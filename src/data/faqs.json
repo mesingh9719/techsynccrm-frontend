@@ -1,0 +1,26 @@
+[
+  {
+    "question": "How long does it take to set up TechSync?",
+    "answer": "Most teams are up and running in under 30 minutes. Import your contacts from Excel, pick a pipeline template for your industry, and invite your team. On Business and Enterprise plans, our onboarding team will help you migrate and configure everything."
+  },
+  {
+    "question": "We currently use Excel and WhatsApp. Is a CRM overkill for us?",
+    "answer": "That's exactly who TechSync is built for. If you have more than a handful of leads a week or more than one person selling, a CRM stops leads from slipping through the cracks. TechSync keeps the WhatsApp workflow your team likes, and adds structure around it."
+  },
+  {
+    "question": "Can I import my existing data?",
+    "answer": "Yes. Import leads, contacts, companies and deals from Excel or CSV with guided column mapping and duplicate detection. We also offer one-click migration from Zoho CRM, HubSpot, Pipedrive and LeadSquared."
+  },
+  {
+    "question": "Does TechSync work on mobile?",
+    "answer": "Yes. Our Android and iOS apps include the full CRM — leads, pipeline, tasks, calling, check-ins and WhatsApp — with offline mode for field sales teams with patchy connectivity."
+  },
+  {
+    "question": "Where is my data stored, and is it secure?",
+    "answer": "Your data is hosted in ISO 27001-certified data centres in India, encrypted in transit and at rest, and backed up daily. We support two-factor authentication, role-based access and, on Enterprise, SSO and audit logs."
+  },
+  {
+    "question": "What kind of support do you offer?",
+    "answer": "Every plan includes access to our Help Center and email support. Growth adds live chat, Business adds priority phone support, and Enterprise customers get a dedicated success manager. Support is available in English and Hindi, Monday to Saturday."
+  }
+]

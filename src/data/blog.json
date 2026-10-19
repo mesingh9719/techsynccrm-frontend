@@ -1,0 +1,123 @@
+{
+  "categories": ["Sales playbooks", "Product updates", "Growth", "Customer stories"],
+  "posts": [
+    {
+      "slug": "whatsapp-inbox-launch",
+      "title": "Introducing the WhatsApp team inbox and AI follow-up reminders",
+      "excerpt": "Your whole team can now reply to customers from one WhatsApp number, with every conversation tied to the right lead and deal.",
+      "category": "Product updates",
+      "author": { "name": "Aisha Khan", "role": "Head of Design" },
+      "date": "2026-10-06",
+      "readMinutes": 5,
+      "featured": true,
+      "body": [
+        { "type": "p", "text": "For most of our customers, WhatsApp isn't a channel — it's where the business happens. Enquiries arrive there, quotes get shared there, and deals close there. Until now, that meant sales conversations lived on individual phones, invisible to the rest of the team." },
+        { "type": "p", "text": "Today we're launching two features that change that: a shared WhatsApp team inbox, and AI follow-up reminders that make sure no conversation goes cold." },
+        { "type": "h2", "text": "One number, the whole team" },
+        { "type": "p", "text": "The new inbox connects your WhatsApp Business number through the official API. Incoming messages are matched to existing contacts, or create a new lead automatically. Assign conversations to reps, leave internal notes, and hand over without losing context." },
+        { "type": "ul", "items": ["Assign conversations manually or with your existing round-robin rules", "Use approved templates for quotes, reminders and payment links", "See the full message history on every contact and deal", "Set business hours with an automatic away message"] },
+        { "type": "h2", "text": "Follow-ups that write themselves" },
+        { "type": "p", "text": "AI follow-up reminders look at the last conversation, the deal stage and how long it's been, then suggest when to follow up and draft a message in your tone. You stay in control — nothing is sent without a rep pressing send." },
+        { "type": "quote", "text": "In our beta, teams using AI reminders followed up on 92% of open deals within 48 hours, up from 61%." },
+        { "type": "h2", "text": "Availability" },
+        { "type": "p", "text": "The WhatsApp team inbox is available today on Growth, Business and Enterprise plans. AI follow-up reminders are included in Business and Enterprise. Head to Settings → Channels to connect your number." }
+      ]
+    },
+    {
+      "slug": "follow-up-system-for-small-sales-teams",
+      "title": "The 5-touch follow-up system for small sales teams",
+      "excerpt": "Most deals are lost to silence, not competitors. Here's a simple cadence any team of 3–30 can run without burning out.",
+      "category": "Sales playbooks",
+      "author": { "name": "Meera Pillai", "role": "Head of Sales" },
+      "date": "2026-09-22",
+      "readMinutes": 7,
+      "body": [
+        { "type": "p", "text": "Ask any business owner why deals slip and you'll hear about price, competition and timing. Look at the data, and a simpler answer appears: nobody followed up. Across our customers, deals with fewer than three follow-ups close at less than a third of the rate of those with five or more." },
+        { "type": "h2", "text": "The cadence" },
+        { "type": "ol", "items": ["Day 0 — Respond within one hour with a short, personal message.", "Day 1 — Share something useful: a catalogue, price list or case study.", "Day 3 — Call. Ask one specific question about their timeline.", "Day 7 — Send the quote or proposal with a clear next step.", "Day 14 — A polite check-in that makes it easy to say no."] },
+        { "type": "h2", "text": "Why it works" },
+        { "type": "p", "text": "Each touch has a purpose beyond 'just checking in'. You're moving the buyer forward, and you're making it easy for them to reply. The day-14 message, which gives permission to decline, often gets the highest reply rate of all." },
+        { "type": "h2", "text": "Running it without spreadsheets" },
+        { "type": "p", "text": "In TechSync, create a sequence with these five steps and attach it to your 'New lead' stage. Tasks appear on each rep's daily list, and the sequence pauses automatically as soon as the lead replies." }
+      ]
+    },
+    {
+      "slug": "excel-to-crm-migration-checklist",
+      "title": "Moving from Excel to a CRM: a checklist for MSMEs",
+      "excerpt": "Clean data, clear stages and a two-week rollout plan. Everything we've learned from helping 4,000 businesses make the switch.",
+      "category": "Growth",
+      "author": { "name": "Sameer Joshi", "role": "VP, Customer Success" },
+      "date": "2026-09-08",
+      "readMinutes": 9,
+      "body": [
+        { "type": "p", "text": "Excel is a brilliant tool. It's also where good leads go to be forgotten. If you're thinking about moving to a CRM, this checklist will save you weeks." },
+        { "type": "h2", "text": "Before you import" },
+        { "type": "ul", "items": ["Pick one master sheet — merge copies from different team members", "Standardise phone numbers to include the country code", "Agree on 4–6 pipeline stages that match how you actually sell", "Decide who owns each existing account"] },
+        { "type": "h2", "text": "Week one: the core team" },
+        { "type": "p", "text": "Start with two or three of your most organised reps. Import data, configure stages, and run the CRM in parallel with Excel for five working days. Note every moment of friction." },
+        { "type": "h2", "text": "Week two: everyone" },
+        { "type": "p", "text": "Fix the friction, then roll out to the full team with a 30-minute session. From this point, if it isn't in the CRM, it didn't happen — and that rule has to start with the owner." },
+        { "type": "quote", "text": "The single best predictor of CRM adoption is whether the founder opens it every day." }
+      ]
+    },
+    {
+      "slug": "kaveri-foods-dealer-network",
+      "title": "How a food distributor manages 600 dealers with a team of nine",
+      "excerpt": "Beat plans, reorder reminders and a shared WhatsApp inbox helped one distributor grow repeat orders by 27% in six months.",
+      "category": "Customer stories",
+      "author": { "name": "Neha Verma", "role": "Co-founder & CEO" },
+      "date": "2026-08-25",
+      "readMinutes": 6,
+      "body": [
+        { "type": "p", "text": "This is an illustrative customer story used as placeholder content. Replace it with an approved case study before launch." },
+        { "type": "p", "text": "A regional food distributor supplies more than 600 retailers and sub-dealers across three districts. Orders came in by phone, WhatsApp and through field visits — and repeat orders depended entirely on reps remembering who was due." },
+        { "type": "h2", "text": "What changed" },
+        { "type": "ul", "items": ["Every dealer became an account with order history and usual reorder cycle", "Field reps plan daily beats in the mobile app, with GPS check-ins", "Reorder tasks are created automatically three days before a dealer is due"] },
+        { "type": "h2", "text": "The result" },
+        { "type": "p", "text": "Repeat orders grew 27% in six months, and the owner now reviews performance from a single dashboard instead of daily calls with every rep." }
+      ]
+    },
+    {
+      "slug": "sales-metrics-for-business-owners",
+      "title": "Six sales metrics every business owner should check weekly",
+      "excerpt": "Forget vanity numbers. These six metrics tell you whether next month will be good — while there's still time to act.",
+      "category": "Growth",
+      "author": { "name": "Meera Pillai", "role": "Head of Sales" },
+      "date": "2026-08-11",
+      "readMinutes": 6,
+      "body": [
+        { "type": "p", "text": "Revenue tells you what happened. These six numbers tell you what's about to happen." },
+        { "type": "ol", "items": ["New leads by source — is demand rising or falling?", "First response time — how fast are you replying?", "Lead-to-meeting rate — are leads qualified?", "Pipeline value by stage — is there enough to hit target?", "Win rate — are you converting what you have?", "Average sales cycle — is it getting longer?"] },
+        { "type": "p", "text": "In TechSync, the Owner dashboard shows all six, and you can schedule it to your WhatsApp every Monday at 9am." }
+      ]
+    },
+    {
+      "slug": "gst-quotes-best-practices",
+      "title": "Writing quotes that win: a guide for B2B manufacturers",
+      "excerpt": "Clear line items, the right HSN codes and a validity date. Small details that make buyers trust you — and sign faster.",
+      "category": "Sales playbooks",
+      "author": { "name": "Rohan Das", "role": "Head of Engineering" },
+      "date": "2026-07-28",
+      "readMinutes": 5,
+      "body": [
+        { "type": "p", "text": "Your quote is often the only document a buyer's finance team sees. Make it easy for them to say yes." },
+        { "type": "h2", "text": "The essentials" },
+        { "type": "ul", "items": ["Correct GSTIN for both parties and HSN/SAC codes per line", "Unit price, quantity, discount and tax shown separately", "Validity date and delivery terms up front", "Payment terms and a payment link where possible"] },
+        { "type": "p", "text": "TechSync's quote builder fills these in from your catalogue, so every quote is consistent no matter who sends it." }
+      ]
+    },
+    {
+      "slug": "automation-ideas-for-smes",
+      "title": "10 automations that save SME sales teams an hour a day",
+      "excerpt": "From instant lead assignment to Monday reports, these are the workflows our customers set up first.",
+      "category": "Product updates",
+      "author": { "name": "Karthik Iyer", "role": "Co-founder & CTO" },
+      "date": "2026-07-14",
+      "readMinutes": 8,
+      "body": [
+        { "type": "p", "text": "Automation isn't about replacing your team. It's about removing the copy-paste work that keeps them from selling." },
+        { "type": "ol", "items": ["Assign new leads by territory or round-robin", "Send a WhatsApp welcome within a minute of enquiry", "Create a call task for the next working morning", "Alert a manager when a high-value deal is created", "Remind reps about deals idle for 7+ days", "Request manager approval for discounts over 10%", "Move a deal to 'Won' when an invoice is paid", "Create a renewal deal 60 days before contract end", "Send a feedback request after delivery", "Email the weekly pipeline report every Monday"] }
+      ]
+    }
+  ]
+}

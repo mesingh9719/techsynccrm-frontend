@@ -1,0 +1,74 @@
+{
+  "main": [
+    {
+      "label": "Product",
+      "items": [
+        { "label": "Features", "to": "/features", "description": "Leads, pipeline, automation and reports", "icon": "Layers" },
+        { "label": "Integrations", "to": "/integrations", "description": "WhatsApp, Gmail, Tally and 40+ more", "icon": "Plug" },
+        { "label": "Pricing", "to": "/pricing", "description": "Simple per-user plans, free to start", "icon": "CreditCard" },
+        { "label": "Book a demo", "to": "/demo", "description": "A 30-minute walkthrough with our team", "icon": "CalendarCheck" }
+      ]
+    },
+    {
+      "label": "Solutions",
+      "items": [
+        { "label": "Retail & distribution", "to": "/solutions#retail", "description": "Dealers, distributors and wholesale", "icon": "Store" },
+        { "label": "Manufacturing", "to": "/solutions#manufacturing", "description": "RFQs, quotes and repeat orders", "icon": "Factory" },
+        { "label": "Professional services", "to": "/solutions#services", "description": "Agencies, consultants and firms", "icon": "Briefcase" },
+        { "label": "Real estate", "to": "/solutions#real-estate", "description": "Site visits, brokers and bookings", "icon": "House" },
+        { "label": "Education", "to": "/solutions#education", "description": "Admissions and counselling teams", "icon": "GraduationCap" },
+        { "label": "Healthcare", "to": "/solutions#healthcare", "description": "Clinics, diagnostics and labs", "icon": "HeartPulse" }
+      ]
+    },
+    { "label": "Pricing", "to": "/pricing" },
+    {
+      "label": "Resources",
+      "items": [
+        { "label": "Blog", "to": "/blog", "description": "Playbooks for growing sales teams", "icon": "Newspaper" },
+        { "label": "Help Center", "to": "/help", "description": "Guides, how-tos and answers", "icon": "LifeBuoy" },
+        { "label": "About us", "to": "/about", "description": "Our story and the team", "icon": "Users" },
+        { "label": "Contact", "to": "/contact", "description": "Talk to sales or support", "icon": "Mail" }
+      ]
+    }
+  ],
+  "footer": [
+    {
+      "title": "Product",
+      "links": [
+        { "label": "Features", "to": "/features" },
+        { "label": "Pricing", "to": "/pricing" },
+        { "label": "Integrations", "to": "/integrations" },
+        { "label": "Book a demo", "to": "/demo" },
+        { "label": "Start free trial", "to": "/signup" }
+      ]
+    },
+    {
+      "title": "Solutions",
+      "links": [
+        { "label": "Retail & distribution", "to": "/solutions#retail" },
+        { "label": "Manufacturing", "to": "/solutions#manufacturing" },
+        { "label": "Professional services", "to": "/solutions#services" },
+        { "label": "Real estate", "to": "/solutions#real-estate" },
+        { "label": "Education", "to": "/solutions#education" }
+      ]
+    },
+    {
+      "title": "Resources",
+      "links": [
+        { "label": "Blog", "to": "/blog" },
+        { "label": "Help Center", "to": "/help" },
+        { "label": "Getting started", "to": "/help/import-leads-from-excel" },
+        { "label": "API & webhooks", "to": "/integrations#developers" }
+      ]
+    },
+    {
+      "title": "Company",
+      "links": [
+        { "label": "About", "to": "/about" },
+        { "label": "Contact", "to": "/contact" },
+        { "label": "Privacy Policy", "to": "/privacy" },
+        { "label": "Terms of Service", "to": "/terms" }
+      ]
+    }
+  ]
+}

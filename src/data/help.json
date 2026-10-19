@@ -1,0 +1,136 @@
+{
+  "categories": [
+    { "id": "getting-started", "icon": "Rocket", "title": "Getting started", "description": "Set up your account, import data and invite your team." },
+    { "id": "leads-contacts", "icon": "Contact", "title": "Leads & contacts", "description": "Capture, assign, score and de-duplicate leads." },
+    { "id": "pipeline", "icon": "SquareKanban", "title": "Pipelines & deals", "description": "Stages, forecasting and deal management." },
+    { "id": "automation", "icon": "Workflow", "title": "Automation", "description": "Workflows, sequences and AI reminders." },
+    { "id": "integrations", "icon": "Plug", "title": "Integrations", "description": "WhatsApp, email, telephony and accounting." },
+    { "id": "billing", "icon": "CreditCard", "title": "Billing & account", "description": "Plans, invoices, users and security." }
+  ],
+  "articles": [
+    {
+      "slug": "import-leads-from-excel",
+      "category": "getting-started",
+      "title": "Import leads and contacts from Excel or CSV",
+      "summary": "Bring your existing data into TechSync with column mapping and duplicate detection.",
+      "updated": "2026-09-30",
+      "body": [
+        { "type": "p", "text": "You can import up to 50,000 rows at a time from .xlsx, .xls or .csv files. Imports run in the background, and you'll get a notification when they finish." },
+        { "type": "h2", "text": "Steps" },
+        { "type": "ol", "items": ["Go to Leads → Import.", "Upload your file and choose whether rows are leads or contacts.", "Map each column to a TechSync field. Unmapped columns can be saved as custom fields.", "Choose how to handle duplicates: skip, update or create new.", "Review the preview and click Start import."] },
+        { "type": "h2", "text": "Tips" },
+        { "type": "ul", "items": ["Include country codes in phone numbers (e.g. +91) for WhatsApp to work.", "Use one row per lead. Split multiple contacts into separate rows.", "Add an 'Owner email' column to assign leads during import."] }
+      ]
+    },
+    {
+      "slug": "invite-your-team",
+      "category": "getting-started",
+      "title": "Invite your team and set roles",
+      "summary": "Add users, choose roles and control what each person can see.",
+      "updated": "2026-09-12",
+      "body": [
+        { "type": "p", "text": "Admins can invite users from Settings → Users. Each user receives an email invite valid for 7 days." },
+        { "type": "h2", "text": "Default roles" },
+        { "type": "ul", "items": ["Admin — full access, including billing and settings.", "Manager — sees their team's records and reports.", "Sales rep — sees records they own or that are shared with them."] },
+        { "type": "p", "text": "On Business and Enterprise, you can create custom roles with field-level permissions." }
+      ]
+    },
+    {
+      "slug": "set-up-your-first-pipeline",
+      "category": "getting-started",
+      "title": "Set up your first sales pipeline",
+      "summary": "Choose a template, rename stages and set win probabilities.",
+      "updated": "2026-08-30",
+      "body": [
+        { "type": "p", "text": "Go to Deals → Pipelines → New pipeline. Start from an industry template or a blank pipeline." },
+        { "type": "ol", "items": ["Rename stages to match how you sell. Four to six stages work best.", "Set a win probability for each stage to power your forecast.", "Optionally set a 'rotting' limit in days for each stage.", "Save and start adding deals."] }
+      ]
+    },
+    {
+      "slug": "lead-assignment-rules",
+      "category": "leads-contacts",
+      "title": "Automatically assign leads with round-robin and territory rules",
+      "summary": "Route new leads to the right rep the moment they arrive.",
+      "updated": "2026-09-18",
+      "body": [
+        { "type": "p", "text": "Assignment rules run on every new lead, whatever the source. Rules are evaluated top to bottom; the first match wins." },
+        { "type": "ul", "items": ["Round-robin — distributes evenly across a group of users.", "Territory — assigns by state, city or pin code.", "Product — assigns by the product or service of interest.", "Working hours — skips users who are on leave or off shift."] }
+      ]
+    },
+    {
+      "slug": "merge-duplicate-contacts",
+      "category": "leads-contacts",
+      "title": "Find and merge duplicate contacts",
+      "summary": "Keep one clean record per customer, with all history combined.",
+      "updated": "2026-07-21",
+      "body": [
+        { "type": "p", "text": "TechSync checks for duplicates by phone number and email. Open Contacts → Duplicates to review suggested matches." },
+        { "type": "p", "text": "When you merge, all activities, deals and notes move to the primary record. Merges can be undone for 30 days." }
+      ]
+    },
+    {
+      "slug": "deal-rotting-alerts",
+      "category": "pipeline",
+      "title": "Use rotting alerts to catch stalled deals",
+      "summary": "Highlight deals that have had no activity for too long.",
+      "updated": "2026-08-14",
+      "body": [
+        { "type": "p", "text": "Set a rotting limit on each pipeline stage. Deals with no activity past that limit are highlighted in red, and owners get a daily digest." }
+      ]
+    },
+    {
+      "slug": "build-a-workflow",
+      "category": "automation",
+      "title": "Build your first workflow",
+      "summary": "Create if-this-then-that rules with triggers, conditions and actions.",
+      "updated": "2026-09-25",
+      "body": [
+        { "type": "p", "text": "Workflows automate repetitive work. Each workflow has one trigger, optional conditions, and one or more actions." },
+        { "type": "ol", "items": ["Go to Automation → Workflows → New workflow.", "Pick a trigger, such as 'Lead created' or 'Deal stage changed'.", "Add conditions, such as 'Source is IndiaMART'.", "Add actions, such as 'Assign owner' and 'Send WhatsApp template'.", "Turn it on. You can test it first with a sample record."] }
+      ]
+    },
+    {
+      "slug": "connect-whatsapp-business",
+      "category": "integrations",
+      "title": "Connect your WhatsApp Business number",
+      "summary": "Link the official WhatsApp Business API to your shared team inbox.",
+      "updated": "2026-10-02",
+      "body": [
+        { "type": "p", "text": "You'll need a phone number that isn't currently registered on the WhatsApp app, and access to your Meta Business account." },
+        { "type": "ol", "items": ["Go to Settings → Channels → WhatsApp.", "Click Connect and sign in with Facebook.", "Select or create your WhatsApp Business account and verify the number.", "Submit message templates for approval — most are approved within an hour."] }
+      ]
+    },
+    {
+      "slug": "sync-with-tally",
+      "category": "integrations",
+      "title": "Sync invoices and customers with Tally Prime",
+      "summary": "Keep your CRM and accounting in step, without double entry.",
+      "updated": "2026-08-05",
+      "body": [
+        { "type": "p", "text": "The Tally connector runs on the computer where Tally Prime is installed and syncs every 15 minutes." },
+        { "type": "ul", "items": ["Customers in TechSync are created as ledgers in Tally.", "Invoices raised from accepted quotes are pushed as sales vouchers.", "Outstanding balances are pulled back to each account."] }
+      ]
+    },
+    {
+      "slug": "change-plan-or-billing",
+      "category": "billing",
+      "title": "Change your plan, users or billing details",
+      "summary": "Upgrade, downgrade, add seats or update your GSTIN.",
+      "updated": "2026-09-01",
+      "body": [
+        { "type": "p", "text": "Admins can manage billing from Settings → Billing. Upgrades apply immediately and are prorated; downgrades apply at the next renewal." },
+        { "type": "p", "text": "To add your GSTIN to invoices, go to Settings → Billing → Company details." }
+      ]
+    },
+    {
+      "slug": "enable-two-factor-authentication",
+      "category": "billing",
+      "title": "Enable two-factor authentication",
+      "summary": "Protect your account with an authenticator app.",
+      "updated": "2026-07-10",
+      "body": [
+        { "type": "p", "text": "Go to Profile → Security → Two-factor authentication and scan the QR code with an authenticator app. Admins can require 2FA for every user from Settings → Security." }
+      ]
+    }
+  ]
+}

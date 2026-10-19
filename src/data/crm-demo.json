@@ -1,0 +1,64 @@
+{
+  "stages": [
+    { "id": "new", "name": "New" },
+    { "id": "qualified", "name": "Qualified" },
+    { "id": "proposal", "name": "Proposal sent" },
+    { "id": "negotiation", "name": "Negotiation" },
+    { "id": "won", "name": "Won" }
+  ],
+  "deals": [
+    { "id": "d1", "stage": "new", "company": "Saffron Retail", "title": "Store POS rollout", "value": 185000, "owner": "Ravi Kumar", "days": 1, "source": "WhatsApp" },
+    { "id": "d2", "stage": "new", "company": "Medisure Labs", "title": "Corporate wellness", "value": 92000, "owner": "Sneha Patil", "days": 2, "source": "Website" },
+    { "id": "d3", "stage": "new", "company": "Pinecrest Studio", "title": "Annual retainer", "value": 240000, "owner": "Ravi Kumar", "days": 0, "source": "Referral" },
+    { "id": "d4", "stage": "qualified", "company": "Northwind Steel", "title": "Fabrication order", "value": 640000, "owner": "Imran Ali", "days": 4, "source": "IndiaMART" },
+    { "id": "d5", "stage": "qualified", "company": "Brightpath Academy", "title": "Campus licences", "value": 310000, "owner": "Sneha Patil", "days": 9, "source": "Google Ads" },
+    { "id": "d6", "stage": "proposal", "company": "Kaveri Foods", "title": "Distributor onboarding", "value": 455000, "owner": "Ravi Kumar", "days": 3, "source": "Referral" },
+    { "id": "d7", "stage": "proposal", "company": "Aarav Realty", "title": "Tower B — 4 units", "value": 1250000, "owner": "Imran Ali", "days": 6, "source": "99acres" },
+    { "id": "d8", "stage": "negotiation", "company": "Indus Logistics", "title": "Fleet tracking", "value": 780000, "owner": "Sneha Patil", "days": 2, "source": "Website" },
+    { "id": "d9", "stage": "won", "company": "Lotus Textiles", "title": "Bulk yarn supply", "value": 520000, "owner": "Imran Ali", "days": 0, "source": "IndiaMART" },
+    { "id": "d10", "stage": "won", "company": "Greenleaf Organics", "title": "Retail partnership", "value": 160000, "owner": "Ravi Kumar", "days": 1, "source": "WhatsApp" }
+  ],
+  "leads": [
+    { "id": "l1", "name": "Ritika Sharma", "company": "Saffron Retail", "source": "WhatsApp", "score": 86, "owner": "Ravi Kumar", "status": "New", "lastActivity": "2 min ago" },
+    { "id": "l2", "name": "Deepak Menon", "company": "Northwind Steel", "source": "IndiaMART", "score": 92, "owner": "Imran Ali", "status": "Qualified", "lastActivity": "18 min ago" },
+    { "id": "l3", "name": "Kavya Reddy", "company": "Brightpath Academy", "source": "Google Ads", "score": 74, "owner": "Sneha Patil", "status": "Contacted", "lastActivity": "1 hr ago" },
+    { "id": "l4", "name": "Harsh Agarwal", "company": "Indus Logistics", "source": "Website", "score": 68, "owner": "Sneha Patil", "status": "Contacted", "lastActivity": "3 hr ago" },
+    { "id": "l5", "name": "Nikhil Bose", "company": "Pinecrest Studio", "source": "Referral", "score": 81, "owner": "Ravi Kumar", "status": "New", "lastActivity": "Today" },
+    { "id": "l6", "name": "Sana Qureshi", "company": "Medisure Labs", "source": "JustDial", "score": 55, "owner": "Imran Ali", "status": "Contacted", "lastActivity": "Yesterday" },
+    { "id": "l7", "name": "Manish Gupta", "company": "Lotus Textiles", "source": "IndiaMART", "score": 38, "owner": "Ravi Kumar", "status": "Lost", "lastActivity": "2 days ago" },
+    { "id": "l8", "name": "Pooja Iyer", "company": "Aarav Realty", "source": "99acres", "score": 88, "owner": "Imran Ali", "status": "Qualified", "lastActivity": "2 days ago" }
+  ],
+  "kpis": [
+    { "label": "Revenue (this quarter)", "value": "₹48.2L", "delta": "+12.4%", "positive": true, "context": "vs last quarter" },
+    { "label": "Win rate", "value": "31%", "delta": "+3.1 pts", "positive": true, "context": "vs last quarter" },
+    { "label": "Avg. deal size", "value": "₹1.8L", "delta": "+6.0%", "positive": true, "context": "vs last quarter" },
+    { "label": "Sales cycle", "value": "24 days", "delta": "−4 days", "positive": true, "context": "vs last quarter" }
+  ],
+  "revenue": [
+    { "month": "Nov", "value": 9.8 },
+    { "month": "Dec", "value": 11.2 },
+    { "month": "Jan", "value": 10.4 },
+    { "month": "Feb", "value": 12.1 },
+    { "month": "Mar", "value": 14.6 },
+    { "month": "Apr", "value": 13.2 },
+    { "month": "May", "value": 14.9 },
+    { "month": "Jun", "value": 15.8 },
+    { "month": "Jul", "value": 15.1 },
+    { "month": "Aug", "value": 16.9 },
+    { "month": "Sep", "value": 18.4 },
+    { "month": "Oct", "value": 19.6 }
+  ],
+  "sources": [
+    { "source": "WhatsApp", "leads": 412 },
+    { "source": "IndiaMART", "leads": 356 },
+    { "source": "Website", "leads": 281 },
+    { "source": "Referral", "leads": 164 },
+    { "source": "Google Ads", "leads": 129 }
+  ],
+  "funnel": [
+    { "stage": "Leads", "count": 1342 },
+    { "stage": "Qualified", "count": 618 },
+    { "stage": "Proposal", "count": 287 },
+    { "stage": "Won", "count": 96 }
+  ]
+}

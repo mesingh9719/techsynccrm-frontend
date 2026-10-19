@@ -1,0 +1,50 @@
+[
+  {
+    "quote": "We were tracking 300 dealer enquiries a month across three WhatsApp groups and an Excel sheet. Within a month of moving to TechSync, our response time dropped from a day to under two hours.",
+    "name": "Ananya Rao",
+    "role": "Director of Sales",
+    "company": "Placeholder Distributors Pvt. Ltd.",
+    "metric": "12× faster first response",
+    "placeholder": true
+  },
+  {
+    "quote": "The quote builder alone pays for itself. Our team sends GST-ready quotations from the shop floor on their phones, and I can finally see what's pending approval.",
+    "name": "Rahul Mehta",
+    "role": "Managing Partner",
+    "company": "Placeholder Engineering Works",
+    "metric": "2.4 hrs saved per rep, per day",
+    "placeholder": true
+  },
+  {
+    "quote": "We tried two bigger CRMs and both died within weeks because nobody used them. TechSync is the first one my counsellors actually open every morning.",
+    "name": "Fatima Sheikh",
+    "role": "Head of Admissions",
+    "company": "Placeholder Academy",
+    "metric": "31% more admissions",
+    "placeholder": true
+  },
+  {
+    "quote": "Monday reports used to take my manager half a day. Now the dashboard is in my inbox at 9am and we spend that meeting on deals instead of numbers.",
+    "name": "Vikram Nair",
+    "role": "Founder",
+    "company": "Placeholder Realty",
+    "metric": "4 hrs saved on weekly reporting",
+    "placeholder": true
+  },
+  {
+    "quote": "Setup took one afternoon. Their onboarding team imported eight years of customer data from spreadsheets without a single duplicate.",
+    "name": "Priya Kulkarni",
+    "role": "Operations Manager",
+    "company": "Placeholder Diagnostics",
+    "metric": "Live in 1 day",
+    "placeholder": true
+  },
+  {
+    "quote": "Pricing that makes sense for a 12-person team. We pay a fraction of what enterprise CRMs quoted us, and get better support.",
+    "name": "Arjun Khanna",
+    "role": "CEO",
+    "company": "Placeholder Digital Agency",
+    "metric": "68% lower CRM cost",
+    "placeholder": true
+  }
+]

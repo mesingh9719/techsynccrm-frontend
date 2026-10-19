@@ -1,0 +1,153 @@
+{
+  "annualDiscountLabel": "Save 20%",
+  "plans": [
+    {
+      "id": "starter",
+      "name": "Starter",
+      "tagline": "For founders and tiny teams getting organised.",
+      "price": { "INR": { "monthly": 0, "annual": 0 }, "USD": { "monthly": 0, "annual": 0 } },
+      "cta": { "label": "Start for free", "to": "/signup?plan=starter" },
+      "userLimit": "Up to 2 users",
+      "features": [
+        "1,000 contacts",
+        "1 sales pipeline",
+        "Web form & Excel lead capture",
+        "Tasks and reminders",
+        "Mobile app",
+        "Email support"
+      ]
+    },
+    {
+      "id": "growth",
+      "name": "Growth",
+      "tagline": "For growing sales teams that live on WhatsApp.",
+      "price": { "INR": { "monthly": 799, "annual": 639 }, "USD": { "monthly": 12, "annual": 10 } },
+      "highlighted": true,
+      "badge": "Most popular",
+      "cta": { "label": "Start 14-day trial", "to": "/signup?plan=growth" },
+      "userLimit": "Up to 25 users",
+      "features": [
+        "Everything in Starter, plus:",
+        "Unlimited contacts",
+        "5 pipelines",
+        "WhatsApp & email inbox",
+        "Workflow automation (25 rules)",
+        "GST quotes & product catalogue",
+        "Standard reports & dashboards",
+        "Chat support"
+      ]
+    },
+    {
+      "id": "business",
+      "name": "Business",
+      "tagline": "For multi-branch teams that need control and insight.",
+      "price": { "INR": { "monthly": 1499, "annual": 1199 }, "USD": { "monthly": 22, "annual": 18 } },
+      "cta": { "label": "Start 14-day trial", "to": "/signup?plan=business" },
+      "userLimit": "Up to 200 users",
+      "features": [
+        "Everything in Growth, plus:",
+        "Unlimited pipelines",
+        "Unlimited automation & sequences",
+        "AI follow-up assistant",
+        "Custom reports & forecasting",
+        "Territories and approvals",
+        "Tally & Zoho Books sync",
+        "Priority phone support"
+      ]
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise",
+      "tagline": "For larger organisations with custom requirements.",
+      "price": { "INR": null, "USD": null },
+      "cta": { "label": "Talk to sales", "to": "/contact?topic=sales" },
+      "userLimit": "Unlimited users",
+      "features": [
+        "Everything in Business, plus:",
+        "SSO (SAML) and audit logs",
+        "Sandbox environment",
+        "Custom data residency",
+        "Dedicated success manager",
+        "Assisted migration",
+        "99.9% uptime SLA"
+      ]
+    }
+  ],
+  "comparison": [
+    {
+      "group": "Core CRM",
+      "rows": [
+        { "label": "Users", "values": { "starter": "2", "growth": "25", "business": "200", "enterprise": "Unlimited" } },
+        { "label": "Contacts", "values": { "starter": "1,000", "growth": "Unlimited", "business": "Unlimited", "enterprise": "Unlimited" } },
+        { "label": "Sales pipelines", "values": { "starter": "1", "growth": "5", "business": "Unlimited", "enterprise": "Unlimited" } },
+        { "label": "Custom fields", "values": { "starter": "10", "growth": "50", "business": "Unlimited", "enterprise": "Unlimited" } },
+        { "label": "Mobile app (Android & iOS)", "values": { "starter": true, "growth": true, "business": true, "enterprise": true } }
+      ]
+    },
+    {
+      "group": "Lead capture & communication",
+      "rows": [
+        { "label": "Web forms & Excel import", "values": { "starter": true, "growth": true, "business": true, "enterprise": true } },
+        { "label": "IndiaMART, JustDial & marketplace sync", "values": { "starter": false, "growth": true, "business": true, "enterprise": true } },
+        { "label": "WhatsApp team inbox", "values": { "starter": false, "growth": true, "business": true, "enterprise": true } },
+        { "label": "Gmail & Outlook sync", "values": { "starter": false, "growth": true, "business": true, "enterprise": true } },
+        { "label": "Click-to-call & call recording", "values": { "starter": false, "growth": "Add-on", "business": true, "enterprise": true } }
+      ]
+    },
+    {
+      "group": "Automation & sales tools",
+      "rows": [
+        { "label": "Workflow rules", "values": { "starter": false, "growth": "25", "business": "Unlimited", "enterprise": "Unlimited" } },
+        { "label": "Follow-up sequences", "values": { "starter": false, "growth": false, "business": true, "enterprise": true } },
+        { "label": "AI follow-up assistant", "values": { "starter": false, "growth": false, "business": true, "enterprise": true } },
+        { "label": "GST quotes & product catalogue", "values": { "starter": false, "growth": true, "business": true, "enterprise": true } },
+        { "label": "Discount approvals", "values": { "starter": false, "growth": false, "business": true, "enterprise": true } }
+      ]
+    },
+    {
+      "group": "Reporting",
+      "rows": [
+        { "label": "Standard dashboards", "values": { "starter": "Basic", "growth": true, "business": true, "enterprise": true } },
+        { "label": "Custom reports", "values": { "starter": false, "growth": false, "business": true, "enterprise": true } },
+        { "label": "Forecasting", "values": { "starter": false, "growth": false, "business": true, "enterprise": true } },
+        { "label": "Scheduled reports", "values": { "starter": false, "growth": true, "business": true, "enterprise": true } }
+      ]
+    },
+    {
+      "group": "Security & support",
+      "rows": [
+        { "label": "Two-factor authentication", "values": { "starter": true, "growth": true, "business": true, "enterprise": true } },
+        { "label": "Role-based permissions", "values": { "starter": false, "growth": "Basic", "business": "Advanced", "enterprise": "Advanced" } },
+        { "label": "SSO (SAML) & audit log", "values": { "starter": false, "growth": false, "business": false, "enterprise": true } },
+        { "label": "Support", "values": { "starter": "Email", "growth": "Chat", "business": "Phone", "enterprise": "Dedicated CSM" } },
+        { "label": "Uptime SLA", "values": { "starter": false, "growth": false, "business": "99.5%", "enterprise": "99.9%" } }
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "question": "Is the Starter plan really free?",
+      "answer": "Yes. Starter is free forever for up to 2 users and 1,000 contacts. There's no credit card required and no time limit. Upgrade only when you need more users or features."
+    },
+    {
+      "question": "How does the 14-day trial work?",
+      "answer": "Growth and Business plans include a 14-day trial with every feature unlocked. You won't be charged unless you add billing details and choose to continue. If you don't, your account moves to Starter and your data stays safe."
+    },
+    {
+      "question": "Are prices inclusive of GST?",
+      "answer": "Prices in INR are exclusive of 18% GST. We issue a GST invoice for every payment, so you can claim input tax credit."
+    },
+    {
+      "question": "Can I change plans or add users later?",
+      "answer": "Any time. Upgrades take effect immediately and are prorated. Downgrades apply from your next billing cycle. You can add or remove users from Settings in a couple of clicks."
+    },
+    {
+      "question": "What payment methods do you accept?",
+      "answer": "UPI, credit and debit cards, net banking and NEFT/RTGS for annual plans. International customers can pay by card in USD."
+    },
+    {
+      "question": "Do you offer discounts for startups or NGOs?",
+      "answer": "Yes — registered startups (DPIIT recognised) and non-profits get 30% off the Growth and Business plans for the first year. Contact our sales team with your registration details."
+    }
+  ]
+}

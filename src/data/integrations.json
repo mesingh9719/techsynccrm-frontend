@@ -1,0 +1,36 @@
+[
+  { "id": "whatsapp", "name": "WhatsApp Business", "category": "Communication", "description": "Shared team inbox, templates and broadcasts on the official API.", "status": "Available", "popular": true, "color": "#1f9d55" },
+  { "id": "gmail", "name": "Gmail", "category": "Communication", "description": "Two-way email sync with open tracking and templates.", "status": "Available", "popular": true, "color": "#d0463b" },
+  { "id": "outlook", "name": "Outlook", "category": "Communication", "description": "Sync email, calendar and contacts from Microsoft 365.", "status": "Available", "color": "#1f6fd1" },
+  { "id": "exotel", "name": "Exotel", "category": "Communication", "description": "Click-to-call, call recording and IVR lead capture.", "status": "Available", "color": "#2f3b8f" },
+  { "id": "knowlarity", "name": "Knowlarity", "category": "Communication", "description": "Cloud telephony with automatic call logging.", "status": "Available", "color": "#5b3fb6" },
+  { "id": "slack", "name": "Slack", "category": "Communication", "description": "Deal-won alerts and lead notifications in your channels.", "status": "Beta", "color": "#5b2a5e" },
+
+  { "id": "indiamart", "name": "IndiaMART", "category": "Lead sources", "description": "Pull buy leads and enquiries into TechSync in real time.", "status": "Available", "popular": true, "color": "#2b4a9b" },
+  { "id": "justdial", "name": "JustDial", "category": "Lead sources", "description": "Capture JustDial enquiries with source tagging.", "status": "Available", "color": "#e1772b" },
+  { "id": "tradeindia", "name": "TradeIndia", "category": "Lead sources", "description": "Sync B2B enquiries and RFQs automatically.", "status": "Available", "color": "#b23a3a" },
+  { "id": "facebook-leads", "name": "Facebook Lead Ads", "category": "Lead sources", "description": "Instant capture from Facebook and Instagram lead forms.", "status": "Available", "popular": true, "color": "#2d5bd7" },
+  { "id": "google-ads", "name": "Google Ads", "category": "Lead sources", "description": "Lead form extensions and offline conversion tracking.", "status": "Available", "color": "#2f855a" },
+  { "id": "99acres", "name": "99acres", "category": "Lead sources", "description": "Property enquiries routed to the right project team.", "status": "Available", "color": "#1e5ba8" },
+  { "id": "magicbricks", "name": "MagicBricks", "category": "Lead sources", "description": "Real estate leads with project and budget details.", "status": "Beta", "color": "#c53030" },
+
+  { "id": "tally", "name": "Tally Prime", "category": "Accounting", "description": "Sync customers, invoices and outstanding balances.", "status": "Available", "popular": true, "color": "#2c5282" },
+  { "id": "zoho-books", "name": "Zoho Books", "category": "Accounting", "description": "Push invoices and pull payment status automatically.", "status": "Available", "color": "#c05621" },
+  { "id": "quickbooks", "name": "QuickBooks", "category": "Accounting", "description": "Two-way sync for customers and invoices.", "status": "Coming soon", "color": "#2f855a" },
+
+  { "id": "razorpay", "name": "Razorpay", "category": "Payments", "description": "UPI and card payment links on quotes and invoices.", "status": "Available", "popular": true, "color": "#1d4ed8" },
+  { "id": "cashfree", "name": "Cashfree", "category": "Payments", "description": "Collect payments and reconcile against deals.", "status": "Beta", "color": "#553c9a" },
+  { "id": "stripe", "name": "Stripe", "category": "Payments", "description": "International card payments for USD invoices.", "status": "Available", "color": "#4c51bf" },
+
+  { "id": "google-calendar", "name": "Google Calendar", "category": "Productivity", "description": "Meetings and site visits synced both ways.", "status": "Available", "color": "#2b6cb0" },
+  { "id": "google-sheets", "name": "Google Sheets", "category": "Productivity", "description": "Export reports and sync rows to sheets on a schedule.", "status": "Available", "color": "#2f855a" },
+  { "id": "google-drive", "name": "Google Drive", "category": "Productivity", "description": "Attach proposals and files to deals from Drive.", "status": "Available", "color": "#b7791f" },
+  { "id": "docusign", "name": "DocuSign", "category": "Productivity", "description": "Send contracts for e-signature from any deal.", "status": "Coming soon", "color": "#1a365d" },
+
+  { "id": "zapier", "name": "Zapier", "category": "Automation", "description": "Connect TechSync to 6,000+ apps without code.", "status": "Available", "popular": true, "color": "#dd6b20" },
+  { "id": "make", "name": "Make", "category": "Automation", "description": "Build multi-step scenarios with visual automation.", "status": "Available", "color": "#6b46c1" },
+  { "id": "webhooks", "name": "Webhooks", "category": "Automation", "description": "Real-time events for leads, deals and contacts.", "status": "Available", "color": "#27272a" },
+
+  { "id": "shopify", "name": "Shopify", "category": "E-commerce", "description": "Customers and orders synced for repeat-purchase campaigns.", "status": "Beta", "color": "#38a169" },
+  { "id": "woocommerce", "name": "WooCommerce", "category": "E-commerce", "description": "Sync store customers and abandoned carts.", "status": "Coming soon", "color": "#6b46c1" }
+]

@@ -1,0 +1,131 @@
+{
+  "privacy": {
+    "title": "Privacy Policy",
+    "updated": "2026-09-01",
+    "intro": "This Privacy Policy explains how TechSync Technologies Pvt. Ltd. (“TechSync”, “we”, “us”) collects, uses and protects personal data when you use our website and CRM services. It is template content and should be reviewed by legal counsel before publication.",
+    "sections": [
+      {
+        "id": "information-we-collect",
+        "title": "Information we collect",
+        "body": [
+          { "type": "p", "text": "We collect information you provide directly, information generated when you use the service, and limited information from third parties." },
+          { "type": "ul", "items": ["Account data: name, work email, phone number, company name and billing details.", "Customer data: the leads, contacts, deals and messages you store in TechSync. You control this data; we process it on your behalf.", "Usage data: pages visited, features used, device and browser information, and IP address.", "Integration data: information from services you connect, such as WhatsApp or Gmail, limited to what you authorise."] }
+        ]
+      },
+      {
+        "id": "how-we-use-information",
+        "title": "How we use information",
+        "body": [
+          { "type": "ul", "items": ["To provide, maintain and improve the service.", "To process payments and send invoices and service notices.", "To provide customer support.", "To send product updates and marketing, where you have agreed to receive them.", "To detect and prevent fraud, abuse and security incidents."] },
+          { "type": "p", "text": "We never sell your personal data or your customer data, and we do not use customer data to train AI models shared with other customers." }
+        ]
+      },
+      {
+        "id": "data-storage",
+        "title": "Data storage and security",
+        "body": [
+          { "type": "p", "text": "Data for customers in India is stored in data centres located in India. Data is encrypted in transit (TLS 1.2+) and at rest (AES-256), and backed up daily. Access is limited to authorised staff on a need-to-know basis and is logged." }
+        ]
+      },
+      {
+        "id": "sharing",
+        "title": "Sharing with third parties",
+        "body": [
+          { "type": "p", "text": "We share data only with sub-processors who help us run the service — such as cloud hosting, payment processing and email delivery — under contracts that require them to protect it. A current list of sub-processors is available on request." }
+        ]
+      },
+      {
+        "id": "your-rights",
+        "title": "Your rights",
+        "body": [
+          { "type": "p", "text": "Subject to applicable law, including India's Digital Personal Data Protection Act, 2023, you may request access to, correction of, or deletion of your personal data, and withdraw consent for marketing at any time." },
+          { "type": "p", "text": "To exercise these rights, email privacy@techsynccrm.com. We respond within 30 days." }
+        ]
+      },
+      {
+        "id": "cookies",
+        "title": "Cookies",
+        "body": [
+          { "type": "p", "text": "We use essential cookies to keep you signed in and secure, and optional analytics cookies to understand how our website is used. You can manage optional cookies through the banner shown on your first visit." }
+        ]
+      },
+      {
+        "id": "retention",
+        "title": "Data retention",
+        "body": [
+          { "type": "p", "text": "We keep account data for as long as your account is active. After cancellation, customer data is available for export for 30 days and then deleted within 90 days, except where we must retain it by law." }
+        ]
+      },
+      {
+        "id": "contact",
+        "title": "Contact us",
+        "body": [
+          { "type": "p", "text": "Grievance Officer: Data Protection Team, TechSync Technologies Pvt. Ltd., 4th Floor, 21 Residency Road, Bengaluru 560025. Email: privacy@techsynccrm.com." }
+        ]
+      }
+    ]
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "updated": "2026-09-01",
+    "intro": "These Terms govern your access to and use of TechSync CRM. By creating an account or using the service, you agree to these Terms on behalf of yourself and the organisation you represent. This is template content and should be reviewed by legal counsel before publication.",
+    "sections": [
+      {
+        "id": "accounts",
+        "title": "Accounts",
+        "body": [
+          { "type": "p", "text": "You must provide accurate information when creating an account and keep your credentials secure. You are responsible for all activity under your account and for your users' compliance with these Terms." }
+        ]
+      },
+      {
+        "id": "subscriptions",
+        "title": "Subscriptions and payment",
+        "body": [
+          { "type": "ul", "items": ["Paid plans are billed in advance, monthly or annually, per user.", "Prices exclude applicable taxes such as GST.", "Subscriptions renew automatically unless cancelled before the renewal date.", "Upgrades are prorated; downgrades take effect at the next billing cycle."] }
+        ]
+      },
+      {
+        "id": "acceptable-use",
+        "title": "Acceptable use",
+        "body": [
+          { "type": "p", "text": "You agree not to use TechSync to send unsolicited bulk messages, violate WhatsApp or email provider policies, store unlawful content, or attempt to disrupt or reverse-engineer the service." }
+        ]
+      },
+      {
+        "id": "your-data",
+        "title": "Your data",
+        "body": [
+          { "type": "p", "text": "You own the data you put into TechSync. You grant us a limited licence to host and process it solely to provide the service. You can export your data at any time." }
+        ]
+      },
+      {
+        "id": "availability",
+        "title": "Service availability",
+        "body": [
+          { "type": "p", "text": "We aim for high availability and publish planned maintenance in advance. Uptime commitments and service credits apply only where included in your plan or order form." }
+        ]
+      },
+      {
+        "id": "termination",
+        "title": "Cancellation and termination",
+        "body": [
+          { "type": "p", "text": "You can cancel at any time from Settings → Billing. We may suspend accounts that breach these Terms, after notice where reasonably possible." }
+        ]
+      },
+      {
+        "id": "liability",
+        "title": "Limitation of liability",
+        "body": [
+          { "type": "p", "text": "To the extent permitted by law, our total liability for any claim is limited to the fees you paid in the 12 months before the claim. We are not liable for indirect or consequential losses." }
+        ]
+      },
+      {
+        "id": "governing-law",
+        "title": "Governing law",
+        "body": [
+          { "type": "p", "text": "These Terms are governed by the laws of India, and the courts of Bengaluru, Karnataka have exclusive jurisdiction." }
+        ]
+      }
+    ]
+  }
+}

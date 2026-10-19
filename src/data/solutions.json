@@ -1,0 +1,138 @@
+{
+  "industries": [
+    {
+      "id": "retail",
+      "icon": "Store",
+      "name": "Retail & distribution",
+      "headline": "Keep every dealer, distributor and repeat order moving",
+      "summary": "Manage hundreds of dealer relationships, beat-plan your field team and never miss a reorder window.",
+      "challenges": [
+        "Dealer enquiries scattered across WhatsApp groups and phones",
+        "No visibility into which field visits turn into orders",
+        "Reorders missed because nobody tracked the cycle"
+      ],
+      "solutions": [
+        { "title": "Dealer & distributor accounts", "description": "One profile per account with order history, outstanding and contacts." },
+        { "title": "Beat planning & check-ins", "description": "Plan routes, verify visits with GPS check-ins and log orders on the spot." },
+        { "title": "Reorder reminders", "description": "Automatic tasks when an account's usual reorder date comes around." }
+      ],
+      "metric": { "value": "27%", "label": "more repeat orders in 6 months" }
+    },
+    {
+      "id": "manufacturing",
+      "icon": "Factory",
+      "name": "Manufacturing",
+      "headline": "Turn RFQs into orders faster, with quotes your buyers trust",
+      "summary": "Track RFQs from IndiaMART and trade fairs, send accurate GST quotes, and follow up until the PO arrives.",
+      "challenges": [
+        "RFQs from marketplaces and exhibitions get lost",
+        "Quotes take days because pricing lives in someone's head",
+        "Long sales cycles with many stakeholders to chase"
+      ],
+      "solutions": [
+        { "title": "Marketplace lead sync", "description": "IndiaMART, TradeIndia and JustDial leads flow in automatically." },
+        { "title": "Catalogue-based quotes", "description": "SKUs, price lists and approvals produce consistent quotes in minutes." },
+        { "title": "Multi-contact deals", "description": "Track purchase, technical and finance contacts on the same deal." }
+      ],
+      "metric": { "value": "3×", "label": "faster quote turnaround" }
+    },
+    {
+      "id": "services",
+      "icon": "Briefcase",
+      "name": "Professional services",
+      "headline": "Win more retainers and keep clients for longer",
+      "summary": "For agencies, consultants, CA and legal firms who sell on relationships and proposals.",
+      "challenges": [
+        "Proposals and follow-ups depend on partners' memory",
+        "Hard to see which services and channels are profitable",
+        "Renewals surface too late to save"
+      ],
+      "solutions": [
+        { "title": "Proposal pipeline", "description": "Stages tuned for discovery calls, proposals and negotiation." },
+        { "title": "Renewal tracking", "description": "Retainer end dates trigger renewal deals 60 days in advance." },
+        { "title": "Source attribution", "description": "Know whether referrals, LinkedIn or events bring your best clients." }
+      ],
+      "metric": { "value": "22%", "label": "higher proposal win rate" }
+    },
+    {
+      "id": "real-estate",
+      "icon": "House",
+      "name": "Real estate",
+      "headline": "From portal enquiry to site visit to booking",
+      "summary": "Capture leads from property portals and ads, schedule site visits and track channel partners.",
+      "challenges": [
+        "Hundreds of portal leads with very different intent",
+        "Site visits scheduled on calls and forgotten",
+        "Channel partner commissions tracked on paper"
+      ],
+      "solutions": [
+        { "title": "Portal integrations", "description": "Leads from 99acres, MagicBricks and Housing.com land instantly." },
+        { "title": "Site visit scheduling", "description": "Book, remind and record feedback for every visit." },
+        { "title": "Channel partner tracking", "description": "Attribute bookings to brokers and track commissions owed." }
+      ],
+      "metric": { "value": "41%", "label": "more site visits booked" }
+    },
+    {
+      "id": "education",
+      "icon": "GraduationCap",
+      "name": "Education",
+      "headline": "Counsel more students without dropping a single enquiry",
+      "summary": "For coaching institutes, schools and colleges managing admissions season at scale.",
+      "challenges": [
+        "Enquiry spikes during admission season overwhelm counsellors",
+        "Parents and students contact on different channels",
+        "No clear view of the admissions funnel by course or campus"
+      ],
+      "solutions": [
+        { "title": "Admissions pipeline", "description": "Enquiry, counselling, application, fee paid — per course and campus." },
+        { "title": "WhatsApp follow-ups", "description": "Automated reminders for documents, fees and counselling slots." },
+        { "title": "Counsellor dashboards", "description": "Targets, conversions and daily tasks for every counsellor." }
+      ],
+      "metric": { "value": "31%", "label": "more admissions per counsellor" }
+    },
+    {
+      "id": "healthcare",
+      "icon": "HeartPulse",
+      "name": "Healthcare",
+      "headline": "Patient enquiries, appointments and corporate tie-ups",
+      "summary": "For clinics, diagnostic centres and labs growing walk-ins and B2B partnerships.",
+      "challenges": [
+        "Missed calls and enquiries never get called back",
+        "Corporate health check-up deals tracked over email",
+        "Patient data needs careful access control"
+      ],
+      "solutions": [
+        { "title": "Missed-call capture", "description": "Every missed call becomes a lead with an automatic call-back task." },
+        { "title": "Corporate deals pipeline", "description": "Manage B2B health packages from pitch to renewal." },
+        { "title": "Field-level permissions", "description": "Restrict sensitive fields to the people who need them." }
+      ],
+      "metric": { "value": "2×", "label": "enquiry-to-appointment rate" }
+    }
+  ],
+  "teams": [
+    {
+      "icon": "Briefcase",
+      "team": "Business owners",
+      "description": "See the whole business on one screen — without chasing anyone for updates.",
+      "outcomes": ["Live revenue and pipeline dashboard", "Weekly summary on WhatsApp", "Know which reps and channels perform"]
+    },
+    {
+      "icon": "Target",
+      "team": "Sales teams",
+      "description": "Less admin, more selling. Every follow-up scheduled, every conversation in context.",
+      "outcomes": ["Daily task list that writes itself", "One-tap calls, WhatsApp and quotes", "Mobile app with offline mode"]
+    },
+    {
+      "icon": "Megaphone",
+      "team": "Marketing",
+      "description": "Know which campaigns bring revenue, not just form fills.",
+      "outcomes": ["Source and campaign attribution", "Segments and broadcasts", "Lead scoring handed to sales"]
+    },
+    {
+      "icon": "Headphones",
+      "team": "Customer support",
+      "description": "Resolve requests faster with the full customer history in front of you.",
+      "outcomes": ["Shared WhatsApp and email inbox", "Tickets linked to accounts", "SLA timers and escalations"]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "stats": [
+    { "value": "4,200+", "label": "businesses on TechSync" },
+    { "value": "38%", "label": "average lift in deals closed" },
+    { "value": "6 hrs", "label": "saved per rep, every week" },
+    { "value": "4.8/5", "label": "average customer rating" }
+  ],
+  "logos": [
+    "Kaveri Foods",
+    "Northwind Steel",
+    "Aarav Realty",
+    "Brightpath Academy",
+    "Medisure Labs",
+    "Indus Logistics",
+    "Saffron Retail",
+    "Pinecrest Studio"
+  ],
+  "story": [
+    "TechSync started in 2019 in a small office in Bengaluru, after our founders spent years building software for large enterprises — and watching their friends who ran small businesses struggle with tools that were either too simple or far too complex.",
+    "A textile distributor in Surat was running 400 dealers on a WhatsApp group and a 14-tab Excel file. A coaching institute in Pune lost a third of its enquiries every admission season. Neither could justify ₹5,000 per user for a CRM they'd need a consultant to set up.",
+    "So we built the CRM we wished they had: one that works the way Indian SMEs already sell — on WhatsApp, on the phone, in the field — and that a team can set up in an afternoon. Today, more than 4,200 businesses across 18 countries run their sales on TechSync."
+  ],
+  "values": [
+    { "icon": "Compass", "title": "Simple beats clever", "description": "If a feature needs a training session, we haven't finished designing it." },
+    { "icon": "Handshake", "title": "Earn trust every month", "description": "No lock-ins, no surprise invoices, and your data is always exportable." },
+    { "icon": "Rocket", "title": "Ship for the shop floor", "description": "We test on budget Android phones and patchy 4G, not just fast laptops." },
+    { "icon": "Users", "title": "Customers are colleagues", "description": "Every engineer joins customer calls. Every roadmap item has a name attached." }
+  ],
+  "timeline": [
+    { "year": "2019", "title": "Founded in Bengaluru", "description": "First version built with 12 design-partner businesses." },
+    { "year": "2021", "title": "WhatsApp and mobile apps", "description": "Launched the shared WhatsApp inbox and offline-ready mobile apps." },
+    { "year": "2023", "title": "1,000 customers", "description": "Expanded into the Middle East and Southeast Asia." },
+    { "year": "2025", "title": "Series A", "description": "Raised to invest in automation, AI assistance and support." },
+    { "year": "2026", "title": "4,200+ businesses", "description": "Serving SMEs and MSMEs across 18 countries." }
+  ],
+  "team": [
+    { "name": "Neha Verma", "role": "Co-founder & CEO", "bio": "Previously led product for enterprise sales tools. Grew up in her family's hardware business." },
+    { "name": "Karthik Iyer", "role": "Co-founder & CTO", "bio": "Built large-scale messaging systems. Obsessed with apps that work on 3G." },
+    { "name": "Sameer Joshi", "role": "VP, Customer Success", "bio": "Has onboarded over 2,000 SMEs personally. Fluent in five languages." },
+    { "name": "Aisha Khan", "role": "Head of Design", "bio": "Designs for the busiest person in the room — usually a business owner on a phone." },
+    { "name": "Rohan Das", "role": "Head of Engineering", "bio": "Keeps TechSync fast, secure and online. Previously at a large payments company." },
+    { "name": "Meera Pillai", "role": "Head of Sales", "bio": "Ran sales for an MSME manufacturer before helping thousands of others do the same." }
+  ],
+  "offices": [
+    { "city": "Bengaluru (HQ)", "address": "4th Floor, 21 Residency Road, Bengaluru, Karnataka 560025", "phone": "+91 80 4718 2200", "email": "hello@techsynccrm.com" },
+    { "city": "Pune", "address": "Level 2, 7 Baner Road, Pune, Maharashtra 411045", "phone": "+91 20 6731 4400", "email": "pune@techsynccrm.com" },
+    { "city": "Dubai", "address": "Office 1204, Business Bay, Dubai, UAE", "phone": "+971 4 512 7700", "email": "mena@techsynccrm.com" }
+  ]
+}

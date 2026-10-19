@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Brand: cobalt. Used sparingly — primary actions, links, focus, key data. */
+  --color-brand-50: #f0f4ff;
+  --color-brand-100: #e0e8ff;
+  --color-brand-200: #c6d4fe;
+  --color-brand-300: #9db4fb;
+  --color-brand-400: #6e8cf6;
+  --color-brand-500: #4a66ee;
+  --color-brand-600: #3349df;
+  --color-brand-700: #2a3bc4;
+  --color-brand-800: #26339d;
+  --color-brand-900: #24307c;
+  --color-brand-950: #171d4b;
+
+  /* Chart roles (validated categorical slots 1–2 from the data-viz palette) */
+  --color-series-1: #2a78d6;
+  --color-series-2: #eb6834;
+  --color-series-3: #1baf7a;
+
+  --color-canvas: #fbfbfa;
+
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-float: 0 1px 2px rgb(16 24 40 / 0.04), 0 12px 32px -8px rgb(16 24 40 / 0.12);
+  --shadow-frame: 0 0 0 1px rgb(16 24 40 / 0.06), 0 2px 4px rgb(16 24 40 / 0.04),
+    0 24px 64px -16px rgb(16 24 40 / 0.18);
+
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.4s ease-out both;
+  --animate-progress: progress 1.2s ease-in-out infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes progress {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(250%);
+    }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 80px;
+  }
+  body {
+    @apply bg-white font-sans text-zinc-900 antialiased;
+    font-feature-settings: "ss01", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-brand-100);
+    color: var(--color-brand-950);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  /* Scroll-reveal: content is visible by default; JS opts elements in. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal[data-visible="true"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(24 24 27 / 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(24 24 27 / 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Long-form content (blog posts, help articles, legal pages) */
+  .prose-body {
+    @apply text-[17px] leading-[1.75] text-zinc-700;
+  }
+  .prose-body > * + * {
+    @apply mt-5;
+  }
+  .prose-body h2 {
+    @apply mt-12 text-2xl font-semibold text-zinc-900;
+  }
+  .prose-body h3 {
+    @apply mt-8 text-lg font-semibold text-zinc-900;
+  }
+  .prose-body ul {
+    @apply list-disc space-y-2 pl-5 marker:text-zinc-400;
+  }
+  .prose-body ol {
+    @apply list-decimal space-y-2 pl-5 marker:text-zinc-500;
+  }
+  .prose-body a {
+    @apply font-medium text-brand-700 underline decoration-brand-200 underline-offset-4 hover:decoration-brand-500;
+  }
+  .prose-body blockquote {
+    @apply border-l-2 border-brand-500 pl-5 text-lg text-zinc-800 italic;
+  }
+  .prose-body strong {
+    @apply font-semibold text-zinc-900;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

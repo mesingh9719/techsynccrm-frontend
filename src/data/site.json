@@ -1,0 +1,21 @@
+{
+  "name": "TechSync CRM",
+  "shortName": "TechSync",
+  "url": "https://techsynccrm.com",
+  "defaultTitle": "TechSync CRM — The simple CRM for growing SMEs & MSMEs",
+  "defaultDescription": "TechSync is the CRM built for small and mid-sized businesses. Capture leads, manage your sales pipeline, automate follow-ups and see real-time reports — set up in an afternoon.",
+  "email": "hello@techsynccrm.com",
+  "supportEmail": "support@techsynccrm.com",
+  "salesEmail": "sales@techsynccrm.com",
+  "phone": "+91 80 4718 2200",
+  "announcement": {
+    "label": "New",
+    "text": "WhatsApp inbox and AI follow-up reminders are live",
+    "to": "/blog/whatsapp-inbox-launch"
+  },
+  "social": [
+    { "label": "LinkedIn", "href": "https://www.linkedin.com/", "icon": "linkedin" },
+    { "label": "X (Twitter)", "href": "https://x.com/", "icon": "x" },
+    { "label": "YouTube", "href": "https://www.youtube.com/", "icon": "youtube" }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "categories": [
+    {
+      "id": "leads",
+      "icon": "UserPlus",
+      "eyebrow": "Lead management",
+      "title": "Every enquiry lands in one place — and nobody forgets to call back",
+      "description": "Website forms, WhatsApp, IndiaMART, JustDial, calls and walk-ins flow into a single inbox. TechSync de-duplicates, scores and assigns each lead automatically, so your fastest rep is never waiting and your best lead is never ignored.",
+      "points": [
+        "Capture from 12+ sources without copy-paste",
+        "Round-robin or territory-based assignment",
+        "Lead scoring based on fit and engagement",
+        "Duplicate detection on phone and email"
+      ],
+      "features": [
+        { "icon": "Inbox", "title": "Unified lead inbox", "description": "Forms, WhatsApp, marketplaces and calls in one prioritised list." },
+        { "icon": "Target", "title": "Lead scoring", "description": "Rank leads by budget, location, source and activity — automatically." },
+        { "icon": "Users", "title": "Smart assignment", "description": "Route by territory, product or round-robin with working-hour rules." },
+        { "icon": "FileSpreadsheet", "title": "Excel import", "description": "Bring years of spreadsheets in with column mapping and clean-up." }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "icon": "SquareKanban",
+      "eyebrow": "Sales pipeline",
+      "title": "See every deal, stage and rupee at a glance",
+      "description": "A visual pipeline your team will actually keep up to date. Drag deals between stages, set required fields per stage, and get nudged when a deal has gone quiet for too long.",
+      "points": [
+        "Multiple pipelines for different products or teams",
+        "Weighted forecast by stage probability",
+        "Stale-deal alerts and next-step reminders",
+        "Required fields so data stays clean"
+      ],
+      "features": [
+        { "icon": "SquareKanban", "title": "Drag-and-drop board", "description": "Move deals between stages with a flick — on desktop or mobile." },
+        { "icon": "Layers", "title": "Multiple pipelines", "description": "Separate flows for new business, renewals or each product line." },
+        { "icon": "Bell", "title": "Rotting deal alerts", "description": "Flag deals with no activity past the limit you set per stage." },
+        { "icon": "TrendingUp", "title": "Weighted forecast", "description": "Know what will close this month, not just what's in the pipe." }
+      ]
+    },
+    {
+      "id": "automation",
+      "icon": "Workflow",
+      "eyebrow": "Automation",
+      "title": "Put follow-ups on autopilot without losing the personal touch",
+      "description": "Build workflows in plain language: when a lead comes in, assign it, send a WhatsApp welcome, and create a call task for tomorrow at 10. No code, no consultants.",
+      "points": [
+        "Visual workflow builder with 30+ triggers and actions",
+        "Follow-up sequences across email and WhatsApp",
+        "AI reminders that suggest the next best action",
+        "Approval flows for discounts and quotes"
+      ],
+      "features": [
+        { "icon": "Workflow", "title": "Workflow builder", "description": "If-this-then-that rules for assignment, tasks, updates and alerts." },
+        { "icon": "Bot", "title": "AI follow-up assistant", "description": "Drafts the next message and flags leads at risk of going cold." },
+        { "icon": "Timer", "title": "Sequences", "description": "Timed, multi-step outreach that stops as soon as a lead replies." },
+        { "icon": "BadgeCheck", "title": "Approvals", "description": "Route discounts above a threshold to a manager in one tap." }
+      ]
+    },
+    {
+      "id": "communication",
+      "icon": "MessageCircle",
+      "eyebrow": "Communication",
+      "title": "WhatsApp, email and calls — logged against the right customer",
+      "description": "Talk to customers on the channels they already use. Every message and call is tied to the contact and deal, so anyone on your team can pick up the conversation.",
+      "points": [
+        "Shared WhatsApp Business inbox for your team",
+        "Two-way Gmail and Outlook sync",
+        "Click-to-call with automatic call logging",
+        "Approved message templates for quick replies"
+      ],
+      "features": [
+        { "icon": "MessageCircle", "title": "WhatsApp inbox", "description": "Shared team inbox on the official WhatsApp Business API." },
+        { "icon": "Mail", "title": "Email sync", "description": "Two-way sync with Gmail and Outlook, with open tracking." },
+        { "icon": "Headphones", "title": "Calling", "description": "Click-to-call, call recording and disposition notes." },
+        { "icon": "Megaphone", "title": "Broadcasts", "description": "Send offers to segments with opt-out handling built in." }
+      ]
+    },
+    {
+      "id": "quotes",
+      "icon": "Receipt",
+      "eyebrow": "Quotes & invoices",
+      "title": "From quote to payment without switching apps",
+      "description": "Create GST-ready quotations from your product catalogue in seconds, share them on WhatsApp, and convert accepted quotes into invoices that sync with Tally or Zoho Books.",
+      "points": [
+        "GST-compliant quotes with HSN codes",
+        "Product catalogue with price lists and discounts",
+        "Share as PDF link with view tracking",
+        "Sync invoices to Tally and Zoho Books"
+      ],
+      "features": [
+        { "icon": "FileText", "title": "Quote builder", "description": "Branded, GST-ready quotes from your catalogue in under a minute." },
+        { "icon": "Boxes", "title": "Product catalogue", "description": "SKUs, price lists, taxes and volume discounts in one place." },
+        { "icon": "Receipt", "title": "Invoices", "description": "Turn accepted quotes into invoices and track what's outstanding." },
+        { "icon": "CreditCard", "title": "Payment links", "description": "Collect via UPI and cards with Razorpay payment links." }
+      ]
+    },
+    {
+      "id": "analytics",
+      "icon": "ChartColumn",
+      "eyebrow": "Reports & analytics",
+      "title": "Answers to “how are we doing?” in seconds, not spreadsheets",
+      "description": "Live dashboards for owners and managers: revenue, conversion by source, rep performance and forecast. Schedule a summary to your inbox or WhatsApp every Monday morning.",
+      "points": [
+        "Ready-made dashboards for owners, managers and reps",
+        "Conversion and revenue by lead source",
+        "Rep leaderboards and activity reports",
+        "Scheduled reports by email or WhatsApp"
+      ],
+      "features": [
+        { "icon": "Gauge", "title": "Live dashboards", "description": "Revenue, pipeline and activity updated in real time." },
+        { "icon": "ChartPie", "title": "Source ROI", "description": "See which channels bring revenue, not just leads." },
+        { "icon": "Award", "title": "Leaderboards", "description": "Friendly competition with targets and rep rankings." },
+        { "icon": "CalendarCheck", "title": "Scheduled reports", "description": "A Monday-morning summary, delivered where you'll read it." }
+      ]
+    }
+  ],
+  "platform": [
+    { "icon": "Smartphone", "title": "Android & iOS apps", "description": "Full CRM on the go, with offline mode for field sales and check-ins." },
+    { "icon": "ShieldCheck", "title": "Role-based access", "description": "Control who sees which leads, deals and reports — down to the field." },
+    { "icon": "Lock", "title": "Bank-grade security", "description": "Encryption in transit and at rest, 2FA, SSO and audit logs." },
+    { "icon": "Database", "title": "Data hosted in India", "description": "Your data stays in Indian data centres, with daily backups." },
+    { "icon": "Globe", "title": "Multi-language", "description": "Use TechSync in English, Hindi, Tamil, Marathi and more." },
+    { "icon": "Puzzle", "title": "Custom fields & modules", "description": "Shape TechSync to the way your business works, without code." }
+  ]
+}
