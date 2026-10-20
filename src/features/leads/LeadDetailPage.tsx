@@ -1,3 +1,4 @@
+import { Attachments } from '../files/Attachments'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -291,6 +292,7 @@ export default function LeadDetailPage() {
         </div>
         <div className="space-y-6">
           {lead.status !== 'converted' && <RecordTasks entityType="lead" entityId={lead.id} recordName={lead.displayName} />}
+          <Attachments entityType="lead" entityId={lead.id} />
           <Timeline entityType="lead" entityId={lead.id} recordName={lead.displayName} canPin={canUpdate} />
           <UpcomingSlot kind="files" />
         </div>

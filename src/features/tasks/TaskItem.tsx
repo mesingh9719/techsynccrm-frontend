@@ -81,6 +81,7 @@ export function TaskItem({ task, showRecord = true, canEdit: allowEdit = true }:
   const orgId = useOrgId()
   const { organization } = useOrg()
   const canEdit = useCan('tasks.update') && allowEdit
+  const canDelete = useCan('tasks.delete')
   const queryClient = useQueryClient()
   const notify = useToast()
   const [dialog, setDialog] = useState<null | 'complete' | 'edit'>(null)
@@ -163,7 +164,7 @@ export function TaskItem({ task, showRecord = true, canEdit: allowEdit = true }:
                 </MenuItem>
               )}
               <MenuSeparator />
-              <MenuItem tone="danger" icon={<Trash2 className="size-4" />} onSelect={() => (close(), void act(() => deleteTask(task.id), 'Task deleted'))}>
+              <MenuItem disabled={!canDelete} tone="danger" icon={<Trash2 className="size-4" />} onSelect={() => (close(), void act(() => deleteTask(task.id), 'Task deleted'))}>
                 Delete
               </MenuItem>
             </>

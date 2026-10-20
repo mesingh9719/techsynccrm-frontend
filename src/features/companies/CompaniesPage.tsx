@@ -1,3 +1,5 @@
+import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
+import { DataTools } from '../transfer/DataTools'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -61,7 +63,7 @@ export default function CompaniesPage() {
   const list = useRecordList(qk.org(orgId).companies.lists, params, (p) => listCompanies({ ...p, limit: 50 }))
   const rows = useMemo(() => list.data?.pages.flatMap((p) => p.items) ?? [], [list.data])
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useCreateFromUrl()
   const [dialog, setDialog] = useState<null | 'assign' | 'tag' | 'untag' | 'delete' | 'merge'>(null)
   const columns = useColumnPrefs(`techsync:${orgId}:companies:columns`, ['industry', 'contacts', 'city', 'owner'])
   const activeDefs = (defs.data ?? []).filter((d) => !d.archived)
@@ -108,13 +110,15 @@ export default function CompaniesPage() {
       <PageHeader
         title="Companies"
         description="The businesses you work with, their people and deals."
-        actions={
-          canCreate && (
+        actions={<>
+          <DataTools entityType="company" filters={params} columns={['name', ...columns.visible.filter((key) => optional.some((c) => c.key === key)).map((key) => ({ created: 'createdAt', owner: 'owner', phone: 'phoneE164', lastActivity: 'lastActivityAt' } as Record<string, string>)[key] ?? key)]} />
+          {canCreate && (
             <Button onClick={() => setCreating(true)}>
               <Plus className="size-4" aria-hidden="true" />
               New company
             </Button>
-          )
+          )}
+        </>
         }
       />
       <div className="mt-6 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">

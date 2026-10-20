@@ -1,3 +1,5 @@
+import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
+import { DataTools } from '../transfer/DataTools'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -58,7 +60,7 @@ export default function ContactsPage() {
   const rows = useMemo(() => list.data?.pages.flatMap((p) => p.items) ?? [], [list.data])
 
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useCreateFromUrl()
   const [dialog, setDialog] = useState<null | 'assign' | 'tag' | 'untag' | 'delete' | 'merge'>(null)
   const columns = useColumnPrefs(`techsync:${orgId}:contacts:columns`, ['company', 'phone', 'owner', 'lastActivity'])
   const activeDefs = (defs.data ?? []).filter((d) => !d.archived)
@@ -109,13 +111,15 @@ export default function ContactsPage() {
       <PageHeader
         title="Contacts"
         description="Everyone you sell to, with their companies and history."
-        actions={
-          canCreate && (
+        actions={<>
+          <DataTools entityType="contact" filters={params} columns={['displayName', ...columns.visible.filter((key) => optional.some((c) => c.key === key)).map((key) => ({ created: 'createdAt', lastActivity: 'lastActivityAt', owner: 'owner', phone: 'primaryPhoneE164', email: 'primaryEmail', lifecycle: 'lifecycleStage' } as Record<string, string>)[key] ?? key)]} />
+          {canCreate && (
             <Button onClick={() => setCreating(true)}>
               <Plus className="size-4" aria-hidden="true" />
               New contact
             </Button>
-          )
+          )}
+        </>
         }
       />
 

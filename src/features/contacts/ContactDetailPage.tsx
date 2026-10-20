@@ -1,3 +1,4 @@
+import { Attachments } from '../files/Attachments'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -239,6 +240,7 @@ export default function ContactDetailPage() {
         <div className="space-y-6">
           <RecordTasks entityType="contact" entityId={contact.id} recordName={contact.displayName} />
           <RecordDeals contact={{ id: contact.id, name: contact.displayName }} />
+          <Attachments entityType="contact" entityId={contact.id} />
           <Timeline entityType="contact" entityId={contact.id} recordName={contact.displayName} canPin={canUpdate} />
           <UpcomingSlot kind="files" />
         </div>

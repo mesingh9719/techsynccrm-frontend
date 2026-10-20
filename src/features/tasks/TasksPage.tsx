@@ -1,3 +1,4 @@
+import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
 import { useState } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarCheck, Plus } from 'lucide-react'
@@ -96,7 +97,7 @@ export default function TasksPage() {
   const canCreate = useCan('tasks.create')
   const canSeeOthers = (user?.organization?.permissions ?? []).some((p) => p === 'tasks.read.all' || p === 'tasks.read.team')
   const { filters, setFilter } = useUrlFilters(['view', 'assignee'] as const)
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useCreateFromUrl()
   const view = (filters.view as Exclude<TaskView, 'all' | 'open'>) ?? 'today'
   const assignee = filters.assignee ?? 'me'
   const params = { view, assigneeId: assignee === 'everyone' ? undefined : assignee, counts: true }

@@ -65,6 +65,7 @@ export interface SettingsNavItem {
 }
 
 export const settingsNav: SettingsNavItem[] = [
+  { key: 'data', label: 'Data transfers', to: '/app/settings/data', ready: true, group: 'Workspace' },
   { key: 'profile', label: 'Profile', to: '/app/settings/profile', ready: true, group: 'You' },
   { key: 'security', label: 'Security', to: '/app/settings/security', ready: true, group: 'You' },
   { key: 'notifications', label: 'Notifications', to: '/app/settings/notifications', ready: true, group: 'You' },

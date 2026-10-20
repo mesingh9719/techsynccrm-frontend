@@ -1,3 +1,5 @@
+import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
+import { DataTools } from '../transfer/DataTools'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -69,7 +71,7 @@ export default function LeadsPage() {
   const counts = list.data?.pages[0]?.counts
 
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useCreateFromUrl()
   const [claiming, setClaiming] = useState<string | null>(null)
   const [dialog, setDialog] = useState<null | 'assign' | 'status' | 'tag' | 'untag' | 'delete'>(null)
   const columns = useColumnPrefs(`techsync:${orgId}:leads:columns`, ['source', 'score', 'owner', 'status', 'lastActivity'])
@@ -168,13 +170,15 @@ export default function LeadsPage() {
       <PageHeader
         title="Leads"
         description="Every enquiry in one place. Claim unassigned ones and reply fast."
-        actions={
-          canCreate && (
+        actions={<>
+          <DataTools entityType="lead" filters={params} columns={['displayName', ...columns.visible.filter((key) => optional.some((c) => c.key === key)).map((key) => ({ budget: 'budgetMinor', created: 'createdAt', source: 'source', lastActivity: 'lastActivityAt', owner: 'owner', phone: 'primaryPhoneE164', email: 'primaryEmail' } as Record<string, string>)[key] ?? key)]} />
+          {canCreate && (
             <Button onClick={() => setCreating(true)}>
               <Plus className="size-4" aria-hidden="true" />
               New lead
             </Button>
-          )
+          )}
+        </>
         }
       />
 

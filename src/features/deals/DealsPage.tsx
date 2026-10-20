@@ -1,3 +1,5 @@
+import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
+import { DataTools } from '../transfer/DataTools'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -340,7 +342,7 @@ export default function DealsPage() {
   const canUpdate = useCan('deals.update')
   const pipelines = usePipelines()
   const { filters, setFilter, activeCount, clearFilters } = useUrlFilters(KEYS)
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useCreateFromUrl()
   const view = (filters.view as 'board' | 'list' | 'forecast' | undefined) ?? 'board'
   const live = (pipelines.data ?? []).filter((p) => !p.archived)
   const pipeline = live.find((p) => p.id === filters.pipelineId) ?? live.find((p) => p.isDefault) ?? live[0]
@@ -352,15 +354,17 @@ export default function DealsPage() {
       <PageHeader
         title="Deals"
         description="Every deal, stage and rupee at a glance."
-        actions={
-          canCreate &&
+        actions={<>
+          <DataTools entityType="deal" filters={listParams} columns={['title', 'valueMinor', 'currency', 'status', 'stage', 'owner', 'expectedCloseDate']} />
+          {canCreate &&
           pipeline &&
           !pipeline.readOnly && (
             <Button onClick={() => setCreating(true)}>
               <Plus className="size-4" aria-hidden="true" />
               New deal
             </Button>
-          )
+          )}
+        </>
         }
       />
       <div className="mt-6 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">

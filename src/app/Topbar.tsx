@@ -13,9 +13,9 @@ import { Button } from '../components/ui/Button'
 
 /** "Create" menu — items enable as their modules ship. Shortcut: c. */
 function CreateMenu() {
+  const navigate = useNavigate()
   const canCreate = useCan('leads.create')
   if (!canCreate) return null
-  const soon = <span className="ml-1 text-xs text-zinc-400">Soon</span>
   return (
     <Menu
       align="end"
@@ -30,20 +30,20 @@ function CreateMenu() {
       {() => (
         <>
           <MenuLabel>Create new</MenuLabel>
-          <MenuItem disabled icon={<Inbox className="size-4" />} onSelect={() => {}}>
-            Lead {soon}
+          <MenuItem icon={<Inbox className="size-4" />} onSelect={() => navigate('/app/leads?create=true')}>
+            Lead
           </MenuItem>
-          <MenuItem disabled icon={<Users className="size-4" />} onSelect={() => {}}>
-            Contact {soon}
+          <MenuItem icon={<Users className="size-4" />} onSelect={() => navigate('/app/contacts?create=true')}>
+            Contact
           </MenuItem>
-          <MenuItem disabled icon={<Building2 className="size-4" />} onSelect={() => {}}>
-            Company {soon}
+          <MenuItem icon={<Building2 className="size-4" />} onSelect={() => navigate('/app/companies?create=true')}>
+            Company
           </MenuItem>
-          <MenuItem disabled icon={<SquareKanban className="size-4" />} onSelect={() => {}}>
-            Deal {soon}
+          <MenuItem icon={<SquareKanban className="size-4" />} onSelect={() => navigate('/app/deals?create=true')}>
+            Deal
           </MenuItem>
-          <MenuItem disabled icon={<ListChecks className="size-4" />} onSelect={() => {}}>
-            Task {soon}
+          <MenuItem icon={<ListChecks className="size-4" />} onSelect={() => navigate('/app/tasks?create=true')}>
+            Task
           </MenuItem>
         </>
       )}
@@ -109,27 +109,36 @@ function UserMenu() {
   )
 }
 
-/** Top bar: mobile menu button, global search (arrives with the CRM modules), create, notifications, account. */
+/** Top bar: record search, create, notifications and account controls. */
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
+  const navigate = useNavigate()
+  const [search, setSearch] = useState('')
+  const [resource, setResource] = useState('leads')
   return (
     <header data-topbar className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-zinc-200/80 bg-white/90 px-4 backdrop-blur sm:px-6">
       <button type="button" onClick={onOpenMenu} className="-ml-1.5 rounded-lg p-1.5 text-zinc-600 hover:bg-zinc-100 lg:hidden" aria-label="Open navigation">
         <MenuIcon className="size-5" aria-hidden="true" />
       </button>
 
-      <div className="relative max-w-md flex-1">
+      <form className="flex min-w-0 max-w-lg flex-1 items-center gap-1" onSubmit={(e) => { e.preventDefault(); if (search.trim()) navigate(`/app/${resource}?${new URLSearchParams({ q: search.trim() })}`) }}>
+        <select aria-label="Search record type" value={resource} onChange={(e) => setResource(e.target.value)} className="hidden max-w-28 rounded-lg bg-zinc-100 px-2 py-2 text-sm sm:block"><option value="leads">Leads</option><option value="contacts">Contacts</option><option value="companies">Companies</option><option value="deals">Deals</option></select>
+        <div className="relative min-w-0 flex-1">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
         <input
           type="search"
           data-global-search-target
-          aria-label="Search the workspace"
+          aria-label={`Search ${resource}`}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           aria-keyshortcuts="/"
-          placeholder="Search leads, contacts, deals…"
+          placeholder={`Search ${resource}…`}
           className="h-9 w-full rounded-lg border border-transparent bg-zinc-100 pr-10 pl-9 text-sm text-zinc-900 placeholder:text-zinc-500 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100 focus:outline-none"
-          title="Search is coming with the leads and contacts modules"
+          title="Enter a search and press Enter"
         />
         <kbd className="pointer-events-none absolute top-1/2 right-2.5 hidden -translate-y-1/2 rounded border border-zinc-300 bg-white px-1.5 font-mono text-[10px] text-zinc-500 sm:block">/</kbd>
-      </div>
+        </div>
+        <button type="submit" className="sr-only">Search records</button>
+      </form>
 
       <div className="ml-auto flex items-center gap-2">
         <CreateMenu />

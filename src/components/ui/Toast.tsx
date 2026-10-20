@@ -6,6 +6,7 @@ interface Toast {
   id: number
   title: string
   description?: string
+  action?: { label: string; onClick: () => void | Promise<void> }
   tone: 'success' | 'error'
 }
 
@@ -51,6 +52,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-zinc-900">{t.title}</p>
               {t.description && <p className={cn('mt-0.5 text-sm text-zinc-600')}>{t.description}</p>}
+              {t.action && <button type="button" className="mt-2 text-sm font-medium text-brand-700" onClick={() => { void t.action?.onClick(); dismiss(t.id) }}>{t.action.label}</button>}
             </div>
             <button
               type="button"
