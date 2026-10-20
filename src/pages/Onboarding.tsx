@@ -19,7 +19,11 @@ const roleSuggestions = ['Founder / Owner', 'Sales manager', 'Sales executive', 
 
 const steps: { title: string; description: string; fields: FieldPath<OnboardingValues>[] }[] = [
   { title: 'About you', description: 'So we can tailor TechSync to how you work.', fields: ['jobRole', 'phone'] },
-  { title: 'Your company', description: 'We’ll set up your workspace with a pipeline for your industry.', fields: ['company', 'industry', 'teamSize'] },
+  {
+    title: 'Your company',
+    description: 'We’ll set up your workspace with a pipeline for your industry.',
+    fields: ['company', 'industry', 'teamSize'],
+  },
   { title: 'Your goals', description: 'Pick what matters most — we’ll show you where to start.', fields: ['goals'] },
 ]
 
@@ -64,7 +68,7 @@ function OnboardingForm({ user }: { user: AuthUser }) {
     setServerError(null)
     try {
       await completeOnboarding(values)
-      navigate('/app', { replace: true, state: { welcome: true } })
+      navigate('/app/setup', { replace: true, state: { welcome: true } })
     } catch (err) {
       setServerError(applyServerErrors(err, setError, allFields))
       // Jump back to the first step with a server-side field error.
@@ -78,7 +82,10 @@ function OnboardingForm({ user }: { user: AuthUser }) {
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-12 sm:py-16">
       {justVerified && (
-        <p className="mb-6 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200" role="status">
+        <p
+          className="mb-6 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200"
+          role="status"
+        >
           <CircleCheck className="size-4 shrink-0" aria-hidden="true" />
           Email verified — welcome, {user.fullName.split(' ')[0]}! Let’s set up your workspace.
         </p>
@@ -90,13 +97,23 @@ function OnboardingForm({ user }: { user: AuthUser }) {
             <span
               className={cn(
                 'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                i < step ? 'bg-brand-600 text-white' : i === step ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-500 ring-1 ring-zinc-200',
+                i < step
+                  ? 'bg-brand-600 text-white'
+                  : i === step
+                    ? 'bg-zinc-900 text-white'
+                    : 'bg-white text-zinc-500 ring-1 ring-zinc-200',
               )}
             >
               {i < step ? <Check className="size-3.5" aria-hidden="true" /> : i + 1}
             </span>
-            <span className={cn('hidden text-sm sm:inline', i === step ? 'font-medium text-zinc-900' : 'text-zinc-500')}>{s.title}</span>
-            {i < steps.length - 1 && <span className={cn('h-px flex-1', i < step ? 'bg-brand-600' : 'bg-zinc-200')} aria-hidden="true" />}
+            <span
+              className={cn('hidden text-sm sm:inline', i === step ? 'font-medium text-zinc-900' : 'text-zinc-500')}
+            >
+              {s.title}
+            </span>
+            {i < steps.length - 1 && (
+              <span className={cn('h-px flex-1', i < step ? 'bg-brand-600' : 'bg-zinc-200')} aria-hidden="true" />
+            )}
           </li>
         ))}
       </ol>
@@ -111,7 +128,9 @@ function OnboardingForm({ user }: { user: AuthUser }) {
                 void next()
               }
         }
-        noValidate className="mt-8 rounded-3xl bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-10">
+        noValidate
+        className="mt-8 rounded-3xl bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-10"
+      >
         <p className="font-mono text-xs font-medium tracking-wider text-zinc-500 uppercase">
           Step {step + 1} of {steps.length}
         </p>
@@ -130,7 +149,14 @@ function OnboardingForm({ user }: { user: AuthUser }) {
               <Field label="Your role" error={errors.jobRole?.message}>
                 {({ id, describedBy, invalid }) => (
                   <>
-                    <Input id={id} autoComplete="organization-title" placeholder="e.g. Founder, Sales manager" aria-describedby={describedBy} invalid={invalid} {...register('jobRole')} />
+                    <Input
+                      id={id}
+                      autoComplete="organization-title"
+                      placeholder="e.g. Founder, Sales manager"
+                      aria-describedby={describedBy}
+                      invalid={invalid}
+                      {...register('jobRole')}
+                    />
                     <div className="mt-2.5 flex flex-wrap gap-2">
                       {roleSuggestions.map((r) => (
                         <button
@@ -139,7 +165,9 @@ function OnboardingForm({ user }: { user: AuthUser }) {
                           onClick={() => setValue('jobRole', r, { shouldValidate: true })}
                           className={cn(
                             'rounded-full px-3 py-1 text-sm ring-1 transition-colors',
-                            jobRole === r ? 'bg-zinc-900 text-white ring-zinc-900' : 'text-zinc-600 ring-zinc-200 hover:ring-zinc-300',
+                            jobRole === r
+                              ? 'bg-zinc-900 text-white ring-zinc-900'
+                              : 'text-zinc-600 ring-zinc-200 hover:ring-zinc-300',
                           )}
                         >
                           {r}
@@ -149,9 +177,22 @@ function OnboardingForm({ user }: { user: AuthUser }) {
                   </>
                 )}
               </Field>
-              <Field label="Phone" optional error={errors.phone?.message} hint="For onboarding help over WhatsApp or a call. We never share it.">
+              <Field
+                label="Phone"
+                optional
+                error={errors.phone?.message}
+                hint="For onboarding help over WhatsApp or a call. We never share it."
+              >
                 {({ id, describedBy, invalid }) => (
-                  <Input id={id} type="tel" autoComplete="tel" placeholder="+91 98450 12345" aria-describedby={describedBy} invalid={invalid} {...register('phone')} />
+                  <Input
+                    id={id}
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="+91 98450 12345"
+                    aria-describedby={describedBy}
+                    invalid={invalid}
+                    {...register('phone')}
+                  />
                 )}
               </Field>
             </>
@@ -161,12 +202,25 @@ function OnboardingForm({ user }: { user: AuthUser }) {
             <>
               <Field label="Company name" error={errors.company?.message}>
                 {({ id, describedBy, invalid }) => (
-                  <Input id={id} autoComplete="organization" autoFocus aria-describedby={describedBy} invalid={invalid} {...register('company')} />
+                  <Input
+                    id={id}
+                    autoComplete="organization"
+                    autoFocus
+                    aria-describedby={describedBy}
+                    invalid={invalid}
+                    {...register('company')}
+                  />
                 )}
               </Field>
               <Field label="Industry" error={errors.industry?.message}>
                 {({ id, describedBy, invalid }) => (
-                  <Select id={id} aria-describedby={describedBy} invalid={invalid} defaultValue="" {...register('industry')}>
+                  <Select
+                    id={id}
+                    aria-describedby={describedBy}
+                    invalid={invalid}
+                    defaultValue=""
+                    {...register('industry')}
+                  >
                     <option value="" disabled>
                       Choose your industry
                     </option>
@@ -186,7 +240,9 @@ function OnboardingForm({ user }: { user: AuthUser }) {
                       key={size}
                       className={cn(
                         'flex h-11 cursor-pointer items-center justify-center rounded-lg text-sm ring-1 transition-colors select-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500',
-                        teamSize === size ? 'bg-zinc-900 font-medium text-white ring-zinc-900' : 'bg-white text-zinc-700 ring-zinc-300 hover:ring-zinc-400',
+                        teamSize === size
+                          ? 'bg-zinc-900 font-medium text-white ring-zinc-900'
+                          : 'bg-white text-zinc-700 ring-zinc-300 hover:ring-zinc-400',
                       )}
                     >
                       <input type="radio" value={size} className="sr-only" {...register('teamSize')} />

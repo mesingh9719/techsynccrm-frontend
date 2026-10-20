@@ -5,6 +5,7 @@ import { qk } from '../../../lib/queryKeys'
 import { useCan } from '../../../lib/useOrg'
 import { ApiError } from '../../../services/http'
 import { Button } from '../../../components/ui/Button'
+import { useToast } from '../../../components/ui/Toast'
 import { Checkbox, Field, FormAlert, Input } from '../../../components/ui/Form'
 import { Dialog } from '../../../components/app/Dialog'
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from '../../../components/app/Menu'
@@ -16,9 +17,22 @@ import type { SavedView } from '../types'
  * "Views" dropdown for a list page: apply a saved filter set, save the current one, delete your
  * own. Admins can share a view with the workspace.
  */
-export function SavedViewsMenu({ entityType, current, onApply }: { entityType: SavedView['entityType']; current: Record<string, string>; onApply: (filters: Record<string, string>) => void }) {
+export function SavedViewsMenu({
+  entityType,
+  current,
+  onApply,
+  columns,
+  onColumnsChange,
+}: {
+  entityType: SavedView['entityType']
+  current: Record<string, string>
+  columns?: string[]
+  onColumnsChange?: (columns: string[]) => void
+  onApply: (filters: Record<string, string>) => void
+}) {
   const orgId = useOrgId()
   const queryClient = useQueryClient()
+  const notify = useToast()
   const views = useSavedViews(entityType)
   const canShare = useCan('settings.workspace.manage')
   const [saving, setSaving] = useState(false)
@@ -33,7 +47,7 @@ export function SavedViewsMenu({ entityType, current, onApply }: { entityType: S
     setBusy(true)
     setError(null)
     try {
-      await createSavedView({ entityType, name: name.trim(), filters: current, isShared: shared })
+      await createSavedView({ entityType, name: name.trim(), filters: current, columns, isShared: shared })
       await refresh()
       setSaving(false)
       setName('')
@@ -52,7 +66,11 @@ export function SavedViewsMenu({ entityType, current, onApply }: { entityType: S
       <Menu
         align="end"
         trigger={(props) => (
-          <button {...props} type="button" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-700 hover:border-zinc-400">
+          <button
+            {...props}
+            type="button"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-700 hover:border-zinc-400"
+          >
             <Bookmark className="size-4 text-zinc-400" aria-hidden="true" />
             <span className="max-w-32 truncate">{active?.name ?? 'Views'}</span>
             <ChevronDown className="size-3.5 text-zinc-400" aria-hidden="true" />
@@ -61,31 +79,59 @@ export function SavedViewsMenu({ entityType, current, onApply }: { entityType: S
       >
         {(close) => (
           <>
+            {views.isPending && (
+              <p role="status" className="px-3 py-2 text-xs text-zinc-500">
+                Loading views…
+              </p>
+            )}
+            {views.isError && (
+              <div role="alert" className="p-2 text-sm text-red-700">
+                Couldn’t load saved views.{' '}
+                <button onClick={() => views.refetch()} className="underline">
+                  Retry
+                </button>
+              </div>
+            )}
             {team.length > 0 && <MenuLabel>Shared with the team</MenuLabel>}
             {team.map((v) => (
-              <MenuItem key={v.id} icon={<Users className="size-4" />} onSelect={() => {
-                onApply(v.filters)
-                close()
-              }}>
+              <MenuItem
+                key={v.id}
+                icon={<Users className="size-4" />}
+                onSelect={() => {
+                  onApply(v.filters)
+                  if (v.columns?.length) onColumnsChange?.(v.columns)
+                  close()
+                }}
+              >
                 {v.name}
               </MenuItem>
             ))}
             {mine.length > 0 && <MenuLabel>Your views</MenuLabel>}
             {mine.map((v) => (
               <div key={v.id} className="flex items-center">
-                <MenuItem icon={<Bookmark className="size-4" />} onSelect={() => {
-                onApply(v.filters)
-                close()
-              }}>
+                <MenuItem
+                  icon={<Bookmark className="size-4" />}
+                  onSelect={() => {
+                    onApply(v.filters)
+                    if (v.columns?.length) onColumnsChange?.(v.columns)
+                    close()
+                  }}
+                >
                   {v.name}
                 </MenuItem>
                 <button
                   type="button"
+                  role="menuitem"
+                  tabIndex={-1}
                   className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600"
                   aria-label={`Delete view ${v.name}`}
                   onClick={async () => {
-                    await deleteSavedView(v.id).catch(() => {})
-                    await refresh()
+                    try {
+                      await deleteSavedView(v.id)
+                      await refresh()
+                    } catch (err) {
+                      notify({ title: err instanceof Error ? err.message : 'Couldn’t delete view', tone: 'error' })
+                    }
                   }}
                 >
                   <Trash2 className="size-3.5" aria-hidden="true" />
@@ -93,10 +139,14 @@ export function SavedViewsMenu({ entityType, current, onApply }: { entityType: S
               </div>
             ))}
             {(team.length > 0 || mine.length > 0) && <MenuSeparator />}
-            <MenuItem icon={<BookmarkPlus className="size-4" />} onSelect={() => {
+            <MenuItem
+              icon={<BookmarkPlus className="size-4" />}
+              onSelect={() => {
+                setError(null)
                 setSaving(true)
                 close()
-              }}>
+              }}
+            >
               Save current filters…
             </MenuItem>
           </>
@@ -106,7 +156,7 @@ export function SavedViewsMenu({ entityType, current, onApply }: { entityType: S
         open={saving}
         onClose={() => setSaving(false)}
         title="Save view"
-        description="Saves the current filters and sort so you can come back to them in one click."
+        description="Saves your filters, sort and visible columns for next time."
         footer={
           <>
             <Button variant="secondary" onClick={() => setSaving(false)}>
@@ -118,8 +168,26 @@ export function SavedViewsMenu({ entityType, current, onApply }: { entityType: S
           </>
         }
       >
-        <Field label="Name">{({ id }) => <Input id={id} value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="e.g. Hot IndiaMART leads" autoFocus />}</Field>
-        {canShare && <Checkbox className="mt-4" label="Share with everyone in the workspace" checked={shared} onChange={(e) => setShared(e.target.checked)} />}
+        <Field label="Name">
+          {({ id }) => (
+            <Input
+              id={id}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={60}
+              placeholder="e.g. Hot IndiaMART leads"
+              autoFocus
+            />
+          )}
+        </Field>
+        {canShare && (
+          <Checkbox
+            className="mt-4"
+            label="Share with everyone in the workspace"
+            checked={shared}
+            onChange={(e) => setShared(e.target.checked)}
+          />
+        )}
         {error && (
           <div className="mt-4">
             <FormAlert>{error}</FormAlert>

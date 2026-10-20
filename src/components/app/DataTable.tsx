@@ -29,10 +29,16 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void
   /** Card layout used below the md breakpoint instead of the table. */
   mobileCard?: (row: T) => ReactNode
+  view?: 'table' | 'cards'
   className?: string
 }
 
-const hideClass = { sm: 'hidden sm:table-cell', md: 'hidden md:table-cell', lg: 'hidden lg:table-cell', xl: 'hidden xl:table-cell' }
+const hideClass = {
+  sm: 'hidden sm:table-cell',
+  md: 'hidden md:table-cell',
+  lg: 'hidden lg:table-cell',
+  xl: 'hidden xl:table-cell',
+}
 
 /**
  * List table for app pages: server-driven sorting (aria-sort), optional row selection, keyboard
@@ -49,6 +55,7 @@ export function DataTable<T>({
   onSelectionChange,
   onRowClick,
   mobileCard,
+  view = 'table',
   className,
 }: DataTableProps<T>) {
   const selectable = Boolean(selectedIds && onSelectionChange)
@@ -84,12 +91,42 @@ export function DataTable<T>({
 
   return (
     <div className={className}>
+      {mobileCard && selectable && (
+        <label className={cn('mb-3 flex items-center gap-2 text-xs text-zinc-500', view !== 'cards' && 'md:hidden')}>
+          <input
+            type="checkbox"
+            aria-label="Select all loaded cards"
+            checked={allSelected}
+            onChange={toggleAll}
+            className="size-4 accent-brand-600"
+          />
+          Select all loaded ({rows.length})
+        </label>
+      )}
       {mobileCard && (
-        <ul className="space-y-2 md:hidden" aria-label={caption}>
+        <ul
+          className={cn(view === 'cards' ? 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-2 md:hidden')}
+          aria-label={caption}
+        >
           {rows.map((row) => (
-            <li key={getRowId(row)}>
+            <li key={getRowId(row)} className="relative min-w-0">
+              {selectable && (
+                <label className="absolute top-3 left-3 z-10 flex size-7 items-center justify-center rounded-md bg-white ring-1 ring-zinc-200">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(selectedIds?.has(getRowId(row)))}
+                    onChange={() => toggle(getRowId(row))}
+                    aria-label={`Select ${caption.toLowerCase()} record ${getRowId(row)}`}
+                    className="size-4 accent-brand-600"
+                  />
+                </label>
+              )}
               {onRowClick ? (
-                <button type="button" onClick={() => onRowClick(row)} className="w-full text-left">
+                <button
+                  type="button"
+                  onClick={() => onRowClick(row)}
+                  className={cn('h-full w-full text-left', selectable && '[&>div]:pl-12')}
+                >
                   {mobileCard(row)}
                 </button>
               ) : (
@@ -99,7 +136,12 @@ export function DataTable<T>({
           ))}
         </ul>
       )}
-      <div className={cn('overflow-x-auto rounded-2xl bg-white ring-1 ring-zinc-200', mobileCard && 'hidden md:block')}>
+      <div
+        className={cn(
+          'overflow-x-auto rounded-xl bg-white ring-1 ring-zinc-200',
+          mobileCard && (view === 'cards' ? 'hidden' : 'hidden md:block'),
+        )}
+      >
         <table className="w-full text-left text-sm">
           <caption className="sr-only">{caption}</caption>
           <thead className="sticky top-0 z-10 bg-zinc-50 text-xs text-zinc-500">
@@ -126,10 +168,19 @@ export function DataTable<T>({
                     key={column.key}
                     scope="col"
                     aria-sort={ariaSort}
-                    className={cn('px-3 py-2.5 font-medium', column.align === 'right' && 'text-right', column.hideBelow && hideClass[column.hideBelow], column.className)}
+                    className={cn(
+                      'px-3 py-2.5 font-medium',
+                      column.align === 'right' && 'text-right',
+                      column.hideBelow && hideClass[column.hideBelow],
+                      column.className,
+                    )}
                   >
                     {column.sortKey && onSortChange ? (
-                      <button type="button" onClick={() => headerSort(column)} className="inline-flex items-center gap-1 hover:text-zinc-900">
+                      <button
+                        type="button"
+                        onClick={() => headerSort(column)}
+                        className="inline-flex items-center gap-1 hover:text-zinc-900"
+                      >
                         {column.header}
                         {active ? (
                           sort?.startsWith('-') ? (
@@ -162,7 +213,8 @@ export function DataTable<T>({
                   aria-selected={selectable ? selected : undefined}
                   className={cn(
                     'transition-colors',
-                    onRowClick && 'cursor-pointer hover:bg-zinc-50 focus-visible:bg-zinc-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
+                    onRowClick &&
+                      'cursor-pointer hover:bg-zinc-50 focus-visible:bg-zinc-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
                     selected && 'bg-brand-50/60',
                   )}
                 >
@@ -180,7 +232,12 @@ export function DataTable<T>({
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className={cn('px-3 py-2.5 text-zinc-700', column.align === 'right' && 'text-right', column.hideBelow && hideClass[column.hideBelow], column.className)}
+                      className={cn(
+                        'px-3 py-2.5 text-zinc-700',
+                        column.align === 'right' && 'text-right',
+                        column.hideBelow && hideClass[column.hideBelow],
+                        column.className,
+                      )}
                     >
                       {column.cell(row)}
                     </td>

@@ -17,7 +17,7 @@ import { ConfirmDialog } from '../../components/app/Dialog'
 import { ErrorState, Skeleton } from '../../components/app/States'
 import { ContactFormDrawer } from '../contacts/ContactFormDrawer'
 import { formatCustomValue } from '../crm/customFieldFormat'
-import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel, UpcomingSlot } from '../crm/components/RecordParts'
+import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel } from '../crm/components/RecordParts'
 import { TagChips } from '../crm/components/Tags'
 import { formatPhone, relativeTime } from '../crm/format'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
@@ -38,7 +38,10 @@ export default function CompanyDetailPage() {
   const queryClient = useQueryClient()
   const notify = useToast()
   const query = useQuery({ queryKey: qk.org(orgId).companies.detail(id), queryFn: () => getCompany(id) })
-  const contacts = useQuery({ queryKey: [...qk.org(orgId).companies.detail(id), 'contacts'], queryFn: () => listCompanyContacts(id) })
+  const contacts = useQuery({
+    queryKey: [...qk.org(orgId).companies.detail(id), 'contacts'],
+    queryFn: () => listCompanyContacts(id),
+  })
   const defs = useCustomFieldDefs('company')
   const canUpdateAny = useCan('companies.update')
   const canDeleteAny = useCan('companies.delete')
@@ -50,7 +53,12 @@ export default function CompanyDetailPage() {
   useSeo({ title: company?.name ?? 'Company', noindex: true })
 
   if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-2xl" />
-  if (query.isError || !company) return <div className="mx-auto max-w-6xl px-4 py-10"><ErrorState error={query.error} onRetry={() => query.refetch()} /></div>
+  if (query.isError || !company)
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <ErrorState error={query.error} onRetry={() => query.refetch()} />
+      </div>
+    )
 
   const permissions = user?.organization?.permissions ?? []
   const ownScoped = (action: string) => permissions.includes(`companies.${action}.own`) && company.ownerId !== user?.id
@@ -91,12 +99,20 @@ export default function CompanyDetailPage() {
                 await refresh()
                 notify({ title: 'Company restored' })
               } catch (err) {
-                if (!handleGlobalApiError(err)) notify({ tone: 'error', title: 'Couldn’t restore', description: err instanceof ApiError ? err.message : undefined })
+                if (!handleGlobalApiError(err))
+                  notify({
+                    tone: 'error',
+                    title: 'Couldn’t restore',
+                    description: err instanceof ApiError ? err.message : undefined,
+                  })
               }
             }}
           />
           {company.mergedIntoId && (
-            <Link to={`/app/companies/${company.mergedIntoId}`} className="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline">
+            <Link
+              to={`/app/companies/${company.mergedIntoId}`}
+              className="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline"
+            >
               Open the company it was merged into →
             </Link>
           )}
@@ -105,10 +121,15 @@ export default function CompanyDetailPage() {
 
       <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-sm font-semibold text-white">{company.name.slice(0, 2).toUpperCase()}</span>
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-sm font-semibold text-white">
+            {company.name.slice(0, 2).toUpperCase()}
+          </span>
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">{company.name}</h1>
-            <p className="mt-0.5 text-sm text-zinc-600">{[company.industry, address?.city, stateName(address?.stateCode)].filter(Boolean).join(' · ') || 'No details yet'}</p>
+            <p className="mt-0.5 text-sm text-zinc-600">
+              {[company.industry, address?.city, stateName(address?.stateCode)].filter(Boolean).join(' · ') ||
+                'No details yet'}
+            </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {company.gstin && <Badge tone="brand">GST registered</Badge>}
               <TagChips tags={company.tags} max={6} />
@@ -117,7 +138,13 @@ export default function CompanyDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           {company.website && (
-            <Button href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noreferrer" variant="secondary" size="sm">
+            <Button
+              href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+              target="_blank"
+              rel="noreferrer"
+              variant="secondary"
+              size="sm"
+            >
               <Globe className="size-4" aria-hidden="true" />
               Website
             </Button>
@@ -147,16 +174,35 @@ export default function CompanyDetailPage() {
           <Panel title="Details">
             <dl className="divide-y divide-zinc-100">
               <FieldRow label="Name">
-                <InlineText label="name" value={company.name} disabled={!canUpdate} onSave={(v) => (v ? patch({ name: v }) : Promise.reject(new Error('A company needs a name')))} />
+                <InlineText
+                  label="name"
+                  value={company.name}
+                  disabled={!canUpdate}
+                  onSave={(v) => (v ? patch({ name: v }) : Promise.reject(new Error('A company needs a name')))}
+                />
               </FieldRow>
               <FieldRow label="Domain">{company.domain ?? '—'}</FieldRow>
               <FieldRow label="Phone">{formatPhone(company.phoneE164, company.phoneRaw)}</FieldRow>
-              <FieldRow label="Email">{company.email ? <a href={`mailto:${company.email}`} className="hover:underline">{company.email}</a> : '—'}</FieldRow>
+              <FieldRow label="Email">
+                {company.email ? (
+                  <a href={`mailto:${company.email}`} className="hover:underline">
+                    {company.email}
+                  </a>
+                ) : (
+                  '—'
+                )}
+              </FieldRow>
               <FieldRow label="Size">{company.size ? `${company.size} employees` : '—'}</FieldRow>
               <FieldRow label="GSTIN">
                 <span className="font-mono text-xs">{company.gstin ?? '—'}</span>
               </FieldRow>
-              <FieldRow label="Billing address">{address ? [address.line1, address.line2, address.city, stateName(address.stateCode), address.pincode].filter(Boolean).join(', ') || '—' : '—'}</FieldRow>
+              <FieldRow label="Billing address">
+                {address
+                  ? [address.line1, address.line2, address.city, stateName(address.stateCode), address.pincode]
+                      .filter(Boolean)
+                      .join(', ') || '—'
+                  : '—'}
+              </FieldRow>
               <FieldRow label="Owner">
                 <OwnerCell owner={company.owner} emptyLabel="No owner" />
               </FieldRow>
@@ -192,7 +238,11 @@ export default function CompanyDetailPage() {
                       <Avatar name={c.displayName} size="sm" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium text-zinc-900">{c.displayName}</span>
-                        <span className="block truncate text-xs text-zinc-500">{[c.role ?? c.title, formatPhone(c.primaryPhoneE164, null)].filter((v) => v && v !== '—').join(' · ')}</span>
+                        <span className="block truncate text-xs text-zinc-500">
+                          {[c.role ?? c.title, formatPhone(c.primaryPhoneE164, null)]
+                            .filter((v) => v && v !== '—')
+                            .join(' · ')}
+                        </span>
                       </span>
                       {c.isPrimary && <Badge>Primary</Badge>}
                     </Link>
@@ -210,7 +260,6 @@ export default function CompanyDetailPage() {
           <RecordTasks entityType="company" entityId={company.id} recordName={company.name} />
           <Attachments entityType="company" entityId={company.id} />
           <Timeline entityType="company" entityId={company.id} recordName={company.name} canPin={canUpdate} />
-          <UpcomingSlot kind="files" />
         </div>
       </div>
 

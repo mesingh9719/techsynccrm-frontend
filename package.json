@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test": "node test/behavior.test.mjs",
     "dev": "vite",
     "build": "node scripts/generate-sitemap.mjs && tsc -b && vite build",
     "lint": "oxlint",
@@ -13,6 +14,9 @@
     "@hookform/resolvers": "^5.9.2",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.104.4",
+    "@tanstack/react-table": "^9.3.1",
+    "@tanstack/react-virtual": "^3.14.21",
+    "libphonenumber-js": "^1.13.15",
     "lucide-react": "^1.59.0",
     "qrcode": "^1.5.4",
     "react": "^19.2.8",

@@ -41,6 +41,12 @@ export function useAppShortcuts() {
         timer = window.setTimeout(() => (pendingG = false), 1000)
       } else if (e.key === '/') {
         // Prefer the page's own search box (lists), else the global one in the top bar.
+        const command = document.querySelector<HTMLButtonElement>('[data-search-trigger]')
+        if (command) {
+          e.preventDefault()
+          command.click()
+          return
+        }
         const boxes = Array.from(document.querySelectorAll<HTMLInputElement>('[data-global-search-target]'))
         const target = boxes.find((b) => !b.closest('[data-topbar]')) ?? boxes[0]
         if (target) {

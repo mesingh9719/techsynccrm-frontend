@@ -1,7 +1,7 @@
 {
   "privacy": {
     "title": "Privacy Policy",
-    "updated": "2026-09-01",
+    "updated": "2026-10-20",
     "intro": "This Privacy Policy explains how TechSync Technologies Pvt. Ltd. (“TechSync”, “we”, “us”) collects, uses and protects personal data when you use our website and CRM services. It is template content and should be reviewed by legal counsel before publication.",
     "sections": [
       {
@@ -40,6 +40,16 @@
         "body": [
           { "type": "p", "text": "Subject to applicable law, including India's Digital Personal Data Protection Act, 2023, you may request access to, correction of, or deletion of your personal data, and withdraw consent for marketing at any time." },
           { "type": "p", "text": "To exercise these rights, email privacy@techsynccrm.com. We respond within 30 days." }
+        ]
+      },
+      {
+        "id": "facebook-data-deletion",
+        "title": "Facebook connection and data deletion",
+        "body": [
+          { "type": "p", "text": "When a workspace administrator connects Facebook, we store the app-scoped Facebook account ID, account name, encrypted access credentials and selected Page/form settings to retrieve authorised lead enquiries. Facebook login status is checked on the integration settings page. We do not automatically connect a workspace based on that status or enable automatic Facebook page-view event logging." },
+          { "type": "p", "text": "To request deletion of your Facebook connection data, open Facebook Settings & Privacy → Settings → Apps and Websites, remove TechSync, then use View Removed Apps and Websites → View → Send Request. Our callback provides a confirmation code and a private URL showing progress. You may also contact privacy@techsynccrm.com with your request or confirmation code." },
+          { "type": "p", "text": "A verified deletion request revokes matching access credentials and removes the associated Facebook account identity, connected Page/form settings and capture receipts. A later connection authorised after the request is outside its scope. This account-connection request does not delete unrelated CRM records about other people; contact the workspace administrator or privacy@techsynccrm.com about those records." },
+          { "type": "p", "text": "Deletion runs in background batches with retries. The status page explains completion or a processing delay. After completion, we remove the encrypted Facebook identifier from the request and retain minimal confirmation hashes and processing timestamps for up to 90 days so you can check its status. Keep the confirmation URL private." }
         ]
       },
       {

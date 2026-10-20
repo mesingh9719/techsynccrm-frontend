@@ -9,6 +9,9 @@ import type { MemberRole } from '../types'
  * matches any scope (all / team / own).
  */
 export type Permission =
+  | 'reports.read'
+  | 'settings.forms.manage'
+  | 'settings.assignment.manage'
   | 'settings.workspace.manage'
   | 'settings.security.manage'
   | 'settings.billing.manage'

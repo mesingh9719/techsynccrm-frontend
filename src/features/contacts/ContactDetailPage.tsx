@@ -15,7 +15,7 @@ import { useToast } from '../../components/ui/Toast'
 import { ConfirmDialog } from '../../components/app/Dialog'
 import { ErrorState, Skeleton } from '../../components/app/States'
 import { formatCustomValue } from '../crm/customFieldFormat'
-import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel, UpcomingSlot } from '../crm/components/RecordParts'
+import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel } from '../crm/components/RecordParts'
 import { TagChips } from '../crm/components/Tags'
 import { formatPhone, lifecycleLabels, relativeTime, whatsappLink } from '../crm/format'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
@@ -25,7 +25,8 @@ import { RecordTasks } from '../tasks/RecordTasks'
 import { deleteContact, getContact, restoreContact, updateContact, type ContactInput } from './api'
 import { ContactFormDrawer } from './ContactFormDrawer'
 
-const dateTime = (iso: string | null) => (iso ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(iso)) : null)
+const dateTime = (iso: string | null) =>
+  iso ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(iso)) : null
 
 /** /app/contacts/:id — header, details with inline edit, companies, consent; slots for timeline, deals, files. */
 export default function ContactDetailPage() {
@@ -45,7 +46,12 @@ export default function ContactDetailPage() {
   useSeo({ title: contact?.displayName ?? 'Contact', noindex: true })
 
   if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-2xl" />
-  if (query.isError || !contact) return <div className="mx-auto max-w-6xl px-4 py-10"><ErrorState error={query.error} onRetry={() => query.refetch()} /></div>
+  if (query.isError || !contact)
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <ErrorState error={query.error} onRetry={() => query.refetch()} />
+      </div>
+    )
 
   // Own-scope roles can only change records they own (the server enforces this too).
   const permissions = user?.organization?.permissions ?? []
@@ -90,12 +96,20 @@ export default function ContactDetailPage() {
                 await refresh()
                 notify({ title: 'Contact restored' })
               } catch (err) {
-                if (!handleGlobalApiError(err)) notify({ tone: 'error', title: 'Couldn’t restore', description: err instanceof ApiError ? err.message : undefined })
+                if (!handleGlobalApiError(err))
+                  notify({
+                    tone: 'error',
+                    title: 'Couldn’t restore',
+                    description: err instanceof ApiError ? err.message : undefined,
+                  })
               }
             }}
           />
           {contact.mergedIntoId && (
-            <Link to={`/app/contacts/${contact.mergedIntoId}`} className="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline">
+            <Link
+              to={`/app/contacts/${contact.mergedIntoId}`}
+              className="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline"
+            >
               Open the contact it was merged into →
             </Link>
           )}
@@ -107,9 +121,14 @@ export default function ContactDetailPage() {
           <Avatar name={contact.displayName} size="lg" />
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">{contact.displayName}</h1>
-            <p className="mt-0.5 text-sm text-zinc-600">{[contact.title, contact.companies.find((c) => c.isPrimary)?.name].filter(Boolean).join(' at ') || 'No company yet'}</p>
+            <p className="mt-0.5 text-sm text-zinc-600">
+              {[contact.title, contact.companies.find((c) => c.isPrimary)?.name].filter(Boolean).join(' at ') ||
+                'No company yet'}
+            </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Badge tone={contact.lifecycleStage === 'customer' ? 'success' : 'neutral'}>{lifecycleLabels[contact.lifecycleStage]}</Badge>
+              <Badge tone={contact.lifecycleStage === 'customer' ? 'success' : 'neutral'}>
+                {lifecycleLabels[contact.lifecycleStage]}
+              </Badge>
               <TagChips tags={contact.tags} max={6} />
             </div>
           </div>
@@ -122,7 +141,13 @@ export default function ContactDetailPage() {
             </Button>
           )}
           {primaryPhone?.e164 && (
-            <Button href={whatsappLink(primaryPhone.e164)!} target="_blank" rel="noreferrer" variant="secondary" size="sm">
+            <Button
+              href={whatsappLink(primaryPhone.e164)!}
+              target="_blank"
+              rel="noreferrer"
+              variant="secondary"
+              size="sm"
+            >
               <MessageCircle className="size-4" aria-hidden="true" />
               WhatsApp
             </Button>
@@ -152,13 +177,28 @@ export default function ContactDetailPage() {
           <Panel title="Details">
             <dl className="divide-y divide-zinc-100">
               <FieldRow label="First name">
-                <InlineText label="first name" value={contact.firstName} disabled={!canUpdate} onSave={(v) => patch({ firstName: v })} />
+                <InlineText
+                  label="first name"
+                  value={contact.firstName}
+                  disabled={!canUpdate}
+                  onSave={(v) => patch({ firstName: v })}
+                />
               </FieldRow>
               <FieldRow label="Last name">
-                <InlineText label="last name" value={contact.lastName} disabled={!canUpdate} onSave={(v) => patch({ lastName: v })} />
+                <InlineText
+                  label="last name"
+                  value={contact.lastName}
+                  disabled={!canUpdate}
+                  onSave={(v) => patch({ lastName: v })}
+                />
               </FieldRow>
               <FieldRow label="Job title">
-                <InlineText label="job title" value={contact.title} disabled={!canUpdate} onSave={(v) => patch({ title: v })} />
+                <InlineText
+                  label="job title"
+                  value={contact.title}
+                  disabled={!canUpdate}
+                  onSave={(v) => patch({ title: v })}
+                />
               </FieldRow>
               <FieldRow label="Phone">
                 {contact.phones.length ? (
@@ -198,7 +238,12 @@ export default function ContactDetailPage() {
                 <OwnerCell owner={contact.owner} emptyLabel="No owner" />
               </FieldRow>
               <FieldRow label="Source">
-                <InlineText label="source" value={contact.source} disabled={!canUpdate} onSave={(v) => patch({ source: v })} />
+                <InlineText
+                  label="source"
+                  value={contact.source}
+                  disabled={!canUpdate}
+                  onSave={(v) => patch({ source: v })}
+                />
               </FieldRow>
               <FieldRow label="Created">{relativeTime(contact.createdAt)}</FieldRow>
               {activeDefs.map((d) => (
@@ -224,14 +269,20 @@ export default function ContactDetailPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-zinc-500">Not linked to a company.{canUpdate && ' Edit the contact to link one.'}</p>
+              <p className="text-sm text-zinc-500">
+                Not linked to a company.{canUpdate && ' Edit the contact to link one.'}
+              </p>
             )}
           </Panel>
 
           <Panel title="Consent">
             <dl className="divide-y divide-zinc-100">
-              <FieldRow label="WhatsApp">{contact.whatsappOptInAt ? `Opted in ${dateTime(contact.whatsappOptInAt)}` : 'Not opted in'}</FieldRow>
-              <FieldRow label="Marketing email">{contact.emailOptInAt ? `Opted in ${dateTime(contact.emailOptInAt)}` : 'Not opted in'}</FieldRow>
+              <FieldRow label="WhatsApp">
+                {contact.whatsappOptInAt ? `Opted in ${dateTime(contact.whatsappOptInAt)}` : 'Not opted in'}
+              </FieldRow>
+              <FieldRow label="Marketing email">
+                {contact.emailOptInAt ? `Opted in ${dateTime(contact.emailOptInAt)}` : 'Not opted in'}
+              </FieldRow>
               {contact.optOutAt && <FieldRow label="Opted out">{dateTime(contact.optOutAt)}</FieldRow>}
             </dl>
           </Panel>
@@ -242,7 +293,6 @@ export default function ContactDetailPage() {
           <RecordDeals contact={{ id: contact.id, name: contact.displayName }} />
           <Attachments entityType="contact" entityId={contact.id} />
           <Timeline entityType="contact" entityId={contact.id} recordName={contact.displayName} canPin={canUpdate} />
-          <UpcomingSlot kind="files" />
         </div>
       </div>
 

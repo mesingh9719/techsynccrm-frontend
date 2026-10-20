@@ -4,6 +4,7 @@ import { Layout } from './components/layout/Layout'
 import { FocusedLayout } from './components/layout/FocusedLayout'
 import { RootShell } from './components/app/RootShell'
 import type { RouteHandle } from './app/pages/ComingSoon'
+import { FullPageSpinner } from './components/auth/Guards'
 import { RouteError } from './pages/RouteError'
 
 /** Wraps a dynamic page import so each route ships as its own chunk. */
@@ -66,7 +67,10 @@ const appRoutes: RouteObject = {
   lazy: page(() => import('./app/AppLayout')),
   errorElement: <RouteError />,
   children: [
-    { index: true, lazy: page(() => import('./app/pages/AppHome')) },
+    { index: true, lazy: page(() => import('./features/dashboard/DashboardPage')) },
+    { path: 'setup', lazy: page(() => import('./features/onboarding/SetupPage')) },
+    { path: 'integrations', lazy: page(() => import('./features/integrations/IntegrationsPage')) },
+    { path: 'settings/forms/:id', lazy: page(() => import('./features/capture/FormBuilderPage')) },
     { path: 'leads', lazy: page(() => import('./features/leads/LeadsPage')) },
     { path: 'leads/:id', lazy: page(() => import('./features/leads/LeadDetailPage')) },
     { path: 'contacts', lazy: page(() => import('./features/contacts/ContactsPage')) },
@@ -79,14 +83,22 @@ const appRoutes: RouteObject = {
     { path: 'import', lazy: page(() => import('./features/transfer/ImportPage')) },
     soon('inbox', { title: 'Inbox', module: 'M19', description: 'A shared WhatsApp and email inbox for your team.' }),
     soon('quotes', { title: 'Quotes', module: 'M17', description: 'GST-ready quotes from your product catalogue.' }),
-    soon('reports', { title: 'Reports', module: 'M15', description: 'Revenue, conversion by source and team performance at a glance.' }),
-    soon('automation', { title: 'Automation', module: 'M18', description: 'Follow-ups and assignments that run themselves.' }),
+    { path: 'reports', lazy: page(() => import('./features/reports/ReportsPage')) },
+    soon('automation', {
+      title: 'Automation',
+      module: 'M18',
+      description: 'Follow-ups and assignments that run themselves.',
+    }),
     { path: 'notifications', lazy: page(() => import('./features/notifications/NotificationInbox')) },
     {
       path: 'settings',
       lazy: page(() => import('./app/pages/SettingsLayout')),
       children: [
         { index: true, element: <Navigate to="workspace" replace /> },
+        { path: 'forms', lazy: page(() => import('./features/capture/WebFormsPage')) },
+        { path: 'assignment', lazy: page(() => import('./features/capture/AssignmentPage')) },
+        { path: 'tags', lazy: page(() => import('./features/tags/TagsSettings')) },
+        { path: 'availability', lazy: page(() => import('./features/capture/AvailabilitySettings')) },
         { path: 'workspace', lazy: page(() => import('./app/pages/WorkspaceSettings')) },
         { path: 'profile', lazy: page(() => import('./app/pages/ProfileSettings')) },
         { path: 'security', lazy: page(() => import('./app/pages/SecuritySettings')) },
@@ -97,6 +109,7 @@ const appRoutes: RouteObject = {
         { path: 'leads', lazy: page(() => import('./features/leads/LeadSettings')) },
         { path: 'plan', lazy: page(() => import('./app/pages/PlanSettings')) },
         { path: 'data', lazy: page(() => import('./features/transfer/DataSettings')) },
+        { path: 'facebook', lazy: page(() => import('./features/facebook/FacebookSettings')) },
         soon('billing', { title: 'Billing', module: 'M16' }),
         soon('*', { title: 'Settings' }),
       ],
@@ -105,6 +118,17 @@ const appRoutes: RouteObject = {
   ],
 }
 
-const routes: RouteObject[] = [{ element: <RootShell />, children: [marketingRoutes, setupRoutes, appRoutes] }]
+const routes: RouteObject[] = [
+  {
+    element: <RootShell />,
+    hydrateFallbackElement: <FullPageSpinner label="Loading TechSync…" />,
+    children: [
+      { path: 'f/:key', lazy: page(() => import('./features/capture/PublicFormPage')), errorElement: <RouteError /> },
+      marketingRoutes,
+      setupRoutes,
+      appRoutes,
+    ],
+  },
+]
 
 export const router = createBrowserRouter(routes)

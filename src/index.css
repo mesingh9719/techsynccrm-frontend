@@ -1,8 +1,8 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   /* Brand: cobalt. Used sparingly — primary actions, links, focus, key data. */
   --color-brand-50: #f0f4ff;
@@ -23,11 +23,20 @@
   --color-series-3: #1baf7a;
 
   --color-canvas: #fbfbfa;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f8fafc;
+  --color-ink: #172033;
+  --color-muted: #64748b;
+  --color-line: #e8edf4;
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-dialog: 1rem;
+  --spacing-page: 2rem;
 
   --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
   --shadow-float: 0 1px 2px rgb(16 24 40 / 0.04), 0 12px 32px -8px rgb(16 24 40 / 0.12);
-  --shadow-frame: 0 0 0 1px rgb(16 24 40 / 0.06), 0 2px 4px rgb(16 24 40 / 0.04),
-    0 24px 64px -16px rgb(16 24 40 / 0.18);
+  --shadow-frame:
+    0 0 0 1px rgb(16 24 40 / 0.06), 0 2px 4px rgb(16 24 40 / 0.04), 0 24px 64px -16px rgb(16 24 40 / 0.18);
 
   --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade-in: fade-in 0.4s ease-out both;
@@ -61,6 +70,112 @@
   }
 }
 
+/* CRM themes also cover the existing feature screens and top-layer dialogs. */
+html[data-crm-theme] {
+  --color-canvas: #f7f9fc;
+  color-scheme: light;
+}
+html[data-crm-theme='dark'] {
+  color-scheme: dark;
+  --color-canvas: #0c1220;
+  --color-surface: #131c2e;
+  --color-surface-subtle: #182235;
+  --color-ink: #eef2ff;
+  --color-muted: #a4b2c8;
+  --color-line: #28344a;
+  --color-zinc-50: #182235;
+  --color-zinc-100: #202b3e;
+  --color-zinc-200: #303d53;
+  --color-zinc-300: #4c5b72;
+  --color-zinc-400: #98a8c1;
+  --color-zinc-500: #a4b2c8;
+  --color-zinc-600: #b9c5d8;
+  --color-zinc-700: #d2dced;
+  --color-zinc-800: #e1e8f5;
+  --color-zinc-900: #edf2fd;
+  --color-zinc-950: #f8faff;
+  --color-brand-50: #1b2551;
+  --color-brand-100: #273466;
+  --color-brand-200: #394a86;
+  --color-brand-700: #a9b7ff;
+  --color-brand-800: #c4cfff;
+  --color-brand-900: #e0e7ff;
+  --color-emerald-50: #092e29;
+  --color-emerald-100: #124b3b;
+  --color-emerald-600: #34d399;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #a7f3d0;
+  --color-emerald-900: #d1fae5;
+  --color-amber-50: #352811;
+  --color-amber-100: #4d3915;
+  --color-amber-200: #72531b;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+  --color-amber-900: #fef3c7;
+  --color-red-50: #391d2a;
+  --color-red-100: #512133;
+  --color-red-200: #7f3041;
+  --color-red-600: #dc354b;
+  --color-red-700: #fda4af;
+  --color-red-800: #fecdd3;
+  --color-red-900: #ffe4e6;
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.12);
+  --shadow-float: 0 12px 36px rgb(0 0 0 / 0.35);
+}
+html[data-crm-theme='dark'] [class~='bg-white'],
+html[data-crm-theme='dark'] [class*='bg-white/'] {
+  background-color: var(--color-surface);
+}
+html[data-crm-theme='dark'] [class~='bg-zinc-900'] {
+  background-color: #3349df;
+  color: white;
+}
+html[data-crm-theme='dark'] [class~='bg-zinc-950'] {
+  background-color: #070b14;
+}
+html[data-crm-theme='dark'] [class*='hover:bg-brand-700']:hover {
+  background-color: #2a3bc4;
+}
+html[data-crm-theme='dark'] [class*='hover:bg-red-700']:hover {
+  background-color: #be123c;
+}
+html[data-crm-theme='dark'] [class~='bg-blue-50'] {
+  background-color: #142d4f;
+  color: #bfdbfe;
+}
+html[data-crm-theme='dark'] [class~='ring-white'] {
+  --tw-ring-color: var(--color-surface);
+}
+
+@layer components {
+  .app-page {
+    @apply mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8 lg:px-9;
+  }
+  .surface {
+    @apply rounded-xl border border-line bg-surface shadow-card;
+  }
+  .section-title {
+    @apply text-[15px] font-semibold tracking-tight text-ink;
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold tracking-[0.12em] text-muted uppercase;
+  }
+}
+
+html[data-crm-theme] .crm-shell {
+  font-size: 14px;
+}
+@media (max-width: 767px) {
+  html[data-crm-theme] button:not([role='option']):not(.compact-control),
+  html[data-crm-theme] select {
+    min-height: 40px;
+  }
+  html[data-crm-theme] input:not([type='checkbox']):not([type='radio']),
+  html[data-crm-theme] textarea {
+    font-size: 16px;
+  }
+}
+
 @layer base {
   html {
     color-scheme: light;
@@ -69,7 +184,7 @@
   }
   body {
     @apply bg-white font-sans text-zinc-900 antialiased;
-    font-feature-settings: "ss01", "cv11";
+    font-feature-settings: 'ss01', 'cv11';
     text-rendering: optimizeLegibility;
   }
   ::selection {
@@ -92,7 +207,7 @@
     text-wrap: pretty;
   }
   button:not(:disabled),
-  [role="button"]:not(:disabled) {
+  [role='button']:not(:disabled) {
     cursor: pointer;
   }
 }
@@ -107,7 +222,7 @@
       transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
     transition-delay: var(--reveal-delay, 0ms);
   }
-  .reveal[data-visible="true"] {
+  .reveal[data-visible='true'] {
     opacity: 1;
     transform: none;
   }

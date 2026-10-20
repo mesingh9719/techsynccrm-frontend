@@ -17,7 +17,7 @@ import { ConfirmDialog } from '../../components/app/Dialog'
 import { ErrorState, Skeleton } from '../../components/app/States'
 import { Timeline } from '../activities/Timeline'
 import { listContacts } from '../contacts/api'
-import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel, UpcomingSlot } from '../crm/components/RecordParts'
+import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel } from '../crm/components/RecordParts'
 import { RecordPicker } from '../crm/components/RecordPicker'
 import { TagChips } from '../crm/components/Tags'
 import { formatCustomValue } from '../crm/customFieldFormat'
@@ -25,14 +25,35 @@ import { formatMinor, formatPhone, relativeTime } from '../crm/format'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
 import type { DealRecord, PipelineStage } from '../crm/types'
 import { RecordTasks } from '../tasks/RecordTasks'
-import { addDealContact, deleteDeal, getDeal, getDealHistory, removeDealContact, restoreDeal, updateDeal, usePipelines, type DealInput } from './api'
+import {
+  addDealContact,
+  deleteDeal,
+  getDeal,
+  getDealHistory,
+  removeDealContact,
+  restoreDeal,
+  updateDeal,
+  usePipelines,
+  type DealInput,
+} from './api'
 import { DealFormDrawer } from './DealFormDrawer'
 import { useDealMover } from './useDealMover'
 
-const duration = (s: number | null) => (s === null ? '' : s < 86_400 ? `${Math.max(1, Math.round(s / 3600))} h` : `${Math.round(s / 86_400)} d`)
+const duration = (s: number | null) =>
+  s === null ? '' : s < 86_400 ? `${Math.max(1, Math.round(s / 3600))} h` : `${Math.round(s / 86_400)} d`
 
 /** Clickable stage stepper: open stages in order, then Won / Lost buttons. */
-function StageStepper({ deal, stages, onMove, disabled }: { deal: DealRecord; stages: PipelineStage[]; onMove: (s: PipelineStage) => void; disabled: boolean }) {
+function StageStepper({
+  deal,
+  stages,
+  onMove,
+  disabled,
+}: {
+  deal: DealRecord
+  stages: PipelineStage[]
+  onMove: (s: PipelineStage) => void
+  disabled: boolean
+}) {
   const open = stages.filter((s) => s.type === 'open')
   const currentIndex = open.findIndex((s) => s.id === deal.stageId)
   const won = stages.find((s) => s.type === 'won')
@@ -52,7 +73,11 @@ function StageStepper({ deal, stages, onMove, disabled }: { deal: DealRecord; st
                 aria-current={current ? 'step' : undefined}
                 className={cn(
                   'flex w-full items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
-                  current ? 'bg-zinc-900 text-white' : done ? 'bg-brand-100 text-brand-800 hover:bg-brand-200' : 'text-zinc-600 hover:bg-white',
+                  current
+                    ? 'bg-zinc-900 text-white'
+                    : done
+                      ? 'bg-brand-100 text-brand-800 hover:bg-brand-200'
+                      : 'text-zinc-600 hover:bg-white',
                   disabled && !current && 'cursor-default hover:bg-transparent',
                 )}
                 title={`${s.name} · ${s.probability}%`}
@@ -66,13 +91,25 @@ function StageStepper({ deal, stages, onMove, disabled }: { deal: DealRecord; st
       </ol>
       <div className="flex shrink-0 gap-2">
         {won && (
-          <Button size="sm" variant={deal.status === 'won' ? 'primary' : 'secondary'} className={deal.status === 'won' ? 'bg-emerald-600 hover:bg-emerald-700' : ''} disabled={disabled || deal.status === 'won'} onClick={() => onMove(won)}>
+          <Button
+            size="sm"
+            variant={deal.status === 'won' ? 'primary' : 'secondary'}
+            className={deal.status === 'won' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+            disabled={disabled || deal.status === 'won'}
+            onClick={() => onMove(won)}
+          >
             <Trophy className="size-4" aria-hidden="true" />
             {deal.status === 'won' ? 'Won' : `Mark ${won.name.toLowerCase()}`}
           </Button>
         )}
         {lost && (
-          <Button size="sm" variant="secondary" className={deal.status === 'lost' ? 'text-red-700 ring-red-200' : ''} disabled={disabled || deal.status === 'lost'} onClick={() => onMove(lost)}>
+          <Button
+            size="sm"
+            variant="secondary"
+            className={deal.status === 'lost' ? 'text-red-700 ring-red-200' : ''}
+            disabled={disabled || deal.status === 'lost'}
+            onClick={() => onMove(lost)}
+          >
             <X className="size-4" aria-hidden="true" />
             {deal.status === 'lost' ? 'Lost' : `Mark ${lost.name.toLowerCase()}`}
           </Button>
@@ -91,7 +128,10 @@ export default function DealDetailPage() {
   const queryClient = useQueryClient()
   const notify = useToast()
   const query = useQuery({ queryKey: qk.org(orgId).deals.detail(id), queryFn: () => getDeal(id) })
-  const history = useQuery({ queryKey: [...qk.org(orgId).deals.detail(id), 'history'], queryFn: () => getDealHistory(id) })
+  const history = useQuery({
+    queryKey: [...qk.org(orgId).deals.detail(id), 'history'],
+    queryFn: () => getDealHistory(id),
+  })
   const pipelines = usePipelines()
   const defs = useCustomFieldDefs('deal')
   const canUpdateAny = useCan('deals.update')
@@ -105,7 +145,12 @@ export default function DealDetailPage() {
   useSeo({ title: deal?.title ?? 'Deal', noindex: true })
 
   if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-2xl" />
-  if (query.isError || !deal) return <div className="mx-auto max-w-6xl px-4 py-10"><ErrorState error={query.error} onRetry={() => query.refetch()} /></div>
+  if (query.isError || !deal)
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <ErrorState error={query.error} onRetry={() => query.refetch()} />
+      </div>
+    )
 
   const permissions = user?.organization?.permissions ?? []
   const ownScoped = (action: string) => permissions.includes(`deals.${action}.own`) && deal.ownerId !== user?.id
@@ -130,7 +175,12 @@ export default function DealDetailPage() {
     try {
       setDeal(await fn())
     } catch (err) {
-      if (!handleGlobalApiError(err)) notify({ tone: 'error', title: 'Couldn’t update contacts', description: err instanceof ApiError ? err.message : undefined })
+      if (!handleGlobalApiError(err))
+        notify({
+          tone: 'error',
+          title: 'Couldn’t update contacts',
+          description: err instanceof ApiError ? err.message : undefined,
+        })
     }
   }
 
@@ -154,7 +204,12 @@ export default function DealDetailPage() {
                 await refresh()
                 notify({ title: 'Deal restored' })
               } catch (err) {
-                if (!handleGlobalApiError(err)) notify({ tone: 'error', title: 'Couldn’t restore', description: err instanceof ApiError ? err.message : undefined })
+                if (!handleGlobalApiError(err))
+                  notify({
+                    tone: 'error',
+                    title: 'Couldn’t restore',
+                    description: err instanceof ApiError ? err.message : undefined,
+                  })
               }
             }}
           />
@@ -165,8 +220,14 @@ export default function DealDetailPage() {
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">{deal.title}</h1>
           <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-600">
-            <span className="text-lg font-semibold text-zinc-950 tabular-nums">{formatMinor(deal.valueMinor, deal.currency)}</span>
-            {deal.status === 'open' && <span className="tabular-nums">Weighted {formatMinor(deal.weightedMinor, deal.currency)} ({deal.probability}%)</span>}
+            <span className="text-lg font-semibold text-zinc-950 tabular-nums">
+              {formatMinor(deal.valueMinor, deal.currency)}
+            </span>
+            {deal.status === 'open' && (
+              <span className="tabular-nums">
+                Weighted {formatMinor(deal.weightedMinor, deal.currency)} ({deal.probability}%)
+              </span>
+            )}
             <span>{deal.pipeline.name}</span>
             {deal.company && (
               <Link to={`/app/companies/${deal.company.id}`} className="inline-flex items-center gap-1 hover:underline">
@@ -176,8 +237,12 @@ export default function DealDetailPage() {
             )}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Badge tone={deal.status === 'won' ? 'success' : deal.status === 'lost' ? 'danger' : 'brand'}>{deal.status === 'open' ? deal.stage.name : deal.status === 'won' ? 'Won' : 'Lost'}</Badge>
-            {deal.status === 'lost' && deal.lostReason && <span className="text-xs text-zinc-500">{deal.lostReason.name}</span>}
+            <Badge tone={deal.status === 'won' ? 'success' : deal.status === 'lost' ? 'danger' : 'brand'}>
+              {deal.status === 'open' ? deal.stage.name : deal.status === 'won' ? 'Won' : 'Lost'}
+            </Badge>
+            {deal.status === 'lost' && deal.lostReason && (
+              <span className="text-xs text-zinc-500">{deal.lostReason.name}</span>
+            )}
             {deal.isRotting && (
               <Badge tone="warning">
                 <Clock className="size-3" aria-hidden="true" />
@@ -204,7 +269,11 @@ export default function DealDetailPage() {
 
       <div className="mt-6">
         <StageStepper deal={deal} stages={stages} disabled={!canUpdate} onMove={(s) => void mover.move(deal, s)} />
-        {pipeline?.readOnly && <p className="mt-2 text-xs text-amber-700">This pipeline is read-only on your plan — the deal can only be marked won or lost.</p>}
+        {pipeline?.readOnly && (
+          <p className="mt-2 text-xs text-amber-700">
+            This pipeline is read-only on your plan — the deal can only be marked won or lost.
+          </p>
+        )}
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
@@ -212,18 +281,33 @@ export default function DealDetailPage() {
           <Panel title="Details">
             <dl className="divide-y divide-zinc-100">
               <FieldRow label="Title">
-                <InlineText label="title" value={deal.title} disabled={!canUpdate} onSave={(v) => (v ? patch({ title: v }) : Promise.reject(new Error('A deal needs a title')))} />
+                <InlineText
+                  label="title"
+                  value={deal.title}
+                  disabled={!canUpdate}
+                  onSave={(v) => (v ? patch({ title: v }) : Promise.reject(new Error('A deal needs a title')))}
+                />
               </FieldRow>
               <FieldRow label="Value">{formatMinor(deal.valueMinor, deal.currency)}</FieldRow>
               <FieldRow label="Expected close">
-                <span className={cn(close && deal.status === 'open' && close.getTime() < now && 'font-medium text-red-600')}>{close ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(close) : '—'}</span>
+                <span
+                  className={cn(close && deal.status === 'open' && close.getTime() < now && 'font-medium text-red-600')}
+                >
+                  {close ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(close) : '—'}
+                </span>
               </FieldRow>
-              <FieldRow label="Probability">{deal.probabilityOverride !== null ? `${deal.probabilityOverride}% (set on deal)` : `${deal.stage.probability}% (stage)`}</FieldRow>
+              <FieldRow label="Probability">
+                {deal.probabilityOverride !== null
+                  ? `${deal.probabilityOverride}% (set on deal)`
+                  : `${deal.stage.probability}% (stage)`}
+              </FieldRow>
               <FieldRow label="Owner">
                 <OwnerCell owner={deal.owner} />
               </FieldRow>
               <FieldRow label="Source">{deal.source?.name ?? '—'}</FieldRow>
-              <FieldRow label="In stage">{deal.status === 'open' ? `${deal.daysInStage} day${deal.daysInStage === 1 ? '' : 's'}` : '—'}</FieldRow>
+              <FieldRow label="In stage">
+                {deal.status === 'open' ? `${deal.daysInStage} day${deal.daysInStage === 1 ? '' : 's'}` : '—'}
+              </FieldRow>
               {deal.leadId && (
                 <FieldRow label="From lead">
                   <Link to={`/app/leads/${deal.leadId}`} className="text-brand-700 hover:underline">
@@ -256,12 +340,20 @@ export default function DealDetailPage() {
               <div className="mb-3">
                 <RecordPicker
                   queryKey={qk.org(orgId).contacts.all}
-                  search={async (q) => (await listContacts({ q, limit: 10 })).items.map((c) => ({ id: c.id, label: c.displayName, hint: c.companies[0]?.name }))}
+                  search={async (q) =>
+                    (await listContacts({ q, limit: 10 })).items.map((c) => ({
+                      id: c.id,
+                      label: c.displayName,
+                      hint: c.companies[0]?.name,
+                    }))
+                  }
                   selected={null}
                   onChange={(o) => {
                     if (!o) return
                     setAddingContact(false)
-                    void contactAction(() => addDealContact(deal.id, { contactId: o.id, isPrimary: !deal.contacts.length }))
+                    void contactAction(() =>
+                      addDealContact(deal.id, { contactId: o.id, isPrimary: !deal.contacts.length }),
+                    )
                   }}
                   placeholder="Search contacts…"
                 />
@@ -273,12 +365,21 @@ export default function DealDetailPage() {
                   <li key={c.contactId} className="flex items-center gap-3 py-2.5">
                     <Avatar name={c.displayName} size="sm" />
                     <Link to={`/app/contacts/${c.contactId}`} className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-zinc-900 hover:underline">{c.displayName}</span>
-                      <span className="block truncate text-xs text-zinc-500">{[c.role, formatPhone(c.primaryPhoneE164, null)].filter((v) => v && v !== '—').join(' · ')}</span>
+                      <span className="block truncate text-sm font-medium text-zinc-900 hover:underline">
+                        {c.displayName}
+                      </span>
+                      <span className="block truncate text-xs text-zinc-500">
+                        {[c.role, formatPhone(c.primaryPhoneE164, null)].filter((v) => v && v !== '—').join(' · ')}
+                      </span>
                     </Link>
                     {c.isPrimary && deal.contacts.length > 1 && <Badge>Primary</Badge>}
                     {canUpdate && (
-                      <button type="button" onClick={() => contactAction(() => removeDealContact(deal.id, c.contactId))} className="rounded p-1 text-zinc-400 hover:text-red-600" aria-label={`Remove ${c.displayName}`}>
+                      <button
+                        type="button"
+                        onClick={() => contactAction(() => removeDealContact(deal.id, c.contactId))}
+                        className="rounded p-1 text-zinc-400 hover:text-red-600"
+                        aria-label={`Remove ${c.displayName}`}
+                      >
                         <X className="size-4" aria-hidden="true" />
                       </button>
                     )}
@@ -301,8 +402,11 @@ export default function DealDetailPage() {
                     <span className="min-w-0 flex-1">
                       {h.from ? (
                         <span className="inline-flex flex-wrap items-center gap-1">
-                          {h.from.name} <ArrowRight className="size-3 text-zinc-400" aria-hidden="true" /> <strong className="font-medium">{h.to.name}</strong>
-                          {h.secondsInPrevStage !== null && <span className="text-xs text-zinc-500">after {duration(h.secondsInPrevStage)}</span>}
+                          {h.from.name} <ArrowRight className="size-3 text-zinc-400" aria-hidden="true" />{' '}
+                          <strong className="font-medium">{h.to.name}</strong>
+                          {h.secondsInPrevStage !== null && (
+                            <span className="text-xs text-zinc-500">after {duration(h.secondsInPrevStage)}</span>
+                          )}
                         </span>
                       ) : (
                         <span>
@@ -324,7 +428,6 @@ export default function DealDetailPage() {
           <RecordTasks entityType="deal" entityId={deal.id} recordName={deal.title} />
           <Attachments entityType="deal" entityId={deal.id} />
           <Timeline entityType="deal" entityId={deal.id} recordName={deal.title} canPin={canUpdate} />
-          <UpcomingSlot kind="files" />
         </div>
       </div>
 

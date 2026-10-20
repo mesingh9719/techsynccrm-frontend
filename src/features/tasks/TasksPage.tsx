@@ -34,7 +34,15 @@ function groupByDay(tasks: Task[], completed: boolean, timeZone: string) {
   const groups: { label: string; items: Task[] }[] = []
   for (const t of tasks) {
     const at = completed ? t.completedAt : t.dueAt
-    const label = at ? new Intl.DateTimeFormat('en-IN', { timeZone, year: 'numeric', weekday: 'long', day: 'numeric', month: 'short' }).format(new Date(at)) : 'No due date'
+    const label = at
+      ? new Intl.DateTimeFormat('en-IN', {
+          timeZone,
+          year: 'numeric',
+          weekday: 'long',
+          day: 'numeric',
+          month: 'short',
+        }).format(new Date(at))
+      : 'No due date'
     if (groups.at(-1)?.label !== label) groups.push({ label, items: [] })
     groups.at(-1)!.items.push(t)
   }
@@ -56,11 +64,19 @@ function QuickAdd() {
     if (!title.trim()) return
     setBusy(true)
     try {
-      await createTask({ title: title.trim(), dueAt: (presets.find((p) => p.key === preset) ?? presets[0]).date.toISOString() })
+      await createTask({
+        title: title.trim(),
+        dueAt: (presets.find((p) => p.key === preset) ?? presets[0]).date.toISOString(),
+      })
       setTitle('')
       await queryClient.invalidateQueries({ queryKey: qk.org(orgId).tasks })
     } catch (err) {
-      if (!handleGlobalApiError(err)) notify({ tone: 'error', title: 'Couldn’t add the task', description: err instanceof ApiError ? err.message : undefined })
+      if (!handleGlobalApiError(err))
+        notify({
+          tone: 'error',
+          title: 'Couldn’t add the task',
+          description: err instanceof ApiError ? err.message : undefined,
+        })
     } finally {
       setBusy(false)
     }
@@ -73,7 +89,13 @@ function QuickAdd() {
       }}
       className="flex flex-col gap-2 rounded-2xl bg-white p-3 shadow-card ring-1 ring-zinc-200 sm:flex-row"
     >
-      <Input aria-label="New task" placeholder="Add a task… e.g. Send price list to Ritika" value={title} onChange={(e) => setTitle(e.target.value)} className="h-10!" />
+      <Input
+        aria-label="New task"
+        placeholder="Add a task… e.g. Send price list to Ritika"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="h-10!"
+      />
       <Select aria-label="Due" value={preset} onChange={(e) => setPreset(e.target.value)} className="h-10! sm:w-48">
         {presets.map((p) => (
           <option key={p.key} value={p.key}>
@@ -95,13 +117,20 @@ export default function TasksPage() {
   const { organization } = useOrg()
   const orgId = useOrgId()
   const canCreate = useCan('tasks.create')
-  const canSeeOthers = (user?.organization?.permissions ?? []).some((p) => p === 'tasks.read.all' || p === 'tasks.read.team')
+  const canSeeOthers = (user?.organization?.permissions ?? []).some(
+    (p) => p === 'tasks.read.all' || p === 'tasks.read.team',
+  )
   const { filters, setFilter } = useUrlFilters(['view', 'assignee'] as const)
   const [creating, setCreating] = useCreateFromUrl()
   const view = (filters.view as Exclude<TaskView, 'all' | 'open'>) ?? 'today'
   const assignee = filters.assignee ?? 'me'
   const params = { view, assigneeId: assignee === 'everyone' ? undefined : assignee, counts: true }
-  const tasks = useInfiniteQuery({ queryKey: qk.org(orgId).taskList(params), queryFn: ({ pageParam }) => listTasks({ ...params, cursor: pageParam }), initialPageParam: undefined as string | undefined, getNextPageParam: (last) => last.nextCursor ?? undefined })
+  const tasks = useInfiniteQuery({
+    queryKey: qk.org(orgId).taskList(params),
+    queryFn: ({ pageParam }) => listTasks({ ...params, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+  })
   const counts = tasks.data?.pages[0]?.counts
   const items = tasks.data?.pages.flatMap((p) => p.items) ?? []
   const canEdit = useCan('tasks.update')
@@ -126,7 +155,7 @@ export default function TasksPage() {
         </div>
       )}
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="no-scrollbar -mx-1 flex gap-1 overflow-x-auto px-1" role="tablist" aria-label="Task views">
+        <div className="no-scrollbar -mx-1 flex gap-1 overflow-x-auto px-1" role="group" aria-label="Task views">
           {VIEWS.map((v) => {
             const active = view === v.value
             const n = counts?.[v.value]
@@ -134,20 +163,45 @@ export default function TasksPage() {
               <button
                 key={v.value}
                 type="button"
-                role="tab"
-                aria-selected={active}
+                aria-pressed={active}
                 onClick={() => setFilter('view', v.value === 'today' ? undefined : v.value)}
-                className={cn('inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-medium', active ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100')}
+                className={cn(
+                  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-medium',
+                  active ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100',
+                )}
               >
                 {v.label}
-                {n !== undefined && <span className={cn('tabular-nums', v.value === 'overdue' && n > 0 && !active ? 'text-red-600' : 'text-zinc-400')}>{n}</span>}
+                {n !== undefined && (
+                  <span
+                    className={cn(
+                      'tabular-nums',
+                      v.value === 'overdue' && n > 0 && !active ? 'text-red-600' : 'text-zinc-400',
+                    )}
+                  >
+                    {n}
+                  </span>
+                )}
               </button>
             )
           })}
         </div>
         {canSeeOthers && (
           <div className="flex items-center gap-2">
-            <Select aria-label="Whose tasks" value={assignee === 'me' || assignee === 'everyone' ? assignee : 'member'} onChange={(e) => setFilter('assignee', e.target.value === 'me' ? undefined : e.target.value === 'member' ? (user?.id ?? undefined) : e.target.value)} className="h-9! w-40 text-sm">
+            <Select
+              aria-label="Whose tasks"
+              value={assignee === 'me' || assignee === 'everyone' ? assignee : 'member'}
+              onChange={(e) =>
+                setFilter(
+                  'assignee',
+                  e.target.value === 'me'
+                    ? undefined
+                    : e.target.value === 'member'
+                      ? (user?.id ?? undefined)
+                      : e.target.value,
+                )
+              }
+              className="h-9! w-40 text-sm"
+            >
               <option value="me">My tasks</option>
               <option value="everyone">Everyone</option>
               <option value="member">A teammate…</option>
@@ -169,8 +223,28 @@ export default function TasksPage() {
         ) : !items.length ? (
           <EmptyState
             icon={CalendarCheck}
-            title={view === 'overdue' ? 'Nothing overdue' : view === 'today' ? 'Nothing due today' : view === 'completed' ? 'No completed tasks yet' : 'Nothing coming up'}
-            description={view === 'overdue' || view === 'today' ? 'You’re all caught up.' : 'Add follow-ups from any lead, contact or deal.'}
+            title={
+              view === 'overdue'
+                ? 'Nothing overdue'
+                : view === 'today'
+                  ? 'Nothing due today'
+                  : view === 'completed'
+                    ? 'No completed tasks yet'
+                    : 'Nothing coming up'
+            }
+            description={
+              view === 'overdue' || view === 'today'
+                ? 'You’re all caught up. Plan your next conversation with a follow-up.'
+                : 'Add follow-ups from any lead, contact or deal.'
+            }
+            action={
+              canCreate ? (
+                <Button onClick={() => setCreating(true)}>
+                  <Plus className="size-4" />
+                  Schedule a follow-up
+                </Button>
+              ) : undefined
+            }
           />
         ) : (
           <div className="space-y-5">
@@ -184,7 +258,11 @@ export default function TasksPage() {
                 </ul>
               </section>
             ))}
-            <LoadMore hasMore={Boolean(tasks.hasNextPage)} loading={tasks.isFetchingNextPage} onLoadMore={() => tasks.fetchNextPage()} />
+            <LoadMore
+              hasMore={Boolean(tasks.hasNextPage)}
+              loading={tasks.isFetchingNextPage}
+              onLoadMore={() => tasks.fetchNextPage()}
+            />
           </div>
         )}
       </div>

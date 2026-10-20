@@ -1,6 +1,6 @@
 import { CalendarCheck } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
-import { Skeleton } from '../../components/app/States'
+import { ErrorState, Skeleton } from '../../components/app/States'
 import { useTaskSummary } from './useTaskSummary'
 import { TaskItem } from './TaskItem'
 
@@ -18,7 +18,9 @@ export function MyDay() {
           {summary.data && (
             <p className="mt-1 text-sm text-zinc-500">
               {summary.data.today} due today
-              {summary.data.overdue > 0 && <span className="font-medium text-red-600"> · {summary.data.overdue} overdue</span>}
+              {summary.data.overdue > 0 && (
+                <span className="font-medium text-red-600"> · {summary.data.overdue} overdue</span>
+              )}
             </p>
           )}
         </div>
@@ -29,6 +31,8 @@ export function MyDay() {
       <div className="mt-4">
         {summary.isPending ? (
           <Skeleton className="h-24" />
+        ) : summary.isError ? (
+          <ErrorState error={summary.error} onRetry={() => summary.refetch()} />
         ) : summary.data?.tasks.length ? (
           <ul className="divide-y divide-zinc-100">
             {summary.data.tasks.map((t) => (
@@ -36,7 +40,9 @@ export function MyDay() {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-zinc-500">Nothing due today. Add follow-ups from your leads and deals so you never forget a call back.</p>
+          <p className="text-sm text-zinc-500">
+            Nothing due today. Add follow-ups from your leads and deals so you never forget a call back.
+          </p>
         )}
       </div>
     </section>

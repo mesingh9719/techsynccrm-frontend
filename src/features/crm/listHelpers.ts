@@ -26,7 +26,15 @@ export function useColumnPrefs(storageKey: string, defaults: string[]) {
       }
       return next
     })
-  return { visible, toggle }
+  const replace = (values: string[]) => {
+    setVisible(values)
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(values))
+    } catch {
+      /* Browser-only preference. */
+    }
+  }
+  return { visible, toggle, setVisible: replace }
 }
 
 /** Select/checkbox custom fields that can be filtered with `cf.<key>=value`. */
@@ -45,10 +53,23 @@ export function bulkSummary(result: BulkResult, verb: string) {
   const failed = result.failed.length
   return {
     title: `${ok} ${ok === 1 ? 'record' : 'records'} ${verb}`,
-    description: failed ? `${failed} skipped — you can’t change ${failed === 1 ? 'it' : 'them'}, or ${failed === 1 ? 'it' : 'they'} changed meanwhile.` : undefined,
+    description: failed
+      ? `${failed} skipped — you can’t change ${failed === 1 ? 'it' : 'them'}, or ${failed === 1 ? 'it' : 'they'} changed meanwhile.`
+      : undefined,
   }
 }
 
 /** Drops empty contact-point rows before sending. */
-export const cleanEmails = (rows: EmailDraft[]) => rows.filter((r) => r.value.trim()).map((r) => ({ value: r.value.trim(), label: r.label ?? null, primary: Boolean(r.primary) }))
-export const cleanPhones = (rows: PhoneDraft[]) => rows.filter((r) => r.raw.trim()).map((r) => ({ raw: r.raw.trim(), label: r.label ?? null, primary: Boolean(r.primary), whatsapp: Boolean(r.whatsapp) }))
+export const cleanEmails = (rows: EmailDraft[]) =>
+  rows
+    .filter((r) => r.value.trim())
+    .map((r) => ({ value: r.value.trim(), label: r.label ?? null, primary: Boolean(r.primary) }))
+export const cleanPhones = (rows: PhoneDraft[]) =>
+  rows
+    .filter((r) => r.raw.trim())
+    .map((r) => ({
+      raw: r.raw.trim(),
+      label: r.label ?? null,
+      primary: Boolean(r.primary),
+      whatsapp: Boolean(r.whatsapp),
+    }))

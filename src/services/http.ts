@@ -80,6 +80,8 @@ export function clearSession() {
 type QueryValue = string | number | boolean | null | undefined | Array<string | number>
 
 export interface RequestOptions {
+  /** Public form requests omit both the session token and cookies. */
+  anonymous?: boolean
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   /** JSON-serialisable value, or FormData (sent as multipart, without a JSON content type). */
   body?: unknown
@@ -106,17 +108,20 @@ export function buildUrl(path: string, query?: Record<string, QueryValue>) {
   return `${API_BASE}${path}${qs ? (path.includes('?') ? '&' : '?') + qs : ''}`
 }
 
-async function send(path: string, { method = 'GET', body, query, ifMatch, signal }: RequestOptions): Promise<Response> {
+async function send(
+  path: string,
+  { method = 'GET', body, query, ifMatch, signal, anonymous }: RequestOptions,
+): Promise<Response> {
   const isForm = body instanceof FormData
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`
+  if (accessToken && !anonymous) headers.Authorization = `Bearer ${accessToken}`
   if (ifMatch) headers['If-Match'] = ifMatch
   try {
     return await fetch(buildUrl(path, query), {
       method,
       headers,
-      credentials: 'include',
+      credentials: anonymous ? 'omit' : 'include',
       body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       signal,
     })
@@ -137,8 +142,11 @@ async function parse<T>(res: Response): Promise<T> {
 
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const res = await send(path, options)
-  if (res.status === 401 && options.retryOnExpiry !== false && accessToken) {
-    const body = await res.clone().json().catch(() => null)
+  if (res.status === 401 && !options.anonymous && options.retryOnExpiry !== false && accessToken) {
+    const body = await res
+      .clone()
+      .json()
+      .catch(() => null)
     if (body?.error?.code === 'TOKEN_EXPIRED' && (await refreshSession())) {
       return parse<T>(await send(path, options))
     }
@@ -192,33 +200,39 @@ export interface UploadOptions {
 }
 
 function xhrUpload(path: string, file: Blob, { fields, fieldName = 'file', onProgress, signal }: UploadOptions) {
-  return new Promise<{ status: number; json: { success?: boolean; data?: unknown; error?: { message?: string; code?: string; details?: Record<string, unknown> } } | null }>(
-    (resolve, reject) => {
-      const form = new FormData()
-      for (const [key, value] of Object.entries(fields ?? {})) form.append(key, value)
-      form.append(fieldName, file)
+  return new Promise<{
+    status: number
+    json: {
+      success?: boolean
+      data?: unknown
+      error?: { message?: string; code?: string; details?: Record<string, unknown> }
+    } | null
+  }>((resolve, reject) => {
+    const form = new FormData()
+    for (const [key, value] of Object.entries(fields ?? {})) form.append(key, value)
+    form.append(fieldName, file)
 
-      const xhr = new XMLHttpRequest()
-      xhr.open('POST', buildUrl(path))
-      xhr.withCredentials = true
-      xhr.setRequestHeader('Accept', 'application/json')
-      if (accessToken) xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`)
-      xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total)
-      xhr.onload = () => {
-        let json = null
-        try {
-          json = JSON.parse(xhr.responseText)
-        } catch {
-          /* non-JSON response */
-        }
-        resolve({ status: xhr.status, json })
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', buildUrl(path))
+    xhr.withCredentials = true
+    xhr.setRequestHeader('Accept', 'application/json')
+    if (accessToken) xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`)
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total)
+    xhr.onload = () => {
+      let json = null
+      try {
+        json = JSON.parse(xhr.responseText)
+      } catch {
+        /* non-JSON response */
       }
-      xhr.onerror = () => reject(new ApiError('Can’t reach the server. Check your connection and try again.', 0, 'NETWORK_ERROR'))
-      xhr.onabort = () => reject(new DOMException('Upload cancelled', 'AbortError'))
-      signal?.addEventListener('abort', () => xhr.abort(), { once: true })
-      xhr.send(form)
-    },
-  )
+      resolve({ status: xhr.status, json })
+    }
+    xhr.onerror = () =>
+      reject(new ApiError('Can’t reach the server. Check your connection and try again.', 0, 'NETWORK_ERROR'))
+    xhr.onabort = () => reject(new DOMException('Upload cancelled', 'AbortError'))
+    signal?.addEventListener('abort', () => xhr.abort(), { once: true })
+    xhr.send(form)
+  })
 }
 
 /** Uploads a file as multipart/form-data, reporting progress (0–1). Refreshes an expired token once. */
@@ -235,15 +249,25 @@ export async function upload<T>(path: string, file: Blob, options: UploadOptions
 }
 
 /** Private-storage POST. Never sends the API access token or refresh cookie to storage. */
-export function postToStorage(url: string, file: File, fields: Record<string, string>, onProgress?: (n: number) => void) {
+export function postToStorage(
+  url: string,
+  file: File,
+  fields: Record<string, string>,
+  onProgress?: (n: number) => void,
+) {
   return new Promise<void>((resolve, reject) => {
     const form = new FormData()
     Object.entries(fields).forEach(([k, v]) => form.append(k, v))
     form.append('file', file)
     const xhr = new XMLHttpRequest()
     xhr.open('POST', url)
-    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(e.loaded / e.total) }
-    xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new ApiError('Storage upload failed. Please try again.', xhr.status))
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress?.(e.loaded / e.total)
+    }
+    xhr.onload = () =>
+      xhr.status >= 200 && xhr.status < 300
+        ? resolve()
+        : reject(new ApiError('Storage upload failed. Please try again.', xhr.status))
     xhr.onerror = () => reject(new ApiError('Storage could not be reached.', 0, 'NETWORK_ERROR'))
     xhr.send(form)
   })

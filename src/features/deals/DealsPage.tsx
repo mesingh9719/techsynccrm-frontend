@@ -38,7 +38,16 @@ const KEYS = ['view', 'pipelineId', 'ownerId', 'q', 'status', 'sort', 'rotting']
 const statusTone = { open: 'brand', won: 'success', lost: 'danger' } as const
 
 function toBoardDeal(d: DealRecord): BoardDeal {
-  return { id: d.id, stageId: d.stageId, company: d.company?.name ?? d.contacts[0]?.displayName ?? d.title, title: d.title, value: d.valueMinor / 100, owner: d.owner?.fullName ?? 'Unassigned', days: d.daysInStage, rotting: d.isRotting }
+  return {
+    id: d.id,
+    stageId: d.stageId,
+    company: d.company?.name ?? d.contacts[0]?.displayName ?? d.title,
+    title: d.title,
+    value: d.valueMinor / 100,
+    owner: d.owner?.fullName ?? 'Unassigned',
+    days: d.daysInStage,
+    rotting: d.isRotting,
+  }
 }
 
 /** Board for one pipeline: optimistic moves, rollback on error, per-column "Load more". */
@@ -50,6 +59,8 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
   const [now] = useState(() => Date.now())
   const key = qk.org(orgId).board(params)
   const board = useQuery({ queryKey: key, queryFn: () => getBoard(params) })
+  const [addingStage, setAddingStage] = useState<string | null>(null)
+  const canCreate = useCan('deals.create')
   const [more, setMore] = useState<Record<string, { deals: DealRecord[]; cursor: string | null; loading: boolean }>>({})
   const [boardData, setBoardData] = useState<Board | undefined>(undefined)
   if (board.data !== boardData) {
@@ -66,8 +77,23 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
         return {
           ...b,
           stages: b.stages.map((col) => {
-            if (col.id === deal.stageId) return { ...col, count: col.count - 1, totalMinor: col.totalMinor - deal.valueMinor, deals: col.deals.filter((d) => d.id !== deal.id) }
-            if (col.id === stage.id) return { ...col, count: col.count + 1, totalMinor: col.totalMinor + deal.valueMinor, deals: [{ ...deal, stageId: stage.id, stage: { ...deal.stage, ...stage }, daysInStage: 0, isRotting: false }, ...col.deals] }
+            if (col.id === deal.stageId)
+              return {
+                ...col,
+                count: col.count - 1,
+                totalMinor: col.totalMinor - deal.valueMinor,
+                deals: col.deals.filter((d) => d.id !== deal.id),
+              }
+            if (col.id === stage.id)
+              return {
+                ...col,
+                count: col.count + 1,
+                totalMinor: col.totalMinor + deal.valueMinor,
+                deals: [
+                  { ...deal, stageId: stage.id, stage: { ...deal.stage, ...stage }, daysInStage: 0, isRotting: false },
+                  ...col.deals,
+                ],
+              }
             return col
           }),
         }
@@ -89,7 +115,10 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
     kind: c.type,
     count: c.count,
     totalLabel: formatINRCompact(c.totalMinor / 100),
-    subtitle: c.type === 'open' ? `${formatINRCompact(c.weightedMinor / 100)} weighted · ${c.probability}%` : `last ${board.data.closedWithinDays} days`,
+    subtitle:
+      c.type === 'open'
+        ? `${formatINRCompact(c.weightedMinor / 100)} weighted · ${c.probability}%`
+        : `last ${board.data.closedWithinDays} days`,
   }))
 
   async function loadMore(col: BoardColumn) {
@@ -97,12 +126,34 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
     setMore((m) => ({ ...m, [col.id]: { deals: state?.deals ?? [], cursor: state?.cursor ?? null, loading: true } }))
     // The list uses the board's order; the first request also covers the 50 already shown.
     try {
-      const page = await listDeals({ ...params, pipelineId: board.data!.pipeline.id, stageId: col.id, sort: 'position', limit: state?.cursor ? 50 : 100, cursor: state?.cursor ?? undefined, ...(col.type !== 'open' && { closedFrom: new Date(now - board.data!.closedWithinDays * 86_400_000).toISOString() }) })
+      const page = await listDeals({
+        ...params,
+        pipelineId: board.data!.pipeline.id,
+        stageId: col.id,
+        sort: 'position',
+        limit: state?.cursor ? 50 : 100,
+        cursor: state?.cursor ?? undefined,
+        ...(col.type !== 'open' && {
+          closedFrom: new Date(now - board.data!.closedWithinDays * 86_400_000).toISOString(),
+        }),
+      })
       const shown = new Set(allDeals.map((d) => d.id))
-      setMore((m) => ({ ...m, [col.id]: { deals: [...(m[col.id]?.deals ?? []), ...page.items.filter((d) => !shown.has(d.id))], cursor: page.nextCursor, loading: false } }))
+      setMore((m) => ({
+        ...m,
+        [col.id]: {
+          deals: [...(m[col.id]?.deals ?? []), ...page.items.filter((d) => !shown.has(d.id))],
+          cursor: page.nextCursor,
+          loading: false,
+        },
+      }))
     } catch (err) {
       setMore((m) => ({ ...m, [col.id]: { deals: state?.deals ?? [], cursor: state?.cursor ?? null, loading: false } }))
-      if (!handleGlobalApiError(err)) notify({ tone: 'error', title: 'Couldn’t load more deals', description: err instanceof ApiError ? err.message : undefined })
+      if (!handleGlobalApiError(err))
+        notify({
+          tone: 'error',
+          title: 'Couldn’t load more deals',
+          description: err instanceof ApiError ? err.message : undefined,
+        })
     }
   }
 
@@ -111,10 +162,16 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-zinc-600">
         <span>
-          Open: <strong className="text-zinc-900 tabular-nums">{formatMinor(totalOpen.reduce((n, c) => n + c.totalMinor, 0))}</strong>
+          Open:{' '}
+          <strong className="text-zinc-900 tabular-nums">
+            {formatMinor(totalOpen.reduce((n, c) => n + c.totalMinor, 0))}
+          </strong>
         </span>
         <span>
-          Weighted: <strong className="text-zinc-900 tabular-nums">{formatMinor(totalOpen.reduce((n, c) => n + c.weightedMinor, 0))}</strong>
+          Weighted:{' '}
+          <strong className="text-zinc-900 tabular-nums">
+            {formatMinor(totalOpen.reduce((n, c) => n + c.weightedMinor, 0))}
+          </strong>
         </span>
         <span className="tabular-nums">{totalOpen.reduce((n, c) => n + c.count, 0)} open deals</span>
         {board.data.pipeline.readOnly && (
@@ -138,14 +195,42 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
           const col = columns.find((c) => c.id === s.id)!
           const extra = more[col.id]
           const hasMore = extra ? Boolean(extra.cursor) || (extra.deals.length === 0 && col.hasMore) : col.hasMore
-          return hasMore ? (
-            <Button size="sm" variant="ghost" className="mt-1 w-full" loading={extra?.loading} onClick={() => loadMore(col)}>
-              Load more
-            </Button>
-          ) : null
+          return (
+            <>
+              {canCreate && !board.data.pipeline.readOnly && s.kind === 'open' && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="mt-2 w-full justify-start text-zinc-500"
+                  onClick={() => setAddingStage(s.id)}
+                >
+                  <Plus className="size-3.5" />
+                  Add deal
+                </Button>
+              )}
+              {hasMore ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="mt-1 w-full"
+                  loading={extra?.loading}
+                  onClick={() => loadMore(col)}
+                >
+                  Load more
+                </Button>
+              ) : null}
+            </>
+          )
         }}
         className="min-h-[420px]"
       />
+      {addingStage && (
+        <DealFormDrawer
+          open
+          onClose={() => setAddingStage(null)}
+          defaults={{ pipelineId: board.data.pipeline.id, stageId: addingStage }}
+        />
+      )}
       {mover.dialog}
     </div>
   )
@@ -179,11 +264,19 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
       cell: (d) => (
         <span className="min-w-0">
           <span className="block truncate font-medium text-zinc-900">{d.title}</span>
-          <span className="block truncate text-xs text-zinc-500">{d.company?.name ?? d.contacts[0]?.displayName ?? ''}</span>
+          <span className="block truncate text-xs text-zinc-500">
+            {d.company?.name ?? d.contacts[0]?.displayName ?? ''}
+          </span>
         </span>
       ),
     },
-    { key: 'value', header: 'Value', sortKey: 'valueMinor', align: 'right', cell: (d) => <span className="font-medium tabular-nums">{formatMinor(d.valueMinor)}</span> },
+    {
+      key: 'value',
+      header: 'Value',
+      sortKey: 'valueMinor',
+      align: 'right',
+      cell: (d) => <span className="font-medium tabular-nums">{formatMinor(d.valueMinor)}</span>,
+    },
     {
       key: 'stage',
       header: 'Stage',
@@ -194,9 +287,26 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
         </span>
       ),
     },
-    { key: 'close', header: 'Expected close', hideBelow: 'md', cell: (d) => (d.expectedCloseDate ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(`${d.expectedCloseDate}T00:00:00`)) : '—') },
+    {
+      key: 'close',
+      header: 'Expected close',
+      hideBelow: 'md',
+      cell: (d) =>
+        d.expectedCloseDate
+          ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(
+              new Date(`${d.expectedCloseDate}T00:00:00`),
+            )
+          : '—',
+    },
     { key: 'owner', header: 'Owner', hideBelow: 'lg', cell: (d) => <OwnerCell owner={d.owner} /> },
-    { key: 'created', header: 'Created', sortKey: 'createdAt', hideBelow: 'xl', align: 'right', cell: (d) => <span className="text-zinc-500">{relativeTime(d.createdAt)}</span> },
+    {
+      key: 'created',
+      header: 'Created',
+      sortKey: 'createdAt',
+      hideBelow: 'xl',
+      align: 'right',
+      cell: (d) => <span className="text-zinc-500">{relativeTime(d.createdAt)}</span>,
+    },
   ]
 
   return (
@@ -239,16 +349,27 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
               <div className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 ring-1 ring-zinc-200">
                 <div className="min-w-0">
                   <p className="truncate font-medium text-zinc-900">{d.title}</p>
-                  <p className="truncate text-xs text-zinc-500">{[d.stage.name, d.company?.name].filter(Boolean).join(' · ')}</p>
+                  <p className="truncate text-xs text-zinc-500">
+                    {[d.stage.name, d.company?.name].filter(Boolean).join(' · ')}
+                  </p>
                 </div>
                 <span className="text-sm font-semibold tabular-nums">{formatINRCompact(d.valueMinor / 100)}</span>
               </div>
             )}
           />
-          <LoadMore hasMore={Boolean(list.hasNextPage)} loading={list.isFetchingNextPage} onLoadMore={() => list.fetchNextPage()} />
+          <LoadMore
+            hasMore={Boolean(list.hasNextPage)}
+            loading={list.isFetchingNextPage}
+            onLoadMore={() => list.fetchNextPage()}
+          />
         </>
       )}
-      <BulkAssignDialog open={dialog === 'assign'} count={selected.size} onClose={() => setDialog(null)} onAssign={(ownerId) => runBulk('assign', { ownerId })} />
+      <BulkAssignDialog
+        open={dialog === 'assign'}
+        count={selected.size}
+        onClose={() => setDialog(null)}
+        onAssign={(ownerId) => runBulk('assign', { ownerId })}
+      />
       <ConfirmDialog
         open={dialog === 'delete'}
         onClose={() => setDialog(null)}
@@ -269,7 +390,10 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
 function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: string }) {
   const orgId = useOrgId()
   const [period, setPeriod] = useState<'month' | 'quarter'>('month')
-  const forecast = useQuery({ queryKey: [...qk.org(orgId).deals.all, 'forecast', pipelineId, ownerId, period], queryFn: () => getForecast({ pipelineId, period, ownerId }) })
+  const forecast = useQuery({
+    queryKey: [...qk.org(orgId).deals.all, 'forecast', pipelineId, ownerId, period],
+    queryFn: () => getForecast({ pipelineId, period, ownerId }),
+  })
   if (forecast.isPending) return <Skeleton className="h-64 rounded-2xl" />
   if (forecast.isError) return <ErrorState error={forecast.error} onRetry={() => forecast.refetch()} />
   const f = forecast.data
@@ -278,9 +402,20 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
     <div className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-zinc-200">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-zinc-600">
-          Weighted forecast <strong className="text-zinc-900 tabular-nums">{formatMinor(f.totals.weightedMinor)}</strong> of {formatMinor(f.totals.totalMinor)} across {f.totals.count} open deals
+          Weighted forecast{' '}
+          <strong className="text-zinc-900 tabular-nums">{formatMinor(f.totals.weightedMinor)}</strong> of{' '}
+          {formatMinor(f.totals.totalMinor)} across {f.totals.count} open deals
         </p>
-        <SegmentedControl label="Group by" size="sm" value={period} onChange={setPeriod} options={[{ value: 'month', label: 'Month' }, { value: 'quarter', label: 'Quarter (FY)' }]} />
+        <SegmentedControl
+          label="Group by"
+          size="sm"
+          value={period}
+          onChange={setPeriod}
+          options={[
+            { value: 'month', label: 'Month' },
+            { value: 'quarter', label: 'Quarter (FY)' },
+          ]}
+        />
       </div>
       {f.periods.length ? (
         <table className="mt-5 w-full text-left text-sm">
@@ -312,8 +447,14 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
                 </th>
                 <td className="py-2.5 pr-4">
                   <div className="relative h-2 rounded-full bg-zinc-100" aria-hidden="true">
-                    <div className="absolute inset-y-0 left-0 rounded-full bg-brand-200" style={{ width: `${(p.totalMinor / max) * 100}%` }} />
-                    <div className="absolute inset-y-0 left-0 rounded-full bg-brand-600" style={{ width: `${(p.weightedMinor / max) * 100}%` }} />
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full bg-brand-200"
+                      style={{ width: `${(p.totalMinor / max) * 100}%` }}
+                    />
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full bg-brand-600"
+                      style={{ width: `${(p.weightedMinor / max) * 100}%` }}
+                    />
                   </div>
                 </td>
                 <td className="py-2.5 text-right font-medium tabular-nums">{formatMinor(p.weightedMinor)}</td>
@@ -328,7 +469,8 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
       )}
       {f.noCloseDate.count > 0 && (
         <p className="mt-4 text-xs text-zinc-500">
-          {f.noCloseDate.count} open deal{f.noCloseDate.count === 1 ? '' : 's'} ({formatMinor(f.noCloseDate.totalMinor)}) have no expected close date and aren’t in the forecast.
+          {f.noCloseDate.count} open deal{f.noCloseDate.count === 1 ? '' : 's'} ({formatMinor(f.noCloseDate.totalMinor)}
+          ) have no expected close date and aren’t in the forecast.
         </p>
       )}
     </div>
@@ -337,7 +479,7 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
 
 /** /app/deals — board, list and forecast for a pipeline. */
 export default function DealsPage() {
-  useSeo({ title: 'Deals', noindex: true })
+  useSeo({ title: 'Pipeline', noindex: true })
   const canCreate = useCan('deals.create')
   const canUpdate = useCan('deals.update')
   const pipelines = usePipelines()
@@ -347,31 +489,57 @@ export default function DealsPage() {
   const live = (pipelines.data ?? []).filter((p) => !p.archived)
   const pipeline = live.find((p) => p.id === filters.pipelineId) ?? live.find((p) => p.isDefault) ?? live[0]
   const boardParams = { pipelineId: pipeline?.id, ownerId: filters.ownerId, q: filters.q }
-  const listParams = Object.fromEntries(Object.entries({ pipelineId: pipeline?.id, ownerId: filters.ownerId, q: filters.q, status: filters.status, sort: filters.sort, rotting: filters.rotting }).filter(([, v]) => v)) as Record<string, string>
+  const listParams = Object.fromEntries(
+    Object.entries({
+      pipelineId: pipeline?.id,
+      ownerId: filters.ownerId,
+      q: filters.q,
+      status: filters.status,
+      sort: filters.sort,
+      rotting: filters.rotting,
+    }).filter(([, v]) => v),
+  ) as Record<string, string>
 
   return (
     <div className="mx-auto w-full max-w-[1600px] px-4 py-8 sm:px-6">
       <PageHeader
-        title="Deals"
-        description="Every deal, stage and rupee at a glance."
-        actions={<>
-          <DataTools entityType="deal" filters={listParams} columns={['title', 'valueMinor', 'currency', 'status', 'stage', 'owner', 'expectedCloseDate']} />
-          {canCreate &&
-          pipeline &&
-          !pipeline.readOnly && (
-            <Button onClick={() => setCreating(true)}>
-              <Plus className="size-4" aria-hidden="true" />
-              New deal
-            </Button>
-          )}
-        </>
+        title="Pipeline"
+        description="A clear path from first conversation to closed deal."
+        actions={
+          <>
+            <DataTools
+              entityType="deal"
+              filters={listParams}
+              columns={['title', 'valueMinor', 'currency', 'status', 'stage', 'owner', 'expectedCloseDate']}
+            />
+            {canCreate && pipeline && !pipeline.readOnly && (
+              <Button onClick={() => setCreating(true)}>
+                <Plus className="size-4" aria-hidden="true" />
+                New deal
+              </Button>
+            )}
+          </>
         }
       />
       <div className="mt-6 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <FilterBar search={{ value: filters.q, onChange: (v) => setFilter('q', v), placeholder: 'Search deals or companies…', label: 'Search deals' }} activeCount={activeCount - (filters.view ? 1 : 0) - (filters.pipelineId ? 1 : 0)} onClear={clearFilters}>
+        <FilterBar
+          search={{
+            value: filters.q,
+            onChange: (v) => setFilter('q', v),
+            placeholder: 'Search deals or companies…',
+            label: 'Search deals',
+          }}
+          activeCount={activeCount - (filters.view ? 1 : 0) - (filters.pipelineId ? 1 : 0)}
+          onClear={clearFilters}
+        >
           {live.length > 1 && (
             <div className="sm:w-52">
-              <Select aria-label="Pipeline" value={pipeline?.id ?? ''} onChange={(e) => setFilter('pipelineId', e.target.value)} className="h-9! text-sm">
+              <Select
+                aria-label="Pipeline"
+                value={pipeline?.id ?? ''}
+                onChange={(e) => setFilter('pipelineId', e.target.value)}
+                className="h-9! text-sm"
+              >
                 {live.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -381,15 +549,37 @@ export default function DealsPage() {
               </Select>
             </div>
           )}
-          <FilterSelect label="Owner" value={filters.ownerId} onChange={(v) => setFilter('ownerId', v)} options={[{ value: 'me', label: 'Me' }, { value: 'none', label: 'Unassigned' }]} />
+          <FilterSelect
+            label="Owner"
+            value={filters.ownerId}
+            onChange={(v) => setFilter('ownerId', v)}
+            options={[
+              { value: 'me', label: 'Me' },
+              { value: 'none', label: 'Unassigned' },
+            ]}
+          />
           {view === 'list' && (
             <>
-              <FilterSelect label="Status" value={filters.status} onChange={(v) => setFilter('status', v)} options={[{ value: 'open', label: 'Open' }, { value: 'won', label: 'Won' }, { value: 'lost', label: 'Lost' }]} />
+              <FilterSelect
+                label="Status"
+                value={filters.status}
+                onChange={(v) => setFilter('status', v)}
+                options={[
+                  { value: 'open', label: 'Open' },
+                  { value: 'won', label: 'Won' },
+                  { value: 'lost', label: 'Lost' },
+                ]}
+              />
               <button
                 type="button"
                 aria-pressed={filters.rotting === 'true'}
                 onClick={() => setFilter('rotting', filters.rotting ? undefined : 'true')}
-                className={cn('inline-flex h-9 items-center rounded-lg border px-3 text-sm', filters.rotting ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-zinc-300 bg-white text-zinc-700')}
+                className={cn(
+                  'inline-flex h-9 items-center rounded-lg border px-3 text-sm',
+                  filters.rotting
+                    ? 'border-amber-300 bg-amber-50 text-amber-800'
+                    : 'border-zinc-300 bg-white text-zinc-700',
+                )}
               >
                 Rotting only
               </button>
@@ -402,9 +592,33 @@ export default function DealsPage() {
           value={view}
           onChange={(v) => setFilter('view', v === 'board' ? undefined : v)}
           options={[
-            { value: 'board', label: <span className="inline-flex items-center gap-1.5"><Columns3 className="size-3.5" aria-hidden="true" />Board</span> },
-            { value: 'list', label: <span className="inline-flex items-center gap-1.5"><List className="size-3.5" aria-hidden="true" />List</span> },
-            { value: 'forecast', label: <span className="inline-flex items-center gap-1.5"><ChartColumn className="size-3.5" aria-hidden="true" />Forecast</span> },
+            {
+              value: 'board',
+              label: (
+                <span className="inline-flex items-center gap-1.5">
+                  <Columns3 className="size-3.5" aria-hidden="true" />
+                  Board
+                </span>
+              ),
+            },
+            {
+              value: 'list',
+              label: (
+                <span className="inline-flex items-center gap-1.5">
+                  <List className="size-3.5" aria-hidden="true" />
+                  List
+                </span>
+              ),
+            },
+            {
+              value: 'forecast',
+              label: (
+                <span className="inline-flex items-center gap-1.5">
+                  <ChartColumn className="size-3.5" aria-hidden="true" />
+                  Forecast
+                </span>
+              ),
+            },
           ]}
         />
       </div>
@@ -413,7 +627,16 @@ export default function DealsPage() {
         {pipelines.isPending ? (
           <Skeleton className="h-[420px] rounded-2xl" />
         ) : !pipeline ? (
-          <EmptyState icon={SquareKanban} title="No pipeline yet" description="An admin can add one in Settings → Pipelines." action={<Button to="/app/settings/pipelines" variant="secondary">Open settings</Button>} />
+          <EmptyState
+            icon={SquareKanban}
+            title="No pipeline yet"
+            description="An admin can add one in Settings → Pipelines."
+            action={
+              <Button to="/app/settings/pipelines" variant="secondary">
+                Open settings
+              </Button>
+            }
+          />
         ) : view === 'list' ? (
           <ListView params={listParams} canUpdate={canUpdate} />
         ) : view === 'forecast' ? (

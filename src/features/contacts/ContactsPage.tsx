@@ -1,4 +1,5 @@
 import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
+import { DirectoryTabs } from '../../components/app/DirectoryTabs'
 import { DataTools } from '../transfer/DataTools'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -55,7 +56,10 @@ export default function ContactsPage() {
   const tags = useTags()
   const keys = useMemo(() => [...CORE_KEYS, ...customFilterKeys(defs.data)], [defs.data])
   const { filters, setFilter, clearFilters, replaceFilters, activeCount } = useUrlFilters(keys)
-  const params = useMemo(() => Object.fromEntries(Object.entries(filters).filter(([, v]) => v)) as Record<string, string>, [filters])
+  const params = useMemo(
+    () => Object.fromEntries(Object.entries(filters).filter(([, v]) => v)) as Record<string, string>,
+    [filters],
+  )
   const list = useRecordList(qk.org(orgId).contacts.lists, params, (p) => listContacts({ ...p, limit: 50 }))
   const rows = useMemo(() => list.data?.pages.flatMap((p) => p.items) ?? [], [list.data])
 
@@ -67,7 +71,10 @@ export default function ContactsPage() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: qk.org(orgId).contacts.all })
   const selectedRows = rows.filter((r) => selected.has(r.id))
 
-  async function runBulk(action: 'assign' | 'tag' | 'untag' | 'delete', payload: { ownerId?: string | null; tagIds?: string[] } = {}) {
+  async function runBulk(
+    action: 'assign' | 'tag' | 'untag' | 'delete',
+    payload: { ownerId?: string | null; tagIds?: string[] } = {},
+  ) {
     const result = await bulkContacts({ ids: [...selected], action, payload })
     notify(bulkSummary(result, { assign: 'reassigned', tag: 'tagged', untag: 'updated', delete: 'deleted' }[action]))
     setSelected(new Set())
@@ -75,15 +82,57 @@ export default function ContactsPage() {
   }
 
   const optional: Column<ContactRecord>[] = [
-    { key: 'company', header: 'Company', hideBelow: 'md', cell: (c) => c.companies.find((x) => x.isPrimary)?.name ?? c.companies[0]?.name ?? <span className="text-zinc-400">—</span> },
-    { key: 'phone', header: 'Phone', hideBelow: 'lg', cell: (c) => <span className="tabular-nums">{c.primaryPhoneE164 ? formatPhone(c.primaryPhoneE164) : (c.phones[0]?.raw ?? '—')}</span> },
+    {
+      key: 'company',
+      header: 'Company',
+      hideBelow: 'md',
+      cell: (c) =>
+        c.companies.find((x) => x.isPrimary)?.name ?? c.companies[0]?.name ?? <span className="text-zinc-400">—</span>,
+    },
+    {
+      key: 'phone',
+      header: 'Phone',
+      hideBelow: 'lg',
+      cell: (c) => (
+        <span className="tabular-nums">
+          {c.primaryPhoneE164 ? formatPhone(c.primaryPhoneE164) : (c.phones[0]?.raw ?? '—')}
+        </span>
+      ),
+    },
     { key: 'email', header: 'Email', hideBelow: 'lg', cell: (c) => c.primaryEmail ?? '—' },
-    { key: 'stage', header: 'Stage', cell: (c) => <Badge tone={c.lifecycleStage === 'customer' ? 'success' : 'neutral'}>{lifecycleLabels[c.lifecycleStage]}</Badge> },
+    {
+      key: 'stage',
+      header: 'Stage',
+      cell: (c) => (
+        <Badge tone={c.lifecycleStage === 'customer' ? 'success' : 'neutral'}>
+          {lifecycleLabels[c.lifecycleStage]}
+        </Badge>
+      ),
+    },
     { key: 'tags', header: 'Tags', hideBelow: 'xl', cell: (c) => <TagChips tags={c.tags} /> },
     { key: 'owner', header: 'Owner', hideBelow: 'md', cell: (c) => <OwnerCell owner={c.owner} emptyLabel="—" /> },
-    { key: 'lastActivity', header: 'Last activity', sortKey: 'lastActivityAt', hideBelow: 'xl', align: 'right', cell: (c) => <span className="text-zinc-500">{relativeTime(c.lastActivityAt)}</span> },
-    { key: 'created', header: 'Created', sortKey: 'createdAt', hideBelow: 'xl', align: 'right', cell: (c) => <span className="text-zinc-500">{relativeTime(c.createdAt)}</span> },
-    ...activeDefs.map((d) => ({ key: `cf.${d.key}`, header: d.label, hideBelow: 'lg' as const, cell: (c: ContactRecord) => formatCustomValue(d, c.customFields[d.key]) })),
+    {
+      key: 'lastActivity',
+      header: 'Last activity',
+      sortKey: 'lastActivityAt',
+      hideBelow: 'xl',
+      align: 'right',
+      cell: (c) => <span className="text-zinc-500">{relativeTime(c.lastActivityAt)}</span>,
+    },
+    {
+      key: 'created',
+      header: 'Created',
+      sortKey: 'createdAt',
+      hideBelow: 'xl',
+      align: 'right',
+      cell: (c) => <span className="text-zinc-500">{relativeTime(c.createdAt)}</span>,
+    },
+    ...activeDefs.map((d) => ({
+      key: `cf.${d.key}`,
+      header: d.label,
+      hideBelow: 'lg' as const,
+      cell: (c: ContactRecord) => formatCustomValue(d, c.customFields[d.key]),
+    })),
   ]
   const tableColumns: Column<ContactRecord>[] = [
     {
@@ -111,31 +160,95 @@ export default function ContactsPage() {
       <PageHeader
         title="Contacts"
         description="Everyone you sell to, with their companies and history."
-        actions={<>
-          <DataTools entityType="contact" filters={params} columns={['displayName', ...columns.visible.filter((key) => optional.some((c) => c.key === key)).map((key) => ({ created: 'createdAt', lastActivity: 'lastActivityAt', owner: 'owner', phone: 'primaryPhoneE164', email: 'primaryEmail', lifecycle: 'lifecycleStage' } as Record<string, string>)[key] ?? key)]} />
-          {canCreate && (
-            <Button onClick={() => setCreating(true)}>
-              <Plus className="size-4" aria-hidden="true" />
-              New contact
-            </Button>
-          )}
-        </>
+        actions={
+          <>
+            <DataTools
+              entityType="contact"
+              filters={params}
+              columns={[
+                'displayName',
+                ...columns.visible
+                  .filter((key) => optional.some((c) => c.key === key))
+                  .map(
+                    (key) =>
+                      (
+                        ({
+                          created: 'createdAt',
+                          lastActivity: 'lastActivityAt',
+                          owner: 'owner',
+                          phone: 'primaryPhoneE164',
+                          email: 'primaryEmail',
+                          lifecycle: 'lifecycleStage',
+                        }) as Record<string, string>
+                      )[key] ?? key,
+                  ),
+              ]}
+            />
+            {canCreate && (
+              <Button onClick={() => setCreating(true)}>
+                <Plus className="size-4" aria-hidden="true" />
+                New contact
+              </Button>
+            )}
+          </>
         }
       />
 
+      <DirectoryTabs />
       <div className="mt-6 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <FilterBar search={{ value: filters.q, onChange: (v) => setFilter('q', v), placeholder: 'Search name, email or phone…', label: 'Search contacts' }} activeCount={activeCount - (filters.q ? 1 : 0)} onClear={clearFilters}>
-          <FilterSelect label="Owner" value={filters.ownerId} onChange={(v) => setFilter('ownerId', v)} options={[{ value: 'me', label: 'Me' }, { value: 'none', label: 'No owner' }]} />
-          <FilterSelect label="Stage" value={filters.lifecycleStage} onChange={(v) => setFilter('lifecycleStage', v)} options={Object.entries(lifecycleLabels).map(([value, label]) => ({ value, label }))} />
-          <FilterSelect label="Tag" value={filters.tag} onChange={(v) => setFilter('tag', v)} options={(tags.data ?? []).map((t) => ({ value: t.id, label: t.name }))} />
+        <FilterBar
+          search={{
+            value: filters.q,
+            onChange: (v) => setFilter('q', v),
+            placeholder: 'Search name, email or phone…',
+            label: 'Search contacts',
+          }}
+          activeCount={activeCount - (filters.q ? 1 : 0)}
+          onClear={clearFilters}
+        >
+          <FilterSelect
+            label="Owner"
+            value={filters.ownerId}
+            onChange={(v) => setFilter('ownerId', v)}
+            options={[
+              { value: 'me', label: 'Me' },
+              { value: 'none', label: 'No owner' },
+            ]}
+          />
+          <FilterSelect
+            label="Stage"
+            value={filters.lifecycleStage}
+            onChange={(v) => setFilter('lifecycleStage', v)}
+            options={Object.entries(lifecycleLabels).map(([value, label]) => ({ value, label }))}
+          />
+          <FilterSelect
+            label="Tag"
+            value={filters.tag}
+            onChange={(v) => setFilter('tag', v)}
+            options={(tags.data ?? []).map((t) => ({ value: t.id, label: t.name }))}
+          />
           <CustomFieldFilters defs={defs.data} filters={filters} setFilter={setFilter} />
         </FilterBar>
         <div className="flex shrink-0 gap-2">
           <SavedViewsMenu entityType="contact" current={params as Record<string, string>} onApply={replaceFilters} />
-          <ColumnChooser options={optional.map((c) => ({ key: c.key, label: String(c.header) }))} visible={columns.visible} onToggle={columns.toggle} />
+          <ColumnChooser
+            options={optional.map((c) => ({ key: c.key, label: String(c.header) }))}
+            visible={columns.visible}
+            onToggle={columns.toggle}
+          />
           {canDelete && (
-            <Button variant="ghost" size="sm" className="h-9" onClick={() => setFilter('deleted', isDeletedView ? undefined : 'true')} aria-pressed={isDeletedView}>
-              {isDeletedView ? <X className="size-4" aria-hidden="true" /> : <Trash2 className="size-4" aria-hidden="true" />}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9"
+              onClick={() => setFilter('deleted', isDeletedView ? undefined : 'true')}
+              aria-pressed={isDeletedView}
+            >
+              {isDeletedView ? (
+                <X className="size-4" aria-hidden="true" />
+              ) : (
+                <Trash2 className="size-4" aria-hidden="true" />
+              )}
               {isDeletedView ? 'Exit bin' : 'Bin'}
             </Button>
           )}
@@ -177,7 +290,20 @@ export default function ContactsPage() {
           <ErrorState error={list.error} onRetry={() => list.refetch()} />
         ) : rows.length === 0 ? (
           hasFilters ? (
-            <EmptyState icon={Users} title={isDeletedView ? 'The bin is empty' : 'No contacts match'} description={isDeletedView ? 'Deleted contacts stay here for 30 days.' : 'Try a different search or clear the filters.'} action={<Button variant="secondary" onClick={clearFilters}>Clear filters</Button>} />
+            <EmptyState
+              icon={Users}
+              title={isDeletedView ? 'The bin is empty' : 'No contacts match'}
+              description={
+                isDeletedView
+                  ? 'Deleted contacts stay here for 30 days.'
+                  : 'Try a different search or clear the filters.'
+              }
+              action={
+                <Button variant="secondary" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              }
+            />
           ) : (
             <EmptyState
               icon={Users}
@@ -210,20 +336,39 @@ export default function ContactsPage() {
                   <Avatar name={c.displayName} size="sm" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-zinc-900">{c.displayName}</p>
-                    <p className="truncate text-xs text-zinc-500">{[c.companies[0]?.name, formatPhone(c.primaryPhoneE164, c.phones[0]?.raw)].filter(Boolean).join(' · ')}</p>
+                    <p className="truncate text-xs text-zinc-500">
+                      {[c.companies[0]?.name, formatPhone(c.primaryPhoneE164, c.phones[0]?.raw)]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
                   </div>
                   <TagChips tags={c.tags} max={1} />
                 </div>
               )}
             />
-            <LoadMore hasMore={Boolean(list.hasNextPage)} loading={list.isFetchingNextPage} onLoadMore={() => list.fetchNextPage()} />
+            <LoadMore
+              hasMore={Boolean(list.hasNextPage)}
+              loading={list.isFetchingNextPage}
+              onLoadMore={() => list.fetchNextPage()}
+            />
           </>
         )}
       </div>
 
       {creating && <ContactFormDrawer open onClose={() => setCreating(false)} />}
-      <BulkAssignDialog open={dialog === 'assign'} count={selected.size} onClose={() => setDialog(null)} onAssign={(ownerId) => runBulk('assign', { ownerId })} />
-      <BulkTagDialog open={dialog === 'tag' || dialog === 'untag'} mode={dialog === 'untag' ? 'untag' : 'tag'} count={selected.size} onClose={() => setDialog(null)} onApply={(tagIds) => runBulk(dialog === 'untag' ? 'untag' : 'tag', { tagIds })} />
+      <BulkAssignDialog
+        open={dialog === 'assign'}
+        count={selected.size}
+        onClose={() => setDialog(null)}
+        onAssign={(ownerId) => runBulk('assign', { ownerId })}
+      />
+      <BulkTagDialog
+        open={dialog === 'tag' || dialog === 'untag'}
+        mode={dialog === 'untag' ? 'untag' : 'tag'}
+        count={selected.size}
+        onClose={() => setDialog(null)}
+        onApply={(tagIds) => runBulk(dialog === 'untag' ? 'untag' : 'tag', { tagIds })}
+      />
       <ConfirmDialog
         open={dialog === 'delete'}
         onClose={() => setDialog(null)}
@@ -241,7 +386,15 @@ export default function ContactsPage() {
           open
           onClose={() => setDialog(null)}
           records={selectedRows}
-          fields={[...contactMergeFields, ...activeDefs.map((d) => ({ key: `cf.${d.key}`, label: d.label, value: (c: ContactRecord) => c.customFields[d.key] ?? null, render: (c: ContactRecord) => formatCustomValue(d, c.customFields[d.key]) }))]}
+          fields={[
+            ...contactMergeFields,
+            ...activeDefs.map((d) => ({
+              key: `cf.${d.key}`,
+              label: d.label,
+              value: (c: ContactRecord) => c.customFields[d.key] ?? null,
+              render: (c: ContactRecord) => formatCustomValue(d, c.customFields[d.key]),
+            })),
+          ]}
           title="Merge contacts"
           nameOf={(c) => c.displayName}
           combinedNote="Emails, phone numbers, companies and tags from every record are kept. Activities and deals move to the record you keep."

@@ -10,7 +10,15 @@ import { createStreamTicket, getUnreadCount, listNotifications, notificationKeys
 export function useNotificationCount() {
   const { user } = useAuth()
   const { organization } = useOrg()
-  return useQuery({ queryKey: notificationKeys(user?.organization?.id ?? 'none', user?.id ?? 'none').count, queryFn: getUnreadCount, enabled: Boolean(user?.organization), refetchOnWindowFocus: true, ...(organization?.unreadNotificationCount !== undefined && { initialData: { unreadCount: organization.unreadNotificationCount } }) })
+  return useQuery({
+    queryKey: notificationKeys(user?.organization?.id ?? 'none', user?.id ?? 'none').count,
+    queryFn: getUnreadCount,
+    enabled: Boolean(user?.organization),
+    refetchOnWindowFocus: true,
+    ...(organization?.unreadNotificationCount !== undefined && {
+      initialData: { unreadCount: organization.unreadNotificationCount },
+    }),
+  })
 }
 
 /** One stream per mounted workspace shell. Polling remains active while SSE reconnects. */
@@ -27,7 +35,8 @@ export function useNotificationStream() {
     const startedAt = Date.now()
     const toasted = new Set<string>()
     let checking = false
-    const active = () => authStore.getState().user?.id === userId && authStore.getState().user?.organization?.id === orgId
+    const active = () =>
+      authStore.getState().user?.id === userId && authStore.getState().user?.organization?.id === orgId
     async function changed(count: number) {
       if (!active()) return
       queryClient.setQueryData(keys.count, { unreadCount: count })
@@ -39,23 +48,39 @@ export function useNotificationStream() {
         const page = await listNotifications({ unread: true, limit: 20 })
         if (!active()) return
         for (const item of page.items) {
-          if (!['mention', 'task_reminder'].includes(item.type) || new Date(item.createdAt).getTime() < startedAt || toasted.has(item.id)) continue
+          if (
+            !['mention', 'task_reminder', 'lead_assigned', 'new_unassigned_lead'].includes(item.type) ||
+            new Date(item.createdAt).getTime() < startedAt ||
+            toasted.has(item.id)
+          )
+            continue
           toasted.add(item.id)
           notify({ title: item.title, description: item.body ?? undefined })
         }
-      } catch { /* The ordinary inbox/count queries expose network errors and retry. */ }
-      finally { checking = false }
+      } catch {
+        /* The ordinary inbox/count queries expose network errors and retry. */
+      } finally {
+        checking = false
+      }
     }
     return startNotificationConnection({
       requestTicket: createStreamTicket,
       makeUrl: notificationStreamUrl,
       isActive: active,
-      onNotification: (count) => { void changed(count) },
+      onNotification: (count) => {
+        void changed(count)
+      },
       onPoll: async () => {
-        const { unreadCount } = await queryClient.fetchQuery({ queryKey: keys.count, queryFn: getUnreadCount, staleTime: 0 })
+        const { unreadCount } = await queryClient.fetchQuery({
+          queryKey: keys.count,
+          queryFn: getUnreadCount,
+          staleTime: 0,
+        })
         await changed(unreadCount)
       },
-      ...(typeof EventSource !== 'undefined' && { createSource: (url: string) => new EventSource(url, { withCredentials: true }) }),
+      ...(typeof EventSource !== 'undefined' && {
+        createSource: (url: string) => new EventSource(url, { withCredentials: true }),
+      }),
     })
   }, [orgId, userId, queryClient, notify])
 }

@@ -1,18 +1,5 @@
 import type { ComponentType } from 'react'
-import {
-  Bell,
-  Building2,
-  ChartColumn,
-  House,
-  Inbox,
-  ListChecks,
-  MessageCircle,
-  Receipt,
-  Settings,
-  SquareKanban,
-  Users,
-  Workflow,
-} from 'lucide-react'
+import { ChartColumn, House, Inbox, ListChecks, Settings, SquareKanban, Users, PlugZap } from 'lucide-react'
 import { t } from '../lib/i18n'
 
 export interface NavItem {
@@ -33,17 +20,35 @@ export interface NavItem {
 }
 
 export const mainNav: NavItem[] = [
-  { key: 'home', label: t('nav.home', 'Home'), to: '/app', icon: House, end: true, ready: true, shortcut: 'h' },
+  { key: 'home', label: t('nav.home', 'Dashboard'), to: '/app', icon: House, end: true, ready: true, shortcut: 'h' },
   { key: 'leads', label: t('nav.leads', 'Leads'), to: '/app/leads', icon: Inbox, ready: true, shortcut: 'l' },
-  { key: 'contacts', label: t('nav.contacts', 'Contacts'), to: '/app/contacts', icon: Users, ready: true, shortcut: 'c' },
-  { key: 'companies', label: t('nav.companies', 'Companies'), to: '/app/companies', icon: Building2, ready: true },
-  { key: 'deals', label: t('nav.deals', 'Deals'), to: '/app/deals', icon: SquareKanban, ready: true, shortcut: 'd' },
-  { key: 'notifications', label: 'Notifications', to: '/app/notifications', icon: Bell, ready: true },
-  { key: 'tasks', label: t('nav.tasks', 'Tasks'), to: '/app/tasks', icon: ListChecks, ready: true, shortcut: 't' },
-  { key: 'inbox', label: t('nav.inbox', 'Inbox'), to: '/app/inbox', icon: MessageCircle, feature: 'whatsapp', ready: false, module: 'M19' },
-  { key: 'quotes', label: t('nav.quotes', 'Quotes'), to: '/app/quotes', icon: Receipt, feature: 'quotes', ready: false, module: 'M17' },
-  { key: 'reports', label: t('nav.reports', 'Reports'), to: '/app/reports', icon: ChartColumn, ready: false, module: 'M15', shortcut: 'r' },
-  { key: 'automation', label: t('nav.automation', 'Automation'), to: '/app/automation', icon: Workflow, feature: 'automation', ready: false, module: 'M18' },
+  { key: 'deals', label: t('nav.deals', 'Pipeline'), to: '/app/deals', icon: SquareKanban, ready: true, shortcut: 'd' },
+  {
+    key: 'tasks',
+    label: t('nav.tasks', 'Tasks & follow-ups'),
+    to: '/app/tasks',
+    icon: ListChecks,
+    ready: true,
+    shortcut: 't',
+  },
+  {
+    key: 'contacts',
+    label: t('nav.contacts', 'Contacts & companies'),
+    to: '/app/contacts',
+    icon: Users,
+    ready: true,
+    shortcut: 'c',
+  },
+  { key: 'integrations', label: 'Integrations', to: '/app/integrations', icon: PlugZap, ready: true },
+  {
+    key: 'reports',
+    label: t('nav.reports', 'Reports'),
+    to: '/app/reports',
+    icon: ChartColumn,
+    ready: true,
+    module: 'M15',
+    shortcut: 'r',
+  },
 ]
 
 export const settingsNavItem: NavItem = {
@@ -65,6 +70,11 @@ export interface SettingsNavItem {
 }
 
 export const settingsNav: SettingsNavItem[] = [
+  { key: 'availability', label: 'Availability', to: '/app/settings/availability', ready: true, group: 'You' },
+  { key: 'forms', label: 'Web forms', to: '/app/settings/forms', ready: true, group: 'Workspace' },
+  { key: 'assignment', label: 'Assignment rules', to: '/app/settings/assignment', ready: true, group: 'Workspace' },
+  { key: 'tags', label: 'Tags', to: '/app/settings/tags', ready: true, group: 'Workspace' },
+  { key: 'facebook', label: 'Facebook Lead Ads', to: '/app/settings/facebook', ready: true, group: 'Workspace' },
   { key: 'data', label: 'Data transfers', to: '/app/settings/data', ready: true, group: 'Workspace' },
   { key: 'profile', label: 'Profile', to: '/app/settings/profile', ready: true, group: 'You' },
   { key: 'security', label: 'Security', to: '/app/settings/security', ready: true, group: 'You' },

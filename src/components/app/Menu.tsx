@@ -3,7 +3,13 @@ import { cn } from '../../lib/cn'
 
 interface MenuProps {
   /** Renders the trigger; spread `props` onto a <button>. */
-  trigger: (props: { 'aria-haspopup': 'menu'; 'aria-expanded': boolean; 'aria-controls': string; onClick: () => void; id: string }) => ReactNode
+  trigger: (props: {
+    'aria-haspopup': 'menu'
+    'aria-expanded': boolean
+    'aria-controls': string
+    onClick: () => void
+    id: string
+  }) => ReactNode
   children: (close: () => void) => ReactNode
   align?: 'start' | 'end'
   /** Open upwards (for menus at the bottom of the sidebar). */
@@ -35,7 +41,7 @@ export function Menu({ trigger, children, align = 'start', side = 'bottom', clas
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('pointerdown', onPointer)
-    listRef.current?.querySelector<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])')?.focus()
+    listRef.current?.querySelector<HTMLElement>('[role^="menuitem"]:not([aria-disabled="true"])')?.focus()
     return () => document.removeEventListener('pointerdown', onPointer)
   }, [open])
 
@@ -47,17 +53,29 @@ export function Menu({ trigger, children, align = 'start', side = 'bottom', clas
     }
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return
     e.preventDefault()
-    const items = Array.from(listRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])') ?? [])
+    const items = Array.from(
+      listRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]:not([aria-disabled="true"])') ?? [],
+    )
     if (!items.length) return
     const index = items.indexOf(document.activeElement as HTMLElement)
     const next =
-      e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : (index + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
+      e.key === 'Home'
+        ? 0
+        : e.key === 'End'
+          ? items.length - 1
+          : (index + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
     items[next].focus()
   }
 
   return (
     <div ref={rootRef} className="relative" onKeyDown={open ? onKeyDown : undefined}>
-      {trigger({ 'aria-haspopup': 'menu', 'aria-expanded': open, 'aria-controls': menuId, onClick: () => setOpen((o) => !o), id: triggerId })}
+      {trigger({
+        'aria-haspopup': 'menu',
+        'aria-expanded': open,
+        'aria-controls': menuId,
+        onClick: () => setOpen((o) => !o),
+        id: triggerId,
+      })}
       {open && (
         <div
           ref={listRef}
@@ -96,7 +114,11 @@ export function MenuItem({ onSelect, children, icon, disabled, tone = 'default' 
       onClick={() => !disabled && onSelect()}
       className={cn(
         'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm outline-none',
-        disabled ? 'cursor-not-allowed text-zinc-400' : tone === 'danger' ? 'text-red-700 hover:bg-red-50 focus:bg-red-50' : 'text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100',
+        disabled
+          ? 'cursor-not-allowed text-zinc-400'
+          : tone === 'danger'
+            ? 'text-red-700 hover:bg-red-50 focus:bg-red-50'
+            : 'text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100',
       )}
     >
       {icon && <span className="flex size-4 shrink-0 items-center justify-center text-zinc-500">{icon}</span>}

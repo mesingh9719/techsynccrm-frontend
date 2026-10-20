@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { UploadProgress } from '../../components/ui/UploadProgress'
 import { Button } from '../../components/ui/Button'
 import { Dialog } from '../../components/app/Dialog'
 import { ErrorState } from '../../components/app/States'
@@ -36,20 +37,31 @@ export function Attachments({ entityType, entityId }: { entityType: string; enti
   const canUpload = useCan(`${resource}.update`)
   const queryClient = useQueryClient(), notify = useToast(), input = useRef<HTMLInputElement>(null)
   const [progress, setProgress] = useState<number | null>(null)
+  const [activeUpload, setActiveUpload] = useState<{ name: string; index: number; total: number } | null>(null)
+  const uploadLock = useRef(false)
   const key = ['org', user?.organization?.id, 'files', entityType, entityId]
   const files = useQuery({ queryKey: key, queryFn: () => listFiles({ entityType, entityId }) })
   const refresh = () => { void queryClient.invalidateQueries({ queryKey: key }) }
   async function add(selected: FileList | null) {
-    if (!selected || !canUpload || progress !== null) return
+    if (!selected?.length || !canUpload || uploadLock.current) return
+    uploadLock.current = true
     setProgress(0)
-    try { for (const file of Array.from(selected)) await uploadFile(file, { entityType, entityId }, setProgress); refresh() }
+    const queue = Array.from(selected)
+    try {
+      for (const [index, file] of queue.entries()) {
+        setActiveUpload({ name: file.name, index: index + 1, total: queue.length })
+        setProgress(0)
+        await uploadFile(file, { entityType, entityId }, setProgress)
+        refresh()
+      }
+    }
     catch (err) { notify({ title: err instanceof Error ? err.message : 'Upload failed' }) }
-    finally { setProgress(null); if (input.current) input.current.value = '' }
+    finally { uploadLock.current = false; setProgress(null); setActiveUpload(null); if (input.current) input.current.value = '' }
   }
   return <section className="rounded-xl bg-white p-5 ring-1 ring-zinc-200" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); void add(e.dataTransfer.files) }}>
     <div className="mb-3 flex items-center justify-between"><h2 className="font-semibold">Attachments</h2>{canUpload && <Button size="sm" variant="secondary" disabled={progress !== null} onClick={() => input.current?.click()}>Upload files</Button>}</div>
     <input ref={input} type="file" multiple hidden aria-label="Upload attachments" onChange={(e) => void add(e.target.files)} />
-    {progress !== null && <progress className="mb-3 w-full" max={1} value={progress} aria-label="Upload progress" />}
+    {progress !== null && activeUpload && <UploadProgress className="mb-4" title={activeUpload.name} progress={progress} status={progress >= 1 ? 'processing' : 'uploading'} description={progress >= 1 ? 'Upload received. Finishing up…' : 'Adding your attachment…'} detail={`File ${activeUpload.index} of ${activeUpload.total}`} />}
     {files.isError ? <ErrorState error={files.error} onRetry={() => void files.refetch()} /> : files.isPending ? <p className="text-sm text-zinc-500">Loading attachments…</p> : <div className="space-y-2">{files.data.map((file) => <Attachment key={file.id} file={file} onDelete={refresh} />)}{!files.data.length && <p className="text-sm text-zinc-500">{canUpload ? 'Drop files here or choose Upload files.' : 'No attachments yet.'}</p>}</div>}
   </section>
 }
