@@ -27,13 +27,13 @@ function Hero() {
             to="/features#automation"
             className="inline-flex animate-fade-up items-center gap-2 rounded-full bg-white py-1 pr-3 pl-1 text-sm text-zinc-700 shadow-card ring-1 ring-zinc-200 transition-colors hover:ring-zinc-300"
           >
-            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">For SMEs & MSMEs</span>
+            <span className="rounded-full bg-brand-50 px-2 py-1 text-xs font-medium text-brand-700">For SMEs & MSMEs</span>
             Built for teams of 2 to 200
-            <ArrowRight className="size-3.5 text-zinc-400" aria-hidden="true" />
+            <ArrowRight className="size-4 text-zinc-400" aria-hidden="true" />
           </Link>
-          <h1 className="mt-7 animate-fade-up text-[2.6rem] leading-[1.05] font-semibold tracking-[-0.035em] text-zinc-950 [animation-delay:60ms] sm:text-6xl lg:text-7xl">
+          <h1 className="mt-7 animate-fade-up text-4xl leading-[1.05] font-semibold tracking-[-0.035em] text-zinc-950 [animation-delay:60ms] sm:text-6xl lg:text-7xl">
             The CRM your sales team
-            <br className="hidden sm:block" /> will <span className="text-brand-600">actually use</span>
+            <br className="hidden sm:block" /> will <span className="text-brand-700">actually use</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl animate-fade-up text-lg leading-relaxed text-zinc-600 [animation-delay:120ms] sm:text-xl">
             TechSync brings leads, pipeline, WhatsApp follow-ups and reports into one simple workspace. Set it up in an afternoon,
@@ -50,8 +50,8 @@ function Hero() {
           </div>
           <ul className="mt-6 flex animate-fade-up flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-zinc-500 [animation-delay:240ms]">
             {['Free for 2 users', 'No credit card', 'Live in under 30 minutes'].map((t) => (
-              <li key={t} className="flex items-center gap-1.5">
-                <Check className="size-4 text-brand-600" aria-hidden="true" />
+              <li key={t} className="flex items-center gap-2">
+                <Check className="size-4 text-brand-700" aria-hidden="true" />
                 {t}
               </li>
             ))}
@@ -86,19 +86,19 @@ function ProblemSection() {
         <div className="grid gap-4">
           {problems.map((p, i) => (
             <Reveal key={p.title} delay={i * 80}>
-              <div className="flex gap-4 rounded-2xl bg-white p-5 shadow-card ring-1 ring-zinc-200 sm:p-6">
+              <div className="flex gap-4 rounded-dialog bg-white p-5 shadow-card ring-1 ring-zinc-200 sm:p-6">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 ring-1 ring-red-100">
                   <p.icon className="size-5" aria-hidden="true" />
                 </span>
                 <div>
                   <h3 className="font-semibold text-zinc-950">{p.title}</h3>
-                  <p className="mt-1.5 leading-relaxed text-zinc-600">{p.text}</p>
+                  <p className="mt-2 leading-relaxed text-zinc-600">{p.text}</p>
                 </div>
               </div>
             </Reveal>
           ))}
           <Reveal delay={260}>
-            <div className="flex items-center gap-3 rounded-2xl bg-zinc-950 p-5 text-white sm:p-6">
+            <div className="flex items-center gap-3 rounded-dialog bg-zinc-950 p-5 text-white sm:p-6">
               <CircleX className="size-5 shrink-0 text-zinc-500" aria-hidden="true" />
               <p className="text-zinc-300">
                 <span className="font-medium text-white">The cost:</span> SMEs lose an estimated 1 in 4 qualified leads to slow or missed
@@ -131,8 +131,8 @@ function Spotlights() {
               <p className="mt-4 text-lg leading-relaxed text-zinc-600">{cat.description}</p>
               <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                 {cat.points.map((point) => (
-                  <li key={point} className="flex gap-2.5 text-[15px] text-zinc-700">
-                    <Check className="mt-0.5 size-4 shrink-0 text-brand-600" aria-hidden="true" />
+                  <li key={point} className="flex gap-3 text-sm text-zinc-700">
+                    <Check className="mt-1 size-4 shrink-0 text-brand-700" aria-hidden="true" />
                     {point}
                   </li>
                 ))}
@@ -143,7 +143,7 @@ function Spotlights() {
               </Button>
             </Reveal>
             <Reveal delay={120} className="min-w-0">
-              <div className="rounded-3xl bg-canvas p-3 ring-1 ring-zinc-100 sm:p-6">
+              <div className="rounded-dialog bg-canvas p-3 ring-1 ring-zinc-100 sm:p-6">
                 <FeatureVisual id={cat.id} />
               </div>
             </Reveal>
@@ -188,7 +188,7 @@ function HowItWorks() {
       <SectionHeader id="how-title" eyebrow="Getting started" title="Live in an afternoon, not a quarter" description="No consultants, no lengthy implementation. Most teams are selling from TechSync on day one." />
       <ol className="mt-16 grid gap-6 md:grid-cols-3">
         {steps.map((s, i) => (
-          <Reveal as="li" key={s.title} delay={i * 80} className="relative h-full rounded-2xl bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-7">
+          <Reveal as="li" key={s.title} delay={i * 80} className="relative h-full rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-7">
               <div className="flex items-center justify-between">
                 <span className="flex size-10 items-center justify-center rounded-xl bg-zinc-950 text-white">
                   <s.icon className="size-5" aria-hidden="true" />

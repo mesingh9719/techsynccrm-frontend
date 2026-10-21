@@ -34,7 +34,7 @@ function StrengthMeter({ value }: { value: string }) {
           <span key={i} className={cn('h-1 flex-1 rounded-full transition-colors', i < score ? strengthColors[score] : 'bg-zinc-200')} />
         ))}
       </div>
-      <p className="mt-1.5 text-xs text-zinc-500">
+      <p className="mt-2 text-xs text-zinc-500">
         Password strength: <span className="font-medium text-zinc-700">{strengthLabels[score]}</span>
       </p>
     </div>
@@ -114,12 +114,12 @@ function SignupForm() {
                   <input type="radio" value={p.id} checked={checked} onChange={() => setValue('plan', p.id as SignupPlan)} name="plan" className="sr-only" />
                   <span className="block text-sm font-medium text-zinc-900">{p.name}</span>
                   <span className="block text-xs text-zinc-500">{price && price.monthly > 0 ? `₹${price.annual}/user` : 'Free'}</span>
-                  {checked && <Check className="absolute top-2.5 right-2.5 size-3.5 text-brand-600" aria-hidden="true" />}
+                  {checked && <Check className="absolute top-2.5 right-2.5 size-4 text-brand-700" aria-hidden="true" />}
                 </label>
               )
             })}
           </div>
-          <p className="mt-1.5 text-xs text-zinc-500">
+          <p className="mt-2 text-xs text-zinc-500">
             {plan === 'starter'
               ? 'Free forever for up to 2 users and 1,000 contacts.'
               : `14-day ${selectablePlans.find((p) => p.id === plan)?.name ?? ''} trial, then Starter unless you upgrade. No credit card needed.`}
@@ -161,7 +161,7 @@ function SignupForm() {
             {...register('terms')}
           />
           {errors.terms && (
-            <p id="terms-error" role="alert" className="mt-1.5 ml-[30px] text-sm text-red-600">
+            <p id="terms-error" role="alert" className="mt-2 ml-[30px] text-sm text-red-600">
               {errors.terms.message}
             </p>
           )}

@@ -1,3 +1,5 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
+import { PageHeader } from '../../components/app/States'
 import { useRef, useState, type ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -62,9 +64,9 @@ function PhotoUploader({ user }: { user: AuthUser }) {
             </Button>
           )}
         </div>
-        <p className="mt-1.5 text-xs text-zinc-500">PNG, JPG or WebP, up to 2 MB.</p>
+        <p className="mt-2 text-xs text-muted">PNG, JPG or WebP, up to 2 MB.</p>
         {error && (
-          <p className="mt-1 text-sm text-red-600" role="alert">
+          <p className="mt-1 text-sm text-danger" role="alert">
             {error}
           </p>
         )}
@@ -86,6 +88,8 @@ function ProfileForm({ user }: { user: AuthUser }) {
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProfileValues>({ resolver: zodResolver(profileSchema), defaultValues: defaults })
 
+  const leaveGuard = useUnsavedChanges(isDirty, () => {}, isSubmitting, isDirty)
+
   const onSubmit = async (values: ProfileValues) => {
     setServerError(null)
     try {
@@ -99,6 +103,7 @@ function ProfileForm({ user }: { user: AuthUser }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        {leaveGuard.confirmation}
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Full name" error={errors.fullName?.message}>
           {({ id, describedBy, invalid }) => <Input id={id} autoComplete="name" aria-describedby={describedBy} invalid={invalid} {...register('fullName')} />}
@@ -216,8 +221,8 @@ function EmailSection({ user }: { user: AuthUser }) {
     <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-medium text-zinc-900">{user.email}</p>
-          <p className="text-sm text-zinc-500">You sign in with this email and receive notifications here.</p>
+          <p className="font-medium text-ink">{user.email}</p>
+          <p className="text-sm text-muted">You sign in with this email and receive notifications here.</p>
         </div>
         <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
           Change email
@@ -226,7 +231,7 @@ function EmailSection({ user }: { user: AuthUser }) {
       {user.pendingEmail && (
         <div className="mt-4 flex flex-col gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200 sm:flex-row sm:items-center sm:justify-between" role="status">
           <p className="flex items-start gap-2">
-            <MailWarning className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <MailWarning className="mt-1 size-4 shrink-0" aria-hidden="true" />
             <span>
               Waiting for you to confirm <strong className="font-medium">{user.pendingEmail}</strong> — check that inbox for the link.
             </span>
@@ -247,6 +252,7 @@ export default function ProfileSettings() {
   if (!user) return null
   return (
     <div className="space-y-6">
+      <PageHeader title="Profile" description="Manage your personal details and sign-in email." />
       <SettingsSection title="Profile" description="How you appear to your team.">
         <PhotoUploader user={user} />
         <div className="mt-6">

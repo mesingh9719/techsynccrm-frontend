@@ -30,7 +30,7 @@ export default function Solutions() {
               <li key={ind.id}>
                 <a
                   href={`#${ind.id}`}
-                  className="flex items-center gap-2.5 rounded-xl bg-white px-3.5 py-3 text-left text-sm font-medium text-zinc-800 shadow-card ring-1 ring-zinc-200 transition-colors hover:text-brand-700 hover:ring-zinc-300"
+                  className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 text-left text-sm font-medium text-zinc-800 shadow-card ring-1 ring-zinc-200 transition-colors hover:text-brand-700 hover:ring-zinc-300"
                 >
                   <Icon className="size-4 shrink-0 text-zinc-500" aria-hidden="true" />
                   {ind.name}
@@ -66,11 +66,11 @@ export default function Solutions() {
                   </h2>
                   <p className="mt-4 text-lg leading-relaxed text-zinc-600">{ind.summary}</p>
 
-                  <div className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-zinc-200">
+                  <div className="mt-8 rounded-dialog bg-white p-5 ring-1 ring-zinc-200">
                     <p className="text-sm font-medium text-zinc-900">Sound familiar?</p>
-                    <ul className="mt-3 space-y-2.5">
+                    <ul className="mt-3 space-y-3">
                       {ind.challenges.map((c) => (
-                        <li key={c} className="flex gap-2.5 text-[15px] text-zinc-600">
+                        <li key={c} className="flex gap-3 text-sm text-zinc-600">
                           <X className="mt-1 size-4 shrink-0 text-red-500" aria-hidden="true" />
                           {c}
                         </li>
@@ -80,13 +80,13 @@ export default function Solutions() {
                 </Reveal>
 
                 <Reveal delay={100}>
-                  <div className="h-full rounded-3xl bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-8">
+                  <div className="h-full rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-8">
                     <p className="font-mono text-xs font-medium tracking-wider text-zinc-500 uppercase">How TechSync helps</p>
                     <ul className="mt-6 space-y-6">
                       {ind.solutions.map((s) => (
                         <li key={s.title} className="flex gap-4">
-                          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 ring-1 ring-brand-100">
-                            <Check className="size-3.5" aria-hidden="true" />
+                          <span className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 ring-1 ring-brand-100">
+                            <Check className="size-4" aria-hidden="true" />
                           </span>
                           <div>
                             <h3 className="font-semibold text-zinc-950">{s.title}</h3>
@@ -124,16 +124,16 @@ export default function Solutions() {
           {solutions.teams.map((t, i) => {
             const Icon = getIcon(t.icon)
             return (
-              <Reveal key={t.team} delay={i * 60} className="flex flex-col rounded-2xl bg-white p-6 shadow-card ring-1 ring-zinc-200">
+              <Reveal key={t.team} delay={i * 60} className="flex flex-col rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200">
                 <IconTile>
                   <Icon className="size-5" />
                 </IconTile>
                 <h3 className="mt-5 font-semibold text-zinc-950">{t.team}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-zinc-600">{t.description}</p>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{t.description}</p>
                 <ul className="mt-5 space-y-2 border-t border-zinc-100 pt-5">
                   {t.outcomes.map((o) => (
                     <li key={o} className="flex gap-2 text-sm text-zinc-700">
-                      <Check className="mt-0.5 size-4 shrink-0 text-brand-600" aria-hidden="true" />
+                      <Check className="mt-1 size-4 shrink-0 text-brand-700" aria-hidden="true" />
                       {o}
                     </li>
                   ))}

@@ -14,10 +14,10 @@ export function KpiTiles({ kpis, className }: { kpis: Kpi[]; className?: string 
         // Arrow shows direction of change; colour shows whether that change is good.
         const down = /^[−-]/.test(kpi.delta)
         return (
-        <div key={kpi.label} className="bg-white p-3.5">
+        <div key={kpi.label} className="bg-white p-4">
           <dt className="truncate text-xs text-zinc-500">{kpi.label}</dt>
-          <dd className="mt-1.5 text-xl font-semibold tracking-tight text-zinc-900">{kpi.value}</dd>
-          <dd className="mt-1 flex items-center gap-1 text-[11px]">
+          <dd className="mt-2 text-xl font-semibold tracking-tight text-zinc-900">{kpi.value}</dd>
+          <dd className="mt-1 flex items-center gap-1 text-xs">
             <span className={cn('inline-flex items-center font-medium', kpi.positive ? 'text-emerald-700' : 'text-red-700')}>
               {down ? <ArrowDownRight className="size-3" aria-hidden="true" /> : <ArrowUpRight className="size-3" aria-hidden="true" />}
               {kpi.delta}

@@ -1,4 +1,6 @@
-import { useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useFloatingPanel } from '../../components/app/useFloatingPanel'
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
+import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarClock, Mail, MapPin, MessageCircle, MoreHorizontal, NotebookPen, Pencil, Phone, Pin, PinOff, Sparkles, Trash2, Users } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
@@ -59,6 +61,8 @@ function MentionTextarea({ value, onChange, placeholder, id, rows = 3 }: { value
   const [active, setActive] = useState(0)
   const members = useQuery({ queryKey: qk.org(orgId).memberOptions(query ?? ''), queryFn: () => memberOptions(query || undefined), enabled: query !== null })
   const items = (members.data ?? []).slice(0, 6)
+  const listId = useId()
+  const panel = useFloatingPanel<HTMLUListElement>(query !== null && items.length > 0, ref)
 
   function detect(text: string, caret: number) {
     const m = /(^|\s)@([\p{L}\p{N}._-]{0,30})$/u.exec(text.slice(0, caret))
@@ -88,7 +92,7 @@ function MentionTextarea({ value, onChange, placeholder, id, rows = 3 }: { value
     } else if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault()
       insert(items[active])
-    } else if (e.key === 'Escape') setQuery(null)
+    } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setQuery(null) }
   }
 
   return (
@@ -106,12 +110,15 @@ function MentionTextarea({ value, onChange, placeholder, id, rows = 3 }: { value
         onKeyDown={onKeyDown}
         onBlur={() => setTimeout(() => setQuery(null), 150)}
         maxLength={10_000}
+        aria-label={id ? undefined : 'Note'}
+        aria-controls={query !== null ? listId : undefined}
+        aria-activedescendant={query !== null && items[active] ? `${listId}-${items[active].userId}` : undefined}
         aria-autocomplete="list"
       />
       {query !== null && items.length > 0 && (
-        <ul role="listbox" aria-label="Mention a teammate" className="absolute z-40 mt-1 w-64 rounded-xl bg-white p-1 shadow-float ring-1 ring-zinc-200">
+        <ul ref={panel} popover="manual" id={listId} role="listbox" aria-label="Mention a teammate" className="crm-popover menu-surface">
           {items.map((m, i) => (
-            <li key={m.userId} role="option" aria-selected={i === active} onPointerDown={(e) => e.preventDefault()} onClick={() => insert(m)} className={cn('flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm', i === active && 'bg-zinc-100')}>
+            <li key={m.userId} id={`${listId}-${m.userId}`} role="option" aria-selected={i === active} onPointerDown={(e) => e.preventDefault()} onClick={() => insert(m)} className={cn('flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm', i === active && 'bg-surface-subtle')}>
               <Avatar name={m.fullName} size="xs" />
               <span className="truncate">{m.fullName}</span>
             </li>
@@ -134,6 +141,8 @@ function ComposerForm({ kind, entityType, entityId, onDone }: { kind: Exclude<Co
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const guard = useUnsavedChanges({ body, subject, minutes, location }, () => {}, busy)
+
   async function submit() {
     setBusy(true)
     setError(null)
@@ -153,6 +162,7 @@ function ComposerForm({ kind, entityType, entityId, onDone }: { kind: Exclude<Co
       setMinutes('')
       setLocation('')
       setWhen(localNow())
+      guard.markSaved({ body: '', subject: '', minutes: '', location: '' })
       onDone(activity, kind === 'call' && outcome === 'callback_requested' && followUp)
     } catch (err) {
       if (!handleGlobalApiError(err)) setError(err instanceof ApiError ? (Object.values(err.fields)[0] ?? err.message) : 'Couldn’t save')
@@ -163,20 +173,21 @@ function ComposerForm({ kind, entityType, entityId, onDone }: { kind: Exclude<Co
 
   return (
     <div className="space-y-3">
+      {guard.confirmation}
       {kind === 'call' && (
         <div className="grid gap-3 sm:grid-cols-3">
-          <Select aria-label="Direction" value={direction} onChange={(e) => setDirection(e.target.value as 'outbound' | 'inbound')} className="h-9! text-sm">
+          <Select aria-label="Direction" value={direction} onChange={(e) => setDirection(e.target.value as 'outbound' | 'inbound')} className="h-10! text-sm">
             <option value="outbound">I called them</option>
             <option value="inbound">They called</option>
           </Select>
-          <Select aria-label="Outcome" value={outcome} onChange={(e) => setOutcome(e.target.value as CallOutcome)} className="h-9! text-sm">
+          <Select aria-label="Outcome" value={outcome} onChange={(e) => setOutcome(e.target.value as CallOutcome)} className="h-10! text-sm">
             {Object.entries(outcomeLabels).map(([v, l]) => (
               <option key={v} value={v}>
                 {l}
               </option>
             ))}
           </Select>
-          <Input aria-label="Duration in minutes" type="number" min={0} placeholder="Minutes" value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-9! text-sm" />
+          <Input aria-label="Duration in minutes" type="number" min={0} placeholder="Minutes" value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-10! text-sm" />
         </div>
       )}
       {['whatsapp', 'email', 'sms'].includes(kind) && (
@@ -187,8 +198,8 @@ function ComposerForm({ kind, entityType, entityId, onDone }: { kind: Exclude<Co
       )}
       {(kind === 'meeting' || kind === 'site_visit') && (
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input aria-label="Subject" placeholder={kind === 'meeting' ? 'Meeting about…' : 'Visit purpose'} value={subject} onChange={(e) => setSubject(e.target.value)} className="h-9! text-sm" />
-          <Input aria-label="Location" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} className="h-9! text-sm" />
+          <Input aria-label="Subject" placeholder={kind === 'meeting' ? 'Meeting about…' : 'Visit purpose'} value={subject} onChange={(e) => setSubject(e.target.value)} className="h-10! text-sm" />
+          <Input aria-label="Location" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} className="h-10! text-sm" />
         </div>
       )}
       {kind === 'note' ? (
@@ -198,10 +209,10 @@ function ComposerForm({ kind, entityType, entityId, onDone }: { kind: Exclude<Co
       )}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-3">
-          {kind !== 'note' && <Input aria-label="When" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="h-9! w-auto text-sm" />}
+          {kind !== 'note' && <Input aria-label="When" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="h-10! w-auto text-sm" />}
           {kind === 'call' && outcome === 'callback_requested' && (
-            <label className="flex items-center gap-1.5 text-sm text-zinc-700">
-              <input type="checkbox" checked={followUp} onChange={(e) => setFollowUp(e.target.checked)} className="size-4 rounded border-zinc-300 text-brand-600" />
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input type="checkbox" checked={followUp} onChange={(e) => setFollowUp(e.target.checked)} className="size-4 rounded border-line text-brand-700" />
               Create a follow-up task
             </label>
           )}
@@ -247,35 +258,35 @@ function ActivityEntry({ activity, canPin, onChanged }: { activity: Activity; ca
 
   return (
     <li className="relative flex gap-3 pb-5 pl-1">
-      <span className={cn('relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full ring-4 ring-white', system ? 'bg-zinc-100 text-zinc-500' : activity.type === 'note' ? 'bg-amber-50 text-amber-700' : 'bg-brand-50 text-brand-700')}>
-        <Icon className="size-3.5" aria-hidden="true" />
+      <span className={cn('relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full ring-4 ring-surface', system ? 'bg-surface-subtle text-muted' : activity.type === 'note' ? 'bg-amber-50 text-amber-700  ' : 'bg-brand-50 text-brand-700  ')}>
+        <Icon className="size-4" aria-hidden="true" />
       </span>
-      <div className={cn('min-w-0 flex-1', !system && 'rounded-xl bg-white p-3 ring-1 ring-zinc-200', activity.isPinned && 'ring-amber-300')}>
+      <div className={cn('min-w-0 flex-1', !system && 'rounded-xl bg-surface p-3 ring-1 ring-line text-ink', activity.isPinned && 'ring-amber-300 ')}>
         <div className="flex items-start justify-between gap-2">
-          <p className={cn('text-sm', system ? 'text-zinc-600' : 'text-zinc-900')}>
+          <p className={cn('text-sm', system ? 'text-muted' : 'text-ink')}>
             {system ? (
               <>
                 {activity.subject}
-                {activity.actor && <span className="text-zinc-400"> · {activity.actor.fullName}</span>}
+                {activity.actor && <span className="text-muted"> · {activity.actor.fullName}</span>}
               </>
             ) : (
               <>
                 <span className="font-medium">{activity.actor?.fullName ?? 'Someone'}</span>
-                <span className="text-zinc-500"> · {typeLabel[activity.type]}</span>
-                {activity.subject && <span className="text-zinc-700"> — {activity.subject}</span>}
+                <span className="text-muted"> · {typeLabel[activity.type]}</span>
+                {activity.subject && <span className="text-ink"> — {activity.subject}</span>}
               </>
             )}
-            {activity.isPinned && <Pin className="ml-1.5 inline size-3 text-amber-600" aria-label="Pinned" />}
+            {activity.isPinned && <Pin className="ml-2 inline size-3 text-warning" aria-label="Pinned" />}
           </p>
           <div className="flex shrink-0 items-center gap-1">
-            <time dateTime={activity.occurredAt} title={new Date(activity.occurredAt).toLocaleString('en-IN')} className="text-xs text-zinc-400">
+            <time dateTime={activity.occurredAt} title={new Date(activity.occurredAt).toLocaleString('en-IN')} className="text-xs text-muted">
               {relativeTime(activity.occurredAt)}
             </time>
             {!system && (canPin || isMine || canDelete) && (
               <Menu
                 align="end"
                 trigger={(props) => (
-                  <button {...props} type="button" className="rounded p-0.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label="Entry actions">
+                  <button {...props} type="button" className="rounded p-1 text-muted hover:bg-surface-subtle hover:text-ink" aria-label="Entry actions">
                     <MoreHorizontal className="size-4" aria-hidden="true" />
                   </button>
                 )}
@@ -320,7 +331,7 @@ function ActivityEntry({ activity, canPin, onChanged }: { activity: Activity; ca
             )}
           </div>
         </div>
-        {meta.length > 0 && <p className="mt-0.5 text-xs text-zinc-500">{meta.join(' · ')}</p>}
+        {meta.length > 0 && <p className="mt-1 text-xs text-muted">{meta.join(' · ')}</p>}
         {editing ? (
           <div className="mt-2 space-y-2">
             <MentionTextarea value={text} onChange={setText} />
@@ -342,9 +353,9 @@ function ActivityEntry({ activity, canPin, onChanged }: { activity: Activity; ca
             </div>
           </div>
         ) : (
-          activity.body && <Markdown text={activity.body} className="mt-1.5 space-y-1 text-sm text-zinc-700" />
+          activity.body && <Markdown text={activity.body} className="mt-2 space-y-1 text-sm text-ink" />
         )}
-        {activity.editedAt && !editing && <p className="mt-1 text-[11px] text-zinc-400">Edited</p>}
+        {activity.editedAt && !editing && <p className="mt-1 text-xs text-muted">Edited</p>}
       </div>
     </li>
   )
@@ -364,12 +375,12 @@ const dayLabel = (iso: string) => {
  * Timeline for a lead, contact, company or deal: composer (note, call, meeting, site visit, task),
  * filters, pinned entries on top, newest first grouped by day, system updates in a muted style.
  */
-export function Timeline({ entityType, entityId, recordName, canPin = false }: { entityType: RecordType; entityId: string; recordName?: string; canPin?: boolean }) {
+export function Timeline({ entityType, entityId, recordName, canPin = false, notesOnly = false }: { notesOnly?: boolean; entityType: RecordType; entityId: string; recordName?: string; canPin?: boolean }) {
   const orgId = useOrgId()
   const queryClient = useQueryClient()
   const canLog = useCan('tasks.create')
   const [composer, setComposer] = useState<Composer>('note')
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState(notesOnly ? 'notes' : 'all')
   const [taskDefaults, setTaskDefaults] = useState<{ title: string; type: 'call' } | null>(null)
   const [taskOpen, setTaskOpen] = useState(false)
   const types = FILTERS.find((f) => f.key === filter)?.types
@@ -409,29 +420,28 @@ export function Timeline({ entityType, entityId, recordName, canPin = false }: {
   ]
 
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-zinc-200" aria-label="Timeline">
-      <h2 className="text-sm font-semibold text-zinc-950">Timeline</h2>
+    <section className="rounded-card bg-surface p-5 shadow-card ring-1 ring-line text-ink" aria-label="Timeline">
+      <h2 className="text-sm font-semibold text-ink">{notesOnly ? 'Notes' : 'Activity timeline'}</h2>
       {canLog && (
-        <div className="mt-4 rounded-xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
-          <div role="tablist" aria-label="Add to timeline" className="no-scrollbar -mx-1 mb-3 flex gap-1 overflow-x-auto px-1">
-            {tabs.map((t) => (
+        <div className="mt-4 rounded-xl bg-surface-subtle p-3 ring-1 ring-line">
+          <div role="group" aria-label="Add to timeline" className="no-scrollbar -mx-1 mb-3 flex gap-1 overflow-x-auto px-1">
+            {tabs.filter((item) => !notesOnly || item.key === 'note').map((t) => (
               <button
                 key={t.key}
                 type="button"
-                role="tab"
-                aria-selected={composer === t.key}
+                aria-pressed={composer === t.key}
                 onClick={() => (t.key === 'task' ? setTaskOpen(true) : setComposer(t.key))}
-                className={cn('inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium', composer === t.key && t.key !== 'task' ? 'bg-white text-zinc-900 shadow-card ring-1 ring-zinc-200' : 'text-zinc-600 hover:text-zinc-900')}
+                className={cn('inline-flex h-8 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors', composer === t.key && t.key !== 'task' ? 'bg-surface text-ink shadow-card ring-1 ring-line' : 'text-muted hover:text-ink')}
               >
-                <t.icon className="size-3.5" aria-hidden="true" />
+                <t.icon className="size-4" aria-hidden="true" />
                 {t.label}
               </button>
             ))}
           </div>
-          {composer !== 'task' && (
+          {tabs.filter((item): item is typeof item & { key: Exclude<Composer, 'task'> } => item.key !== 'task' && (!notesOnly || item.key === 'note')).map((item) => (
+            <div key={item.key} hidden={composer !== item.key}>
             <ComposerForm
-              key={composer}
-              kind={composer}
+              kind={item.key}
               entityType={entityType}
               entityId={entityId}
               onDone={(_a, followUp) => {
@@ -442,13 +452,14 @@ export function Timeline({ entityType, entityId, recordName, canPin = false }: {
                 }
               }}
             />
-          )}
+            </div>
+          ))}
         </div>
       )}
 
       <div className="no-scrollbar -mx-1 mt-4 flex gap-1 overflow-x-auto px-1" role="group" aria-label="Filter timeline">
-        {FILTERS.map((f) => (
-          <button key={f.key} type="button" aria-pressed={filter === f.key} onClick={() => setFilter(f.key)} className={cn('h-7 shrink-0 rounded-md px-2.5 text-xs font-medium', filter === f.key ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100')}>
+        {FILTERS.filter((item) => !notesOnly || item.key === 'notes').map((f) => (
+          <button key={f.key} type="button" aria-pressed={filter === f.key} onClick={() => setFilter(f.key)} className={cn('h-8 shrink-0 rounded-md px-3 text-xs font-medium transition-colors', filter === f.key ? 'bg-ink text-surface' : 'text-muted hover:bg-surface-subtle hover:text-ink')}>
             {f.label}
           </button>
         ))}
@@ -460,7 +471,7 @@ export function Timeline({ entityType, entityId, recordName, canPin = false }: {
         ) : timeline.isError ? (
           <ErrorState error={timeline.error} onRetry={() => timeline.refetch()} />
         ) : !items.length && !pinned.length ? (
-          <p className="rounded-xl border border-dashed border-zinc-200 p-4 text-sm text-zinc-500">Nothing here yet. Log a call or add a note to start the history.</p>
+          <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">Nothing here yet. Log a call or add a note to start the history.</p>
         ) : (
           <>
             {pinned.length > 0 && (
@@ -472,8 +483,8 @@ export function Timeline({ entityType, entityId, recordName, canPin = false }: {
             )}
             {groups.map((g) => (
               <div key={g.label}>
-                <p className="mb-2 text-xs font-medium text-zinc-500">{g.label}</p>
-                <ul className="relative before:absolute before:top-2 before:bottom-4 before:left-[17px] before:w-px before:bg-zinc-200">
+                <p className="mb-2 text-xs font-medium text-muted">{g.label}</p>
+                <ul className="relative before:absolute before:top-2 before:bottom-4 before:left-[17px] before:w-px before:bg-line">
                   {g.items.map((a) => (
                     <ActivityEntry key={a.id} activity={a} canPin={canPin} onChanged={refresh} />
                   ))}

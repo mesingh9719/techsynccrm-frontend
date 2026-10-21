@@ -15,7 +15,7 @@ import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import { useToast } from '../../components/ui/Toast'
 import { ConfirmDialog, Dialog } from '../../components/app/Dialog'
 import { SettingsSection } from '../../components/app/SettingsSection'
-import { EmptyState, ErrorState, ListSkeleton } from '../../components/app/States'
+import { EmptyState, ErrorState, ListSkeleton, PageHeader } from '../../components/app/States'
 import { createCustomField, deleteCustomField, reorderCustomFields, updateCustomField } from '../crm/api'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
 import type { CustomFieldDefinition, CustomFieldEntity, CustomFieldOption, CustomFieldType } from '../crm/types'
@@ -154,18 +154,18 @@ function FieldDialog({ entityType, field, onClose }: { entityType: CustomFieldEn
         </Field>
         {hasOptions && (
           <fieldset>
-            <legend className="mb-1.5 text-sm font-medium text-zinc-800">Options</legend>
-            <ul className="space-y-1.5">
+            <legend className="mb-2 text-sm font-medium text-ink">Options</legend>
+            <ul className="space-y-2">
               {options.map((o, i) => (
-                <li key={o.value} className="flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-1.5 text-sm">
+                <li key={o.value} className="flex items-center gap-2 rounded-lg bg-surface-subtle px-3 py-2 text-sm">
                   <input
                     value={o.label}
                     aria-label={`Option ${i + 1}`}
                     onChange={(e) => setOptions(options.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
                     className="min-w-0 flex-1 bg-transparent focus:outline-none"
                   />
-                  <button type="button" onClick={() => setOptions(options.filter((_, j) => j !== i))} className="rounded p-1 text-zinc-400 hover:text-red-600" aria-label={`Remove ${o.label}`}>
-                    <X className="size-3.5" aria-hidden="true" />
+                  <button type="button" onClick={() => setOptions(options.filter((_, j) => j !== i))} className="rounded p-1 text-muted hover:text-danger" aria-label={`Remove ${o.label}`}>
+                    <X className="size-4" aria-hidden="true" />
                   </button>
                 </li>
               ))}
@@ -187,8 +187,8 @@ function FieldDialog({ entityType, field, onClose }: { entityType: CustomFieldEn
                 Add
               </Button>
             </div>
-            {errors.options && <p className="mt-1 text-sm text-red-600">{errors.options}</p>}
-            {field && <p className="mt-1.5 text-xs text-zinc-500">Removing an option keeps it on records that already use it.</p>}
+            {errors.options && <p className="mt-1 text-sm text-danger">{errors.options}</p>}
+            {field && <p className="mt-2 text-xs text-muted">Removing an option keeps it on records that already use it.</p>}
           </fieldset>
         )}
         <Checkbox label="Required" description="Records can’t be saved without it (web forms and imports skip this)." checked={required} onChange={(e) => setRequired(e.target.checked)} />
@@ -242,6 +242,7 @@ export default function CustomFieldsSettings() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Custom fields" description="Collect the information that matters to your business." />
       <SettingsSection
         title="Custom fields"
         description="Extra details your team records — GST type, product interest, branch. They appear on forms, detail pages and list filters."
@@ -262,13 +263,13 @@ export default function CustomFieldsSettings() {
         <SegmentedControl label="Record type" value={entityType} onChange={(v) => setEntityType(v as CustomFieldEntity)} options={ENTITIES} />
         {limit !== null && (
           <div className="mt-4">
-            <div className="flex justify-between text-xs text-zinc-600">
+            <div className="flex justify-between text-xs text-muted">
               <span>Fields for {ENTITIES.find((e) => e.value === entityType)?.label.toLowerCase()}</span>
               <span className="tabular-nums">
                 {used} of {limit} (archived fields count)
               </span>
             </div>
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-zinc-100" role="meter" aria-label="Custom fields used" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={used}>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-100" role="meter" aria-label="Custom fields used" aria-valuemin={0} aria-valuemax={limit} aria-valuenow={used}>
               <div className={cn('h-full rounded-full', full ? 'bg-red-500' : used / limit >= 0.8 ? 'bg-amber-500' : 'bg-brand-500')} style={{ width: `${Math.min(100, (used / limit) * 100)}%` }} />
             </div>
           </div>
@@ -281,7 +282,7 @@ export default function CustomFieldsSettings() {
           ) : !fields.length ? (
             <EmptyState title="No custom fields yet" description="Add one to capture what matters to your business." className="py-10" />
           ) : (
-            <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
+            <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
               {fields.map((f, i) => (
                 <li
                   key={f.id}
@@ -295,35 +296,35 @@ export default function CustomFieldsSettings() {
                     setDragId(null)
                     void move(ids)
                   }}
-                  className={cn('flex items-center gap-3 px-3 py-2.5', f.archived && 'bg-zinc-50', dragId === f.id && 'opacity-50')}
+                  className={cn('flex items-center gap-3 px-3 py-3', f.archived && 'bg-surface-subtle', dragId === f.id && 'opacity-50')}
                 >
                   {canManage && <GripVertical className="size-4 shrink-0 cursor-grab text-zinc-300" aria-hidden="true" />}
                   <div className="min-w-0 flex-1">
-                    <p className={cn('flex flex-wrap items-center gap-2 text-sm font-medium', f.archived ? 'text-zinc-500' : 'text-zinc-900')}>
+                    <p className={cn('flex flex-wrap items-center gap-2 text-sm font-medium', f.archived ? 'text-muted' : 'text-ink')}>
                       {f.label}
                       {f.required && <Badge tone="warning">Required</Badge>}
                       {f.archived && <Badge>Archived</Badge>}
                     </p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted">
                       {fieldTypeLabels[f.type]} · <span className="font-mono">{f.key}</span>
                       {f.options?.length ? ` · ${f.options.length} options` : ''}
                     </p>
                   </div>
                   {canManage && (
-                    <div className="flex shrink-0 items-center gap-0.5">
-                      <button type="button" disabled={i === 0} onClick={() => swap(i, i - 1)} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 disabled:opacity-30" aria-label={`Move ${f.label} up`}>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <button type="button" disabled={i === 0} onClick={() => swap(i, i - 1)} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink disabled:opacity-30" aria-label={`Move ${f.label} up`}>
                         <ArrowUp className="size-4" aria-hidden="true" />
                       </button>
-                      <button type="button" disabled={i === fields.length - 1} onClick={() => swap(i, i + 1)} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 disabled:opacity-30" aria-label={`Move ${f.label} down`}>
+                      <button type="button" disabled={i === fields.length - 1} onClick={() => swap(i, i + 1)} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink disabled:opacity-30" aria-label={`Move ${f.label} down`}>
                         <ArrowDown className="size-4" aria-hidden="true" />
                       </button>
-                      <button type="button" onClick={() => setEditing(f)} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label={`Edit ${f.label}`}>
+                      <button type="button" onClick={() => setEditing(f)} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={`Edit ${f.label}`}>
                         <Pencil className="size-4" aria-hidden="true" />
                       </button>
-                      <button type="button" onClick={() => toggleArchive(f)} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label={f.archived ? `Restore ${f.label}` : `Archive ${f.label}`}>
+                      <button type="button" onClick={() => toggleArchive(f)} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={f.archived ? `Restore ${f.label}` : `Archive ${f.label}`}>
                         {f.archived ? <ArchiveRestore className="size-4" aria-hidden="true" /> : <Archive className="size-4" aria-hidden="true" />}
                       </button>
-                      <button type="button" onClick={() => setDeleting(f)} className="rounded p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600" aria-label={`Delete ${f.label}`}>
+                      <button type="button" onClick={() => setDeleting(f)} className="rounded p-2 text-muted hover:bg-red-50 hover:text-danger" aria-label={`Delete ${f.label}`}>
                         <Trash2 className="size-4" aria-hidden="true" />
                       </button>
                     </div>
@@ -333,7 +334,7 @@ export default function CustomFieldsSettings() {
             </ul>
           )}
         </div>
-        {entityType === 'deal' && <p className="mt-3 text-xs text-zinc-500">Deal fields appear once pipelines and deals are available.</p>}
+        {entityType === 'deal' && <p className="mt-3 text-xs text-muted">Deal fields appear once pipelines and deals are available.</p>}
       </SettingsSection>
 
       {editing && <FieldDialog entityType={entityType} field={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}

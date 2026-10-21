@@ -1,4 +1,4 @@
-import { Attachments } from '../files/Attachments'
+import { RecordWorkspace } from '../crm/components/RecordWorkspace'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -21,9 +21,7 @@ import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel } from '../crm/co
 import { TagChips } from '../crm/components/Tags'
 import { formatPhone, relativeTime } from '../crm/format'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
-import { Timeline } from '../activities/Timeline'
 import { RecordDeals } from '../deals/RecordDeals'
-import { RecordTasks } from '../tasks/RecordTasks'
 import { deleteCompany, getCompany, listCompanyContacts, restoreCompany, updateCompany, type CompanyInput } from './api'
 import { CompanyFormDrawer } from './CompanyFormDrawer'
 
@@ -52,7 +50,7 @@ export default function CompanyDetailPage() {
   const company = query.data
   useSeo({ title: company?.name ?? 'Company', noindex: true })
 
-  if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-2xl" />
+  if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-card" />
   if (query.isError || !company)
     return (
       <div className="mx-auto max-w-6xl px-4 py-10">
@@ -82,8 +80,8 @@ export default function CompanyDetailPage() {
   const activeDefs = (defs.data ?? []).filter((d) => !d.archived || company.customFields[d.key] !== undefined)
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <Link to="/app/companies" className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+    <div className="app-page">
+      <Link to="/app/companies" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
         <ArrowLeft className="size-4" aria-hidden="true" />
         Companies
       </Link>
@@ -125,8 +123,8 @@ export default function CompanyDetailPage() {
             {company.name.slice(0, 2).toUpperCase()}
           </span>
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">{company.name}</h1>
-            <p className="mt-0.5 text-sm text-zinc-600">
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">{company.name}</h1>
+            <p className="mt-1 text-sm text-muted">
               {[company.industry, address?.city, stateName(address?.stateCode)].filter(Boolean).join(' · ') ||
                 'No details yet'}
             </p>
@@ -169,7 +167,7 @@ export default function CompanyDetailPage() {
         </div>
       </header>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <div className="record-workspace mt-6">
         <div className="space-y-6">
           <Panel title="Details">
             <dl className="divide-y divide-zinc-100">
@@ -222,7 +220,7 @@ export default function CompanyDetailPage() {
               canCreateContact &&
               !company.deletedAt && (
                 <Button size="sm" variant="secondary" onClick={() => setAddingContact(true)}>
-                  <Plus className="size-3.5" aria-hidden="true" />
+                  <Plus className="size-4" aria-hidden="true" />
                   Add contact
                 </Button>
               )
@@ -230,15 +228,17 @@ export default function CompanyDetailPage() {
           >
             {contacts.isPending ? (
               <Skeleton className="h-16" />
+            ) : contacts.isError ? (
+              <ErrorState error={contacts.error} onRetry={() => contacts.refetch()} />
             ) : contacts.data?.length ? (
               <ul className="divide-y divide-zinc-100">
                 {contacts.data.map((c) => (
                   <li key={c.id}>
-                    <Link to={`/app/contacts/${c.id}`} className="flex items-center gap-3 py-2.5 hover:bg-zinc-50">
+                    <Link to={`/app/contacts/${c.id}`} className="flex items-center gap-3 py-3 hover:bg-surface-subtle">
                       <Avatar name={c.displayName} size="sm" />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-zinc-900">{c.displayName}</span>
-                        <span className="block truncate text-xs text-zinc-500">
+                        <span className="block truncate text-sm font-medium text-ink">{c.displayName}</span>
+                        <span className="block truncate text-xs text-muted">
                           {[c.role ?? c.title, formatPhone(c.primaryPhoneE164, null)]
                             .filter((v) => v && v !== '—')
                             .join(' · ')}
@@ -250,16 +250,13 @@ export default function CompanyDetailPage() {
                 ))}
               </ul>
             ) : (
-              <p className="flex items-center gap-2 text-sm text-zinc-500">
+              <p className="flex items-center gap-2 text-sm text-muted">
                 <Users className="size-4" aria-hidden="true" />
                 No contacts at this company yet.
               </p>
             )}
           </Panel>
-          <RecordDeals company={{ id: company.id, name: company.name }} />
-          <RecordTasks entityType="company" entityId={company.id} recordName={company.name} />
-          <Attachments entityType="company" entityId={company.id} />
-          <Timeline entityType="company" entityId={company.id} recordName={company.name} canPin={canUpdate} />
+          <RecordWorkspace key={company.id} entityType="company" entityId={company.id} name={company.name} canPin={canUpdate} deals={<RecordDeals company={{ id: company.id, name: company.name }} />} />
         </div>
       </div>
 

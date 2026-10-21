@@ -19,7 +19,7 @@ import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import { useToast } from '../../components/ui/Toast'
 import { DataTable, type Column } from '../../components/app/DataTable'
 import { ConfirmDialog } from '../../components/app/Dialog'
-import { FilterBar } from '../../components/app/FilterBar'
+import { FilterChips, FilterBar } from '../../components/app/FilterBar'
 import { EmptyState, ErrorState, ListSkeleton, LoadMore, PageHeader, Skeleton } from '../../components/app/States'
 import { PipelineBoard } from '../../components/product/PipelineBoard'
 import type { BoardDeal, BoardStage } from '../../components/product/types'
@@ -103,7 +103,7 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
     onSettled: () => queryClient.invalidateQueries({ queryKey: qk.org(orgId).deals.all }),
   })
 
-  if (board.isPending) return <Skeleton className="h-[420px] rounded-2xl" />
+  if (board.isPending) return <Skeleton className="h-[420px] rounded-card" />
   if (board.isError) return <ErrorState error={board.error} onRetry={() => board.refetch()} />
 
   const columns = board.data.stages
@@ -160,16 +160,16 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
   const totalOpen = columns.filter((c) => c.type === 'open')
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-zinc-600">
+      <div className="mb-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted">
         <span>
           Open:{' '}
-          <strong className="text-zinc-900 tabular-nums">
+          <strong className="text-ink tabular-nums">
             {formatMinor(totalOpen.reduce((n, c) => n + c.totalMinor, 0))}
           </strong>
         </span>
         <span>
           Weighted:{' '}
-          <strong className="text-zinc-900 tabular-nums">
+          <strong className="text-ink tabular-nums">
             {formatMinor(totalOpen.reduce((n, c) => n + c.weightedMinor, 0))}
           </strong>
         </span>
@@ -201,10 +201,10 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="mt-2 w-full justify-start text-zinc-500"
+                  className="mt-2 w-full justify-start text-muted"
                   onClick={() => setAddingStage(s.id)}
                 >
-                  <Plus className="size-3.5" />
+                  <Plus className="size-4" />
                   Add deal
                 </Button>
               )}
@@ -263,8 +263,8 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
       sortKey: 'title',
       cell: (d) => (
         <span className="min-w-0">
-          <span className="block truncate font-medium text-zinc-900">{d.title}</span>
-          <span className="block truncate text-xs text-zinc-500">
+          <span className="block truncate font-medium text-ink">{d.title}</span>
+          <span className="block truncate text-xs text-muted">
             {d.company?.name ?? d.contacts[0]?.displayName ?? ''}
           </span>
         </span>
@@ -281,7 +281,7 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
       key: 'stage',
       header: 'Stage',
       cell: (d) => (
-        <span className="flex flex-wrap items-center gap-1.5">
+        <span className="flex flex-wrap items-center gap-2">
           <Badge tone={statusTone[d.status]}>{d.stage.name}</Badge>
           {d.isRotting && <Badge tone="warning">{d.daysInStage}d idle</Badge>}
         </span>
@@ -305,7 +305,7 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
       sortKey: 'createdAt',
       hideBelow: 'xl',
       align: 'right',
-      cell: (d) => <span className="text-zinc-500">{relativeTime(d.createdAt)}</span>,
+      cell: (d) => <span className="text-muted">{relativeTime(d.createdAt)}</span>,
     },
   ]
 
@@ -315,13 +315,13 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
         <BulkBar count={selected.size} onClear={() => setSelected(new Set())}>
           {canAssign && (
             <BulkButton onClick={() => setDialog('assign')}>
-              <UserRound className="size-3.5" aria-hidden="true" />
+              <UserRound className="size-4" aria-hidden="true" />
               Change owner
             </BulkButton>
           )}
           {canDelete && (
             <BulkButton tone="danger" onClick={() => setDialog('delete')}>
-              <Trash2 className="size-3.5" aria-hidden="true" />
+              <Trash2 className="size-4" aria-hidden="true" />
               Delete
             </BulkButton>
           )}
@@ -346,10 +346,10 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
             onSelectionChange={canUpdate ? setSelected : undefined}
             onRowClick={(d) => navigate(`/app/deals/${d.id}`)}
             mobileCard={(d) => (
-              <div className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 ring-1 ring-zinc-200">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-surface p-3 ring-1 ring-line">
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-zinc-900">{d.title}</p>
-                  <p className="truncate text-xs text-zinc-500">
+                  <p className="truncate font-medium text-ink">{d.title}</p>
+                  <p className="truncate text-xs text-muted">
                     {[d.stage.name, d.company?.name].filter(Boolean).join(' · ')}
                   </p>
                 </div>
@@ -394,16 +394,16 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
     queryKey: [...qk.org(orgId).deals.all, 'forecast', pipelineId, ownerId, period],
     queryFn: () => getForecast({ pipelineId, period, ownerId }),
   })
-  if (forecast.isPending) return <Skeleton className="h-64 rounded-2xl" />
+  if (forecast.isPending) return <Skeleton className="h-64 rounded-card" />
   if (forecast.isError) return <ErrorState error={forecast.error} onRetry={() => forecast.refetch()} />
   const f = forecast.data
   const max = Math.max(1, ...f.periods.map((p) => p.totalMinor))
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-zinc-200">
+    <div className="rounded-card bg-surface p-5 shadow-card ring-1 ring-line">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-muted">
           Weighted forecast{' '}
-          <strong className="text-zinc-900 tabular-nums">{formatMinor(f.totals.weightedMinor)}</strong> of{' '}
+          <strong className="text-ink tabular-nums">{formatMinor(f.totals.weightedMinor)}</strong> of{' '}
           {formatMinor(f.totals.totalMinor)} across {f.totals.count} open deals
         </p>
         <SegmentedControl
@@ -420,7 +420,7 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
       {f.periods.length ? (
         <table className="mt-5 w-full text-left text-sm">
           <caption className="sr-only">Forecast by {period}</caption>
-          <thead className="text-xs text-zinc-500">
+          <thead className="text-xs text-muted">
             <tr>
               <th scope="col" className="py-2 font-medium">
                 Period
@@ -439,14 +439,14 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-line">
             {f.periods.map((p) => (
               <tr key={p.period} title={p.byOwner.map((o) => `${o.name}: ${formatMinor(o.weightedMinor)}`).join('\n')}>
-                <th scope="row" className="py-2.5 font-medium text-zinc-800">
+                <th scope="row" className="py-3 font-medium text-ink">
                   {p.label}
                 </th>
-                <td className="py-2.5 pr-4">
-                  <div className="relative h-2 rounded-full bg-zinc-100" aria-hidden="true">
+                <td className="py-3 pr-4">
+                  <div className="relative h-2 rounded-full bg-surface-subtle" aria-hidden="true">
                     <div
                       className="absolute inset-y-0 left-0 rounded-full bg-brand-200"
                       style={{ width: `${(p.totalMinor / max) * 100}%` }}
@@ -457,18 +457,18 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
                     />
                   </div>
                 </td>
-                <td className="py-2.5 text-right font-medium tabular-nums">{formatMinor(p.weightedMinor)}</td>
-                <td className="py-2.5 text-right text-zinc-600 tabular-nums">{formatMinor(p.totalMinor)}</td>
-                <td className="py-2.5 text-right text-zinc-600 tabular-nums">{p.count}</td>
+                <td className="py-3 text-right font-medium tabular-nums">{formatMinor(p.weightedMinor)}</td>
+                <td className="py-3 text-right text-muted tabular-nums">{formatMinor(p.totalMinor)}</td>
+                <td className="py-3 text-right text-muted tabular-nums">{p.count}</td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <p className="mt-5 text-sm text-zinc-500">No open deals have an expected close date yet.</p>
+        <p className="mt-5 text-sm text-muted">No open deals have an expected close date yet.</p>
       )}
       {f.noCloseDate.count > 0 && (
-        <p className="mt-4 text-xs text-zinc-500">
+        <p className="mt-4 text-xs text-muted">
           {f.noCloseDate.count} open deal{f.noCloseDate.count === 1 ? '' : 's'} ({formatMinor(f.noCloseDate.totalMinor)}
           ) have no expected close date and aren’t in the forecast.
         </p>
@@ -501,7 +501,7 @@ export default function DealsPage() {
   ) as Record<string, string>
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-4 py-8 sm:px-6">
+    <div className="app-page">
       <PageHeader
         title="Pipeline"
         description="A clear path from first conversation to closed deal."
@@ -538,7 +538,7 @@ export default function DealsPage() {
                 aria-label="Pipeline"
                 value={pipeline?.id ?? ''}
                 onChange={(e) => setFilter('pipelineId', e.target.value)}
-                className="h-9! text-sm"
+                className="h-10! text-sm"
               >
                 {live.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -575,10 +575,10 @@ export default function DealsPage() {
                 aria-pressed={filters.rotting === 'true'}
                 onClick={() => setFilter('rotting', filters.rotting ? undefined : 'true')}
                 className={cn(
-                  'inline-flex h-9 items-center rounded-lg border px-3 text-sm',
+                  'inline-flex h-10 items-center rounded-lg border px-3 text-sm transition-colors',
                   filters.rotting
                     ? 'border-amber-300 bg-amber-50 text-amber-800'
-                    : 'border-zinc-300 bg-white text-zinc-700',
+                    : 'border-line bg-surface text-ink hover:bg-surface-subtle',
                 )}
               >
                 Rotting only
@@ -595,8 +595,8 @@ export default function DealsPage() {
             {
               value: 'board',
               label: (
-                <span className="inline-flex items-center gap-1.5">
-                  <Columns3 className="size-3.5" aria-hidden="true" />
+                <span className="inline-flex items-center gap-2">
+                  <Columns3 className="size-4" aria-hidden="true" />
                   Board
                 </span>
               ),
@@ -604,8 +604,8 @@ export default function DealsPage() {
             {
               value: 'list',
               label: (
-                <span className="inline-flex items-center gap-1.5">
-                  <List className="size-3.5" aria-hidden="true" />
+                <span className="inline-flex items-center gap-2">
+                  <List className="size-4" aria-hidden="true" />
                   List
                 </span>
               ),
@@ -613,8 +613,8 @@ export default function DealsPage() {
             {
               value: 'forecast',
               label: (
-                <span className="inline-flex items-center gap-1.5">
-                  <ChartColumn className="size-3.5" aria-hidden="true" />
+                <span className="inline-flex items-center gap-2">
+                  <ChartColumn className="size-4" aria-hidden="true" />
                   Forecast
                 </span>
               ),
@@ -623,9 +623,10 @@ export default function DealsPage() {
         />
       </div>
 
+      <div className="mt-4"><FilterChips filters={filters} onRemove={(key) => setFilter(key, undefined)} onClear={clearFilters} /></div>
       <div className="mt-5">
         {pipelines.isPending ? (
-          <Skeleton className="h-[420px] rounded-2xl" />
+          <Skeleton className="h-[420px] rounded-card" />
         ) : !pipeline ? (
           <EmptyState
             icon={SquareKanban}

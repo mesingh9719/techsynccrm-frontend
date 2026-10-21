@@ -97,14 +97,14 @@ export function FormRenderer({
     }
   }
   return (
-    <div ref={frame} className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-card sm:p-8">
+    <div ref={frame} className="rounded-card border border-line bg-surface p-6 shadow-card sm:p-8">
       {done ? (
         <div className="py-10 text-center" role="status">
           <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
             <Check className="size-6" />
           </span>
-          <h2 className="mt-4 text-xl font-semibold text-zinc-950">{preview ? 'Looking good!' : 'You’re all set!'}</h2>
-          <p className="mt-3 text-sm leading-6 text-zinc-600">{done}</p>
+          <h2 className="mt-4 text-xl font-semibold text-ink">{preview ? 'Looking good!' : 'You’re all set!'}</h2>
+          <p className="mt-3 text-sm leading-6 text-muted">{done}</p>
           {preview && (
             <Button variant="secondary" size="sm" className="mt-5" onClick={() => setDone('')}>
               Try again
@@ -114,8 +114,8 @@ export function FormRenderer({
       ) : (
         <>
           <div className="mb-6 h-1 w-10 rounded-full" style={{ backgroundColor: form.settings.brandColor }} />
-          <h2 className="text-xl font-semibold tracking-tight text-zinc-950">{form.settings.title}</h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-500">{form.settings.description}</p>
+          <h2 className="text-xl font-semibold tracking-tight text-ink">{form.settings.title}</h2>
+          <p className="mt-2 text-sm leading-6 text-muted">{form.settings.description}</p>
           <form onSubmit={submit} noValidate className="mt-7 space-y-5">
             {form.fields
               .filter((f) => !f.hidden)
@@ -131,14 +131,14 @@ export function FormRenderer({
                 }
                 return (
                   <div key={field.key}>
-                    <label htmlFor={fieldId} className="mb-1.5 block text-sm font-medium text-zinc-700">
+                    <label htmlFor={fieldId} className="mb-2 block text-sm font-medium text-ink">
                       {field.label}
                       {field.required ? (
-                        <span className="ml-1 text-brand-600" aria-hidden="true">
+                        <span className="ml-1 text-brand-700" aria-hidden="true">
                           *
                         </span>
                       ) : (
-                        <span className="ml-1 font-normal text-zinc-400">(optional)</span>
+                        <span className="ml-1 font-normal text-muted">(optional)</span>
                       )}
                     </label>
                     {field.type === 'textarea' ? (
@@ -181,7 +181,7 @@ export function FormRenderer({
                       />
                     )}
                     {fieldError && (
-                      <p id={`${fieldId}-error`} role="alert" className="mt-1.5 text-xs text-red-600">
+                      <p id={`${fieldId}-error`} role="alert" className="mt-2 text-xs text-danger">
                         {fieldError}
                       </p>
                     )}
@@ -195,7 +195,7 @@ export function FormRenderer({
               </label>
             </div>
             <div>
-              <label className="flex items-start gap-2.5 text-xs leading-5 text-zinc-500">
+              <label className="flex items-start gap-3 text-xs leading-5 text-muted">
                 <input
                   id={`${id}-consent`}
                   type="checkbox"
@@ -209,7 +209,7 @@ export function FormRenderer({
                 {form.settings.consentText}
               </label>
               {errors.consent && (
-                <p id={`${id}-consent-error`} role="alert" className="mt-1.5 text-xs text-red-600">
+                <p id={`${id}-consent-error`} role="alert" className="mt-2 text-xs text-danger">
                   {errors.consent}
                 </p>
               )}
@@ -223,7 +223,7 @@ export function FormRenderer({
             >
               {busy ? 'Sending…' : form.settings.submitLabel}
             </button>
-            <p className="flex items-center justify-center gap-1.5 text-[11px] text-zinc-400">
+            <p className="flex items-center justify-center gap-2 text-xs text-muted">
               <LockKeyhole className="size-3" />
               {preview ? 'Sample form · no data is sent' : 'Your information stays private'} · TechSync
             </p>

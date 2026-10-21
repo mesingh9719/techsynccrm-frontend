@@ -1,3 +1,4 @@
+import { PageHeader } from '../../components/app/States'
 import { useState, type FormEvent } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -77,13 +78,13 @@ function RoleSelect({ value, onChange, allowAdmin, id, describedBy }: { value: s
           </option>
         ))}
       </Select>
-      {value && <p className="mt-1.5 text-sm text-zinc-500">{roleDescriptions[value as MemberRole]}</p>}
+      {value && <p className="mt-2 text-sm text-muted">{roleDescriptions[value as MemberRole]}</p>}
     </>
   )
 }
 
 function TeamCheckboxes({ teams, value, onChange }: { teams: Team[]; value: string[]; onChange: (ids: string[]) => void }) {
-  if (!teams.length) return <p className="text-sm text-zinc-500">No teams yet — create them in the Teams tab.</p>
+  if (!teams.length) return <p className="text-sm text-muted">No teams yet — create them in the Teams tab.</p>
   return (
     <div className="flex flex-wrap gap-2">
       {teams.map((t) => {
@@ -92,8 +93,8 @@ function TeamCheckboxes({ teams, value, onChange }: { teams: Team[]; value: stri
           <label
             key={t.id}
             className={cn(
-              'inline-flex cursor-pointer items-center rounded-full px-3 py-1.5 text-sm ring-1 select-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500',
-              checked ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-zinc-700 ring-zinc-300 hover:ring-zinc-400',
+              'inline-flex cursor-pointer items-center rounded-full px-3 py-2 text-sm ring-1 select-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500',
+              checked ? 'bg-brand-600 text-white ring-brand-600' : 'bg-surface text-ink ring-zinc-300 hover:ring-zinc-400',
             )}
           >
             <input type="checkbox" className="sr-only" checked={checked} onChange={() => onChange(checked ? value.filter((v) => v !== t.id) : [...value, t.id])} />
@@ -180,8 +181,8 @@ function InviteDrawer({ open, onClose, orgId }: { open: boolean; onClose: () => 
       {results ? (
         <ul className="divide-y divide-zinc-100" aria-label="Invitation results">
           {results.map((r) => (
-            <li key={r.email} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-              <span className="truncate text-zinc-900">{r.email}</span>
+            <li key={r.email} className="flex items-center justify-between gap-3 py-3 text-sm">
+              <span className="truncate text-ink">{r.email}</span>
               <Badge tone={r.status === 'invited' ? 'success' : r.status === 'already_member' ? 'neutral' : 'warning'}>{statusLabel[r.status]}</Badge>
             </li>
           ))}
@@ -196,11 +197,11 @@ function InviteDrawer({ open, onClose, orgId }: { open: boolean; onClose: () => 
             {({ id, describedBy }) => <RoleSelect id={id} describedBy={describedBy} value={role} onChange={(r) => setValue('role', r as InviteValues['role'])} allowAdmin={canInviteAdmins} />}
           </Field>
           <fieldset>
-            <legend className="mb-2 text-sm font-medium text-zinc-800">Teams (optional)</legend>
+            <legend className="mb-2 text-sm font-medium text-ink">Teams (optional)</legend>
             <TeamCheckboxes teams={teams.data ?? []} value={teamIds} onChange={setTeamIds} />
           </fieldset>
           {seats.limit !== null && seats.used !== null && (
-            <p className={cn('text-sm', seats.used + parsed.valid.length > seats.limit ? 'text-amber-700' : 'text-zinc-500')}>
+            <p className={cn('text-sm', seats.used + parsed.valid.length > seats.limit ? 'text-amber-700' : 'text-muted')}>
               {seats.used} of {seats.limit} seats used on your plan (pending invitations hold a seat).
             </p>
           )}
@@ -263,7 +264,7 @@ function EditMemberDialog({ member, onClose, orgId }: { member: Member | null; o
           {({ id }) => <Input id={id} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Area Sales Manager" maxLength={60} />}
         </Field>
         <fieldset>
-          <legend className="mb-2 text-sm font-medium text-zinc-800">Teams</legend>
+          <legend className="mb-2 text-sm font-medium text-ink">Teams</legend>
           <TeamCheckboxes teams={teams.data ?? []} value={teamIds} onChange={setTeamIds} />
         </fieldset>
         {error && <FormAlert>{error}</FormAlert>}
@@ -419,7 +420,7 @@ function MembersTab({ orgId }: { orgId: string }) {
             type="button"
             aria-pressed={status === s}
             onClick={() => setStatus(s)}
-            className={cn('rounded-lg px-3 py-1.5 text-sm font-medium', status === s ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100')}
+            className={cn('rounded-lg px-3 py-2 text-sm font-medium', status === s ? 'bg-zinc-900 text-white' : 'text-muted hover:bg-zinc-100')}
           >
             {s === 'active' ? 'Active' : 'Removed'}
           </button>
@@ -433,36 +434,36 @@ function MembersTab({ orgId }: { orgId: string }) {
       ) : members.data.length === 0 ? (
         <EmptyState icon={Users} title={status === 'active' ? 'No members yet' : 'No removed members'} />
       ) : (
-        <ul className="divide-y divide-zinc-100 rounded-2xl bg-white ring-1 ring-zinc-200">
+        <ul className="divide-y divide-zinc-100 rounded-card bg-surface ring-1 ring-line">
           {members.data.map((m) => (
-            <li key={m.userId} className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center">
+            <li key={m.userId} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center">
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <Avatar name={m.fullName} size="sm" />
                 <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
+                  <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink">
                     {m.fullName}
-                    {m.userId === user?.id && <span className="font-normal text-zinc-500">(you)</span>}
-                    {m.twoFactorEnabled && <ShieldCheck className="size-3.5 text-emerald-600" aria-label="Two-factor authentication on" />}
+                    {m.userId === user?.id && <span className="font-normal text-muted">(you)</span>}
+                    {m.twoFactorEnabled && <ShieldCheck className="size-4 text-emerald-600" aria-label="Two-factor authentication on" />}
                   </p>
-                  <p className="truncate text-xs text-zinc-500">
+                  <p className="truncate text-xs text-muted">
                     {m.email}
                     {m.title && ` · ${m.title}`}
                   </p>
                   {m.teams.length > 0 && (
-                    <p className="mt-1 text-xs text-zinc-500">
+                    <p className="mt-1 text-xs text-muted">
                       {m.teams.map((t) => `${t.name}${t.isManager ? ' (manager)' : ''}`).join(', ')}
                     </p>
                   )}
                 </div>
               </div>
               <div className="flex items-center gap-3 sm:justify-end">
-                <span className="hidden text-xs text-zinc-500 md:block">
+                <span className="hidden text-xs text-muted md:block">
                   {status === 'active' ? (m.lastActiveAt ? `Active ${formatDate(m.lastActiveAt)}` : 'Not signed in yet') : m.deactivatedAt ? `Removed ${formatDate(m.deactivatedAt)}` : ''}
                 </span>
                 <Badge tone={roleTone[m.role]}>{roleLabels[m.role]}</Badge>
                 {status === 'deactivated' && canActOn(m) && (
                   <Button variant="secondary" size="sm" loading={reactivate.isPending && reactivate.variables?.userId === m.userId} onClick={() => reactivate.mutate(m)}>
-                    <RotateCcw className="size-3.5" aria-hidden="true" />
+                    <RotateCcw className="size-4" aria-hidden="true" />
                     Restore
                   </Button>
                 )}
@@ -470,7 +471,7 @@ function MembersTab({ orgId }: { orgId: string }) {
                   <Menu
                     align="end"
                     trigger={(props) => (
-                      <button type="button" {...props} className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900" aria-label={`Actions for ${m.fullName}`}>
+                      <button type="button" {...props} className="rounded-lg p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={`Actions for ${m.fullName}`}>
                         <MoreHorizontal className="size-4" aria-hidden="true" />
                       </button>
                     )}
@@ -539,12 +540,12 @@ function InvitationsTab({ orgId }: { orgId: string }) {
   if (!invitations.data.length) return <EmptyState icon={Send} title="No pending invitations" description="People you invite appear here until they join." />
 
   return (
-    <ul className="divide-y divide-zinc-100 rounded-2xl bg-white ring-1 ring-zinc-200">
+    <ul className="divide-y divide-zinc-100 rounded-card bg-surface ring-1 ring-line">
       {invitations.data.map((inv) => (
-        <li key={inv.id} className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center">
+        <li key={inv.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-zinc-900">{inv.email}</p>
-            <p className="text-xs text-zinc-500">
+            <p className="truncate text-sm font-medium text-ink">{inv.email}</p>
+            <p className="text-xs text-muted">
               {roleLabels[inv.role]} · invited by {inv.invitedByName ?? 'someone'} · {inv.status === 'expired' ? 'expired' : `expires ${formatDate(inv.expiresAt)}`}
             </p>
           </div>
@@ -624,24 +625,24 @@ function TeamDialog({ team, open, onClose, orgId }: { team: Team | null; open: b
           )}
         </Field>
         {members.length > 0 && (
-          <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
+          <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
             {members.map((m) => (
               <li key={m.userId} className="flex items-center gap-3 px-3 py-2">
                 <Avatar name={m.fullName} size="xs" className="size-6" />
-                <span className="min-w-0 flex-1 truncate text-sm text-zinc-900">{m.fullName}</span>
-                <label className="flex items-center gap-1.5 text-xs text-zinc-600">
+                <span className="min-w-0 flex-1 truncate text-sm text-ink">{m.fullName}</span>
+                <label className="flex items-center gap-2 text-xs text-muted">
                   <input
                     type="checkbox"
                     checked={m.isManager}
                     onChange={() => setMembers((all) => all.map((x) => (x.userId === m.userId ? { ...x, isManager: !x.isManager } : x)))}
-                    className="size-4 rounded border-zinc-300 text-brand-600 focus:ring-brand-500"
+                    className="size-4 rounded border-zinc-300 text-brand-700 focus:ring-brand-500"
                   />
                   Manager
                 </label>
                 <button
                   type="button"
                   onClick={() => setMembers((all) => all.filter((x) => x.userId !== m.userId))}
-                  className="rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                  className="rounded p-1 text-muted hover:bg-zinc-100 hover:text-ink"
                   aria-label={`Remove ${m.fullName} from the team`}
                 >
                   <X className="size-4" aria-hidden="true" />
@@ -686,26 +687,26 @@ function TeamsTab({ orgId }: { orgId: string }) {
       ) : (
         <ul className="grid gap-4 md:grid-cols-2">
           {teams.data.map((t) => (
-            <li key={t.id} className="rounded-2xl bg-white p-5 ring-1 ring-zinc-200">
+            <li key={t.id} className="rounded-card bg-surface p-5 ring-1 ring-line">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 className="font-semibold text-zinc-950">{t.name}</h3>
-                  <p className="text-xs text-zinc-500">
+                  <h3 className="font-semibold text-ink">{t.name}</h3>
+                  <p className="text-xs text-muted">
                     {t.members.length} member{t.members.length === 1 ? '' : 's'}
                   </p>
                 </div>
                 {canManage && (
                   <div className="flex gap-1">
-                    <button type="button" onClick={() => setEditing(t)} className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100" aria-label={`Edit ${t.name}`}>
+                    <button type="button" onClick={() => setEditing(t)} className="rounded-lg p-2 text-muted hover:bg-zinc-100" aria-label={`Edit ${t.name}`}>
                       <Pencil className="size-4" aria-hidden="true" />
                     </button>
-                    <button type="button" onClick={() => setDeleting(t)} className="rounded-lg p-1.5 text-zinc-500 hover:bg-red-50 hover:text-red-700" aria-label={`Delete ${t.name}`}>
+                    <button type="button" onClick={() => setDeleting(t)} className="rounded-lg p-2 text-muted hover:bg-red-50 hover:text-red-700" aria-label={`Delete ${t.name}`}>
                       <Trash2 className="size-4" aria-hidden="true" />
                     </button>
                   </div>
                 )}
               </div>
-              <ul className="mt-3 flex flex-wrap gap-1.5">
+              <ul className="mt-3 flex flex-wrap gap-2">
                 {t.members.map((m) => (
                   <li key={m.userId}>
                     <Badge tone={m.isManager ? 'brand' : 'neutral'}>
@@ -765,7 +766,8 @@ export default function TeamSettings() {
 
   return (
     <div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <PageHeader title="Team" description="Invite teammates, manage roles, and organize your sales teams." />
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div role="tablist" aria-label="Team" className="flex gap-1 rounded-xl bg-zinc-100 p-1">
           {visibleTabs.map((t) => (
             <button
@@ -774,9 +776,18 @@ export default function TeamSettings() {
               role="tab"
               id={`team-tab-${t.key}`}
               aria-selected={tab === t.key}
+              tabIndex={tab === t.key ? 0 : -1}
+              onKeyDown={(event) => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+                event.preventDefault()
+                const current = visibleTabs.findIndex((item) => item.key === tab)
+                const next = event.key === 'Home' ? 0 : event.key === 'End' ? visibleTabs.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + visibleTabs.length) % visibleTabs.length
+                setTab(visibleTabs[next].key)
+                document.getElementById(`team-tab-${visibleTabs[next].key}`)?.focus()
+              }}
               aria-controls="team-tabpanel"
               onClick={() => setTab(t.key)}
-              className={cn('rounded-lg px-3 py-1.5 text-sm font-medium', tab === t.key ? 'bg-white text-zinc-950 shadow-card' : 'text-zinc-600 hover:text-zinc-900')}
+              className={cn('rounded-lg px-3 py-2 text-sm font-medium', tab === t.key ? 'bg-surface text-ink shadow-card' : 'text-muted hover:text-ink')}
             >
               {t.label}
             </button>

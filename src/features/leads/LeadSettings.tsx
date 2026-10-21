@@ -11,7 +11,7 @@ import { Button } from '../../components/ui/Button'
 import { FormAlert, Input } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { SettingsSection } from '../../components/app/SettingsSection'
-import { ErrorState, ListSkeleton } from '../../components/app/States'
+import { ErrorState, ListSkeleton, PageHeader } from '../../components/app/States'
 import { useOrgId } from '../crm/hooks'
 import type { LeadSource, LostReason } from '../crm/types'
 import { createLeadSource, createLostReason, deleteLeadSource, updateLeadSource, updateLostReason, useLeadSources, useLostReasons } from './api'
@@ -56,7 +56,7 @@ function AddRow({ placeholder, onAdd }: { placeholder: string; onAdd: (name: str
           Add
         </Button>
       </div>
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-sm text-danger">{error}</p>}
     </div>
   )
 }
@@ -78,7 +78,7 @@ function SourceRow({ source, canManage, onChanged }: { source: LeadSource; canMa
   }
 
   return (
-    <li className={cn('flex flex-wrap items-center gap-3 px-3 py-2', source.archived && 'bg-zinc-50')}>
+    <li className={cn('flex flex-wrap items-center gap-3 px-3 py-2', source.archived && 'bg-surface-subtle')}>
       <div className="min-w-0 flex-1">
         {canManage ? (
           <input
@@ -86,20 +86,20 @@ function SourceRow({ source, canManage, onChanged }: { source: LeadSource; canMa
             aria-label={`Name of ${source.name}`}
             onChange={(e) => setName(e.target.value)}
             onBlur={() => name.trim() && name.trim() !== source.name && save({ name: name.trim() })}
-            className={cn('w-full rounded-md bg-transparent px-1.5 py-1 text-sm hover:bg-zinc-50 focus:bg-white focus:ring-2 focus:ring-brand-100 focus:outline-none', source.archived ? 'text-zinc-500' : 'text-zinc-900')}
+            className={cn('w-full rounded-md bg-transparent px-2 py-1 text-sm hover:bg-surface-subtle focus:bg-surface focus:ring-2 focus:ring-brand-100 focus:outline-none', source.archived ? 'text-muted' : 'text-ink')}
           />
         ) : (
-          <span className="text-sm text-zinc-900">{source.name}</span>
+          <span className="text-sm text-ink">{source.name}</span>
         )}
       </div>
       {source.isSystem && (
         <span title="Used by integrations — can be renamed or archived, not deleted">
-          <Lock className="size-3.5 text-zinc-400" aria-label="Built-in source" />
+          <Lock className="size-4 text-muted" aria-label="Built-in source" />
         </span>
       )}
       {source.archived && <Badge>Archived</Badge>}
-      <span className="text-xs text-zinc-500 tabular-nums">{source.leadCount ?? 0} leads</span>
-      <label className="flex items-center gap-1.5 text-xs text-zinc-600">
+      <span className="text-xs text-muted tabular-nums">{source.leadCount ?? 0} leads</span>
+      <label className="flex items-center gap-2 text-xs text-muted">
         Score +
         <input
           type="number"
@@ -109,13 +109,13 @@ function SourceRow({ source, canManage, onChanged }: { source: LeadSource; canMa
           disabled={!canManage}
           onChange={(e) => setWeight(e.target.value)}
           onBlur={() => Number(weight) !== source.scoreWeight && save({ scoreWeight: Math.max(0, Math.min(20, Number(weight) || 0)) })}
-          className="h-8 w-14 rounded-md border border-zinc-200 px-2 text-sm tabular-nums"
+          className="h-8 w-14 rounded-md border border-line px-2 text-sm tabular-nums"
           aria-label={`Score points for ${source.name}`}
         />
       </label>
       {canManage && (
         <div className="flex">
-          <button type="button" onClick={() => save({ archived: !source.archived })} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label={source.archived ? `Restore ${source.name}` : `Archive ${source.name}`}>
+          <button type="button" onClick={() => save({ archived: !source.archived })} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={source.archived ? `Restore ${source.name}` : `Archive ${source.name}`}>
             {source.archived ? <ArchiveRestore className="size-4" aria-hidden="true" /> : <Archive className="size-4" aria-hidden="true" />}
           </button>
           {!source.isSystem && !source.leadCount && (
@@ -129,7 +129,7 @@ function SourceRow({ source, canManage, onChanged }: { source: LeadSource; canMa
                   notify({ tone: 'error', title: 'Couldn’t delete', description: errorText(err) })
                 }
               }}
-              className="rounded p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+              className="rounded p-2 text-muted hover:bg-red-50 hover:text-danger"
               aria-label={`Delete ${source.name}`}
             >
               <Trash2 className="size-4" aria-hidden="true" />
@@ -154,21 +154,21 @@ function ReasonRow({ reason, canManage, onChanged }: { reason: LostReason; canMa
     }
   }
   return (
-    <li className={cn('flex items-center gap-3 px-3 py-2', reason.archived && 'bg-zinc-50')}>
+    <li className={cn('flex items-center gap-3 px-3 py-2', reason.archived && 'bg-surface-subtle')}>
       {canManage ? (
         <input
           value={name}
           aria-label={`Reason ${reason.name}`}
           onChange={(e) => setName(e.target.value)}
           onBlur={() => name.trim() && name.trim() !== reason.name && save({ name: name.trim() })}
-          className={cn('min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-sm hover:bg-zinc-50 focus:bg-white focus:ring-2 focus:ring-brand-100 focus:outline-none', reason.archived ? 'text-zinc-500' : 'text-zinc-900')}
+          className={cn('min-w-0 flex-1 rounded-md bg-transparent px-2 py-1 text-sm hover:bg-surface-subtle focus:bg-surface focus:ring-2 focus:ring-brand-100 focus:outline-none', reason.archived ? 'text-muted' : 'text-ink')}
         />
       ) : (
         <span className="flex-1 text-sm">{reason.name}</span>
       )}
       {reason.archived && <Badge>Archived</Badge>}
       {canManage && (
-        <button type="button" onClick={() => save({ archived: !reason.archived })} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label={reason.archived ? `Restore ${reason.name}` : `Archive ${reason.name}`}>
+        <button type="button" onClick={() => save({ archived: !reason.archived })} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={reason.archived ? `Restore ${reason.name}` : `Archive ${reason.name}`}>
           {reason.archived ? <ArchiveRestore className="size-4" aria-hidden="true" /> : <Archive className="size-4" aria-hidden="true" />}
         </button>
       )}
@@ -189,13 +189,14 @@ export default function LeadSettings() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Lead settings" description="Manage lead sources, status rules, and qualification settings." />
       <SettingsSection title="Lead sources" description="Where enquiries come from. Score points add to a lead’s fit score (0–20). Built-in sources are used by integrations.">
         {sources.isPending ? (
           <ListSkeleton rows={4} />
         ) : sources.isError ? (
           <ErrorState error={sources.error} onRetry={() => sources.refetch()} />
         ) : (
-          <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
+          <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
             {sources.data.map((s) => (
               <SourceRow key={`${s.id}:${s.name}:${s.scoreWeight}`} source={s} canManage={canManage} onChanged={refreshSources} />
             ))}
@@ -213,7 +214,7 @@ export default function LeadSettings() {
         ) : reasons.isError ? (
           <ErrorState error={reasons.error} onRetry={() => reasons.refetch()} />
         ) : reasons.data.length ? (
-          <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
+          <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
             {reasons.data.map((r) => (
               <ReasonRow key={`${r.id}:${r.name}`} reason={r} canManage={canManage} onChanged={refreshReasons} />
             ))}

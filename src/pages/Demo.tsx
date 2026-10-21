@@ -158,7 +158,7 @@ export default function Demo() {
           </span>
           <h1 className="mt-6 text-3xl font-semibold tracking-tight text-zinc-950 sm:text-4xl">You’re booked, {values.firstName}!</h1>
           <p className="mt-3 text-lg text-zinc-600">We’ve sent a calendar invite and video link to {values.email}.</p>
-          <dl className="mt-10 grid gap-px overflow-hidden rounded-2xl bg-zinc-200 text-left ring-1 ring-zinc-200 sm:grid-cols-3">
+          <dl className="mt-10 grid gap-px overflow-hidden rounded-dialog bg-zinc-200 text-left ring-1 ring-zinc-200 sm:grid-cols-3">
             <div className="bg-white p-5">
               <dt className="text-xs text-zinc-500">Date</dt>
               <dd className="mt-1 font-medium text-zinc-900">{dateLabel}</dd>
@@ -208,13 +208,13 @@ export default function Demo() {
                   </span>
                   <div>
                     <h2 className="font-semibold text-zinc-950">{a.title}</h2>
-                    <p className="mt-0.5 text-zinc-600">{a.text}</p>
+                    <p className="mt-1 text-zinc-600">{a.text}</p>
                   </div>
                 </li>
               ))}
             </ul>
 
-            <figure className="mt-12 hidden rounded-2xl border-l-2 border-brand-500 bg-white p-6 shadow-card ring-1 ring-zinc-200 lg:block">
+            <figure className="mt-12 hidden rounded-dialog border-l-2 border-brand-500 bg-white p-6 shadow-card ring-1 ring-zinc-200 lg:block">
               <blockquote className="leading-relaxed text-zinc-700">“{quote.quote}”</blockquote>
               <figcaption className="mt-4 flex items-center gap-3">
                 <Avatar name={quote.name} size="sm" />
@@ -230,15 +230,15 @@ export default function Demo() {
             onSubmit={handleSubmit(onSubmit)}
             noValidate
             aria-labelledby="demo-form-title"
-            className="rounded-3xl bg-white p-6 shadow-float ring-1 ring-zinc-200 sm:p-10"
+            className="rounded-dialog bg-white p-6 shadow-float ring-1 ring-zinc-200 sm:p-10"
           >
             <Honeypot ref={honeypotRef} />
             <div className="flex items-center justify-between gap-4">
               <h2 id="demo-form-title" className="text-xl font-semibold text-zinc-950">
                 Pick a time that works
               </h2>
-              <span className="hidden items-center gap-1.5 text-xs text-zinc-500 sm:flex">
-                <Video className="size-3.5" aria-hidden="true" />
+              <span className="hidden items-center gap-2 text-xs text-zinc-500 sm:flex">
+                <Video className="size-4" aria-hidden="true" />
                 Google Meet or Zoom
               </span>
             </div>
@@ -285,7 +285,7 @@ export default function Demo() {
             </div>
 
             <fieldset className="mt-6" aria-describedby={errors.interests ? 'interests-error' : undefined}>
-              <legend className="mb-2.5 text-sm font-medium text-zinc-800">What would you like to see?</legend>
+              <legend className="mb-3 text-sm font-medium text-zinc-800">What would you like to see?</legend>
               <div className="flex flex-wrap gap-2">
                 {demoInterests.map((interest) => {
                   const checked = selectedInterests?.includes(interest)
@@ -293,7 +293,7 @@ export default function Demo() {
                     <label
                       key={interest}
                       className={cn(
-                        'inline-flex cursor-pointer items-center rounded-full px-3.5 py-1.5 text-sm ring-1 transition-colors select-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500',
+                        'inline-flex cursor-pointer items-center rounded-full px-4 py-2 text-sm ring-1 transition-colors select-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500',
                         checked ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-zinc-700 ring-zinc-300 hover:ring-zinc-400',
                       )}
                     >
@@ -304,7 +304,7 @@ export default function Demo() {
                 })}
               </div>
               {errors.interests && (
-                <p id="interests-error" role="alert" className="mt-1.5 text-sm text-red-600">
+                <p id="interests-error" role="alert" className="mt-2 text-sm text-red-600">
                   {errors.interests.message}
                 </p>
               )}
@@ -315,7 +315,7 @@ export default function Demo() {
                 {({ id, describedBy, invalid }) => <Input id={id} type="date" min={today} max={maxDate} aria-describedby={describedBy} invalid={invalid} {...register('date')} />}
               </Field>
               <fieldset aria-describedby={errors.slot ? 'slot-error' : undefined}>
-                <legend className="mb-1.5 text-sm font-medium text-zinc-800">Time (IST)</legend>
+                <legend className="mb-2 text-sm font-medium text-zinc-800">Time (IST)</legend>
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                   {demoSlots.map((slot) => {
                     const info = availability?.get(slot)
@@ -342,7 +342,7 @@ export default function Demo() {
                   })}
                 </div>
                 {errors.slot && (
-                  <p id="slot-error" role="alert" className="mt-1.5 text-sm text-red-600">
+                  <p id="slot-error" role="alert" className="mt-2 text-sm text-red-600">
                     {errors.slot.message}
                   </p>
                 )}

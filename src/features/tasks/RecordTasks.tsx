@@ -27,7 +27,7 @@ export function RecordTasks({ entityType, entityId, recordName }: { entityType: 
       actions={
         canCreate && (
           <Button size="sm" variant="secondary" onClick={() => setAdding(true)}>
-            <Plus className="size-3.5" aria-hidden="true" />
+            <Plus className="size-4" aria-hidden="true" />
             Add task
           </Button>
         )
@@ -38,13 +38,13 @@ export function RecordTasks({ entityType, entityId, recordName }: { entityType: 
       ) : tasks.isError ? (
         <ErrorState error={tasks.error} onRetry={() => tasks.refetch()} />
       ) : items.length ? (
-        <ul className="divide-y divide-zinc-100">
+        <ul className="divide-y divide-line">
           {items.map((t) => (
             <TaskItem key={t.id} task={t} showRecord={false} />
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-zinc-500">No open tasks. Add a follow-up so nothing slips.</p>
+        <p className="text-sm text-muted">No open tasks. Add a follow-up so nothing slips.</p>
       )}
       <LoadMore hasMore={Boolean(tasks.hasNextPage)} loading={tasks.isFetchingNextPage} onLoadMore={() => tasks.fetchNextPage()} />
       {adding && <TaskFormDialog record={{ entityType, entityId, name: recordName }} onClose={() => setAdding(false)} />}

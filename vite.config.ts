@@ -11,6 +11,11 @@ export default defineConfig({
     include: ['@tanstack/react-table', '@tanstack/react-virtual'],
   },
   server: {
+    // Wait for editors and code generators to finish saving before transforming.
+    // Otherwise a briefly truncated TSX file can be cached as an empty module.
+    watch: {
+      awaitWriteFinish: { stabilityThreshold: 200, pollInterval: 50 },
+    },
     // Forward API calls to the Express backend so cookies stay same-origin in development.
     proxy: {
       '/api': { target: process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:5000', changeOrigin: true },

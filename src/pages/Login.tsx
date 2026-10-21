@@ -137,8 +137,8 @@ function LoginForm({ onForgot }: { onForgot: () => void }) {
       </p>
 
       {notice && (
-        <p className="mt-6 flex items-start gap-2 rounded-lg bg-emerald-50 px-3.5 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200" role="status">
-          <CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+        <p className="mt-6 flex items-start gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200" role="status">
+          <CircleCheck className="mt-1 size-4 shrink-0" aria-hidden="true" />
           {notice}
         </p>
       )}
@@ -202,7 +202,7 @@ function ResetForm({ onBack }: { onBack: () => void }) {
 
   return (
     <>
-      <button type="button" onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-950">
+      <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-950">
         <ArrowLeft className="size-4" aria-hidden="true" />
         Back to sign in
       </button>

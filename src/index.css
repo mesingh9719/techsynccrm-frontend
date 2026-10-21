@@ -2,37 +2,93 @@
 
 @theme {
   --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Manrope', 'Geist', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-  /* Brand: cobalt. Used sparingly — primary actions, links, focus, key data. */
-  --color-brand-50: #f0f4ff;
-  --color-brand-100: #e0e8ff;
-  --color-brand-200: #c6d4fe;
-  --color-brand-300: #9db4fb;
-  --color-brand-400: #6e8cf6;
-  --color-brand-500: #4a66ee;
-  --color-brand-600: #3349df;
-  --color-brand-700: #2a3bc4;
-  --color-brand-800: #26339d;
-  --color-brand-900: #24307c;
-  --color-brand-950: #171d4b;
+  /* Primary: indigo. Used sparingly — primary actions, links, focus, key data. */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
+  --color-brand-950: #1e1b4b;
 
   /* Chart roles (validated categorical slots 1–2 from the data-viz palette) */
-  --color-series-1: #2a78d6;
-  --color-series-2: #eb6834;
-  --color-series-3: #1baf7a;
+  --color-series-1: var(--color-brand-600);
+  --color-series-2: var(--color-brand-400);
+  --color-series-3: var(--color-brand-200);
 
-  --color-canvas: #fbfbfa;
+  --color-canvas: #f6f7fb;
   --color-surface: #ffffff;
   --color-surface-subtle: #f8fafc;
   --color-ink: #172033;
-  --color-muted: #64748b;
-  --color-line: #e8edf4;
+  --color-muted: #526078;
+  --color-zinc-400: #526078;
+  --color-zinc-500: #526078;
+  --color-line: #dfe4ed;
   --radius-control: 0.5rem;
   --radius-card: 0.75rem;
   --radius-dialog: 1rem;
   --spacing-page: 2rem;
+  --spacing: 0.25rem;
+  --container-app: 90rem;
+  --container-wide: 100rem;
+  --container-form: 48rem;
+  --container-drawer-sm: 26.25rem;
+  --container-drawer-md: 35rem;
+  --container-drawer-lg: 45rem;
+  --text-page-title: 1.75rem;
+  --text-page-title--line-height: 1.25;
+  --text-section-title: 1rem;
+  --text-section-title--line-height: 1.5;
+  --text-metric: 1.75rem;
+  --text-metric--line-height: 1.25;
+  --color-google-blue: #4285F4;
+  --color-google-green: #34A853;
+  --color-google-yellow: #FBBC05;
+  --color-google-red: #EA4335;
+  --color-microsoft-red: #F25022;
+  --color-microsoft-green: #7FBA00;
+  --color-microsoft-blue: #00A4EF;
+  --color-microsoft-yellow: #FFB900;
+  --color-action: #4f46e5;
+  --color-action-hover: #4338ca;
+  --color-danger-action: #be123c;
+  --color-danger-action-hover: #9f1239;
+  --color-highlight: #d9f36a;
+  --color-sidebar: #111827;
+  --color-sidebar-ink: #e7ecf5;
+  --color-sidebar-muted: #aebbd0;
+  --color-sidebar-hover: #202b40;
+  --color-sidebar-active: #303e69;
+  --color-overlay: rgb(8 13 27 / 0.56);
+  --color-success: #08734f;
+  --color-warning: #965000;
+  --color-danger: #be123c;
+  --color-chart-1: var(--color-brand-700);
+  --color-chart-2: var(--color-brand-600);
+  --color-chart-3: var(--color-brand-400);
+  --color-chart-4: var(--color-brand-200);
+  --color-chart-5: var(--color-brand-100);
+  --color-chart-6: var(--color-brand-50);
 
+  --radius-sm: var(--radius-control);
+  --radius-md: var(--radius-control);
+  --radius-lg: var(--radius-control);
+  --radius-xl: var(--radius-card);
+  --radius-2xl: var(--radius-dialog);
+  --radius-3xl: var(--radius-dialog);
+  --shadow-xs: var(--shadow-card);
+  --shadow-sm: var(--shadow-card);
+  --shadow-md: var(--shadow-float);
+  --shadow-lg: var(--shadow-float);
+  --shadow-xl: var(--shadow-frame);
+  --shadow-2xl: var(--shadow-frame);
   --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
   --shadow-float: 0 1px 2px rgb(16 24 40 / 0.04), 0 12px 32px -8px rgb(16 24 40 / 0.12);
   --shadow-frame:
@@ -72,7 +128,7 @@
 
 /* CRM themes also cover the existing feature screens and top-layer dialogs. */
 html[data-crm-theme] {
-  --color-canvas: #f7f9fc;
+  --color-canvas: #f6f7fb;
   color-scheme: light;
 }
 html[data-crm-theme='dark'] {
@@ -82,7 +138,10 @@ html[data-crm-theme='dark'] {
   --color-surface-subtle: #182235;
   --color-ink: #eef2ff;
   --color-muted: #a4b2c8;
-  --color-line: #28344a;
+  --color-line: #344158;
+  --color-success: #6ee7b7;
+  --color-warning: #fcd34d;
+  --color-danger: #fda4af;
   --color-zinc-50: #182235;
   --color-zinc-100: #202b3e;
   --color-zinc-200: #303d53;
@@ -127,14 +186,14 @@ html[data-crm-theme='dark'] [class*='bg-white/'] {
   background-color: var(--color-surface);
 }
 html[data-crm-theme='dark'] [class~='bg-zinc-900'] {
-  background-color: #3349df;
+  background-color: var(--color-action);
   color: white;
 }
 html[data-crm-theme='dark'] [class~='bg-zinc-950'] {
   background-color: #070b14;
 }
 html[data-crm-theme='dark'] [class*='hover:bg-brand-700']:hover {
-  background-color: #2a3bc4;
+  background-color: var(--color-action-hover);
 }
 html[data-crm-theme='dark'] [class*='hover:bg-red-700']:hover {
   background-color: #be123c;
@@ -149,16 +208,16 @@ html[data-crm-theme='dark'] [class~='ring-white'] {
 
 @layer components {
   .app-page {
-    @apply mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8 lg:px-9;
+    @apply mx-auto w-full min-w-0 max-w-app px-4 py-6 sm:px-6 lg:px-8;
   }
   .surface {
     @apply rounded-xl border border-line bg-surface shadow-card;
   }
   .section-title {
-    @apply text-[15px] font-semibold tracking-tight text-ink;
+    @apply font-display text-section-title font-semibold tracking-tight text-ink;
   }
   .eyebrow {
-    @apply text-[11px] font-semibold tracking-[0.12em] text-muted uppercase;
+    @apply text-xs font-semibold tracking-widest text-muted uppercase;
   }
 }
 
@@ -183,7 +242,7 @@ html[data-crm-theme] .crm-shell {
     scroll-padding-top: 80px;
   }
   body {
-    @apply bg-white font-sans text-zinc-900 antialiased;
+    @apply bg-surface font-sans text-ink antialiased;
     font-feature-settings: 'ss01', 'cv11';
     text-rendering: optimizeLegibility;
   }
@@ -194,12 +253,13 @@ html[data-crm-theme] .crm-shell {
   :focus-visible {
     outline: 2px solid var(--color-brand-500);
     outline-offset: 2px;
-    border-radius: 6px;
+    border-radius: var(--radius-control);
   }
   h1,
   h2,
   h3,
   h4 {
+    font-family: var(--font-display);
     text-wrap: balance;
     letter-spacing: -0.02em;
   }
@@ -291,3 +351,80 @@ html[data-crm-theme] .crm-shell {
     transform: none;
   }
 }
+
+/* Shared workspace layout, controls and elevation. */
+:root {
+  --popover-gutter: 16px;
+  --popover-gap: 8px;
+  --popover-max-height: 384px;
+  --z-dropdown: 40;
+  --z-drawer: 50;
+  --z-modal: 60;
+  --z-toast: 80;
+  --sidebar-rail: 5rem;
+  --sidebar-expanded: 16rem;
+  --topbar-height: 4rem;
+  --overlay-gutter: 1rem;
+  --overlay-blur: 4px;
+}
+@layer components {
+  .page-header { @apply flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between; }
+  .page-title { @apply font-display text-page-title font-semibold tracking-tight text-ink; }
+  .page-description { @apply mt-2 max-w-2xl text-sm leading-6 text-muted; }
+  .icon-button { @apply inline-flex size-10 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface-subtle hover:text-ink disabled:pointer-events-none disabled:opacity-50; }
+  .filter-toolbar { @apply flex min-w-0 flex-col gap-3 rounded-card border border-line bg-surface p-3 sm:flex-row sm:flex-wrap sm:items-center; }
+  .metric-band { @apply grid grid-cols-1 divide-y divide-line overflow-hidden rounded-card border border-line bg-surface shadow-card sm:grid-cols-2 xl:grid-cols-4; }
+  .metric-cell { @apply min-w-0 p-4 transition-colors hover:bg-surface-subtle sm:p-5; }
+  .sidebar-rail { @apply bg-sidebar text-sidebar-ink; }
+  .sidebar-link { @apply flex min-h-10 items-center gap-3 rounded-control px-3 py-2 text-sm font-medium text-sidebar-muted transition-colors hover:bg-sidebar-hover hover:text-sidebar-ink; }
+  .sidebar-link[data-active='true'] { @apply bg-sidebar-active text-sidebar-ink; }
+  .menu-surface { @apply max-h-96 overflow-y-auto rounded-card border border-line bg-surface p-2 text-ink shadow-float; }
+  .table-viewport { @apply max-w-full overflow-auto rounded-card border border-line bg-surface shadow-card; max-height: 70dvh; }
+  .table-viewport table { @apply w-full text-left text-sm; }
+  .table-viewport thead { @apply sticky top-0 z-10 bg-surface-subtle text-xs text-muted; }
+  .table-viewport th { @apply h-10 whitespace-nowrap border-b border-line px-4 text-xs font-semibold; }
+  .table-viewport td { @apply border-b border-line px-4 py-3 align-middle; }
+  .table-viewport tbody tr { @apply transition-colors hover:bg-surface-subtle; }
+  .settings-section { @apply rounded-card border border-line bg-surface p-4 shadow-card sm:p-6; }
+  .record-workspace { @apply grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]; }
+  .crm-shell main { min-width: 0; }
+  .crm-shell h1 { @apply font-display text-page-title font-semibold; }
+  .crm-shell h2 { @apply font-display; }
+  .crm-shell [class*='tabular-nums'] { font-family: var(--font-display); }
+  .crm-shell button[aria-label]:not([role='option']):not([role='rowheader']):not([role='gridcell']) { min-width: 2.5rem; min-height: 2.5rem; }
+  .crm-shell :is(input, select, textarea):disabled { cursor: not-allowed; opacity: 0.65; }
+  .sidebar-rail .workspace-switcher { @apply text-sidebar-ink hover:bg-sidebar-hover; }
+  .sidebar-rail .workspace-switcher .workspace-name { @apply text-sidebar-ink; }
+  .sidebar-rail .workspace-switcher .workspace-plan { @apply text-sidebar-muted; }
+}
+/* Top-layer dialogs escape ancestor clipping and share a scroll-contained frame. */
+.crm-dialog { border: 1px solid var(--color-line); padding: 0; background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-frame); overflow: hidden; }
+.crm-dialog::backdrop { background: var(--color-overlay); backdrop-filter: blur(var(--overlay-blur)); }
+.crm-modal { margin: auto; width: calc(100% - 2 * var(--overlay-gutter)); max-width: var(--container-drawer-md); max-height: calc(100dvh - 2 * var(--overlay-gutter)); border-radius: var(--radius-dialog); z-index: var(--z-modal); }
+.crm-drawer { margin: 0 0 0 auto; height: 100dvh; max-height: 100dvh; width: 100%; border-radius: var(--radius-dialog) 0 0 var(--radius-dialog); z-index: var(--z-drawer); }
+.crm-dialog-frame { display: flex; flex-direction: column; max-height: inherit; height: 100%; }
+.crm-dialog-header, .crm-dialog-footer { flex-shrink: 0; background: var(--color-surface); }
+.crm-dialog-body { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.crm-popover { position: fixed; inset: auto; margin: 0; z-index: var(--z-dropdown); }
+@media (max-width: 639px) {
+  .crm-drawer { max-width: none; border-radius: 0; }
+  .crm-modal { --overlay-gutter: 0.5rem; }
+  .crm-dialog-body { padding: 1rem; }
+}
+
+.dialog-actions:has(> :nth-child(2)) > :first-child { margin-right: auto; }
+
+@layer base {
+  button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: not-allowed; }
+  button:disabled { opacity: 0.6; }
+  svg.lucide { stroke-width: 1.75; }
+}
+@media (pointer: coarse) {
+  button, a[aria-label], select, [role='tab'] { min-height: 2.5rem; }
+}
+@layer components {
+  .workspace-switcher:focus-visible, label:has(> select:focus-visible) { outline: 2px solid var(--color-brand-400); outline-offset: 2px; border-radius: var(--radius-control); }
+}
+
+/* Dark marketing panels retain readable supporting text independently of workspace mode. */
+:is(.bg-zinc-950, .bg-zinc-900) :is(.text-zinc-400, .text-zinc-500) { color: var(--color-sidebar-muted); }

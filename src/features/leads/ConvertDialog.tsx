@@ -23,11 +23,11 @@ import { convertLead, getConversionSuggestions, type ConvertInput } from './api'
 
 function Choice({ checked, onChange, title, hint }: { checked: boolean; onChange: () => void; title: string; hint?: string }) {
   return (
-    <label className={cn('flex cursor-pointer items-start gap-2.5 rounded-xl px-3 py-2.5 text-sm ring-1', checked ? 'bg-brand-50 ring-brand-300' : 'ring-zinc-200 hover:bg-zinc-50')}>
-      <input type="radio" checked={checked} onChange={onChange} className="mt-0.5 text-brand-600 focus:ring-brand-500" />
+    <label className={cn('flex cursor-pointer items-start gap-3 rounded-xl px-3 py-3 text-sm ring-1', checked ? 'bg-brand-50 ring-brand-300' : 'ring-line hover:bg-surface-subtle')}>
+      <input type="radio" checked={checked} onChange={onChange} className="mt-1 text-brand-700 focus:ring-brand-500" />
       <span>
-        <span className="block font-medium text-zinc-900">{title}</span>
-        {hint && <span className="block text-xs text-zinc-500">{hint}</span>}
+        <span className="block font-medium text-ink">{title}</span>
+        {hint && <span className="block text-xs text-muted">{hint}</span>}
       </span>
     </label>
   )
@@ -35,9 +35,9 @@ function Choice({ checked, onChange, title, hint }: { checked: boolean; onChange
 
 function Section({ icon: Icon, title, children }: { icon: typeof UserRound; title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl p-4 ring-1 ring-zinc-200">
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-950">
-        <Icon className="size-4 text-zinc-400" aria-hidden="true" />
+    <section className="rounded-card p-4 ring-1 ring-line">
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-ink">
+        <Icon className="size-4 text-muted" aria-hidden="true" />
         {title}
       </h3>
       <div className="mt-3 space-y-2">{children}</div>
@@ -189,7 +189,7 @@ export function ConvertDialog({ lead, onClose }: { lead: LeadRecord; onClose: ()
                       <Field label="Value" optional>
                         {({ id }) => (
                           <div className="relative">
-                            <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-zinc-500">₹</span>
+                            <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted">₹</span>
                             <Input id={id} inputMode="decimal" className="pl-7" value={valueText} onChange={(e) => setDealValue(e.target.value)} />
                           </div>
                         )}
@@ -216,7 +216,7 @@ export function ConvertDialog({ lead, onClose }: { lead: LeadRecord; onClose: ()
                 )}
               </>
             ) : (
-              <p className="text-sm text-zinc-500">Set up a pipeline (Settings → Pipelines) to create a deal when converting.</p>
+              <p className="text-sm text-muted">Set up a pipeline (Settings → Pipelines) to create a deal when converting.</p>
             )}
           </Section>
           {error && <FormAlert>{error}</FormAlert>}

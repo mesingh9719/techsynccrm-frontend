@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -132,15 +133,19 @@ export function ContactFormDrawer({ open, onClose, contact = null, defaultCompan
 
   const shown = conflicts.length ? conflicts : live
 
+  const guard = useUnsavedChanges(draft, close, busy, open)
+
   return (
+    <>
     <Drawer
       open={open}
-      onClose={close}
+      onClose={guard.requestClose}
+      busy={busy}
       title={contact ? 'Edit contact' : 'New contact'}
       description={contact ? undefined : 'A name, phone or email is enough to start.'}
       footer={
         <>
-          <Button variant="secondary" onClick={close} disabled={busy}>
+          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
             Cancel
           </Button>
           {conflicts.length > 0 && (
@@ -148,7 +153,7 @@ export function ContactFormDrawer({ open, onClose, contact = null, defaultCompan
               Save anyway
             </Button>
           )}
-          <Button type="submit" form="contact-form" loading={busy && !conflicts.length}>
+          <Button type="submit" form="contact-form" disabled={busy} loading={busy && !conflicts.length}>
             {contact ? 'Save' : 'Create contact'}
           </Button>
         </>
@@ -184,23 +189,23 @@ export function ContactFormDrawer({ open, onClose, contact = null, defaultCompan
         </Field>
 
         <fieldset>
-          <legend className="mb-1.5 text-sm font-medium text-zinc-800">Companies</legend>
+          <legend className="mb-2 text-sm font-medium text-ink">Companies</legend>
           <div className="space-y-2">
             {draft.companies.map((c, i) => (
-              <div key={c.option.id} className="flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-2 text-sm">
-                <span className="min-w-0 flex-1 truncate font-medium text-zinc-900">{c.option.label}</span>
+              <div key={c.option.id} className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle px-3 py-2 text-sm">
+                <span className="min-w-0 flex-1 truncate font-medium text-ink">{c.option.label}</span>
                 <input
                   value={c.role}
                   onChange={(e) => set('companies', draft.companies.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))}
                   placeholder="Role"
                   aria-label={`Role at ${c.option.label}`}
-                  className="h-8 w-28 rounded-md border border-zinc-200 px-2 text-sm"
+                  className="h-8 w-28 rounded-md border border-line bg-surface px-2 text-sm text-ink placeholder:text-muted"
                 />
-                <label className="flex items-center gap-1 text-xs text-zinc-600">
+                <label className="flex items-center gap-1 text-xs text-muted">
                   <input type="radio" name="primary-company" checked={c.isPrimary || draft.companies.length === 1} onChange={() => set('companies', draft.companies.map((x, j) => ({ ...x, isPrimary: j === i })))} />
                   Primary
                 </label>
-                <button type="button" onClick={() => set('companies', draft.companies.filter((_, j) => j !== i))} className="rounded p-1 text-zinc-400 hover:text-red-600" aria-label={`Remove ${c.option.label}`}>
+                <button type="button" onClick={() => set('companies', draft.companies.filter((_, j) => j !== i))} className="rounded p-1 text-muted hover:text-danger" aria-label={`Remove ${c.option.label}`}>
                   <Trash2 className="size-4" aria-hidden="true" />
                 </button>
               </div>
@@ -213,7 +218,7 @@ export function ContactFormDrawer({ open, onClose, contact = null, defaultCompan
               placeholder="Link a company…"
             />
           </div>
-          {errors.companies && <p className="mt-1 text-sm text-red-600">{errors.companies}</p>}
+          {errors.companies && <p className="mt-1 text-sm text-danger">{errors.companies}</p>}
         </fieldset>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -241,18 +246,20 @@ export function ContactFormDrawer({ open, onClose, contact = null, defaultCompan
           {({ id }) => <TagPicker id={id} value={draft.tagIds} onChange={(v) => set('tagIds', v)} />}
         </Field>
         <fieldset className="space-y-2">
-          <legend className="mb-1 text-sm font-medium text-zinc-800">Marketing consent</legend>
+          <legend className="mb-1 text-sm font-medium text-ink">Marketing consent</legend>
           <Checkbox label="Agreed to receive WhatsApp messages" checked={draft.whatsappOptIn} onChange={(e) => set('whatsappOptIn', e.target.checked)} />
           <Checkbox label="Agreed to receive marketing emails" checked={draft.emailOptIn} onChange={(e) => set('emailOptIn', e.target.checked)} />
         </fieldset>
         <CustomFieldsEditor entityType="contact" values={draft.customFields} onChange={(v) => set('customFields', v)} errors={fieldErrorsUnder(errors, 'customFields')} />
         {!contact && (
-          <p className="flex items-center gap-1.5 text-xs text-zinc-500">
+          <p className="flex items-center gap-2 text-xs text-muted">
             <Plus className="size-3" aria-hidden="true" />
             Contacts count toward your plan’s leads & contacts limit.
           </p>
         )}
       </form>
     </Drawer>
+    {guard.confirmation}
+    </>
   )
 }

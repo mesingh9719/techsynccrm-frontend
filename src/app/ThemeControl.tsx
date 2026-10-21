@@ -36,7 +36,7 @@ export function ThemeControl() {
   const { theme, setTheme } = useAppTheme()
   const Icon = icons[theme]
   return (
-    <label className="relative flex size-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100">
+    <label className="relative flex size-10 items-center justify-center rounded-lg text-muted hover:bg-zinc-100">
       <Icon className="size-4" aria-hidden="true" />
       <span className="sr-only">Color theme</span>
       <select

@@ -1,3 +1,4 @@
+import { ConfirmDialog } from '../../components/app/Dialog'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarClock, Plus, Trash2 } from 'lucide-react'
@@ -26,6 +27,7 @@ export default function AvailabilitySettings() {
     [note, setNote] = useState(''),
     [busy, setBusy] = useState(false),
     [error, setError] = useState('')
+  const [removing, setRemoving] = useState<string | null>(null)
   const refresh = () => client.invalidateQueries({ queryKey: key })
   return (
     <div className="space-y-5">
@@ -71,12 +73,12 @@ export default function AvailabilitySettings() {
         }}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Away from">
+          <Field label="Away from" required>
             {({ id }) => (
               <Input id={id} type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} />
             )}
           </Field>
-          <Field label="Back on">
+          <Field label="Back on" required>
             {({ id }) => (
               <Input id={id} type="datetime-local" value={end} min={start} onChange={(e) => setEnd(e.target.value)} />
             )}
@@ -115,7 +117,7 @@ export default function AvailabilitySettings() {
         <div className="space-y-3">
           {query.data.map((absence) => (
             <div key={absence.id} className="surface flex items-start gap-3 p-4">
-              <CalendarClock className="mt-1 size-4 text-brand-600" />
+              <CalendarClock className="mt-1 size-4 text-brand-700" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-ink">
                   {new Intl.DateTimeFormat('en-IN', {
@@ -137,18 +139,7 @@ export default function AvailabilitySettings() {
                 size="sm"
                 disabled={busy}
                 aria-label="Remove out-of-office period"
-                onClick={async () => {
-                  setBusy(true)
-                  setError('')
-                  try {
-                    await service.deleteAbsence(absence.id)
-                    await refresh()
-                  } catch (err) {
-                    setError(err instanceof Error ? err.message : 'Couldn’t remove availability.')
-                  } finally {
-                    setBusy(false)
-                  }
-                }}
+                onClick={() => setRemoving(absence.id)}
               >
                 <Trash2 className="size-4" />
               </Button>
@@ -156,6 +147,7 @@ export default function AvailabilitySettings() {
           ))}
         </div>
       )}
+      <ConfirmDialog open={Boolean(removing)} onClose={() => setRemoving(null)} title="Remove this time away?" description="This period will no longer affect availability planning." confirmLabel="Remove period" tone="danger" onConfirm={async () => { if (!removing) return; await service.deleteAbsence(removing); await refresh(); setRemoving(null); notify({ title: 'Time away removed' }) }} />
     </div>
   )
 }

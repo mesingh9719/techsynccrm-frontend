@@ -1,4 +1,4 @@
-import { Attachments } from '../files/Attachments'
+import { RecordWorkspace } from '../crm/components/RecordWorkspace'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -15,7 +15,6 @@ import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
 import { ConfirmDialog } from '../../components/app/Dialog'
 import { ErrorState, Skeleton } from '../../components/app/States'
-import { Timeline } from '../activities/Timeline'
 import { listContacts } from '../contacts/api'
 import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel } from '../crm/components/RecordParts'
 import { RecordPicker } from '../crm/components/RecordPicker'
@@ -24,7 +23,6 @@ import { formatCustomValue } from '../crm/customFieldFormat'
 import { formatMinor, formatPhone, relativeTime } from '../crm/format'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
 import type { DealRecord, PipelineStage } from '../crm/types'
-import { RecordTasks } from '../tasks/RecordTasks'
 import {
   addDealContact,
   deleteDeal,
@@ -60,7 +58,7 @@ function StageStepper({
   const lost = stages.find((s) => s.type === 'lost')
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-      <ol className="flex min-w-0 flex-1 overflow-x-auto rounded-xl bg-zinc-100 p-1" aria-label="Deal stage">
+      <ol className="flex min-w-0 flex-1 overflow-x-auto rounded-xl border border-line bg-surface-subtle p-1" aria-label="Deal stage">
         {open.map((s, i) => {
           const done = deal.status === 'won' || (deal.status === 'open' && i < currentIndex)
           const current = s.id === deal.stageId
@@ -72,12 +70,12 @@ function StageStepper({
                 onClick={() => onMove(s)}
                 aria-current={current ? 'step' : undefined}
                 className={cn(
-                  'flex w-full items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
+                  'flex w-full items-center justify-center gap-1 rounded-lg px-2 py-2 text-xs font-medium whitespace-nowrap transition-colors',
                   current
-                    ? 'bg-zinc-900 text-white'
+                    ? 'bg-ink text-surface'
                     : done
-                      ? 'bg-brand-100 text-brand-800 hover:bg-brand-200'
-                      : 'text-zinc-600 hover:bg-white',
+                      ? 'bg-brand-100 text-brand-800 hover:bg-brand-200  '
+                      : 'text-muted hover:bg-surface hover:text-ink',
                   disabled && !current && 'cursor-default hover:bg-transparent',
                 )}
                 title={`${s.name} · ${s.probability}%`}
@@ -93,8 +91,8 @@ function StageStepper({
         {won && (
           <Button
             size="sm"
-            variant={deal.status === 'won' ? 'primary' : 'secondary'}
-            className={deal.status === 'won' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+            variant="secondary"
+            className={deal.status === 'won' ? 'bg-emerald-50 text-emerald-800' : ''}
             disabled={disabled || deal.status === 'won'}
             onClick={() => onMove(won)}
           >
@@ -144,7 +142,7 @@ export default function DealDetailPage() {
   const mover = useDealMover({ onSettled: refresh })
   useSeo({ title: deal?.title ?? 'Deal', noindex: true })
 
-  if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-2xl" />
+  if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-card" />
   if (query.isError || !deal)
     return (
       <div className="mx-auto max-w-6xl px-4 py-10">
@@ -188,8 +186,8 @@ export default function DealDetailPage() {
   const close = deal.expectedCloseDate ? new Date(`${deal.expectedCloseDate}T00:00:00`) : null
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <Link to="/app/deals" className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+    <div className="app-page">
+      <Link to="/app/deals" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
         <ArrowLeft className="size-4" aria-hidden="true" />
         Deals
       </Link>
@@ -218,9 +216,9 @@ export default function DealDetailPage() {
 
       <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">{deal.title}</h1>
-          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-600">
-            <span className="text-lg font-semibold text-zinc-950 tabular-nums">
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">{deal.title}</h1>
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+            <span className="text-lg font-semibold text-ink tabular-nums">
               {formatMinor(deal.valueMinor, deal.currency)}
             </span>
             {deal.status === 'open' && (
@@ -231,7 +229,7 @@ export default function DealDetailPage() {
             <span>{deal.pipeline.name}</span>
             {deal.company && (
               <Link to={`/app/companies/${deal.company.id}`} className="inline-flex items-center gap-1 hover:underline">
-                <Building2 className="size-3.5" aria-hidden="true" />
+                <Building2 className="size-4" aria-hidden="true" />
                 {deal.company.name}
               </Link>
             )}
@@ -241,7 +239,7 @@ export default function DealDetailPage() {
               {deal.status === 'open' ? deal.stage.name : deal.status === 'won' ? 'Won' : 'Lost'}
             </Badge>
             {deal.status === 'lost' && deal.lostReason && (
-              <span className="text-xs text-zinc-500">{deal.lostReason.name}</span>
+              <span className="text-xs text-muted">{deal.lostReason.name}</span>
             )}
             {deal.isRotting && (
               <Badge tone="warning">
@@ -276,10 +274,10 @@ export default function DealDetailPage() {
         )}
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <div className="record-workspace mt-6">
         <div className="space-y-6">
           <Panel title="Details">
-            <dl className="divide-y divide-zinc-100">
+            <dl className="divide-y divide-line">
               <FieldRow label="Title">
                 <InlineText
                   label="title"
@@ -291,7 +289,7 @@ export default function DealDetailPage() {
               <FieldRow label="Value">{formatMinor(deal.valueMinor, deal.currency)}</FieldRow>
               <FieldRow label="Expected close">
                 <span
-                  className={cn(close && deal.status === 'open' && close.getTime() < now && 'font-medium text-red-600')}
+                  className={cn(close && deal.status === 'open' && close.getTime() < now && 'font-medium text-danger')}
                 >
                   {close ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(close) : '—'}
                 </span>
@@ -330,7 +328,7 @@ export default function DealDetailPage() {
             actions={
               canUpdate && (
                 <Button size="sm" variant="secondary" onClick={() => setAddingContact((v) => !v)}>
-                  <Plus className="size-3.5" aria-hidden="true" />
+                  <Plus className="size-4" aria-hidden="true" />
                   Add
                 </Button>
               )
@@ -360,15 +358,15 @@ export default function DealDetailPage() {
               </div>
             )}
             {deal.contacts.length ? (
-              <ul className="divide-y divide-zinc-100">
+              <ul className="divide-y divide-line">
                 {deal.contacts.map((c) => (
-                  <li key={c.contactId} className="flex items-center gap-3 py-2.5">
+                  <li key={c.contactId} className="flex items-center gap-3 py-3">
                     <Avatar name={c.displayName} size="sm" />
                     <Link to={`/app/contacts/${c.contactId}`} className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-zinc-900 hover:underline">
+                      <span className="block truncate text-sm font-medium text-ink hover:underline">
                         {c.displayName}
                       </span>
-                      <span className="block truncate text-xs text-zinc-500">
+                      <span className="block truncate text-xs text-muted">
                         {[c.role, formatPhone(c.primaryPhoneE164, null)].filter((v) => v && v !== '—').join(' · ')}
                       </span>
                     </Link>
@@ -377,7 +375,7 @@ export default function DealDetailPage() {
                       <button
                         type="button"
                         onClick={() => contactAction(() => removeDealContact(deal.id, c.contactId))}
-                        className="rounded p-1 text-zinc-400 hover:text-red-600"
+                        className="rounded p-1 text-muted hover:text-danger"
                         aria-label={`Remove ${c.displayName}`}
                       >
                         <X className="size-4" aria-hidden="true" />
@@ -387,25 +385,27 @@ export default function DealDetailPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-zinc-500">No contacts on this deal yet.</p>
+              <p className="text-sm text-muted">No contacts on this deal yet.</p>
             )}
           </Panel>
 
           <Panel title="Stage history">
             {history.isPending ? (
               <Skeleton className="h-16" />
+            ) : history.isError ? (
+              <ErrorState error={history.error} onRetry={() => history.refetch()} />
             ) : (
-              <ol className="space-y-2.5">
+              <ol className="space-y-3">
                 {(history.data ?? []).map((h) => (
                   <li key={h.id} className="flex items-start gap-2 text-sm">
-                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-zinc-300" aria-hidden="true" />
+                    <span className="mt-2 size-2 shrink-0 rounded-full bg-zinc-300" aria-hidden="true" />
                     <span className="min-w-0 flex-1">
                       {h.from ? (
                         <span className="inline-flex flex-wrap items-center gap-1">
-                          {h.from.name} <ArrowRight className="size-3 text-zinc-400" aria-hidden="true" />{' '}
+                          {h.from.name} <ArrowRight className="size-3 text-muted" aria-hidden="true" />{' '}
                           <strong className="font-medium">{h.to.name}</strong>
                           {h.secondsInPrevStage !== null && (
-                            <span className="text-xs text-zinc-500">after {duration(h.secondsInPrevStage)}</span>
+                            <span className="text-xs text-muted">after {duration(h.secondsInPrevStage)}</span>
                           )}
                         </span>
                       ) : (
@@ -413,7 +413,7 @@ export default function DealDetailPage() {
                           Created in <strong className="font-medium">{h.to.name}</strong>
                         </span>
                       )}
-                      <span className="block text-xs text-zinc-500">
+                      <span className="block text-xs text-muted">
                         {relativeTime(h.movedAt)}
                         {h.movedBy && ` · ${h.movedBy.fullName}`}
                       </span>
@@ -424,11 +424,7 @@ export default function DealDetailPage() {
             )}
           </Panel>
         </div>
-        <div className="space-y-6">
-          <RecordTasks entityType="deal" entityId={deal.id} recordName={deal.title} />
-          <Attachments entityType="deal" entityId={deal.id} />
-          <Timeline entityType="deal" entityId={deal.id} recordName={deal.title} canPin={canUpdate} />
-        </div>
+        <RecordWorkspace key={deal.id} entityType="deal" entityId={deal.id} name={deal.title} canPin={canUpdate} />
       </div>
 
       {mover.dialog}

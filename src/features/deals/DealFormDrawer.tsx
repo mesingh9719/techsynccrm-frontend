@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -124,14 +125,18 @@ export function DealFormDrawer({
     }
   }
 
+  const guard = useUnsavedChanges(draft, close, busy, open)
+
   return (
+    <>
     <Drawer
       open={open}
-      onClose={close}
+      onClose={guard.requestClose}
+      busy={busy}
       title={deal ? 'Edit deal' : 'New deal'}
       footer={
         <>
-          <Button variant="secondary" onClick={close} disabled={busy}>
+          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
             Cancel
           </Button>
           <Button type="submit" form="deal-form" loading={busy} disabled={!deal && !stageId}>
@@ -183,7 +188,7 @@ export function DealFormDrawer({
           <Field label="Value" optional error={errors.valueMinor}>
             {({ id, invalid }) => (
               <div className="relative">
-                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-zinc-500">₹</span>
+                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted">₹</span>
                 <Input id={id} invalid={invalid} inputMode="decimal" className="pl-7" value={draft.value} onChange={(e) => set('value', e.target.value)} placeholder="1,85,000" />
               </div>
             )}
@@ -206,23 +211,23 @@ export function DealFormDrawer({
           )}
         </Field>
         <fieldset>
-          <legend className="mb-1.5 text-sm font-medium text-zinc-800">Contacts</legend>
+          <legend className="mb-2 text-sm font-medium text-ink">Contacts</legend>
           <div className="space-y-2">
             {draft.contacts.map((c, i) => (
-              <div key={c.option.id} className="flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-2 text-sm">
-                <span className="min-w-0 flex-1 truncate font-medium text-zinc-900">{c.option.label}</span>
+              <div key={c.option.id} className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle px-3 py-2 text-sm">
+                <span className="min-w-0 flex-1 truncate font-medium text-ink">{c.option.label}</span>
                 <input
                   value={c.role}
                   onChange={(e) => set('contacts', draft.contacts.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))}
                   placeholder="Role"
                   aria-label={`Role of ${c.option.label}`}
-                  className="h-8 w-32 rounded-md border border-zinc-200 px-2 text-sm"
+                  className="h-8 w-32 rounded-md border border-line bg-surface px-2 text-sm text-ink placeholder:text-muted"
                 />
-                <label className="flex items-center gap-1 text-xs text-zinc-600">
+                <label className="flex items-center gap-1 text-xs text-muted">
                   <input type="radio" name="primary-contact" checked={c.isPrimary || draft.contacts.length === 1} onChange={() => set('contacts', draft.contacts.map((x, j) => ({ ...x, isPrimary: j === i })))} />
                   Primary
                 </label>
-                <button type="button" onClick={() => set('contacts', draft.contacts.filter((_, j) => j !== i))} className="rounded p-1 text-zinc-400 hover:text-red-600" aria-label={`Remove ${c.option.label}`}>
+                <button type="button" onClick={() => set('contacts', draft.contacts.filter((_, j) => j !== i))} className="rounded p-1 text-muted hover:text-danger" aria-label={`Remove ${c.option.label}`}>
                   <Trash2 className="size-4" aria-hidden="true" />
                 </button>
               </div>
@@ -235,7 +240,7 @@ export function DealFormDrawer({
               placeholder="Add a contact…"
             />
           </div>
-          {errors.contacts && <p className="mt-1 text-sm text-red-600">{errors.contacts}</p>}
+          {errors.contacts && <p className="mt-1 text-sm text-danger">{errors.contacts}</p>}
         </fieldset>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Source" optional>
@@ -267,5 +272,7 @@ export function DealFormDrawer({
         <CustomFieldsEditor entityType="deal" values={draft.customFields} onChange={(v) => set('customFields', v)} errors={fieldErrorsUnder(errors, 'customFields')} />
       </form>
     </Drawer>
+    {guard.confirmation}
+    </>
   )
 }

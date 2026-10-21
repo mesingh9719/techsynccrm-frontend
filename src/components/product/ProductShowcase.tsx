@@ -37,14 +37,14 @@ const sidebar: { label: string; icon: LucideIcon; view?: View }[] = [
 /** Browser-style frame around an app screen. */
 export function AppWindow({ children, url = 'app.techsynccrm.com', className }: { children: ReactNode; url?: string; className?: string }) {
   return (
-    <div className={cn('overflow-hidden rounded-2xl bg-white shadow-frame', className)}>
+    <div className={cn('overflow-hidden rounded-dialog bg-white shadow-frame', className)}>
       <div className="flex h-10 items-center gap-3 border-b border-zinc-200/80 bg-zinc-50/80 px-4">
-        <div className="flex gap-1.5" aria-hidden="true">
-          <span className="size-2.5 rounded-full bg-zinc-300" />
-          <span className="size-2.5 rounded-full bg-zinc-300" />
-          <span className="size-2.5 rounded-full bg-zinc-300" />
+        <div className="flex gap-2" aria-hidden="true">
+          <span className="size-3 rounded-full bg-zinc-300" />
+          <span className="size-3 rounded-full bg-zinc-300" />
+          <span className="size-3 rounded-full bg-zinc-300" />
         </div>
-        <div className="mx-auto flex h-6 w-full max-w-xs items-center justify-center rounded-md bg-white px-3 font-mono text-[11px] text-zinc-500 ring-1 ring-zinc-200">
+        <div className="mx-auto flex h-6 w-full max-w-xs items-center justify-center rounded-md bg-white px-3 font-mono text-xs text-zinc-500 ring-1 ring-zinc-200">
           {url}
         </div>
         <div className="w-12" aria-hidden="true" />
@@ -90,7 +90,7 @@ export function ProductShowcase({ className }: { className?: string }) {
                 onClick={() => setView(v.id)}
                 onKeyDown={(e) => onTabKey(e, i)}
                 className={cn(
-                  'inline-flex h-9 items-center gap-2 rounded-lg px-3.5 text-sm font-medium transition-colors sm:px-4',
+                  'inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors sm:px-4',
                   active ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900',
                 )}
               >
@@ -105,11 +105,11 @@ export function ProductShowcase({ className }: { className?: string }) {
       <AppWindow>
         <div className="flex">
           <aside className="hidden w-48 shrink-0 border-r border-zinc-200/80 bg-zinc-50/60 p-3 md:block" aria-hidden="true">
-            <div className="flex items-center gap-2 px-2 py-1.5">
+            <div className="flex items-center gap-2 px-2 py-2">
               <LogoMark className="size-6" />
-              <span className="truncate text-[13px] font-semibold text-zinc-900">Kaveri Foods</span>
+              <span className="truncate text-sm font-semibold text-zinc-900">Kaveri Foods</span>
             </div>
-            <nav className="mt-4 space-y-0.5">
+            <nav className="mt-4 space-y-1">
               {sidebar.map((item) => {
                 const active = item.view === view
                 return (
@@ -120,18 +120,18 @@ export function ProductShowcase({ className }: { className?: string }) {
                     disabled={!item.view}
                     onClick={() => item.view && setView(item.view)}
                     className={cn(
-                      'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] transition-colors disabled:cursor-default',
+                      'flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors disabled:cursor-default',
                       active ? 'bg-white font-medium text-zinc-900 shadow-card ring-1 ring-zinc-200/80' : 'text-zinc-600 enabled:hover:bg-zinc-100',
                     )}
                   >
-                    <item.icon className={cn('size-4', active ? 'text-brand-600' : 'text-zinc-400')} />
+                    <item.icon className={cn('size-4', active ? 'text-brand-700' : 'text-zinc-400')} />
                     {item.label}
                   </button>
                 )
               })}
             </nav>
             <div className="mt-6 border-t border-zinc-200/80 pt-3">
-              <div className="flex items-center gap-2.5 px-2 py-1.5 text-[13px] text-zinc-600">
+              <div className="flex items-center gap-3 px-2 py-2 text-sm text-zinc-600">
                 <Settings className="size-4 text-zinc-400" />
                 Settings
               </div>
@@ -144,16 +144,16 @@ export function ProductShowcase({ className }: { className?: string }) {
                 <p className="truncate text-sm font-semibold text-zinc-900">{current.title}</p>
               </div>
               <div className="flex items-center gap-2" aria-hidden="true">
-                <div className="hidden h-7 w-44 items-center gap-2 rounded-md bg-zinc-100 px-2.5 text-xs text-zinc-400 lg:flex">
-                  <Search className="size-3.5" />
+                <div className="hidden h-8 w-44 items-center gap-2 rounded-md bg-zinc-100 px-3 text-xs text-zinc-400 lg:flex">
+                  <Search className="size-4" />
                   Search
-                  <kbd className="ml-auto font-mono text-[10px]">⌘K</kbd>
+                  <kbd className="ml-auto font-mono text-xs">⌘K</kbd>
                 </div>
                 <span className="hidden size-7 items-center justify-center rounded-md text-zinc-500 sm:flex">
                   <Bell className="size-4" />
                 </span>
-                <span className="inline-flex h-7 items-center gap-1 rounded-md bg-brand-600 px-2.5 text-xs font-medium text-white">
-                  <Plus className="size-3.5" />
+                <span className="inline-flex h-8 items-center gap-1 rounded-md bg-brand-600 px-3 text-xs font-medium text-white">
+                  <Plus className="size-4" />
                   New
                 </span>
                 <Avatar name="Neha Verma" size="xs" className="size-7" />

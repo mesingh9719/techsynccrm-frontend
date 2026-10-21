@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -22,6 +23,7 @@ import { useOrgId } from '../crm/hooks'
 import type { CustomFieldValues, Duplicate, LeadRecord } from '../crm/types'
 import { useDuplicateCheck } from '../crm/useDuplicateCheck'
 import { checkLeadDuplicates, createLead, updateLead, useLeadSources, type LeadInput } from './api'
+import { useCampaigns } from '../campaigns/useCampaigns'
 
 interface Draft {
   firstName: string
@@ -36,6 +38,7 @@ interface Draft {
   pincode: string
   sourceId: string
   sourceDetail: string
+  utm: Record<string, string> | null
   ownerId: string | null
   tagIds: string[]
   customFields: CustomFieldValues
@@ -54,6 +57,7 @@ const fromLead = (l: LeadRecord | null, userId: string | null): Draft => ({
   pincode: l?.pincode ?? '',
   sourceId: l?.sourceId ?? '',
   sourceDetail: l?.sourceDetail ?? '',
+  utm: l?.utm ?? null,
   ownerId: l ? l.ownerId : userId,
   tagIds: l?.tags.map((t) => t.id) ?? [],
   customFields: l?.customFields ?? {},
@@ -76,6 +80,7 @@ export function LeadFormDrawer({
   const notify = useToast()
   const canAssign = useCan('records.assign')
   const sources = useLeadSources()
+  const { data: campaigns = [] } = useCampaigns()
   const [draft, setDraft] = useState<Draft>(() => fromLead(lead, user?.id ?? null))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string | null>(null)
@@ -114,6 +119,7 @@ export function LeadFormDrawer({
       pincode: draft.pincode.trim() || null,
       sourceId: draft.sourceId || null,
       sourceDetail: draft.sourceDetail.trim() || null,
+      utm: draft.utm,
       tagIds: draft.tagIds,
       customFields: draft.customFields,
       ...(!lead && { ownerId: draft.ownerId }),
@@ -155,15 +161,19 @@ export function LeadFormDrawer({
 
   const activeSources = (sources.data ?? []).filter((s) => !s.archived || s.id === draft.sourceId)
 
+  const guard = useUnsavedChanges(draft, close, busy, open)
+
   return (
+    <>
     <Drawer
       open={open}
-      onClose={close}
+      onClose={guard.requestClose}
+      busy={busy}
       title={lead ? 'Edit lead' : 'New lead'}
       description={lead ? undefined : 'A name, phone or email is enough. Add the rest as you learn it.'}
       footer={
         <>
-          <Button variant="secondary" onClick={close} disabled={busy}>
+          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
             Cancel
           </Button>
           {conflicts.length > 0 && (
@@ -171,7 +181,7 @@ export function LeadFormDrawer({
               Save anyway
             </Button>
           )}
-          <Button type="submit" form="lead-form" loading={busy && !conflicts.length}>
+          <Button type="submit" form="lead-form" disabled={busy} loading={busy && !conflicts.length}>
             {lead ? 'Save' : 'Create lead'}
           </Button>
         </>
@@ -260,10 +270,10 @@ export function LeadFormDrawer({
         <details
           open={detailsOpen}
           onToggle={(e) => setDetailsOpen(e.currentTarget.open)}
-          className="rounded-xl border border-zinc-200 p-3"
+          className="rounded-xl border border-line bg-surface-subtle/40 p-3"
         >
-          <summary className="cursor-pointer text-sm font-medium text-zinc-600">
-            More details <span className="font-normal text-zinc-400">· source, budget, location & tags</span>
+          <summary className="cursor-pointer text-sm font-medium text-ink">
+            More details <span className="font-normal text-muted">· source, budget, location & tags</span>
           </summary>
           <div className="mt-5 space-y-5">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -287,7 +297,7 @@ export function LeadFormDrawer({
               <Field label="Budget" optional error={errors.budgetMinor}>
                 {({ id, invalid }) => (
                   <div className="relative">
-                    <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-zinc-500">
+                    <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted">
                       ₹
                     </span>
                     <Input
@@ -303,16 +313,69 @@ export function LeadFormDrawer({
                 )}
               </Field>
             </div>
-            <Field label="Source details" optional hint="Campaign name, IndiaMART query ID, who referred them…">
-              {({ id, describedBy }) => (
-                <Input
-                  id={id}
-                  aria-describedby={describedBy}
-                  value={draft.sourceDetail}
-                  onChange={(e) => set('sourceDetail', e.target.value)}
-                />
-              )}
-            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Attributed Campaign" optional hint="Link to tracked campaign">
+                {({ id }) => (
+                  <Select
+                    id={id}
+                    value={
+                      campaigns.find(
+                        (c) =>
+                          c.code === draft.utm?.utm_campaign ||
+                          c.name === draft.sourceDetail ||
+                          c.id === draft.utm?.campaign_id,
+                      )?.id ?? ''
+                    }
+                    onChange={(e) => {
+                      const found = campaigns.find((c) => c.id === e.target.value)
+                      if (found) {
+                        setDraft((d) => ({
+                          ...d,
+                          sourceDetail: found.name,
+                          utm: {
+                            ...(d.utm || {}),
+                            utm_campaign: found.code,
+                            campaign_id: found.id,
+                            ...(found.utm.utm_source ? { utm_source: found.utm.utm_source } : {}),
+                            ...(found.utm.utm_medium ? { utm_medium: found.utm.utm_medium } : {}),
+                          },
+                        }))
+                      } else {
+                        setDraft((d) => ({
+                          ...d,
+                          utm: d.utm
+                            ? Object.fromEntries(
+                                Object.entries(d.utm).filter(
+                                  ([k]) => k !== 'utm_campaign' && k !== 'campaign_id',
+                                ),
+                              )
+                            : null,
+                        }))
+                      }
+                    }}
+                  >
+                    <option value="">No campaign</option>
+                    {campaigns
+                      .filter((c) => c.status !== 'archived')
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.code})
+                        </option>
+                      ))}
+                  </Select>
+                )}
+              </Field>
+              <Field label="Source details" optional hint="Partner name, IndiaMART query ID, ad note…">
+                {({ id, describedBy }) => (
+                  <Input
+                    id={id}
+                    aria-describedby={describedBy}
+                    value={draft.sourceDetail}
+                    onChange={(e) => set('sourceDetail', e.target.value)}
+                  />
+                )}
+              </Field>
+            </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label="City" optional>
                 {({ id }) => <Input id={id} value={draft.city} onChange={(e) => set('city', e.target.value)} />}
@@ -373,5 +436,7 @@ export function LeadFormDrawer({
         </details>
       </form>
     </Drawer>
+    {guard.confirmation}
+    </>
   )
 }

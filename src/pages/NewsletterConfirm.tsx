@@ -9,7 +9,7 @@ import { Button } from '../components/ui/Button'
 function StatusCard({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
   return (
     <div className="mx-auto w-full max-w-lg px-4 py-16 sm:py-24">
-      <div className="rounded-3xl bg-white p-8 text-center shadow-card ring-1 ring-zinc-200 sm:p-10" role="status">
+      <div className="rounded-dialog bg-white p-8 text-center shadow-card ring-1 ring-zinc-200 sm:p-10" role="status">
         {icon}
         <h1 className="mt-5 text-2xl font-semibold tracking-tight text-zinc-950">{title}</h1>
         {children}
@@ -30,7 +30,7 @@ const errorIcon = (
   </span>
 )
 
-const loadingIcon = <LoaderCircle className="mx-auto size-7 animate-spin text-brand-600" aria-hidden="true" />
+const loadingIcon = <LoaderCircle className="mx-auto size-7 animate-spin text-brand-700" aria-hidden="true" />
 
 const errorMessage = (err: unknown) => (err instanceof ApiError && err.status !== 0 && err.status < 500 ? err.message : 'Something went wrong. Please try again.')
 

@@ -41,10 +41,10 @@ export function RecoveryCodes({ codes, onDone, doneLabel = 'I’ve saved my code
 
   return (
     <div>
-      <p className="text-sm text-zinc-600">
-        Save these somewhere safe, like a password manager. If you lose your phone, each code lets you sign in once. <strong className="font-medium text-zinc-900">You won’t see them again.</strong>
+      <p className="text-sm text-muted">
+        Save these somewhere safe, like a password manager. If you lose your phone, each code lets you sign in once. <strong className="font-medium text-ink">You won’t see them again.</strong>
       </p>
-      <ul className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-zinc-50 p-4 font-mono text-sm text-zinc-900 ring-1 ring-zinc-200" aria-label="Recovery codes">
+      <ul className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-surface-subtle p-4 font-mono text-sm text-ink ring-1 ring-line" aria-label="Recovery codes">
         {codes.map((code) => (
           <li key={code}>{code}</li>
         ))}
@@ -112,7 +112,7 @@ export function TwoFactorSetup({ onComplete }: { onComplete: () => void }) {
   if (loadError) return <FormAlert>{loadError}</FormAlert>
   if (!setup) {
     return (
-      <p role="status" className="flex items-center gap-2 py-8 text-sm text-zinc-500">
+      <p role="status" className="flex items-center gap-2 py-8 text-sm text-muted">
         <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> Preparing…
       </p>
     )
@@ -121,21 +121,21 @@ export function TwoFactorSetup({ onComplete }: { onComplete: () => void }) {
   const grouped = setup.secret.match(/.{1,4}/g)?.join(' ')
   return (
     <form onSubmit={confirm} noValidate>
-      <ol className="space-y-5 text-sm text-zinc-700">
+      <ol className="space-y-5 text-sm text-ink">
         <li>
           <p>
-            <span className="font-medium text-zinc-900">1. Scan this QR code</span> with an authenticator app such as Google Authenticator, Microsoft Authenticator or 1Password.
+            <span className="font-medium text-ink">1. Scan this QR code</span> with an authenticator app such as Google Authenticator, Microsoft Authenticator or 1Password.
           </p>
-          <div className="mt-3 flex flex-col items-center gap-3 rounded-xl bg-zinc-50 p-4 ring-1 ring-zinc-200 sm:flex-row sm:items-start">
-            <img src={setup.qr} alt="QR code for your authenticator app" width={160} height={160} className="rounded-lg bg-white" />
+          <div className="mt-3 flex flex-col items-center gap-3 rounded-xl bg-surface-subtle p-4 ring-1 ring-line sm:flex-row sm:items-start">
+            <img src={setup.qr} alt="QR code for your authenticator app" width={160} height={160} className="rounded-lg bg-surface" />
             <div className="min-w-0 text-center sm:text-left">
-              <p className="text-xs text-zinc-500">Can’t scan? Enter this key instead:</p>
-              <p className="mt-1 font-mono text-sm break-all text-zinc-900 select-all">{grouped}</p>
+              <p className="text-xs text-muted">Can’t scan? Enter this key instead:</p>
+              <p className="mt-1 font-mono text-sm break-all text-ink select-all">{grouped}</p>
             </div>
           </div>
         </li>
         <li>
-          <p className="font-medium text-zinc-900">2. Enter the 6-digit code it shows</p>
+          <p className="font-medium text-ink">2. Enter the 6-digit code it shows</p>
           <Field label="Code" className="mt-3" error={error ?? undefined}>
             {({ id, describedBy, invalid }) => (
               <Input

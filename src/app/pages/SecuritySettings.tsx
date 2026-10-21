@@ -29,7 +29,7 @@ import { Button } from '../../components/ui/Button'
 import { Field, FormAlert, Input, PasswordInput } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { Dialog } from '../../components/app/Dialog'
-import { ErrorState, Skeleton } from '../../components/app/States'
+import { ErrorState, Skeleton, PageHeader } from '../../components/app/States'
 import { SettingsSection } from '../../components/app/SettingsSection'
 import { RecoveryCodes, TwoFactorSetup } from '../../components/app/TwoFactorSetup'
 
@@ -205,13 +205,13 @@ function TwoFactorSection() {
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          {enabled ? <ShieldCheck className="mt-0.5 size-5 text-emerald-600" aria-hidden="true" /> : <ShieldOff className="mt-0.5 size-5 text-zinc-400" aria-hidden="true" />}
+          {enabled ? <ShieldCheck className="mt-1 size-5 text-emerald-600" aria-hidden="true" /> : <ShieldOff className="mt-1 size-5 text-muted" aria-hidden="true" />}
           <div>
-            <p className="font-medium text-zinc-900">
+            <p className="font-medium text-ink">
               {enabled ? 'On' : 'Off'}
-              {enabled && enabledAt && <span className="font-normal text-zinc-500"> · since {formatDate(enabledAt)}</span>}
+              {enabled && enabledAt && <span className="font-normal text-muted"> · since {formatDate(enabledAt)}</span>}
             </p>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted">
               {enabled
                 ? `${recoveryCodesRemaining} recovery code${recoveryCodesRemaining === 1 ? '' : 's'} left.`
                 : 'Protect your account with a code from your phone when you sign in.'}
@@ -240,7 +240,7 @@ function TwoFactorSection() {
           )}
         </div>
       </div>
-      {enabled && required && <p className="mt-3 text-xs text-zinc-500">Your workspace requires two-factor authentication, so it can’t be turned off.</p>}
+      {enabled && required && <p className="mt-3 text-xs text-muted">Your workspace requires two-factor authentication, so it can’t be turned off.</p>}
 
       <Dialog open={dialog === 'setup'} onClose={() => setDialog(null)} title="Turn on two-factor authentication">
         {dialog === 'setup' && (
@@ -295,13 +295,13 @@ function SessionRow({ session, onRevoke, busy }: { session: UserSession; onRevok
   const Icon = /Android|iOS/.test(session.device.os) ? Smartphone : Laptop
   return (
     <li className="flex items-center gap-3 py-3">
-      <Icon className="size-5 shrink-0 text-zinc-400" aria-hidden="true" />
+      <Icon className="size-5 shrink-0 text-muted" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-zinc-900">
+        <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink">
           {session.device.label}
           {session.current && <Badge tone="success">This device</Badge>}
         </p>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted">
           {session.ip ?? 'Unknown IP'} · active {timeAgo(session.lastActiveAt)} · signed in {formatDate(session.startedAt)}
         </p>
       </div>
@@ -385,7 +385,7 @@ function DeleteAccountSection() {
 
   return (
     <>
-      <p className="text-sm text-zinc-600">
+      <p className="text-sm text-muted">
         Permanently removes your personal details and signs you out everywhere. Records you own in each workspace are handed to its owner. If you own a workspace, transfer it or delete it first.
       </p>
       <Button variant="secondary" className="mt-5 text-red-700" onClick={() => setOpen(true)}>
@@ -422,6 +422,7 @@ export default function SecuritySettings() {
   useSeo({ title: 'Security settings', noindex: true })
   return (
     <div className="space-y-6">
+      <PageHeader title="Security" description="Protect your account and manage active sessions." />
       <SettingsSection title="Password">
         <PasswordForm />
       </SettingsSection>

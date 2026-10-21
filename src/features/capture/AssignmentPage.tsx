@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -91,16 +92,19 @@ function RuleEditor({
       setBusy(false)
     }
   }
+  const guard = useUnsavedChanges(draft, onClose, busy)
   return (
+    <>
     <Dialog
       open
-      onClose={onClose}
+      onClose={guard.requestClose}
+      busy={busy}
       title={rule.name ? 'Edit assignment rule' : 'Create assignment rule'}
       description="All conditions must match. The first matching rule gets the lead."
       className="max-w-2xl"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={guard.requestClose}>
             Cancel
           </Button>
           <Button loading={busy} onClick={save}>
@@ -110,7 +114,7 @@ function RuleEditor({
         </>
       }
     >
-      <div className="max-h-[62vh] space-y-5 overflow-y-auto px-1">
+      <div className="space-y-5">
         <Field label="Rule name">
           {({ id }) => (
             <Input
@@ -133,12 +137,12 @@ function RuleEditor({
                 set('conditions', [...draft.conditions, { field: 'sourceId', operator: 'equals', value: '' }])
               }
             >
-              <Plus className="size-3.5" />
+              <Plus className="size-4" />
               Condition
             </Button>
           </div>
           {!draft.conditions.length && (
-            <p className="rounded-lg bg-zinc-50 p-3 text-xs text-muted">
+            <p className="rounded-lg bg-surface-subtle p-3 text-xs text-muted">
               No conditions: this rule matches every new lead.
             </p>
           )}
@@ -152,7 +156,7 @@ function RuleEditor({
                   aria-label={`Condition ${i + 1} field`}
                   value={c.field}
                   onChange={(e) => condition(i, { field: e.target.value, value: '' })}
-                  className="h-9! text-xs"
+                  className="h-10! text-xs"
                 >
                   {fields.map((f) => (
                     <option
@@ -168,7 +172,7 @@ function RuleEditor({
                   aria-label={`Condition ${i + 1} operator`}
                   value={c.operator}
                   onChange={(e) => condition(i, { operator: e.target.value as RuleCondition['operator'] })}
-                  className="h-9! text-xs"
+                  className="h-10! text-xs"
                 >
                   <option value="equals">is exactly</option>
                   <option value="contains">contains</option>
@@ -181,7 +185,7 @@ function RuleEditor({
                     aria-label={`Condition ${i + 1} source`}
                     value={c.value}
                     onChange={(e) => condition(i, { value: e.target.value })}
-                    className="h-9! text-xs"
+                    className="h-10! text-xs"
                   >
                     <option value="">Choose source</option>
                     {sources.data
@@ -198,7 +202,7 @@ function RuleEditor({
                     value={c.value}
                     onChange={(e) => condition(i, { value: e.target.value })}
                     placeholder="Value"
-                    className="h-9! text-xs"
+                    className="h-10! text-xs"
                   />
                 )}
                 <button
@@ -209,7 +213,7 @@ function RuleEditor({
                       draft.conditions.filter((_, n) => n !== i),
                     )
                   }
-                  className="rounded p-1 text-zinc-400 hover:text-red-600"
+                  className="rounded p-1 text-muted hover:text-danger"
                 >
                   <Trash2 className="size-4" />
                 </button>
@@ -249,7 +253,7 @@ function RuleEditor({
           <legend className="mb-2 text-sm font-medium text-ink">Eligible teammates</legend>
           <div className="grid gap-2 rounded-lg border border-line p-3 sm:grid-cols-2">
             {members.map((member) => (
-              <label key={member.userId} className="flex items-center gap-2 py-1 text-sm text-zinc-600">
+              <label key={member.userId} className="flex items-center gap-2 py-1 text-sm text-muted">
                 <input
                   type={draft.strategy === 'specific_user' ? 'radio' : 'checkbox'}
                   name="assignment-member"
@@ -301,7 +305,7 @@ function RuleEditor({
             )}
           </Field>
         </div>
-        <label className="flex items-center gap-2 text-sm text-zinc-600">
+        <label className="flex items-center gap-2 text-sm text-muted">
           <input
             type="checkbox"
             checked={draft.onlyWorkingHours}
@@ -313,6 +317,8 @@ function RuleEditor({
         {error && <FormAlert>{error}</FormAlert>}
       </div>
     </Dialog>
+    {guard.confirmation}
+    </>
   )
 }
 function HoursEditor({
@@ -343,7 +349,7 @@ function HoursEditor({
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
             <label
               key={d}
-              className="flex items-center gap-2 rounded-lg border border-line bg-zinc-50 px-3 py-2 text-sm text-zinc-600"
+              className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle px-3 py-2 text-sm text-muted"
             >
               <input
                 type="checkbox"
@@ -430,7 +436,7 @@ function HoursEditor({
           />
         )}
       </Field>
-      <label className="flex items-center gap-2 text-sm text-zinc-600">
+      <label className="flex items-center gap-2 text-sm text-muted">
         <input
           type="checkbox"
           disabled={!territories.enabled}
@@ -561,7 +567,7 @@ export default function AssignmentPage() {
             value: 'rules',
             label: (
               <span className="flex items-center gap-2">
-                <Route className="size-3.5" />
+                <Route className="size-4" />
                 Rules
               </span>
             ),
@@ -570,7 +576,7 @@ export default function AssignmentPage() {
             value: 'hours',
             label: (
               <span className="flex items-center gap-2">
-                <Clock3 className="size-3.5" />
+                <Clock3 className="size-4" />
                 Working hours & SLA
               </span>
             ),
@@ -579,7 +585,7 @@ export default function AssignmentPage() {
             value: 'test',
             label: (
               <span className="flex items-center gap-2">
-                <FlaskConical className="size-3.5" />
+                <FlaskConical className="size-4" />
                 Test a lead
               </span>
             ),
@@ -627,7 +633,7 @@ export default function AssignmentPage() {
               {rules.data.map((rule, index) => (
                 <article key={rule.id} className="surface flex flex-wrap items-center gap-3 p-4">
                   <GripVertical className="size-4 text-zinc-300" />
-                  <span className="flex size-6 items-center justify-center rounded-md bg-zinc-100 text-xs text-zinc-500">
+                  <span className="flex size-6 items-center justify-center rounded-md bg-zinc-100 text-xs text-muted">
                     {index + 1}
                   </span>
                   <button onClick={() => setEditing(rule)} className="min-w-0 flex-1 text-left">
@@ -651,7 +657,7 @@ export default function AssignmentPage() {
                       aria-label={`Move ${rule.name} up`}
                       disabled={busy || !index}
                       onClick={() => reorder(index, index - 1)}
-                      className="rounded p-2 text-zinc-400 hover:bg-zinc-100 disabled:opacity-30"
+                      className="rounded p-2 text-muted hover:bg-zinc-100 disabled:opacity-30"
                     >
                       <ArrowUp className="size-4" />
                     </button>
@@ -659,7 +665,7 @@ export default function AssignmentPage() {
                       aria-label={`Move ${rule.name} down`}
                       disabled={busy || index === rules.data.length - 1}
                       onClick={() => reorder(index, index + 1)}
-                      className="rounded p-2 text-zinc-400 hover:bg-zinc-100 disabled:opacity-30"
+                      className="rounded p-2 text-muted hover:bg-zinc-100 disabled:opacity-30"
                     >
                       <ArrowDown className="size-4" />
                     </button>
@@ -667,7 +673,7 @@ export default function AssignmentPage() {
                       aria-label={`Delete ${rule.name}`}
                       disabled={busy}
                       onClick={() => setRemoving(rule)}
-                      className="rounded p-2 text-zinc-400 hover:text-red-600"
+                      className="rounded p-2 text-muted hover:text-danger"
                     >
                       <Trash2 className="size-4" />
                     </button>

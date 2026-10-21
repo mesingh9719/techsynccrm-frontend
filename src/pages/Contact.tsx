@@ -80,7 +80,7 @@ export default function Contact() {
 
       <Container className="py-14 sm:py-20">
         <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
-          <div className="rounded-3xl bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-10">
+          <div className="rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-10">
             {ticket ? (
               <div className="py-10 text-center" role="status">
                 <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-100">
@@ -167,7 +167,7 @@ export default function Contact() {
                       {...register('consent')}
                     />
                     {errors.consent && (
-                      <p id="consent-error" role="alert" className="mt-1.5 ml-[30px] text-sm text-red-600">
+                      <p id="consent-error" role="alert" className="mt-2 ml-[30px] text-sm text-red-600">
                         {errors.consent.message}
                       </p>
                     )}
@@ -191,7 +191,7 @@ export default function Contact() {
             <ul className="space-y-3">
               {channels.map((c) => (
                 <li key={c.title}>
-                  <a href={c.href} className="group flex gap-4 rounded-2xl bg-white p-5 shadow-card ring-1 ring-zinc-200 transition-shadow hover:shadow-float">
+                  <a href={c.href} className="group flex gap-4 rounded-dialog bg-white p-5 shadow-card ring-1 ring-zinc-200 transition-shadow hover:shadow-float">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-700 ring-1 ring-zinc-200">
                       <c.icon className="size-5" aria-hidden="true" />
                     </span>
@@ -205,13 +205,13 @@ export default function Contact() {
               ))}
             </ul>
 
-            <div className="rounded-2xl bg-canvas p-5 ring-1 ring-zinc-200">
+            <div className="rounded-dialog bg-canvas p-5 ring-1 ring-zinc-200">
               <p className="flex items-center gap-2 text-sm font-medium text-zinc-900">
                 <Clock className="size-4 text-zinc-500" aria-hidden="true" />
                 Average first response: 2 hours
               </p>
               <p className="mt-3 flex items-start gap-2 text-sm text-zinc-600">
-                <LifeBuoy className="mt-0.5 size-4 shrink-0 text-zinc-500" aria-hidden="true" />
+                <LifeBuoy className="mt-1 size-4 shrink-0 text-zinc-500" aria-hidden="true" />
                 <span>
                   Looking for a quick answer? Try the{' '}
                   <Link to="/help" className="font-medium text-brand-700 underline-offset-4 hover:underline">
@@ -227,7 +227,7 @@ export default function Contact() {
               <ul className="mt-4 space-y-4">
                 {company.offices.map((o) => (
                   <li key={o.city} className="flex gap-3 text-sm">
-                    <MapPin className="mt-0.5 size-4 shrink-0 text-zinc-400" aria-hidden="true" />
+                    <MapPin className="mt-1 size-4 shrink-0 text-zinc-400" aria-hidden="true" />
                     <div>
                       <p className="font-medium text-zinc-900">{o.city}</p>
                       <address className="text-zinc-600 not-italic">{o.address}</address>

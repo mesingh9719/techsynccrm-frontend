@@ -1,4 +1,4 @@
-import { Attachments } from '../files/Attachments'
+import { RecordWorkspace } from '../crm/components/RecordWorkspace'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -19,9 +19,7 @@ import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel } from '../crm/co
 import { TagChips } from '../crm/components/Tags'
 import { formatPhone, lifecycleLabels, relativeTime, whatsappLink } from '../crm/format'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
-import { Timeline } from '../activities/Timeline'
 import { RecordDeals } from '../deals/RecordDeals'
-import { RecordTasks } from '../tasks/RecordTasks'
 import { deleteContact, getContact, restoreContact, updateContact, type ContactInput } from './api'
 import { ContactFormDrawer } from './ContactFormDrawer'
 
@@ -45,7 +43,7 @@ export default function ContactDetailPage() {
   const contact = query.data
   useSeo({ title: contact?.displayName ?? 'Contact', noindex: true })
 
-  if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-2xl" />
+  if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-card" />
   if (query.isError || !contact)
     return (
       <div className="mx-auto max-w-6xl px-4 py-10">
@@ -77,8 +75,8 @@ export default function ContactDetailPage() {
   const activeDefs = (defs.data ?? []).filter((d) => !d.archived || contact.customFields[d.key] !== undefined)
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <Link to="/app/contacts" className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+    <div className="app-page">
+      <Link to="/app/contacts" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
         <ArrowLeft className="size-4" aria-hidden="true" />
         Contacts
       </Link>
@@ -120,8 +118,8 @@ export default function ContactDetailPage() {
         <div className="flex items-start gap-4">
           <Avatar name={contact.displayName} size="lg" />
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">{contact.displayName}</h1>
-            <p className="mt-0.5 text-sm text-zinc-600">
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">{contact.displayName}</h1>
+            <p className="mt-1 text-sm text-muted">
               {[contact.title, contact.companies.find((c) => c.isPrimary)?.name].filter(Boolean).join(' at ') ||
                 'No company yet'}
             </p>
@@ -172,7 +170,7 @@ export default function ContactDetailPage() {
         </div>
       </header>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <div className="record-workspace mt-6">
         <div className="space-y-6">
           <Panel title="Details">
             <dl className="divide-y divide-zinc-100">
@@ -204,7 +202,7 @@ export default function ContactDetailPage() {
                 {contact.phones.length ? (
                   <ul className="space-y-1">
                     {contact.phones.map((p) => (
-                      <li key={p.raw} className="flex items-center gap-1.5 tabular-nums">
+                      <li key={p.raw} className="flex items-center gap-2 tabular-nums">
                         {p.primary && <Star className="size-3 fill-amber-400 text-amber-400" aria-label="Primary" />}
                         <a href={`tel:${p.e164 ?? p.raw}`} className="hover:underline">
                           {formatPhone(p.e164, p.raw)}
@@ -222,7 +220,7 @@ export default function ContactDetailPage() {
                 {contact.emails.length ? (
                   <ul className="space-y-1">
                     {contact.emails.map((e) => (
-                      <li key={e.value} className="flex items-center gap-1.5">
+                      <li key={e.value} className="flex items-center gap-2">
                         {e.primary && <Star className="size-3 fill-amber-400 text-amber-400" aria-label="Primary" />}
                         <a href={`mailto:${e.value}`} className="truncate hover:underline">
                           {e.value}
@@ -259,17 +257,17 @@ export default function ContactDetailPage() {
               <ul className="space-y-2">
                 {contact.companies.map((c) => (
                   <li key={c.id} className="flex items-center gap-2 text-sm">
-                    <Building2 className="size-4 text-zinc-400" aria-hidden="true" />
-                    <Link to={`/app/companies/${c.id}`} className="font-medium text-zinc-900 hover:underline">
+                    <Building2 className="size-4 text-muted" aria-hidden="true" />
+                    <Link to={`/app/companies/${c.id}`} className="font-medium text-ink hover:underline">
                       {c.name}
                     </Link>
-                    {c.role && <span className="text-zinc-500">· {c.role}</span>}
+                    {c.role && <span className="text-muted">· {c.role}</span>}
                     {c.isPrimary && contact.companies.length > 1 && <Badge>Primary</Badge>}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-muted">
                 Not linked to a company.{canUpdate && ' Edit the contact to link one.'}
               </p>
             )}
@@ -288,12 +286,7 @@ export default function ContactDetailPage() {
           </Panel>
         </div>
 
-        <div className="space-y-6">
-          <RecordTasks entityType="contact" entityId={contact.id} recordName={contact.displayName} />
-          <RecordDeals contact={{ id: contact.id, name: contact.displayName }} />
-          <Attachments entityType="contact" entityId={contact.id} />
-          <Timeline entityType="contact" entityId={contact.id} recordName={contact.displayName} canPin={canUpdate} />
-        </div>
+        <RecordWorkspace key={contact.id} entityType="contact" entityId={contact.id} name={contact.displayName} canPin={canUpdate} deals={<RecordDeals contact={{ id: contact.id, name: contact.displayName }} />} />
       </div>
 
       {editing && <ContactFormDrawer open contact={contact} onClose={() => setEditing(false)} />}

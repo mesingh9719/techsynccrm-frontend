@@ -37,7 +37,7 @@ import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
 import { DataTable, type Column } from '../../components/app/DataTable'
 import { ConfirmDialog, Dialog } from '../../components/app/Dialog'
-import { FilterBar } from '../../components/app/FilterBar'
+import { FilterChips, FilterBar } from '../../components/app/FilterBar'
 import { EmptyState, ErrorState, ListSkeleton, LoadMore, PageHeader } from '../../components/app/States'
 import { BulkAssignDialog, BulkTagDialog } from '../crm/components/BulkDialogs'
 import { formatCustomValue } from '../crm/customFieldFormat'
@@ -59,6 +59,7 @@ const CORE_KEYS = [
   'status',
   'ownerId',
   'sourceId',
+  'campaignId',
   'scoreMin',
   'tag',
   'createdFrom',
@@ -198,11 +199,11 @@ export default function LeadsPage() {
               void claim(l)
             }}
           >
-            <Hand className="size-3.5" aria-hidden="true" />
+            <Hand className="size-4" aria-hidden="true" />
             Claim
           </Button>
         ) : (
-          <span className="text-zinc-400">Unassigned</span>
+          <span className="text-muted">Unassigned</span>
         ),
     },
     { key: 'status', header: 'Status', cell: (l) => <InlineLeadStatus lead={l} /> },
@@ -221,7 +222,7 @@ export default function LeadsPage() {
       sortKey: 'lastActivityAt',
       align: 'right',
       hideBelow: 'xl',
-      cell: (l) => <span className="text-zinc-500">{relativeTime(l.lastActivityAt)}</span>,
+      cell: (l) => <span className="text-muted">{relativeTime(l.lastActivityAt)}</span>,
     },
     {
       key: 'created',
@@ -229,7 +230,7 @@ export default function LeadsPage() {
       sortKey: 'createdAt',
       align: 'right',
       hideBelow: 'xl',
-      cell: (l) => <span className="text-zinc-500">{relativeTime(l.createdAt)}</span>,
+      cell: (l) => <span className="text-muted">{relativeTime(l.createdAt)}</span>,
     },
     ...activeDefs.map((d) => ({
       key: `cf.${d.key}`,
@@ -244,26 +245,26 @@ export default function LeadsPage() {
       header: 'Lead',
       sortKey: 'displayName',
       cell: (l) => (
-        <span className="flex items-center gap-2.5">
+        <span className="flex items-center gap-3">
           <Avatar name={l.displayName} size="sm" />
           <span className="min-w-0">
-            <span className="flex items-center gap-1.5 truncate font-medium text-zinc-900">
+            <span className="flex items-center gap-2 truncate font-medium text-ink">
               {l.status === 'new' && (
-                <span className="size-1.5 shrink-0 rounded-full bg-brand-600" aria-label="New lead" />
+                <span className="size-2 shrink-0 rounded-full bg-brand-600" aria-label="New lead" />
               )}
               {l.displayName}
               {l.enquiryCount > 1 && (
                 <span
-                  className="inline-flex items-center gap-0.5 rounded bg-amber-50 px-1 text-[10px] font-medium text-amber-800"
+                  className="inline-flex items-center gap-1 rounded bg-amber-50 px-1 text-xs font-medium text-amber-800"
                   title={`${l.enquiryCount} enquiries`}
                 >
-                  <Repeat className="size-2.5" aria-hidden="true" />
+                  <Repeat className="size-3" aria-hidden="true" />
                   {l.enquiryCount}
                 </span>
               )}
               {l.isExistingCustomer && <Badge tone="success">Customer</Badge>}
             </span>
-            <span className="block truncate text-xs text-zinc-500">{l.companyName ?? l.requirement ?? ''}</span>
+            <span className="block truncate text-xs text-muted">{l.companyName ?? l.requirement ?? ''}</span>
           </span>
         </span>
       ),
@@ -272,7 +273,7 @@ export default function LeadsPage() {
   ]
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-7 sm:py-8 lg:px-9">
+    <div className="app-page">
       <PageHeader
         title="Leads"
         description="Your next customer starts here. Follow up while the conversation is warm."
@@ -322,13 +323,13 @@ export default function LeadsPage() {
               aria-pressed={active}
               onClick={() => setFilter('status', tab.value)}
               className={cn(
-                'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors',
-                active ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900',
+                'inline-flex h-8 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors',
+                active ? 'bg-ink text-surface shadow-xs' : 'text-muted hover:bg-surface-subtle hover:text-ink',
               )}
             >
               {tab.label}
               {count !== undefined && (
-                <span className={cn('tabular-nums', active ? 'text-zinc-400' : 'text-zinc-400')}>{count}</span>
+                <span className={cn('tabular-nums', active ? 'text-surface/70' : 'text-muted')}>{count}</span>
               )}
             </button>
           )
@@ -352,20 +353,20 @@ export default function LeadsPage() {
               aria-pressed={unassignedOnly}
               onClick={() => setFilter('ownerId', unassignedOnly ? undefined : 'none')}
               className={cn(
-                'inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm',
+                'inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm transition-colors',
                 unassignedOnly
                   ? 'border-brand-300 bg-brand-50 text-brand-800'
-                  : 'border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400',
+                  : 'border-line bg-surface text-ink hover:border-brand-300',
               )}
             >
-              <CircleDot className="size-3.5" aria-hidden="true" />
+              <CircleDot className="size-4" aria-hidden="true" />
               Unassigned
             </button>
-            <Button variant="secondary" size="sm" className="h-9" onClick={() => setFiltersOpen(true)}>
-              <SlidersHorizontal className="size-3.5" />
+            <Button variant="secondary" size="sm" className="h-10" onClick={() => setFiltersOpen(true)}>
+              <SlidersHorizontal className="size-4" />
               Filters
               {activeCount > 0 && (
-                <span className="rounded-full bg-brand-50 px-1.5 text-xs text-brand-700">{activeCount}</span>
+                <span className="rounded-full bg-brand-50 px-2 text-xs text-brand-700">{activeCount}</span>
               )}
             </Button>
           </div>
@@ -381,7 +382,7 @@ export default function LeadsPage() {
                 value: 'table',
                 label: (
                   <>
-                    <List className="size-3.5" />
+                    <List className="size-4" />
                     <span className="sr-only">Table</span>
                   </>
                 ),
@@ -390,7 +391,7 @@ export default function LeadsPage() {
                 value: 'cards',
                 label: (
                   <>
-                    <LayoutGrid className="size-3.5" />
+                    <LayoutGrid className="size-4" />
                     <span className="sr-only">Cards</span>
                   </>
                 ),
@@ -413,7 +414,7 @@ export default function LeadsPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-9"
+              className="h-10"
               onClick={() => setFilter('deleted', isDeletedView ? undefined : 'true')}
               aria-pressed={isDeletedView}
             >
@@ -428,18 +429,19 @@ export default function LeadsPage() {
         </div>
       </div>
 
+      <div className="mt-4"><FilterChips filters={filters} onRemove={(key) => setFilter(key, undefined)} onClear={clearFilters} /></div>
       <div className="mt-4 space-y-3">
         {!isDeletedView && canUpdate && (
           <BulkBar count={selected.size} onClear={() => setSelected(new Set())}>
             {canAssign && (
               <BulkButton onClick={() => setDialog('assign')}>
-                <UserRound className="size-3.5" aria-hidden="true" />
+                <UserRound className="size-4" aria-hidden="true" />
                 Assign
               </BulkButton>
             )}
             <BulkButton onClick={() => setDialog('status')}>Change status</BulkButton>
             <BulkButton onClick={() => setDialog('tag')}>
-              <Tag className="size-3.5" aria-hidden="true" />
+              <Tag className="size-4" aria-hidden="true" />
               Add tags
             </BulkButton>
             <BulkButton onClick={() => setDialog('untag')}>Remove tags</BulkButton>
@@ -467,13 +469,13 @@ export default function LeadsPage() {
                   })
                 }}
               >
-                <Download className="size-3.5" />
+                <Download className="size-4" />
                 Export selected
               </BulkButton>
             )}
             {canDelete && (
               <BulkButton tone="danger" onClick={() => setDialog('delete')}>
-                <Trash2 className="size-3.5" aria-hidden="true" />
+                <Trash2 className="size-4" aria-hidden="true" />
                 Delete
               </BulkButton>
             )}
@@ -524,6 +526,7 @@ export default function LeadsPage() {
         ) : (
           <>
             <DataTable
+              showColumnControls={false}
               view={view}
               rows={rows}
               columns={tableColumns}
@@ -535,17 +538,17 @@ export default function LeadsPage() {
               onSelectionChange={canUpdate && !isDeletedView ? setSelected : undefined}
               onRowClick={(l) => navigate(`/app/leads/${l.id}`)}
               mobileCard={(l) => (
-                <div className="flex items-center gap-3 rounded-xl bg-white p-3 ring-1 ring-zinc-200">
+                <div className="flex items-center gap-3 rounded-xl bg-surface p-3 ring-1 ring-line">
                   <Avatar name={l.displayName} size="sm" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-zinc-900">{l.displayName}</p>
-                    <p className="truncate text-xs text-zinc-500">
+                    <p className="truncate font-medium text-ink">{l.displayName}</p>
+                    <p className="truncate text-xs text-muted">
                       {[l.source?.name, l.companyName, relativeTime(l.createdAt)].filter(Boolean).join(' · ')}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <LeadStatusBadge status={l.status} />
-                    <span className="text-xs font-medium text-zinc-700 tabular-nums">{l.score}</span>
+                    <span className="text-xs font-medium text-ink tabular-nums">{l.score}</span>
                   </div>
                 </div>
               )}
@@ -609,7 +612,7 @@ export default function LeadsPage() {
             onChange={(v) => setFilter('tag', v)}
             options={(tags.data ?? []).map((t) => ({ value: t.id, label: t.name }))}
           />
-          <label className="flex h-9 items-center gap-2 rounded-lg border border-zinc-300 bg-white px-2 text-xs text-zinc-500">
+          <label className="flex h-10 items-center gap-2 rounded-lg border border-zinc-300 bg-surface px-2 text-xs text-muted">
             From
             <Input
               type="date"
@@ -620,7 +623,7 @@ export default function LeadsPage() {
               className="h-8! w-32 border-0 bg-transparent! px-1 shadow-none"
             />
           </label>
-          <label className="flex h-9 items-center gap-2 rounded-lg border border-zinc-300 bg-white px-2 text-xs text-zinc-500">
+          <label className="flex h-10 items-center gap-2 rounded-lg border border-zinc-300 bg-surface px-2 text-xs text-muted">
             To
             <Input
               type="date"

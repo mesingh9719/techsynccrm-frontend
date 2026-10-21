@@ -15,7 +15,7 @@ export function CtaBanner({
     <section className="py-20 sm:py-24" aria-labelledby="cta-title">
       <Container>
         <Reveal>
-          <div className="relative overflow-hidden rounded-3xl bg-zinc-950 px-6 py-14 sm:px-12 sm:py-16 lg:px-16">
+          <div className="relative overflow-hidden rounded-dialog bg-zinc-950 px-6 py-14 sm:px-12 sm:py-16 lg:px-16">
             <div
               className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(ellipse_at_right,black,transparent_70%)]"
               aria-hidden="true"

@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -107,7 +108,7 @@ function EmbedPanel({ form, scope }: { form: WebForm; scope: string }) {
                 <h3 className="text-sm font-medium text-ink">{snippet.label}</h3>
                 <CopyButton text={snippet.value} />
               </div>
-              <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-zinc-50 p-4 text-xs leading-6 text-zinc-600">
+              <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-surface-subtle p-4 text-xs leading-6 text-ink">
                 <code>{snippet.value}</code>
               </pre>
               <p className="mt-2 text-xs text-muted">{snippet.help}</p>
@@ -118,7 +119,7 @@ function EmbedPanel({ form, scope }: { form: WebForm; scope: string }) {
       {captureLive && (
         <Button variant="secondary" href={hosted} target="_blank" rel="noreferrer">
           Open hosted form
-          <ExternalLink className="size-3.5" />
+          <ExternalLink className="size-4" />
         </Button>
       )}
     </div>
@@ -243,12 +244,12 @@ function SettingsEditor({
           />
         )}
       </Field>
-      <label className="flex items-start gap-3 text-sm text-zinc-700">
+      <label className="flex items-start gap-3 text-sm text-ink">
         <input
           type="checkbox"
           checked={settings.autoReply}
           onChange={(e) => set('autoReply', e.target.checked)}
-          className="mt-0.5 size-4 accent-brand-600"
+          className="mt-1 size-4 accent-brand-600"
         />
         <span>
           Send an email acknowledgement
@@ -269,7 +270,7 @@ function SettingsEditor({
           )}
         </Field>
       )}
-      <label className="flex items-center gap-3 text-sm text-zinc-700">
+      <label className="flex items-center gap-3 text-sm text-ink">
         <input
           type="checkbox"
           checked={settings.notifyOwner}
@@ -294,6 +295,7 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
     notify = useToast(),
     service = makeCaptureApi(scope),
     defs = useCustomFieldDefs('lead')
+  const guard = useUnsavedChanges(form, () => navigate('/app/settings/forms'), busy, dirty)
   function change(next: WebForm) {
     setForm(next)
     setDirty(true)
@@ -353,6 +355,7 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
       await client.invalidateQueries({ queryKey: captureKeys(scope) })
       setForm(saved)
       setDirty(false)
+      guard.markSaved(saved)
       notify({
         title: captureLive ? 'Form saved' : 'Form preview saved',
         description: captureLive ? undefined : 'Stored in this browser. No live form has been published.',
@@ -383,13 +386,13 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <Link to="/app/settings/forms" className="mb-3 inline-flex items-center gap-1 text-xs text-muted">
-            <ArrowLeft className="size-3.5" />
+            <ArrowLeft className="size-4" />
             All web forms
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">
             {isNew ? 'Build your first conversation' : form.name}
           </h1>
-          <p className="mt-1.5 text-sm text-muted">Keep it short. Ask for what your team needs to get started.</p>
+          <p className="mt-2 text-sm text-muted">Keep it short. Ask for what your team needs to get started.</p>
         </div>
         <div className="flex items-center gap-3">
           {dirty && (
@@ -405,11 +408,11 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
       </div>
       {!captureLive && (
         <PreviewNotice>
-          Design and test your form here. You can explore the design here. Publishing and automatic follow-up are not
-          enabled yet.
+          Preview your form here. Publishing and automatic follow-up will be available when live capture is enabled.
         </PreviewNotice>
       )}
       {error && <FormAlert>{error}</FormAlert>}
+      {guard.confirmation}
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <section className="surface p-5 sm:p-6">
           <Field label="Internal form name" hint="Only your team sees this name.">
@@ -434,7 +437,7 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
                   value: 'embed',
                   label: (
                     <span className="flex items-center gap-2">
-                      <Code2 className="size-3.5" />
+                      <Code2 className="size-4" />
                       Embed & share
                     </span>
                   ),
@@ -458,11 +461,11 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
                     if (drag !== null) move(drag, index)
                     setDrag(null)
                   }}
-                  className="rounded-xl border border-line bg-zinc-50/70 p-3"
+                  className="rounded-xl border border-line bg-surface-subtle/70 p-3"
                 >
                   <div className="mb-3 flex items-center gap-2">
-                    <GripVertical className="size-4 cursor-grab text-zinc-400" />
-                    <span className="min-w-0 flex-1 truncate text-xs font-medium text-zinc-500">
+                    <GripVertical className="size-4 cursor-grab text-muted" />
+                    <span className="min-w-0 flex-1 truncate text-xs font-medium text-muted">
                       {f.key}
                       {f.hidden ? ' · hidden' : ''}
                     </span>
@@ -471,33 +474,33 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
                       disabled={index === 0}
                       onClick={() => move(index, index - 1)}
                       aria-label={`Move ${f.label} up`}
-                      className="rounded p-1 text-zinc-400 hover:bg-zinc-200 disabled:opacity-30"
+                      className="rounded p-1 text-muted hover:bg-surface hover:text-ink disabled:opacity-30"
                     >
-                      <ArrowUp className="size-3.5" />
+                      <ArrowUp className="size-4" />
                     </button>
                     <button
                       type="button"
                       disabled={index === form.fields.length - 1}
                       onClick={() => move(index, index + 1)}
                       aria-label={`Move ${f.label} down`}
-                      className="rounded p-1 text-zinc-400 hover:bg-zinc-200 disabled:opacity-30"
+                      className="rounded p-1 text-muted hover:bg-surface hover:text-ink disabled:opacity-30"
                     >
-                      <ArrowDown className="size-3.5" />
+                      <ArrowDown className="size-4" />
                     </button>
                     <button
                       type="button"
                       onClick={() => change({ ...form, fields: form.fields.filter((_, i) => i !== index) })}
                       aria-label={`Remove ${f.label}`}
-                      className="rounded p-1 text-zinc-400 hover:text-red-600"
+                      className="rounded p-1 text-muted hover:text-danger"
                     >
-                      <Trash2 className="size-3.5" />
+                      <Trash2 className="size-4" />
                     </button>
                   </div>
                   <Input
                     aria-label={`Label for ${f.key}`}
                     value={f.label}
                     onChange={(e) => field(index, { label: e.target.value })}
-                    className="h-9! text-sm"
+                    className="h-10! text-sm"
                     maxLength={100}
                   />
                   {f.hidden ? (
@@ -506,7 +509,7 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
                       value={f.defaultValue ?? ''}
                       onChange={(e) => field(index, { defaultValue: e.target.value })}
                       placeholder="Hidden default value"
-                      className="mt-2 h-9! text-sm"
+                      className="mt-2 h-10! text-sm"
                     />
                   ) : (
                     <Input
@@ -514,11 +517,11 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
                       value={f.placeholder}
                       onChange={(e) => field(index, { placeholder: e.target.value })}
                       placeholder="Placeholder (optional)"
-                      className="mt-2 h-9! text-sm"
+                      className="mt-2 h-10! text-sm"
                     />
                   )}
-                  <div className="mt-3 flex flex-wrap gap-4 text-xs text-zinc-600">
-                    <label className="flex items-center gap-1.5">
+                  <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted">
+                    <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={f.required}
@@ -528,7 +531,7 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
                       />
                       Required
                     </label>
-                    <label className="flex items-center gap-1.5">
+                    <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={Boolean(f.hidden)}
@@ -591,10 +594,10 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
             <EmbedPanel form={form} scope={scope} />
           )}
         </section>
-        <aside className="min-w-0 rounded-2xl border border-dashed border-zinc-300 bg-zinc-100/50 p-4 sm:p-6 xl:sticky xl:top-24">
+        <aside className="min-w-0 rounded-card border border-dashed border-line bg-surface-subtle/50 p-4 sm:p-6 xl:sticky xl:top-24">
           <div className="mb-5 flex items-center justify-between">
             <p className="eyebrow">Live preview</p>
-            <span className="rounded-full border border-line bg-surface px-2 py-1 text-[10px] text-muted">
+            <span className="rounded-full border border-line bg-surface px-2 py-1 text-xs text-muted">
               No data is sent
             </span>
           </div>

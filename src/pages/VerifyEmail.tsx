@@ -14,7 +14,7 @@ const RESEND_COOLDOWN = 60
 function Card({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto w-full max-w-lg px-4 py-16 sm:py-24">
-      <div className="rounded-3xl bg-white p-8 text-center shadow-card ring-1 ring-zinc-200 sm:p-10">{children}</div>
+      <div className="rounded-dialog bg-white p-8 text-center shadow-card ring-1 ring-zinc-200 sm:p-10">{children}</div>
     </div>
   )
 }
@@ -52,7 +52,7 @@ function ConfirmToken({ token }: { token: string }) {
     return (
       <Card>
         <div role="status" className="py-6">
-          <LoaderCircle className="mx-auto size-7 animate-spin text-brand-600" aria-hidden="true" />
+          <LoaderCircle className="mx-auto size-7 animate-spin text-brand-700" aria-hidden="true" />
           <p className="mt-4 font-medium text-zinc-900">Verifying your email…</p>
         </div>
       </Card>

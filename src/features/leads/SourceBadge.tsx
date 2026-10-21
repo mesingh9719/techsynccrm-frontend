@@ -7,11 +7,11 @@ export function SourceBadge({ name, className }: { name?: string | null; classNa
   return (
     <span
       className={cn(
-        'inline-flex max-w-full items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1 text-xs font-medium text-zinc-600',
+        'inline-flex max-w-full items-center gap-2 rounded-md border border-line bg-surface-subtle px-2 py-1 text-xs font-medium text-muted',
         className,
       )}
     >
-      {createElement(Icon, { className: 'size-3.5 shrink-0 text-zinc-400' })}
+      {createElement(Icon, { className: 'size-4 shrink-0 text-muted' })}
       <span className="truncate">{name || 'Not specified'}</span>
     </span>
   )

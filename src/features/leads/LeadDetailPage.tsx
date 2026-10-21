@@ -1,7 +1,7 @@
+import { RecordWorkspace } from '../crm/components/RecordWorkspace'
 import { QuickFollowUp } from '../activities/QuickFollowUp'
 import { InlineLeadStatus } from './InlineLeadStatus'
 import { SourceBadge } from './SourceBadge'
-import { Attachments } from '../files/Attachments'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -11,6 +11,7 @@ import {
   Hand,
   History,
   Mail,
+  Megaphone,
   MessageCircle,
   Pencil,
   Phone,
@@ -38,13 +39,12 @@ import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel } from '../crm/co
 import { TagChips } from '../crm/components/Tags'
 import { formatMinor, formatPhone, junkReasonLabels, relativeTime, whatsappLink } from '../crm/format'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
-import { Timeline } from '../activities/Timeline'
-import { RecordTasks } from '../tasks/RecordTasks'
 import type { LeadRecord, LeadStatus } from '../crm/types'
 import { assignLead, claimLead, deleteLead, getLead, restoreLead, updateLead, type LeadInput } from './api'
 import { ConvertDialog } from './ConvertDialog'
 import { LeadFormDrawer } from './LeadFormDrawer'
 import { ScoreBreakdownList } from './LeadBits'
+import { CampaignPicker } from '../campaigns/CampaignPicker'
 
 const FROZEN: LeadStatus[] = ['converted', 'lost', 'junk']
 const stateName = (code: string | null) => gstStates.find(([c]) => c === code)?.[1] ?? null
@@ -68,12 +68,13 @@ export default function LeadDetailPage() {
   const canUpdateAny = useCan('leads.update')
   const canDeleteAny = useCan('leads.delete')
   const canAssign = useCan('records.assign')
-  const [dialog, setDialog] = useState<null | 'edit' | 'convert' | 'assign' | 'delete'>(null)
+  const canReadCampaigns = useCan('campaigns.read')
+  const [dialog, setDialog] = useState<null | 'edit' | 'convert' | 'assign' | 'delete' | 'campaign'>(null)
   const [busy, setBusy] = useState(false)
   const lead = query.data
   useSeo({ title: lead?.displayName ?? 'Lead', noindex: true })
 
-  if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-2xl" />
+  if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-card" />
   if (query.isError || !lead)
     return (
       <div className="mx-auto max-w-6xl px-4 py-10">
@@ -98,6 +99,11 @@ export default function LeadDetailPage() {
     try {
       setLead(await updateLead(lead!.id, values, { ifMatch: lead!.updatedAt }))
       await queryClient.invalidateQueries({ queryKey: qk.org(orgId).leads.lists })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['org', orgId, 'campaigns'] }),
+        queryClient.invalidateQueries({ queryKey: ['org', orgId, 'campaign'] }),
+        queryClient.invalidateQueries({ queryKey: ['org', orgId, 'campaign-leads'] }),
+      ])
     } catch (err) {
       if (err instanceof ApiError && err.code === 'STALE_UPDATE') await refresh()
       if (handleGlobalApiError(err)) throw new Error('Not saved')
@@ -128,8 +134,8 @@ export default function LeadDetailPage() {
   const activeDefs = (defs.data ?? []).filter((d) => !d.archived || lead.customFields[d.key] !== undefined)
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-      <Link to="/app/leads" className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900">
+    <div className="app-page">
+      <Link to="/app/leads" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
         <ArrowLeft className="size-4" aria-hidden="true" />
         Leads
       </Link>
@@ -184,7 +190,7 @@ export default function LeadDetailPage() {
           </p>
         )}
         {lead.previousLeadId && (
-          <p className="flex items-center gap-2 text-sm text-zinc-600">
+          <p className="flex items-center gap-2 text-sm text-muted">
             <History className="size-4" aria-hidden="true" />
             Enquired before —{' '}
             <Link to={`/app/leads/${lead.previousLeadId}`} className="font-medium text-brand-700 hover:underline">
@@ -196,19 +202,18 @@ export default function LeadDetailPage() {
 
       <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
-          <Avatar name={lead.displayName} size="lg" />
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">{lead.displayName}</h1>
-            <p className="mt-0.5 text-sm text-zinc-600">
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">{lead.displayName}</h1>
+            <p className="mt-1 text-sm text-muted">
               {[lead.companyName, lead.source?.name, lead.city].filter(Boolean).join(' · ') || 'No details yet'}
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <InlineLeadStatus lead={lead} />
               {lead.status === 'lost' && lead.lostReason && (
-                <span className="text-xs text-zinc-500">{lead.lostReason.name}</span>
+                <span className="text-xs text-muted">{lead.lostReason.name}</span>
               )}
               {lead.status === 'junk' && lead.junkReason && (
-                <span className="text-xs text-zinc-500">{junkReasonLabels[lead.junkReason]}</span>
+                <span className="text-xs text-muted">{junkReasonLabels[lead.junkReason]}</span>
               )}
               <Badge tone={lead.score >= 70 ? 'success' : lead.score >= 40 ? 'warning' : 'neutral'}>
                 Score {lead.score}
@@ -218,24 +223,6 @@ export default function LeadDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {phone && (
-            <Button href={`tel:${phone.e164 ?? phone.raw}`} variant="secondary" size="sm">
-              <Phone className="size-4" aria-hidden="true" />
-              Call
-            </Button>
-          )}
-          {phone?.e164 && (
-            <Button href={whatsappLink(phone.e164)!} target="_blank" rel="noreferrer" variant="secondary" size="sm">
-              <MessageCircle className="size-4" aria-hidden="true" />
-              WhatsApp
-            </Button>
-          )}
-          {lead.primaryEmail && (
-            <Button href={`mailto:${lead.primaryEmail}`} variant="secondary" size="sm">
-              <Mail className="size-4" aria-hidden="true" />
-              Email
-            </Button>
-          )}
           {canClaim && (
             <Button size="sm" loading={busy} onClick={() => act(() => claimLead(lead.id), 'Lead claimed — it’s yours')}>
               <Hand className="size-4" aria-hidden="true" />
@@ -262,16 +249,38 @@ export default function LeadDetailPage() {
       </header>
 
       {canUpdate && (
-        <div className="mt-5 rounded-xl border border-brand-100 bg-brand-50/40 p-4">
+        <div className="mt-5 rounded-xl border border-brand-500/20 bg-brand-500/5 p-4">
           <p className="mb-3 text-xs font-medium text-brand-700">Keep the conversation moving</p>
           <QuickFollowUp entityType="lead" entityId={lead.id} name={lead.displayName} />
         </div>
       )}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <div className="space-y-6">
+      <div className="record-workspace mt-6">
+        <div className="min-w-0 space-y-6">
+          <Panel title="Lead profile">
+            <div className="flex items-center gap-3"><Avatar name={lead.displayName} size="lg" /><div className="min-w-0"><p className="truncate font-display text-lg font-semibold" title={lead.displayName}>{lead.displayName}</p><p className="mt-1 truncate text-sm text-muted">{lead.companyName ?? 'Individual enquiry'}</p></div></div>
+            <div className="mt-4 flex flex-wrap gap-2">          {phone && (
+            <Button href={`tel:${phone.e164 ?? phone.raw}`} variant="secondary" size="sm">
+              <Phone className="size-4" aria-hidden="true" />
+              Call
+            </Button>
+          )}
+          {phone?.e164 && (
+            <Button href={whatsappLink(phone.e164)!} target="_blank" rel="noreferrer" variant="secondary" size="sm">
+              <MessageCircle className="size-4" aria-hidden="true" />
+              WhatsApp
+            </Button>
+          )}
+          {lead.primaryEmail && (
+            <Button href={`mailto:${lead.primaryEmail}`} variant="secondary" size="sm">
+              <Mail className="size-4" aria-hidden="true" />
+              Email
+            </Button>
+          )}
+            </div>
+          </Panel>
           <Panel title="Details">
-            <dl className="divide-y divide-zinc-100">
+            <dl className="divide-y divide-line">
               <FieldRow label="Requirement">
                 <InlineText
                   label="requirement"
@@ -293,7 +302,7 @@ export default function LeadDetailPage() {
                 {lead.phones.length ? (
                   <ul className="space-y-1">
                     {lead.phones.map((p) => (
-                      <li key={p.raw} className="flex items-center gap-1.5 tabular-nums">
+                      <li key={p.raw} className="flex items-center gap-2 tabular-nums">
                         {p.primary && lead.phones.length > 1 && (
                           <Star className="size-3 fill-amber-400 text-amber-400" aria-label="Primary" />
                         )}
@@ -326,15 +335,40 @@ export default function LeadDetailPage() {
                   onSave={(v) => patch({ sourceDetail: v })}
                 />
               </FieldRow>
-              {lead.utm && Object.keys(lead.utm).length > 0 && (
-                <FieldRow label="Campaign">
-                  <span className="text-xs text-zinc-600">
-                    {Object.entries(lead.utm)
-                      .map(([k, v]) => `${k.replace('utm_', '')}: ${v}`)
-                      .join(' · ')}
-                  </span>
-                </FieldRow>
-              )}
+              <FieldRow label="Campaign">
+                <div className="w-full">
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <div className="flex items-center gap-2">
+                      <Megaphone className="size-4 text-muted shrink-0" />
+                      {lead.utm?.utm_campaign || lead.sourceDetail ? (
+                        <span className="text-xs font-semibold text-ink">
+                          {lead.sourceDetail || lead.utm?.utm_campaign}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted">Not attributed</span>
+                      )}
+                    </div>
+                    {canUpdate && canReadCampaigns && (
+                      <button
+                        type="button"
+                        onClick={() => setDialog('campaign')}
+                        className="text-xs font-medium text-brand-700 hover:underline"
+                      >
+                        {lead.utm?.utm_campaign || lead.sourceDetail ? 'Change' : 'Associate'}
+                      </button>
+                    )}
+                  </div>
+                  {lead.utm && Object.keys(lead.utm).length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1 font-mono text-xs text-muted">
+                      {Object.entries(lead.utm).map(([k, v]) => (
+                        <span key={k} className="rounded border border-line bg-surface-subtle px-2 py-1">
+                          {k.replace('utm_', '')}: {v}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </FieldRow>
               <FieldRow label="Owner">
                 <span className="flex flex-wrap items-center gap-2">
                   <OwnerCell owner={lead.owner} />
@@ -371,13 +405,9 @@ export default function LeadDetailPage() {
             </Panel>
           )}
         </div>
-        <div className="space-y-6">
-          {lead.status !== 'converted' && (
-            <RecordTasks entityType="lead" entityId={lead.id} recordName={lead.displayName} />
-          )}
-          <Attachments entityType="lead" entityId={lead.id} />
-          <Timeline entityType="lead" entityId={lead.id} recordName={lead.displayName} canPin={canUpdate} />
-        </div>
+        <RecordWorkspace key={lead.id} entityType="lead" entityId={lead.id} name={lead.displayName} canPin={canUpdate} allowTasks={lead.status !== 'converted'} deals={
+          <Panel title="Deals"><p className="text-sm leading-6 text-muted">Convert this lead to manage opportunities from its contact record.</p>{(lead.convertedContactId || lead.contactId) ? <Button className="mt-4" variant="secondary" to={`/app/contacts/${lead.convertedContactId ?? lead.contactId}`}>Open contact and deals</Button> : canUpdate && isOpen ? <Button className="mt-4" onClick={() => setDialog('convert')}>Convert lead</Button> : null}</Panel>
+        } />
       </div>
 
       {dialog === 'edit' && <LeadFormDrawer open lead={lead} onClose={() => setDialog(null)} />}
@@ -406,6 +436,40 @@ export default function LeadDetailPage() {
         confirmLabel="Delete"
         tone="danger"
       />
+      {dialog === 'campaign' && (
+        <CampaignPicker
+          open={true}
+          currentCampaignCode={lead.utm?.utm_campaign}
+          currentCampaignName={lead.sourceDetail ?? undefined}
+          onClose={() => setDialog(null)}
+          onSelect={async (camp) => {
+            if (!camp) {
+              const nextUtm = lead.utm
+                ? Object.fromEntries(
+                    Object.entries(lead.utm).filter(([k]) => !['utm_campaign', 'campaign_id', 'campaign'].includes(k)),
+                  )
+                : null
+              await patch({
+                sourceDetail: null,
+                utm: nextUtm && Object.keys(nextUtm).length > 0 ? nextUtm : null,
+              })
+              notify({ title: 'Campaign attribution removed' })
+            } else {
+              await patch({
+                sourceDetail: camp.name,
+                utm: {
+                  ...(lead.utm ?? {}),
+                  utm_campaign: camp.code,
+                  campaign_id: camp.id,
+                  ...(camp.utm.utm_source ? { utm_source: camp.utm.utm_source } : {}),
+                  ...(camp.utm.utm_medium ? { utm_medium: camp.utm.utm_medium } : {}),
+                },
+              })
+              notify({ title: `Attributed to ${camp.name}` })
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -11,7 +11,7 @@ import { Avatar } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Field, Input, Select, Textarea } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
-import { Dialog } from '../../components/app/Dialog'
+import { ConfirmDialog, Dialog } from '../../components/app/Dialog'
 import { Menu, MenuItem, MenuSeparator } from '../../components/app/Menu'
 import { useOrgId } from '../crm/hooks'
 import type { CallOutcome, Task } from '../crm/types'
@@ -84,7 +84,7 @@ export function TaskItem({ task, showRecord = true, canEdit: allowEdit = true }:
   const canDelete = useCan('tasks.delete')
   const queryClient = useQueryClient()
   const notify = useToast()
-  const [dialog, setDialog] = useState<null | 'complete' | 'edit'>(null)
+  const [dialog, setDialog] = useState<null | 'complete' | 'edit' | 'delete'>(null)
   const [busy, setBusy] = useState(false)
   const done = task.status === 'completed'
   const refresh = () => Promise.all([queryClient.invalidateQueries({ queryKey: qk.org(orgId).tasks }), queryClient.invalidateQueries({ queryKey: qk.org(orgId).timelineAll })])
@@ -109,25 +109,25 @@ export function TaskItem({ task, showRecord = true, canEdit: allowEdit = true }:
   }
 
   return (
-    <li className={cn('flex items-start gap-3 py-2.5', task.status === 'cancelled' && 'opacity-60')}>
+    <li className={cn('flex items-start gap-3 py-4', task.status === 'cancelled' && 'opacity-60')}>
       <button
         type="button"
         onClick={toggle}
         disabled={!canEdit || busy || task.status === 'cancelled'}
         aria-label={done ? `Reopen ${task.title}` : `Mark ${task.title} done`}
         aria-pressed={done}
-        className={cn('mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full ring-1 transition-colors', done ? 'bg-emerald-500 text-white ring-emerald-500' : 'text-transparent ring-zinc-300 hover:text-zinc-400 hover:ring-zinc-400')}
+        className={cn('mt-1 flex size-10 shrink-0 items-center justify-center rounded-full ring-1 transition-colors', done ? 'bg-success text-surface ring-success' : 'text-transparent ring-line hover:text-muted hover:ring-muted')}
       >
-        <Check className="size-3.5" aria-hidden="true" />
+        <Check className="size-4" aria-hidden="true" />
       </button>
       <div className="min-w-0 flex-1">
-        <p className={cn('flex flex-wrap items-center gap-1.5 text-sm', done ? 'text-zinc-500 line-through' : 'text-zinc-900')}>
-          {task.priority === 'high' && <Flag className="size-3.5 fill-red-500 text-red-500" aria-label="High priority" />}
+        <p className={cn('flex flex-wrap items-center gap-2 text-sm', done ? 'text-muted line-through' : 'text-ink')}>
+          {task.priority === 'high' && <Flag className="size-4 fill-red-500 text-danger" aria-label="High priority" />}
           <span className="font-medium">{task.title}</span>
-          {task.recurrence && <Repeat className="size-3 text-zinc-400" aria-label="Repeats" />}
+          {task.recurrence && <Repeat className="size-3 text-muted" aria-label="Repeats" />}
         </p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-zinc-500">
-          <span className={cn(task.isOverdue && 'font-medium text-red-600')}>{task.isOverdue ? `Overdue · ${dueLabel(task.dueAt, task.allDay, now, organization?.timezone)}` : dueLabel(task.dueAt, task.allDay, now, organization?.timezone)}</span>
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted">
+          <span className={cn(task.isOverdue && 'font-medium text-danger')}>{task.isOverdue ? `Overdue · ${dueLabel(task.dueAt, task.allDay, now, organization?.timezone)}` : dueLabel(task.dueAt, task.allDay, now, organization?.timezone)}</span>
           <span>· {taskTypeLabels[task.type]}</span>
           {showRecord && task.record && (
             <Link to={recordPath(task.record.entityType, task.record.entityId)} className="truncate text-brand-700 hover:underline">
@@ -136,12 +136,12 @@ export function TaskItem({ task, showRecord = true, canEdit: allowEdit = true }:
           )}
         </p>
       </div>
-      {task.assignee && <Avatar name={task.assignee.fullName} size="xs" className="mt-0.5" />}
+      {task.assignee && <Avatar name={task.assignee.fullName} size="xs" className="mt-1" />}
       {canEdit && (
         <Menu
           align="end"
           trigger={(props) => (
-            <button {...props} type="button" className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label={`Actions for ${task.title}`}>
+            <button {...props} type="button" className="rounded-md p-1 text-muted hover:bg-surface-subtle hover:text-ink" aria-label={`Actions for ${task.title}`}>
               <MoreHorizontal className="size-4" aria-hidden="true" />
             </button>
           )}
@@ -164,7 +164,7 @@ export function TaskItem({ task, showRecord = true, canEdit: allowEdit = true }:
                 </MenuItem>
               )}
               <MenuSeparator />
-              <MenuItem disabled={!canDelete} tone="danger" icon={<Trash2 className="size-4" />} onSelect={() => (close(), void act(() => deleteTask(task.id), 'Task deleted'))}>
+              <MenuItem disabled={!canDelete} tone="danger" icon={<Trash2 className="size-4" />} onSelect={() => { close(); setDialog('delete') }}>
                 Delete
               </MenuItem>
             </>
@@ -181,6 +181,7 @@ export function TaskItem({ task, showRecord = true, canEdit: allowEdit = true }:
           }}
         />
       )}
+      <ConfirmDialog open={dialog === 'delete'} onClose={() => setDialog(null)} title="Delete this task?" description={`“${task.title}” will be removed. This action cannot be undone.`} confirmLabel="Delete task" tone="danger" onConfirm={async () => { await deleteTask(task.id); await refresh(); setDialog(null); notify({ title: 'Task deleted' }) }} />
       {dialog === 'edit' && <TaskFormDialog task={task} onClose={() => setDialog(null)} />}
     </li>
   )

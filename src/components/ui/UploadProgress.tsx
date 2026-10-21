@@ -23,15 +23,15 @@ export function UploadProgress({ title, progress, status = 'uploading', statusLa
   const active = !complete && !failed && !stopped
   const label = statusLabel ?? { uploading: 'Uploading', processing: 'Processing', complete: 'Complete', error: 'Failed', cancelled: 'Cancelled' }[status]
   return <div className={cn('rounded-xl border border-line bg-surface p-4 shadow-card sm:p-5', className)}>
-    <div className="flex items-start gap-3.5">
+    <div className="flex items-start gap-4">
       <div className={cn('flex size-11 shrink-0 items-center justify-center rounded-xl', complete ? 'bg-emerald-50 text-emerald-700' : failed ? 'bg-red-50 text-red-700' : stopped ? 'bg-zinc-100 text-muted' : 'bg-brand-50 text-brand-700')}>
         {complete ? <Check className="size-5" aria-hidden="true" /> : failed ? <CircleAlert className="size-5" aria-hidden="true" /> : <FileText className="size-5" aria-hidden="true" />}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <p className="min-w-0 truncate text-sm font-semibold text-ink" title={title}>{title}</p>
-          <span className={cn('inline-flex items-center gap-1.5 text-xs font-medium', complete ? 'text-emerald-700' : failed ? 'text-red-700' : 'text-muted')}>
-            {active && <LoaderCircle className="size-3.5 motion-safe:animate-spin" aria-hidden="true" />}{label}
+          <span className={cn('inline-flex items-center gap-2 text-xs font-medium', complete ? 'text-emerald-700' : failed ? 'text-red-700' : 'text-muted')}>
+            {active && <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden="true" />}{label}
           </span>
         </div>
         {description && <p className="mt-1 text-xs leading-relaxed text-muted" role="status">{description}</p>}

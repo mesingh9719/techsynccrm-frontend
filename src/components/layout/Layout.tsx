@@ -70,10 +70,10 @@ function CookieNotice() {
     <div
       role="region"
       aria-label="Cookie preferences"
-      className="fixed bottom-4 left-4 z-[55] max-w-sm animate-fade-up rounded-2xl bg-white p-5 shadow-float ring-1 ring-zinc-200 [animation-delay:1.2s] max-sm:right-4"
+      className="fixed bottom-4 left-4 z-[55] max-w-sm animate-fade-up rounded-dialog bg-white p-5 shadow-float ring-1 ring-zinc-200 [animation-delay:1.2s] max-sm:right-4"
     >
       <p className="text-sm font-medium text-zinc-900">We use a few cookies</p>
-      <p className="mt-1.5 text-sm leading-relaxed text-zinc-600">
+      <p className="mt-2 text-sm leading-relaxed text-zinc-600">
         Essential cookies keep the site working. With your OK, we also use analytics to improve it. See our{' '}
         <Link to="/privacy#cookies" className="font-medium text-brand-700 underline-offset-4 hover:underline">
           Privacy Policy

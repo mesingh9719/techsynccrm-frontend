@@ -97,7 +97,7 @@ export function MoveDealDialog({
           <Field label={requirableFieldLabels.valueMinor}>
             {({ id }) => (
               <div className="relative">
-                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-zinc-500">₹</span>
+                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted">₹</span>
                 <Input id={id} autoFocus inputMode="decimal" className="pl-7" value={value} onChange={(e) => setValue(e.target.value)} />
               </div>
             )}
@@ -153,7 +153,7 @@ export function MoveDealDialog({
             </Field>
           </>
         )}
-        {!missing.length && stage.type !== 'lost' && <p className="text-sm text-zinc-600">Ready to move.</p>}
+        {!missing.length && stage.type !== 'lost' && <p className="text-sm text-muted">Ready to move.</p>}
         {error && <FormAlert>{error}</FormAlert>}
       </div>
     </Dialog>

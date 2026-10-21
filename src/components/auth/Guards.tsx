@@ -1,13 +1,16 @@
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { LoaderCircle } from 'lucide-react'
+import { Skeleton } from '../app/States'
 import { nextPathFor, useAuth, type StagePath } from '../../lib/useAuth'
 
 export function FullPageSpinner({ label = 'Loading…' }: { label?: string }) {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center" role="status">
-      <LoaderCircle className="size-6 animate-spin text-zinc-400" aria-hidden="true" />
+    <div className="mx-auto w-full max-w-app space-y-6 p-6" role="status" aria-label={label}>
       <span className="sr-only">{label}</span>
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-4 w-64 max-w-full" />
+      <div className="grid gap-4 sm:grid-cols-3"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div>
+      <Skeleton className="h-64" />
     </div>
   )
 }

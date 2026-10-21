@@ -108,7 +108,7 @@ export function UpgradeDialog({ prompt, onClose }: { prompt: UpgradePrompt | nul
       ) : (
         <>
           {copy && <p className="mb-4 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">{copy.description}</p>}
-          <p className="text-sm font-medium text-zinc-900">
+          <p className="text-sm font-medium text-ink">
             {plan.name} includes{plan.userLimit ? ` · ${plan.userLimit.toLowerCase()}` : ''}:
           </p>
           <ul className="mt-3 space-y-2">
@@ -116,8 +116,8 @@ export function UpgradeDialog({ prompt, onClose }: { prompt: UpgradePrompt | nul
               .filter((f) => !f.endsWith(':'))
               .slice(0, 6)
               .map((feature) => (
-                <li key={feature} className="flex gap-2 text-sm text-zinc-700">
-                  <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                <li key={feature} className="flex gap-2 text-sm text-ink">
+                  <Check className="mt-1 size-4 shrink-0 text-emerald-600" aria-hidden="true" />
                   {feature}
                 </li>
               ))}

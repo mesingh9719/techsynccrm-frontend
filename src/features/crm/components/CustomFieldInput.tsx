@@ -26,7 +26,7 @@ export function CustomFieldInput({ def, value, onChange, id, describedBy, invali
     case 'currency':
       return (
         <div className="relative">
-          <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-zinc-500">₹</span>
+          <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted">₹</span>
           <Input {...common} inputMode="decimal" className="pl-7" defaultValue={minorToRupeesText(value as number)} onBlur={(e) => onChange(rupeesToMinor(e.target.value))} />
         </div>
       )
@@ -55,7 +55,7 @@ export function CustomFieldInput({ def, value, onChange, id, describedBy, invali
     case 'multiselect': {
       const selected = new Set((value as string[]) ?? [])
       return (
-        <div id={id} role="group" aria-describedby={describedBy} className="flex flex-wrap gap-1.5">
+        <div id={id} role="group" aria-describedby={describedBy} className="flex flex-wrap gap-2">
           {(def.options ?? []).map((o) => {
             const on = selected.has(o.value)
             return (
@@ -69,7 +69,7 @@ export function CustomFieldInput({ def, value, onChange, id, describedBy, invali
                   else next.add(o.value)
                   onChange([...next])
                 }}
-                className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset', on ? 'bg-brand-50 text-brand-800 ring-brand-200' : 'bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50')}
+                className={cn('inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset', on ? 'bg-brand-50 text-brand-800 ring-brand-200' : 'bg-surface text-ink ring-line hover:bg-surface-subtle')}
               >
                 {on && <Check className="size-3" aria-hidden="true" />}
                 {o.label}
@@ -81,8 +81,8 @@ export function CustomFieldInput({ def, value, onChange, id, describedBy, invali
     }
     case 'checkbox':
       return (
-        <label className="inline-flex items-center gap-2 text-sm text-zinc-700">
-          <input id={id} type="checkbox" checked={Boolean(value)} onChange={(e) => onChange(e.target.checked)} className="size-4 rounded border-zinc-300 text-brand-600 focus:ring-brand-500" />
+        <label className="inline-flex items-center gap-2 text-sm text-ink">
+          <input id={id} type="checkbox" checked={Boolean(value)} onChange={(e) => onChange(e.target.checked)} className="size-4 rounded border-zinc-300 text-brand-700 focus:ring-brand-500" />
           Yes
         </label>
       )

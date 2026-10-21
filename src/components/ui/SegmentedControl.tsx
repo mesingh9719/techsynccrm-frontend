@@ -45,7 +45,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, l
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
               'inline-flex items-center gap-2 rounded-lg font-medium transition-all duration-150',
-              size === 'sm' ? 'h-7 px-2.5 text-xs' : 'h-9 px-4 text-sm',
+              size === 'sm' ? 'h-8 px-3 text-xs' : 'h-10 px-4 text-sm',
               active ? 'bg-white text-zinc-900 shadow-card ring-1 ring-zinc-200/70' : 'text-zinc-600 hover:text-zinc-900',
             )}
           >

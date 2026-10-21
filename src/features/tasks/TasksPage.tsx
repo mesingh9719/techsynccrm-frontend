@@ -1,3 +1,5 @@
+import { LocalViews } from '../../components/app/LocalViews'
+import { FilterChips } from '../../components/app/FilterBar'
 import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
 import { useState } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
@@ -87,7 +89,7 @@ function QuickAdd() {
         e.preventDefault()
         void add()
       }}
-      className="flex flex-col gap-2 rounded-2xl bg-white p-3 shadow-card ring-1 ring-zinc-200 sm:flex-row"
+      className="flex flex-col gap-2 rounded-card bg-surface p-3 shadow-card ring-1 ring-line sm:flex-row"
     >
       <Input
         aria-label="New task"
@@ -120,7 +122,7 @@ export default function TasksPage() {
   const canSeeOthers = (user?.organization?.permissions ?? []).some(
     (p) => p === 'tasks.read.all' || p === 'tasks.read.team',
   )
-  const { filters, setFilter } = useUrlFilters(['view', 'assignee'] as const)
+  const { filters, setFilter, clearFilters, replaceFilters } = useUrlFilters(['view', 'assignee'] as const)
   const [creating, setCreating] = useCreateFromUrl()
   const view = (filters.view as Exclude<TaskView, 'all' | 'open'>) ?? 'today'
   const assignee = filters.assignee ?? 'me'
@@ -136,7 +138,7 @@ export default function TasksPage() {
   const canEdit = useCan('tasks.update')
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
+    <div className="app-page max-w-6xl">
       <PageHeader
         title="Tasks"
         description="Today’s calls and follow-ups, with reminders so nothing slips."
@@ -166,8 +168,8 @@ export default function TasksPage() {
                 aria-pressed={active}
                 onClick={() => setFilter('view', v.value === 'today' ? undefined : v.value)}
                 className={cn(
-                  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-medium',
-                  active ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100',
+                  'inline-flex h-8 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors',
+                  active ? 'bg-ink text-surface' : 'text-muted hover:bg-surface-subtle hover:text-ink',
                 )}
               >
                 {v.label}
@@ -175,7 +177,7 @@ export default function TasksPage() {
                   <span
                     className={cn(
                       'tabular-nums',
-                      v.value === 'overdue' && n > 0 && !active ? 'text-red-600' : 'text-zinc-400',
+                      v.value === 'overdue' && n > 0 && !active ? 'text-danger' : 'text-muted',
                     )}
                   >
                     {n}
@@ -200,7 +202,7 @@ export default function TasksPage() {
                       : e.target.value,
                 )
               }
-              className="h-9! w-40 text-sm"
+              className="h-10! w-40 text-sm"
             >
               <option value="me">My tasks</option>
               <option value="everyone">Everyone</option>
@@ -215,6 +217,7 @@ export default function TasksPage() {
         )}
       </div>
 
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><FilterChips filters={filters} onRemove={(key) => setFilter(key, undefined)} onClear={clearFilters} exclude={[]} /><LocalViews module="tasks" filters={filters} onApply={replaceFilters} /></div>
       <div className="mt-4">
         {tasks.isPending ? (
           <ListSkeleton rows={5} />
@@ -249,9 +252,9 @@ export default function TasksPage() {
         ) : (
           <div className="space-y-5">
             {groupByDay(items, view === 'completed', organization?.timezone ?? 'Asia/Kolkata').map((g) => (
-              <section key={g.label} className="rounded-2xl bg-white px-4 shadow-card ring-1 ring-zinc-200">
-                <h2 className="border-b border-zinc-100 py-2.5 text-xs font-medium text-zinc-500">{g.label}</h2>
-                <ul className="divide-y divide-zinc-100">
+              <section key={g.label} className="rounded-card bg-surface px-4 shadow-card ring-1 ring-line">
+                <h2 className="border-b border-line py-3 text-xs font-medium text-muted">{g.label}</h2>
+                <ul className="divide-y divide-line">
                   {g.items.map((t) => (
                     <TaskItem key={t.id} task={t} canEdit={canEdit} />
                   ))}

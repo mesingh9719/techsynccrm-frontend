@@ -19,6 +19,7 @@ export interface LeadInput {
   pincode?: string | null
   sourceId?: string | null
   sourceDetail?: string | null
+  utm?: Record<string, string> | null
   ownerId?: string | null
   tagIds?: string[]
   customFields?: CustomFieldValues

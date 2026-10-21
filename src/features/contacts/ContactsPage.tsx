@@ -14,7 +14,7 @@ import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
 import { DataTable, type Column } from '../../components/app/DataTable'
 import { ConfirmDialog } from '../../components/app/Dialog'
-import { FilterBar } from '../../components/app/FilterBar'
+import { FilterChips, FilterBar } from '../../components/app/FilterBar'
 import { EmptyState, ErrorState, ListSkeleton, LoadMore, PageHeader } from '../../components/app/States'
 import { BulkAssignDialog, BulkTagDialog } from '../crm/components/BulkDialogs'
 import { formatCustomValue } from '../crm/customFieldFormat'
@@ -87,7 +87,7 @@ export default function ContactsPage() {
       header: 'Company',
       hideBelow: 'md',
       cell: (c) =>
-        c.companies.find((x) => x.isPrimary)?.name ?? c.companies[0]?.name ?? <span className="text-zinc-400">—</span>,
+        c.companies.find((x) => x.isPrimary)?.name ?? c.companies[0]?.name ?? <span className="text-muted">—</span>,
     },
     {
       key: 'phone',
@@ -117,7 +117,7 @@ export default function ContactsPage() {
       sortKey: 'lastActivityAt',
       hideBelow: 'xl',
       align: 'right',
-      cell: (c) => <span className="text-zinc-500">{relativeTime(c.lastActivityAt)}</span>,
+      cell: (c) => <span className="text-muted">{relativeTime(c.lastActivityAt)}</span>,
     },
     {
       key: 'created',
@@ -125,7 +125,7 @@ export default function ContactsPage() {
       sortKey: 'createdAt',
       hideBelow: 'xl',
       align: 'right',
-      cell: (c) => <span className="text-zinc-500">{relativeTime(c.createdAt)}</span>,
+      cell: (c) => <span className="text-muted">{relativeTime(c.createdAt)}</span>,
     },
     ...activeDefs.map((d) => ({
       key: `cf.${d.key}`,
@@ -140,11 +140,11 @@ export default function ContactsPage() {
       header: 'Name',
       sortKey: 'displayName',
       cell: (c) => (
-        <span className="flex items-center gap-2.5">
+        <span className="flex items-center gap-3">
           <Avatar name={c.displayName} size="sm" />
           <span className="min-w-0">
-            <span className="block truncate font-medium text-zinc-900">{c.displayName}</span>
-            {c.title && <span className="block truncate text-xs text-zinc-500">{c.title}</span>}
+            <span className="block truncate font-medium text-ink">{c.displayName}</span>
+            {c.title && <span className="block truncate text-xs text-muted">{c.title}</span>}
           </span>
         </span>
       ),
@@ -156,7 +156,7 @@ export default function ContactsPage() {
   const hasFilters = activeCount > 0
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+    <div className="app-page">
       <PageHeader
         title="Contacts"
         description="Everyone you sell to, with their companies and history."
@@ -240,7 +240,7 @@ export default function ContactsPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-9"
+              className="h-10"
               onClick={() => setFilter('deleted', isDeletedView ? undefined : 'true')}
               aria-pressed={isDeletedView}
             >
@@ -255,29 +255,30 @@ export default function ContactsPage() {
         </div>
       </div>
 
+      <div className="mt-4"><FilterChips filters={filters} onRemove={(key) => setFilter(key, undefined)} onClear={clearFilters} /></div>
       <div className="mt-4 space-y-3">
         {!isDeletedView && canUpdate && (
           <BulkBar count={selected.size} onClear={() => setSelected(new Set())}>
             {canAssign && (
               <BulkButton onClick={() => setDialog('assign')}>
-                <UserRound className="size-3.5" aria-hidden="true" />
+                <UserRound className="size-4" aria-hidden="true" />
                 Change owner
               </BulkButton>
             )}
             <BulkButton onClick={() => setDialog('tag')}>
-              <Tag className="size-3.5" aria-hidden="true" />
+              <Tag className="size-4" aria-hidden="true" />
               Add tags
             </BulkButton>
             <BulkButton onClick={() => setDialog('untag')}>Remove tags</BulkButton>
             {selected.size >= 2 && selected.size <= 10 && (
               <BulkButton onClick={() => setDialog('merge')}>
-                <GitMerge className="size-3.5" aria-hidden="true" />
+                <GitMerge className="size-4" aria-hidden="true" />
                 Merge
               </BulkButton>
             )}
             {canDelete && (
               <BulkButton tone="danger" onClick={() => setDialog('delete')}>
-                <Trash2 className="size-3.5" aria-hidden="true" />
+                <Trash2 className="size-4" aria-hidden="true" />
                 Delete
               </BulkButton>
             )}
@@ -322,6 +323,7 @@ export default function ContactsPage() {
         ) : (
           <>
             <DataTable
+              showColumnControls={false}
               rows={rows}
               columns={tableColumns}
               getRowId={(c) => c.id}
@@ -332,11 +334,11 @@ export default function ContactsPage() {
               onSelectionChange={canUpdate && !isDeletedView ? setSelected : undefined}
               onRowClick={(c) => navigate(`/app/contacts/${c.id}`)}
               mobileCard={(c) => (
-                <div className="flex items-center gap-3 rounded-xl bg-white p-3 ring-1 ring-zinc-200">
+                <div className="flex items-center gap-3 rounded-xl bg-surface p-3 ring-1 ring-line">
                   <Avatar name={c.displayName} size="sm" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-zinc-900">{c.displayName}</p>
-                    <p className="truncate text-xs text-zinc-500">
+                    <p className="truncate font-medium text-ink">{c.displayName}</p>
+                    <p className="truncate text-xs text-muted">
                       {[c.companies[0]?.name, formatPhone(c.primaryPhoneE164, c.phones[0]?.raw)]
                         .filter(Boolean)
                         .join(' · ')}

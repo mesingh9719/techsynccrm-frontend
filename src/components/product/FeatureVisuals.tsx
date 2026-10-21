@@ -7,7 +7,7 @@ import { Funnel } from './Charts'
 import { DemoKpiTiles, DemoPipelineBoard } from './demo'
 
 function Panel({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('rounded-2xl bg-white p-4 shadow-frame sm:p-5', className)}>{children}</div>
+  return <div className={cn('rounded-dialog bg-white p-4 shadow-frame sm:p-5', className)}>{children}</div>
 }
 
 function LeadInboxVisual() {
@@ -17,7 +17,7 @@ function LeadInboxVisual() {
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-zinc-900">Lead inbox</p>
         <Badge tone="brand">
-          <span className="size-1.5 animate-pulse rounded-full bg-brand-500" aria-hidden="true" />
+          <span className="size-2 animate-pulse rounded-full bg-brand-500" aria-hidden="true" />
           Live
         </Badge>
       </div>
@@ -33,7 +33,7 @@ function LeadInboxVisual() {
             </div>
             <div className="hidden text-right sm:block">
               <p className="text-xs font-medium text-zinc-800 tabular-nums">Score {lead.score}</p>
-              <p className="text-[11px] text-zinc-500">→ {lead.owner.split(' ')[0]}</p>
+              <p className="text-xs text-zinc-500">→ {lead.owner.split(' ')[0]}</p>
             </div>
             {i === 0 && <Badge tone="success">New</Badge>}
           </li>
@@ -64,16 +64,16 @@ function WorkflowVisual() {
                 <s.icon className="size-4" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <p className="font-mono text-[10px] tracking-wider text-zinc-500 uppercase">{s.kind}</p>
+                <p className="font-mono text-xs tracking-wider text-zinc-500 uppercase">{s.kind}</p>
                 <p className="text-sm text-zinc-900">{s.label}</p>
               </div>
             </div>
-            {i < steps.length - 1 && <ArrowDown className="mx-auto my-1.5 size-4 text-zinc-300" aria-hidden="true" />}
+            {i < steps.length - 1 && <ArrowDown className="mx-auto my-2 size-4 text-zinc-300" aria-hidden="true" />}
           </li>
         ))}
       </ol>
       <p className="mt-4 flex items-center gap-2 text-xs text-zinc-500">
-        <CircleCheck className="size-3.5 text-emerald-600" aria-hidden="true" />
+        <CircleCheck className="size-4 text-emerald-600" aria-hidden="true" />
         Ran 214 times this month · 0 errors
       </p>
     </Panel>
@@ -93,34 +93,34 @@ function WhatsAppVisual() {
         <Badge tone="success">WhatsApp</Badge>
       </div>
       <div className="space-y-3 bg-zinc-50/70 px-4 py-5 text-sm">
-        <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-white px-3.5 py-2.5 text-zinc-800 shadow-card ring-1 ring-zinc-200/70">
+        <div className="max-w-[80%] rounded-dialog rounded-tl-sm bg-white px-4 py-3 text-zinc-800 shadow-card ring-1 ring-zinc-200/70">
           Hi, can you share pricing for 12 stores? We want to go live before Diwali.
-          <span className="mt-1 block text-right text-[10px] text-zinc-400">10:42</span>
+          <span className="mt-1 block text-right text-xs text-zinc-400">10:42</span>
         </div>
-        <div className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm bg-emerald-50 px-3.5 py-2.5 text-zinc-800 ring-1 ring-emerald-200/60">
+        <div className="ml-auto max-w-[80%] rounded-dialog rounded-tr-sm bg-emerald-50 px-4 py-3 text-zinc-800 ring-1 ring-emerald-200/60">
           Absolutely, Ritika — sharing the quote now. Volume pricing applies from 10 stores.
-          <span className="mt-1 flex items-center justify-end gap-1 text-[10px] text-zinc-500">
+          <span className="mt-1 flex items-center justify-end gap-1 text-xs text-zinc-500">
             10:44 · Ravi <CheckCheck className="size-3 text-sky-500" aria-hidden="true" />
           </span>
         </div>
         <div className="ml-auto max-w-[80%] rounded-xl bg-white p-3 ring-1 ring-zinc-200">
           <p className="text-xs text-zinc-500">Quote QT-2291 · PDF</p>
-          <p className="mt-0.5 font-medium text-zinc-900">₹1,85,000 + GST</p>
-          <p className="mt-1 text-[11px] text-emerald-700">Viewed 2 times</p>
+          <p className="mt-1 font-medium text-zinc-900">₹1,85,000 + GST</p>
+          <p className="mt-1 text-xs text-emerald-700">Viewed 2 times</p>
         </div>
       </div>
       <div className="border-t border-zinc-100 p-3">
         <div className="flex items-start gap-2 rounded-xl bg-brand-50/60 p-3 ring-1 ring-brand-100">
-          <Bot className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
+          <Bot className="mt-1 size-4 shrink-0 text-brand-700" aria-hidden="true" />
           <div className="flex-1 text-xs">
             <p className="font-medium text-brand-900">Suggested follow-up · tomorrow 11:00</p>
-            <p className="mt-0.5 text-brand-900/80">“Hi Ritika, did the team get a chance to review the quote? Happy to walk through rollout timelines.”</p>
+            <p className="mt-1 text-brand-900/80">“Hi Ritika, did the team get a chance to review the quote? Happy to walk through rollout timelines.”</p>
           </div>
           <button
             type="button"
             onClick={() => setSent(true)}
             disabled={sent}
-            className="shrink-0 rounded-md bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:bg-emerald-600"
+            className="shrink-0 rounded-md bg-brand-600 px-3 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:bg-emerald-600"
           >
             {sent ? 'Scheduled' : 'Schedule'}
           </button>
@@ -143,7 +143,7 @@ function QuoteVisual() {
     <Panel>
       <div className="flex items-start justify-between">
         <div>
-          <p className="font-mono text-[11px] text-zinc-500">QUOTATION · QT-2291</p>
+          <p className="font-mono text-xs text-zinc-500">QUOTATION · QT-2291</p>
           <p className="mt-1 text-sm font-semibold text-zinc-900">Saffron Retail Pvt. Ltd.</p>
           <p className="text-xs text-zinc-500">GSTIN 29ABCDE1234F1Z5 · Valid till 31 Oct</p>
         </div>
@@ -161,15 +161,15 @@ function QuoteVisual() {
         <tbody className="text-zinc-800">
           {items.map((i) => (
             <tr key={i.name} className="border-b border-zinc-100">
-              <td className="py-2.5 pr-2">{i.name}</td>
-              <td className="py-2.5 font-mono text-zinc-500">{i.hsn}</td>
-              <td className="py-2.5 text-right tabular-nums">{i.qty}</td>
-              <td className="py-2.5 text-right tabular-nums">{fmt(i.qty * i.rate)}</td>
+              <td className="py-3 pr-2">{i.name}</td>
+              <td className="py-3 font-mono text-zinc-500">{i.hsn}</td>
+              <td className="py-3 text-right tabular-nums">{i.qty}</td>
+              <td className="py-3 text-right tabular-nums">{fmt(i.qty * i.rate)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <dl className="mt-3 ml-auto w-48 space-y-1.5 text-xs">
+      <dl className="mt-3 ml-auto w-48 space-y-2 text-xs">
         <div className="flex justify-between text-zinc-600">
           <dt>Subtotal</dt>
           <dd className="tabular-nums">{fmt(subtotal)}</dd>
@@ -178,7 +178,7 @@ function QuoteVisual() {
           <dt>GST 18%</dt>
           <dd className="tabular-nums">{fmt(gst)}</dd>
         </div>
-        <div className="flex justify-between border-t border-zinc-200 pt-1.5 text-sm font-semibold text-zinc-950">
+        <div className="flex justify-between border-t border-zinc-200 pt-2 text-sm font-semibold text-zinc-950">
           <dt>Total</dt>
           <dd className="tabular-nums">{fmt(subtotal + gst)}</dd>
         </div>
@@ -208,7 +208,7 @@ function PipelineVisual() {
       <div className="mb-3 flex items-center justify-between px-1">
         <p className="text-sm font-semibold text-zinc-900">New business</p>
         <span className="flex items-center gap-1 text-xs text-zinc-500">
-          <Sparkles className="size-3.5 text-brand-600" aria-hidden="true" />
+          <Sparkles className="size-4 text-brand-700" aria-hidden="true" />
           Try dragging a deal
         </span>
       </div>

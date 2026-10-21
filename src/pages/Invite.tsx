@@ -18,7 +18,7 @@ import { Checkbox, Field, FormAlert, Input, PasswordInput } from '../components/
 function Card({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto w-full max-w-lg px-4 py-12 sm:py-20">
-      <div className="rounded-3xl bg-white p-8 shadow-card ring-1 ring-zinc-200 sm:p-10">{children}</div>
+      <div className="rounded-dialog bg-white p-8 shadow-card ring-1 ring-zinc-200 sm:p-10">{children}</div>
     </div>
   )
 }
@@ -102,7 +102,7 @@ function SignupForm({ token, invite, onJoined }: { token: string; invite: Invita
           {...register('terms')}
         />
         {errors.terms && (
-          <p role="alert" className="mt-1.5 ml-[30px] text-sm text-red-600">
+          <p role="alert" className="mt-2 ml-[30px] text-sm text-red-600">
             {errors.terms.message}
           </p>
         )}

@@ -12,8 +12,8 @@ export function ColumnChooser({ options, visible, onToggle }: { options: { key: 
     <Menu
       align="end"
       trigger={(props) => (
-        <button {...props} type="button" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-700 hover:border-zinc-400">
-          <Columns3 className="size-4 text-zinc-400" aria-hidden="true" />
+        <button {...props} type="button" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm text-ink transition-colors hover:border-brand-300">
+          <Columns3 className="size-4 text-muted" aria-hidden="true" />
           Columns
         </button>
       )}
@@ -21,8 +21,8 @@ export function ColumnChooser({ options, visible, onToggle }: { options: { key: 
       {() => (
         <div className="max-h-80 overflow-y-auto">
           {options.map((o) => (
-            <label key={o.key} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-zinc-700 hover:bg-zinc-100">
-              <input type="checkbox" role="menuitemcheckbox" aria-checked={visible.includes(o.key)} checked={visible.includes(o.key)} onChange={() => onToggle(o.key)} className="size-4 rounded border-zinc-300 text-brand-600 focus:ring-brand-500" />
+            <label key={o.key} className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm text-ink transition-colors hover:bg-surface-subtle">
+              <input type="checkbox" role="menuitemcheckbox" aria-checked={visible.includes(o.key)} checked={visible.includes(o.key)} onChange={() => onToggle(o.key)} className="size-4 rounded border-line text-brand-700 focus:ring-brand-500" />
               {o.label}
             </label>
           ))}
@@ -36,7 +36,7 @@ export function ColumnChooser({ options, visible, onToggle }: { options: { key: 
 export function FilterSelect({ label, value, onChange, options, className }: { label: string; value: string | undefined; onChange: (v: string | undefined) => void; options: { value: string; label: string }[]; className?: string }) {
   return (
     <div className={cn('sm:w-44', className)}>
-      <Select aria-label={label} value={value ?? ''} onChange={(e) => onChange(e.target.value || undefined)} className="h-9! text-sm">
+      <Select aria-label={label} value={value ?? ''} onChange={(e) => onChange(e.target.value || undefined)} className="h-10! text-sm">
         <option value="">{label}: any</option>
         {options.map((o) => (
           <option key={o.value} value={o.value}>

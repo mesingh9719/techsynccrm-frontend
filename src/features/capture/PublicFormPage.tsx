@@ -26,7 +26,7 @@ export default function PublicFormPage() {
     }
   }, [query.data, key])
   return (
-    <main className="min-h-dvh bg-zinc-50 px-4 py-8 sm:py-12">
+    <main className="min-h-dvh bg-surface-subtle px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-lg">
         {!captureLive ? (
           <PreviewNotice>
@@ -36,11 +36,11 @@ export default function PublicFormPage() {
         ) : !/^[a-zA-Z0-9_-]{22}$/.test(key) ? (
           <ErrorState error={new Error('Invalid form address')} />
         ) : query.isPending ? (
-          <Skeleton className="h-[560px] rounded-2xl" />
+          <Skeleton className="h-[560px] rounded-card" />
         ) : query.isError ? (
           <ErrorState error={query.error} onRetry={() => query.refetch()} />
         ) : !query.data.isActive ? (
-          <p className="rounded-xl border border-zinc-200 bg-white p-8 text-center text-sm text-zinc-600">
+          <p className="rounded-xl border border-line bg-surface p-8 text-center text-sm text-muted">
             This form is currently closed. Please contact the business directly.
           </p>
         ) : (

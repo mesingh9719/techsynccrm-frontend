@@ -69,18 +69,18 @@ export function SavedViewsMenu({
           <button
             {...props}
             type="button"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-700 hover:border-zinc-400"
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-300 bg-surface px-3 text-sm text-ink hover:border-zinc-400"
           >
-            <Bookmark className="size-4 text-zinc-400" aria-hidden="true" />
+            <Bookmark className="size-4 text-muted" aria-hidden="true" />
             <span className="max-w-32 truncate">{active?.name ?? 'Views'}</span>
-            <ChevronDown className="size-3.5 text-zinc-400" aria-hidden="true" />
+            <ChevronDown className="size-4 text-muted" aria-hidden="true" />
           </button>
         )}
       >
         {(close) => (
           <>
             {views.isPending && (
-              <p role="status" className="px-3 py-2 text-xs text-zinc-500">
+              <p role="status" className="px-3 py-2 text-xs text-muted">
                 Loading views…
               </p>
             )}
@@ -123,7 +123,7 @@ export function SavedViewsMenu({
                   type="button"
                   role="menuitem"
                   tabIndex={-1}
-                  className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-red-600"
+                  className="rounded-md p-2 text-muted hover:bg-zinc-100 hover:text-danger"
                   aria-label={`Delete view ${v.name}`}
                   onClick={async () => {
                     try {
@@ -134,7 +134,7 @@ export function SavedViewsMenu({
                     }
                   }}
                 >
-                  <Trash2 className="size-3.5" aria-hidden="true" />
+                  <Trash2 className="size-4" aria-hidden="true" />
                 </button>
               </div>
             ))}

@@ -17,7 +17,7 @@ export function PostMeta({ post, className }: { post: BlogPost; className?: stri
 export function PostCard({ post, featured = false }: { post: BlogPost; featured?: boolean }) {
   return (
     <article className={cn('group relative flex flex-col', featured && 'lg:grid lg:grid-cols-[1.3fr_1fr] lg:items-center lg:gap-12')}>
-      <div className="aspect-[16/9] overflow-hidden rounded-2xl ring-1 ring-zinc-200">
+      <div className="aspect-[16/9] overflow-hidden rounded-dialog ring-1 ring-zinc-200">
         <PostCover category={post.category} seed={post.slug} className="transition-transform duration-500 group-hover:scale-[1.02]" />
       </div>
       <div className={cn('mt-5', featured && 'lg:mt-0')}>
@@ -27,7 +27,7 @@ export function PostCard({ post, featured = false }: { post: BlogPost; featured?
             {post.title}
           </Link>
         </h3>
-        <p className={cn('mt-2.5 leading-relaxed text-zinc-600', featured ? 'text-lg' : 'line-clamp-2 text-[15px]')}>{post.excerpt}</p>
+        <p className={cn('mt-3 leading-relaxed text-zinc-600', featured ? 'text-lg' : 'line-clamp-2 text-sm')}>{post.excerpt}</p>
         <div className="mt-4 flex items-center gap-3">
           <span className="text-sm font-medium text-zinc-800">{post.author.name}</span>
           <PostMeta post={post} />

@@ -48,12 +48,12 @@ export default function About() {
           {company.values.map((v, i) => {
             const Icon = getIcon(v.icon)
             return (
-              <Reveal key={v.title} delay={i * 60} className="rounded-2xl bg-white p-6 shadow-card ring-1 ring-zinc-200">
+              <Reveal key={v.title} delay={i * 60} className="rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200">
                 <IconTile>
                   <Icon className="size-5" />
                 </IconTile>
                 <h3 className="mt-5 font-semibold text-zinc-950">{v.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-zinc-600">{v.description}</p>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{v.description}</p>
               </Reveal>
             )
           })}
@@ -66,7 +66,7 @@ export default function About() {
           <ol className="relative border-l border-zinc-200 pl-8">
             {company.timeline.map((t, i) => (
               <Reveal as="li" key={t.year} delay={i * 60} className="relative pb-10 last:pb-0">
-                <span className="absolute top-1.5 -left-[37px] size-2.5 rounded-full bg-white ring-2 ring-brand-600" aria-hidden="true" />
+                <span className="absolute top-1.5 -left-[37px] size-3 rounded-full bg-white ring-2 ring-brand-600" aria-hidden="true" />
                 <p className="font-mono text-sm text-brand-700">{t.year}</p>
                 <h3 className="mt-1 text-lg font-semibold text-zinc-950">{t.title}</h3>
                 <p className="mt-1 text-zinc-600">{t.description}</p>
@@ -80,7 +80,7 @@ export default function About() {
         <SectionHeader id="team-title" eyebrow="Leadership" title="The people behind TechSync" description="A team of 140 across Bengaluru, Pune and Dubai — engineers, designers, and people who’ve run sales teams themselves." />
         <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {company.team.map((m, i) => (
-            <Reveal as="li" key={m.name} delay={(i % 3) * 60} className="flex gap-4 rounded-2xl bg-white p-6 shadow-card ring-1 ring-zinc-200">
+            <Reveal as="li" key={m.name} delay={(i % 3) * 60} className="flex gap-4 rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200">
               <Avatar name={m.name} size="lg" />
               <div>
                 <h3 className="font-semibold text-zinc-950">{m.name}</h3>
@@ -102,7 +102,7 @@ export default function About() {
         <SectionHeader id="offices-title" eyebrow="Offices" title="Come say hello" />
         <ul className="mt-12 grid gap-4 md:grid-cols-3">
           {company.offices.map((o) => (
-            <li key={o.city} className="rounded-2xl bg-white p-6 shadow-card ring-1 ring-zinc-200">
+            <li key={o.city} className="rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200">
               <MapPin className="size-5 text-zinc-400" aria-hidden="true" />
               <h3 className="mt-4 font-semibold text-zinc-950">{o.city}</h3>
               <address className="mt-2 text-sm leading-relaxed text-zinc-600 not-italic">{o.address}</address>

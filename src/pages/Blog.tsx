@@ -67,7 +67,7 @@ export default function Blog() {
                 aria-pressed={category === c}
                 onClick={() => setCategory(c)}
                 className={cn(
-                  'h-9 shrink-0 rounded-lg px-3.5 text-sm font-medium transition-colors',
+                  'h-10 shrink-0 rounded-lg px-4 text-sm font-medium transition-colors',
                   category === c ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900',
                 )}
               >
@@ -111,7 +111,7 @@ export default function Blog() {
             )}
           </>
         ) : (
-          <div className="mt-10 rounded-2xl border border-dashed border-zinc-300 px-6 py-16 text-center">
+          <div className="mt-10 rounded-dialog border border-dashed border-zinc-300 px-6 py-16 text-center">
             <SearchX className="mx-auto size-8 text-zinc-400" aria-hidden="true" />
             <p className="mt-4 font-medium text-zinc-900">No articles found</p>
             <p className="mt-1 text-sm text-zinc-600">Try a different search or category.</p>

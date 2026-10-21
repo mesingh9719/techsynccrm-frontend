@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/Button'
 import { Field, FormAlert, Input } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { SettingsSection } from '../../components/app/SettingsSection'
-import { ErrorState, Skeleton } from '../../components/app/States'
+import { ErrorState, PageHeader, Skeleton } from '../../components/app/States'
 import { getNotificationPreferences, notificationKeys, updateNotificationPreferences, type NotificationPreferences } from './api'
 
 function PreferencesForm({ initial }: { initial: NotificationPreferences }) {
@@ -34,17 +34,18 @@ function PreferencesForm({ initial }: { initial: NotificationPreferences }) {
   }
   const toggle = (type: string, channel: 'inApp' | 'email', checked: boolean) => setPreferences((rows) => rows.map((p) => p.type === type ? { ...p, [channel]: checked } : p))
   return <form onSubmit={save} className="space-y-6">
+    <PageHeader title="Notifications" description="Choose how you hear about assignments, reminders, and team updates." />
     <SettingsSection title="Notification channels" description="Choose updates for this workspace. Mentions and task reminders always remain in your inbox.">
-      <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-zinc-200"><th scope="col" className="py-3 text-left font-medium">Notification</th><th scope="col" className="px-3 py-3 text-center font-medium">In app</th><th scope="col" className="px-3 py-3 text-center font-medium">Email</th></tr></thead><tbody>{preferences.map((pref) => <tr key={pref.type} className="border-b border-zinc-100 last:border-0"><th scope="row" className="py-3 text-left font-normal text-zinc-700">{pref.label}{pref.mandatory && <span className="ml-2 text-xs text-zinc-400">Required in app</span>}</th>{(['inApp', 'email'] as const).map((channel) => <td key={channel} className="px-3 text-center"><input type="checkbox" aria-label={`${pref.label}: ${channel === 'inApp' ? 'in app' : 'email'}`} checked={pref[channel]} disabled={busy || (channel === 'inApp' && pref.mandatory)} onChange={(e) => toggle(pref.type, channel, e.target.checked)} className="size-4 rounded border-zinc-300 text-brand-600" /></td>)}</tr>)}</tbody></table></div>
-      <p className="mt-3 text-xs text-zinc-500">Emails are combined into one batch every five minutes. Security emails continue separately.</p>
+      <div className="table-viewport"><table className="w-full text-sm"><thead><tr className="border-b border-line"><th scope="col" className="py-3 text-left font-medium">Notification</th><th scope="col" className="px-3 py-3 text-center font-medium">In app</th><th scope="col" className="px-3 py-3 text-center font-medium">Email</th></tr></thead><tbody>{preferences.map((pref) => <tr key={pref.type} className="border-b border-zinc-100 last:border-0"><th scope="row" className="py-3 text-left font-normal text-ink">{pref.label}{pref.mandatory && <span className="ml-2 text-xs text-muted">Required in app</span>}</th>{(['inApp', 'email'] as const).map((channel) => <td key={channel} className="px-3 text-center"><input type="checkbox" aria-label={`${pref.label}: ${channel === 'inApp' ? 'in app' : 'email'}`} checked={pref[channel]} disabled={busy || (channel === 'inApp' && pref.mandatory)} onChange={(e) => toggle(pref.type, channel, e.target.checked)} className="size-4 rounded border-zinc-300 text-brand-700" /></td>)}</tr>)}</tbody></table></div>
+      <p className="mt-3 text-xs text-muted">Emails are combined into one batch every five minutes. Security emails continue separately.</p>
     </SettingsSection>
     <SettingsSection title="Quiet hours" description={`Email waits until quiet hours end; in-app updates still arrive. Time zone: ${initial.timezone}. This personal setting applies across workspaces.`}>
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={quiet} onChange={(e) => setQuiet(e.target.checked)} disabled={busy} className="size-4 rounded text-brand-600" />Use quiet hours</label>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={quiet} onChange={(e) => setQuiet(e.target.checked)} disabled={busy} className="size-4 rounded text-brand-700" />Use quiet hours</label>
       {quiet && <div className="mt-4 grid gap-4 sm:grid-cols-2"><Field label="Start">{({ id }) => <Input id={id} type="time" value={start} onChange={(e) => setStart(e.target.value)} required disabled={busy} />}</Field><Field label="End">{({ id }) => <Input id={id} type="time" value={end} onChange={(e) => setEnd(e.target.value)} required disabled={busy} />}</Field></div>}
     </SettingsSection>
     <SettingsSection title="Daily digest" description={`At 8:30 am in ${initial.timezone}: overdue and today’s tasks, idle deals and unread mentions. Empty digests are skipped; quiet hours still apply.`}>
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={digestEnabled} onChange={(e) => setDigestEnabled(e.target.checked)} disabled={busy} className="size-4 rounded text-brand-600" />Email my daily digest</label>
-      <p className="mt-2 text-xs text-zinc-500">Applies across your workspaces. Digest summaries are separate from individual email notification choices.</p>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={digestEnabled} onChange={(e) => setDigestEnabled(e.target.checked)} disabled={busy} className="size-4 rounded text-brand-700" />Email my daily digest</label>
+      <p className="mt-2 text-xs text-muted">Applies across your workspaces. Digest summaries are separate from individual email notification choices.</p>
     </SettingsSection>
     {error && <FormAlert>{error}</FormAlert>}<div className="flex justify-end"><Button type="submit" loading={busy}>Save preferences</Button></div>
   </form>

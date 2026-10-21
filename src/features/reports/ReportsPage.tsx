@@ -1,3 +1,5 @@
+import { LocalViews } from '../../components/app/LocalViews'
+import { FilterChips } from '../../components/app/FilterBar'
 import { useState } from 'react'
 import { z } from 'zod'
 import { reportPeriods } from './periods'
@@ -97,7 +99,7 @@ export default function ReportsPage() {
   return (
     <div className="app-page space-y-6">
       <PageHeader
-        title="A clearer picture of your business"
+        title="Reports & analytics"
         description="Understand what brings leads in, what moves them forward, and where to focus next."
         actions={
           canExport && (
@@ -119,7 +121,7 @@ export default function ReportsPage() {
           Period
           <Select
             aria-label="Report period preset"
-            className="mt-1.5 h-10!"
+            className="mt-2 h-10!"
             value={periods.find((period) => period.from === from && period.to === to)?.key ?? 'custom'}
             onChange={(e) => {
               const period = periods.find((p) => p.key === e.target.value)
@@ -142,7 +144,7 @@ export default function ReportsPage() {
             value={from}
             max={to}
             onChange={(e) => setFilter('from', e.target.value)}
-            className="mt-1.5 h-10!"
+            className="mt-2 h-10!"
           />
         </label>
         <label className="min-w-36 flex-1 text-xs text-muted">
@@ -154,7 +156,7 @@ export default function ReportsPage() {
             min={from}
             max={today}
             onChange={(e) => setFilter('to', e.target.value)}
-            className="mt-1.5 h-10!"
+            className="mt-2 h-10!"
           />
         </label>
         <label className="min-w-40 flex-1 text-xs text-muted">
@@ -163,7 +165,7 @@ export default function ReportsPage() {
             aria-label="Report owner"
             value={filters.ownerId ?? ''}
             onChange={(e) => setFilter('ownerId', e.target.value)}
-            className="mt-1.5 h-10!"
+            className="mt-2 h-10!"
           >
             <option value="">All visible owners</option>
             {ownerOptions.map((o) => (
@@ -179,7 +181,7 @@ export default function ReportsPage() {
             aria-label="Report lead source"
             value={filters.sourceId ?? ''}
             onChange={(e) => setFilter('sourceId', e.target.value)}
-            className="mt-1.5 h-10!"
+            className="mt-2 h-10!"
           >
             <option value="">All sources</option>
             {sourceOptions.map((s) => (
@@ -190,10 +192,11 @@ export default function ReportsPage() {
           </Select>
         </label>
         <Button variant="ghost" size="sm" onClick={() => replaceFilters({})}>
-          <Filter className="size-3.5" />
+          <Filter className="size-4" />
           Reset
         </Button>
       </div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><FilterChips filters={filters} onRemove={(key) => setFilter(key, undefined)} onClear={() => replaceFilters({})} labels={Object.fromEntries([...ownerOptions.map((owner) => [`ownerId:${owner.id}`, owner.name]), ...sourceOptions.map((source) => [`sourceId:${source.id}`, source.name])])} /><LocalViews module="reports" filters={{ ...filters, from, to }} onApply={replaceFilters} /></div>
       {!valid ? (
         <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
           Choose a valid date range, with the end on or after the start.
@@ -205,12 +208,12 @@ export default function ReportsPage() {
       ) : (
         data && (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="metric-band">
               {data.kpis.map((kpi) => (
-                <div key={kpi.key} className="surface p-5">
+                <div key={kpi.key} className="metric-cell">
                   <p className="text-sm text-muted">{kpi.label}</p>
                   <p className="mt-4 text-3xl font-semibold tracking-tight text-ink tabular-nums">{kpi.value}</p>
-                  <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted">
+                  <p className="mt-3 flex items-center gap-2 text-xs text-muted">
                     {kpi.delta && (
                       <span
                         className={`inline-flex items-center gap-1 font-medium ${kpi.positive ? 'text-emerald-700' : 'text-red-700'}`}
@@ -243,7 +246,7 @@ export default function ReportsPage() {
                       <h2 className="section-title">Revenue won</h2>
                       <p className="mt-1 text-xs text-muted">Last 12 months within selected range · {currency}</p>
                     </div>
-                    <TrendingUp className="size-4 text-brand-600" />
+                    <TrendingUp className="size-4 text-brand-700" />
                   </div>
                   {data.revenue.some((r) => r.valueMinor > 0) ? (
                     <AreaChart
@@ -275,6 +278,7 @@ export default function ReportsPage() {
                 <section className="surface p-5">
                   <h2 className="section-title">Lead source performance</h2>
                   <div className="mt-5 space-y-4">
+                    {!data.sources.length && <p className="text-sm text-muted">No source activity in this period. Change the dates or add a lead source.</p>}
                     {data.sources.map((r) => (
                       <div key={r.sourceId}>
                         <div className="flex items-center justify-between text-sm">
@@ -303,9 +307,9 @@ export default function ReportsPage() {
                   rows={data.sources}
                   getRowId={(r) => r.sourceId}
                   columns={[
-                    { key: 'source', header: 'Lead source', cell: (r) => <SourceBadge name={r.source} /> },
-                    { key: 'leads', header: 'New leads', align: 'right', cell: (r) => r.leads },
-                    { key: 'converted', header: 'Converted', align: 'right', cell: (r) => r.converted },
+                    { key: 'source', sortKey: 'source', header: 'Lead source', cell: (r) => <SourceBadge name={r.source} /> },
+                    { key: 'leads', sortKey: 'leads', header: 'New leads', align: 'right', cell: (r) => r.leads },
+                    { key: 'converted', sortKey: 'converted', header: 'Converted', align: 'right', cell: (r) => r.converted },
                     {
                       key: 'conversion',
                       header: 'Conversion',
@@ -314,6 +318,7 @@ export default function ReportsPage() {
                     },
                     {
                       key: 'revenue',
+                      sortKey: 'revenueMinor',
                       header: 'Won revenue',
                       align: 'right',
                       cell: (r) => formatMinor(r.revenueMinor, currency),
@@ -346,7 +351,7 @@ export default function ReportsPage() {
                   ]}
                 />
                 <p className="flex gap-2 text-xs leading-5 text-muted">
-                  <Info className="size-3.5 shrink-0" />
+                  <Info className="size-4 shrink-0" />
                   Cost per lead is unavailable until ad-spend data exists. Lead conversion uses leads created in this
                   range, excluding junk, that are converted by now.
                 </p>
@@ -360,8 +365,8 @@ export default function ReportsPage() {
                 </p>
                 <div className="mt-7 space-y-4">
                   {data.funnel.map((r, i) => (
-                    <div key={r.stage} className="grid grid-cols-[100px_1fr_50px] items-center gap-4">
-                      <span className="text-xs text-zinc-600 sm:text-sm">{r.stage}</span>
+                    <div key={r.stage} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-center gap-3">
+                      <span className="text-xs text-muted sm:text-sm">{r.stage}</span>
                       <div className="h-10 overflow-hidden rounded-lg bg-zinc-100">
                         <div
                           className="flex h-full min-w-1 items-center rounded-lg bg-brand-500 px-3 text-xs font-medium text-white"
@@ -389,6 +394,7 @@ export default function ReportsPage() {
                 columns={[
                   {
                     key: 'owner',
+                    sortKey: 'name',
                     header: 'Team member',
                     cell: (r) => (
                       <span className="flex items-center gap-2">
@@ -399,13 +405,14 @@ export default function ReportsPage() {
                   },
                   {
                     key: 'revenue',
+                      sortKey: 'revenueMinor',
                     header: 'Won revenue',
                     align: 'right',
                     cell: (r) => formatMinor(r.revenueMinor, currency),
                   },
-                  { key: 'won', header: 'Deals won', align: 'right', cell: (r) => r.dealsWon },
-                  { key: 'rate', header: 'Win rate', align: 'right', cell: (r) => `${r.winRate}%` },
-                  { key: 'activities', header: 'Activities', align: 'right', cell: (r) => r.activities },
+                  { key: 'won', sortKey: 'dealsWon', header: 'Deals won', align: 'right', cell: (r) => r.dealsWon },
+                  { key: 'rate', sortKey: 'winRate', header: 'Win rate', align: 'right', cell: (r) => `${r.winRate}%` },
+                  { key: 'activities', sortKey: 'activities', header: 'Activities', align: 'right', cell: (r) => r.activities },
                   {
                     key: 'target',
                     header: 'Target',

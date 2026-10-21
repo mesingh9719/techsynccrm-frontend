@@ -4,7 +4,7 @@ import { cn } from '../../lib/cn'
 
 export function DirectoryTabs() {
   return (
-    <nav aria-label="Contacts and companies" className="mt-5 flex gap-1 border-b border-zinc-200">
+    <nav aria-label="Contacts and companies" className="mt-5 flex gap-1 border-b border-line">
       {[
         { to: '/app/contacts', label: 'Contacts', icon: Users },
         { to: '/app/companies', label: 'Companies', icon: Building2 },
@@ -15,8 +15,8 @@ export function DirectoryTabs() {
           end
           className={({ isActive }) =>
             cn(
-              'flex min-h-11 items-center gap-2 border-b-2 px-4 text-sm font-medium',
-              isActive ? 'border-brand-600 text-brand-700' : 'border-transparent text-zinc-500 hover:text-zinc-900',
+              'flex min-h-11 items-center gap-2 border-b-2 px-4 text-sm font-medium transition-colors',
+              isActive ? 'border-brand-600 text-brand-700 font-semibold' : 'border-transparent text-muted hover:text-ink',
             )
           }
         >

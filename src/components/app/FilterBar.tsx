@@ -32,7 +32,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', label 
 
   return (
     <div className={cn('relative', className)}>
-      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
+      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
       <input
         type="search"
         value={text}
@@ -40,7 +40,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', label 
         placeholder={placeholder}
         aria-label={label}
         data-global-search-target
-        className="h-9 w-full rounded-lg border border-zinc-300 bg-white pr-8 pl-9 text-sm text-zinc-900 placeholder:text-zinc-400 hover:border-zinc-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 focus:outline-none"
+        className="h-10 w-full rounded-lg border border-line bg-surface pr-8 pl-9 text-sm text-ink placeholder:text-muted hover:border-brand-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none"
       />
       {text && (
         <button
@@ -49,10 +49,10 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', label 
             setText('')
             onChange('')
           }}
-          className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-0.5 text-zinc-400 hover:text-zinc-700"
+          className="absolute top-1/2 right-0 -translate-y-1/2 rounded-control p-3 text-muted hover:text-ink"
           aria-label="Clear search"
         >
-          <X className="size-3.5" aria-hidden="true" />
+          <X className="size-4" aria-hidden="true" />
         </button>
       )}
     </div>
@@ -71,7 +71,7 @@ interface FilterBarProps {
 /** Search + filters row above a list. State lives in the URL (see lib/useUrlFilters.ts). */
 export function FilterBar({ search, children, activeCount = 0, onClear, className }: FilterBarProps) {
   return (
-    <div role="search" className={cn('flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center', className)}>
+    <div role="search" className={cn('filter-toolbar', className)}>
       {search && <SearchInput {...search} className={cn('sm:w-72', search.className)} />}
       {children}
       {activeCount > 0 && onClear && (
@@ -81,4 +81,23 @@ export function FilterBar({ search, children, activeCount = 0, onClear, classNam
       )}
     </div>
   )
+}
+
+/** Active URL filters, individually removable without resetting the rest of the view. */
+export function FilterChips<K extends string>({ filters, onRemove, onClear, exclude = ['sort', 'view', 'deleted'], labels = {} }: {
+  filters: Record<K, string | undefined>
+  onRemove: (key: K) => void
+  onClear: () => void
+  exclude?: string[]
+  labels?: Record<string, string>
+}) {
+  const active = Object.entries(filters).filter(([key, value]) => value && !exclude.includes(key))
+  if (!active.length) return null
+  const names: Record<string, string> = { q: 'Search', sourceId: 'Source', ownerId: 'Owner', status: 'Status', tag: 'Tag', createdFrom: 'From', createdTo: 'Until', campaignId: 'Campaign', lifecycleStage: 'Stage', industry: 'Industry', assignee: 'Assignee', type: 'Channel' }
+  return <div aria-label="Active filters" className="flex flex-wrap items-center gap-2">
+    {active.map(([key, value]) => <button key={key} type="button" onClick={() => onRemove(key as K)} className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-control border border-brand-200 bg-brand-50 px-3 text-xs font-medium text-brand-800" title={`Remove ${names[key] ?? key} filter`}>
+      <span className="truncate">{names[key] ?? key.replace(/^cf\./, '')}: {labels[`${key}:${value}`] ?? (value && /^[a-f0-9-]{20,}$/i.test(value) ? 'Selected' : value)}</span><X className="size-3 shrink-0" aria-hidden="true" />
+    </button>)}
+    <button type="button" onClick={onClear} className="min-h-10 px-2 text-xs font-medium text-brand-700 hover:underline">Clear all</button>
+  </div>
 }

@@ -1,5 +1,6 @@
-import type { KeyboardEvent, ReactNode } from 'react'
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
+import { useId, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { ArrowDown, ArrowUp, ArrowUpDown, Columns3, List, AlignJustify, MoreHorizontal, ArrowUpRight } from 'lucide-react'
+import { Menu, MenuItem } from './Menu'
 import { cn } from '../../lib/cn'
 
 export interface Column<T> {
@@ -31,6 +32,7 @@ interface DataTableProps<T> {
   mobileCard?: (row: T) => ReactNode
   view?: 'table' | 'cards'
   className?: string
+  showColumnControls?: boolean
 }
 
 const hideClass = {
@@ -57,7 +59,22 @@ export function DataTable<T>({
   mobileCard,
   view = 'table',
   className,
+  showColumnControls = true,
 }: DataTableProps<T>) {
+  const [dense, setDense] = useState(false)
+  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(() => new Set())
+  const [localSort, setLocalSort] = useState<string>()
+  const helpId = useId()
+  const displayedColumns = columns.filter((column) => !hiddenColumns.has(column.key))
+  const activeSort = onSortChange ? sort : localSort
+  const displayedRows = !onSortChange && localSort ? [...rows].sort((a, b) => {
+    const key = localSort.replace(/^-/, '')
+    const left = (a as Record<string, unknown>)[key]
+    const right = (b as Record<string, unknown>)[key]
+    const result = typeof left === 'number' && typeof right === 'number'
+      ? left - right : String(left ?? '').localeCompare(String(right ?? ''), undefined, { numeric: true })
+    return localSort.startsWith('-') ? -result : result
+  }) : rows
   const selectable = Boolean(selectedIds && onSelectionChange)
   const allSelected = selectable && rows.length > 0 && rows.every((r) => selectedIds!.has(getRowId(r)))
   const someSelected = selectable && rows.some((r) => selectedIds!.has(getRowId(r)))
@@ -79,10 +96,10 @@ export function DataTable<T>({
   }
 
   function headerSort(column: Column<T>) {
-    if (!column.sortKey || !onSortChange) return
-    const current = sort?.replace(/^-/, '')
-    const desc = sort?.startsWith('-')
-    onSortChange(current === column.sortKey && !desc ? `-${column.sortKey}` : column.sortKey)
+    if (!column.sortKey) return
+    const current = activeSort?.replace(/^-/, '')
+    const desc = activeSort?.startsWith('-')
+    ;(onSortChange ?? setLocalSort)(current === column.sortKey && !desc ? `-${column.sortKey}` : column.sortKey)
   }
 
   function onRowKey(e: KeyboardEvent, row: T) {
@@ -90,9 +107,18 @@ export function DataTable<T>({
   }
 
   return (
-    <div className={className}>
+    <div className={cn('min-w-0 space-y-3', className)}>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
+        <p id={helpId}>{rows.length.toLocaleString()} loaded{selectedIds?.size ? ` · ${selectedIds.size} selected` : ''}{localSort && !onSortChange ? ' · Sorted within loaded records' : ''}</p>
+        <div className="flex items-center gap-2">
+          {showColumnControls && <Menu align="end" trigger={(props) => <button {...props} type="button" className="inline-flex min-h-10 items-center gap-2 rounded-control border border-line bg-surface px-3 text-xs hover:bg-surface-subtle"><Columns3 className="size-4" />Columns</button>}>
+            {() => <>{columns.map((column) => <label key={column.key} className="flex min-h-10 items-center gap-3 rounded-control px-3 text-sm hover:bg-surface-subtle"><input type="checkbox" role="menuitemcheckbox" aria-checked={!hiddenColumns.has(column.key)} checked={!hiddenColumns.has(column.key)} disabled={!hiddenColumns.has(column.key) && displayedColumns.length === 1} onChange={() => setHiddenColumns((previous) => { const next = new Set(previous); if (next.has(column.key)) next.delete(column.key); else next.add(column.key); return next })} />{column.header || 'Actions'}</label>)}</>}
+          </Menu>}
+          <button type="button" aria-pressed={dense} onClick={() => setDense((previous) => !previous)} className="icon-button border border-line bg-surface" aria-label={dense ? 'Use comfortable row spacing' : 'Use compact row spacing'} title={dense ? 'Comfortable rows' : 'Compact rows'}>{dense ? <AlignJustify className="size-4" /> : <List className="size-4" />}</button>
+        </div>
+      </div>
       {mobileCard && selectable && (
-        <label className={cn('mb-3 flex items-center gap-2 text-xs text-zinc-500', view !== 'cards' && 'md:hidden')}>
+        <label className={cn('mb-3 flex items-center gap-2 text-xs text-muted', view !== 'cards' && 'md:hidden')}>
           <input
             type="checkbox"
             aria-label="Select all loaded cards"
@@ -108,10 +134,10 @@ export function DataTable<T>({
           className={cn(view === 'cards' ? 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-2 md:hidden')}
           aria-label={caption}
         >
-          {rows.map((row) => (
+          {displayedRows.map((row) => (
             <li key={getRowId(row)} className="relative min-w-0">
               {selectable && (
-                <label className="absolute top-3 left-3 z-10 flex size-7 items-center justify-center rounded-md bg-white ring-1 ring-zinc-200">
+                <label className="absolute top-3 left-3 z-10 flex size-7 items-center justify-center rounded-md border border-line bg-surface shadow-xs">
                   <input
                     type="checkbox"
                     checked={Boolean(selectedIds?.has(getRowId(row)))}
@@ -138,16 +164,16 @@ export function DataTable<T>({
       )}
       <div
         className={cn(
-          'overflow-x-auto rounded-xl bg-white ring-1 ring-zinc-200',
+          'table-viewport',
           mobileCard && (view === 'cards' ? 'hidden' : 'hidden md:block'),
         )}
       >
-        <table className="w-full text-left text-sm">
+        <table className={cn("w-full text-left text-sm", dense && "[&_td]:py-2")} aria-describedby={helpId}>
           <caption className="sr-only">{caption}</caption>
-          <thead className="sticky top-0 z-10 bg-zinc-50 text-xs text-zinc-500">
+          <thead className="sticky top-0 z-10 border-b border-line bg-surface-subtle text-xs text-muted">
             <tr>
               {selectable && (
-                <th scope="col" className="w-10 px-3 py-2.5">
+                <th scope="col" className="w-10 px-3 py-3">
                   <input
                     type="checkbox"
                     aria-label="Select all rows"
@@ -156,40 +182,40 @@ export function DataTable<T>({
                       if (el) el.indeterminate = !allSelected && someSelected
                     }}
                     onChange={toggleAll}
-                    className="size-4 rounded border-zinc-300 text-brand-600 focus:ring-brand-500"
+                    className="size-4 rounded border-line text-brand-700 focus:ring-brand-500"
                   />
                 </th>
               )}
-              {columns.map((column) => {
-                const active = column.sortKey && sort?.replace(/^-/, '') === column.sortKey
-                const ariaSort = active ? (sort?.startsWith('-') ? 'descending' : 'ascending') : undefined
+              {displayedColumns.map((column) => {
+                const active = column.sortKey && activeSort?.replace(/^-/, '') === column.sortKey
+                const ariaSort = active ? (activeSort?.startsWith('-') ? 'descending' : 'ascending') : undefined
                 return (
                   <th
                     key={column.key}
                     scope="col"
                     aria-sort={ariaSort}
                     className={cn(
-                      'px-3 py-2.5 font-medium',
+                      'px-3 py-3 font-medium',
                       column.align === 'right' && 'text-right',
                       column.hideBelow && hideClass[column.hideBelow],
                       column.className,
                     )}
                   >
-                    {column.sortKey && onSortChange ? (
+                    {column.sortKey ? (
                       <button
                         type="button"
                         onClick={() => headerSort(column)}
-                        className="inline-flex items-center gap-1 hover:text-zinc-900"
+                        className="inline-flex items-center gap-1 hover:text-ink"
                       >
                         {column.header}
                         {active ? (
-                          sort?.startsWith('-') ? (
+                          activeSort?.startsWith('-') ? (
                             <ArrowDown className="size-3" aria-hidden="true" />
                           ) : (
                             <ArrowUp className="size-3" aria-hidden="true" />
                           )
                         ) : (
-                          <ArrowUpDown className="size-3 text-zinc-300" aria-hidden="true" />
+                          <ArrowUpDown className="size-3 text-muted/60" aria-hidden="true" />
                         )}
                       </button>
                     ) : (
@@ -198,42 +224,47 @@ export function DataTable<T>({
                   </th>
                 )
               })}
+              {onRowClick && <th scope="col" className="w-12"><span className="sr-only">Row actions</span></th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
-            {rows.map((row) => {
+          <tbody className="divide-y divide-line">
+            {displayedRows.map((row) => {
               const id = getRowId(row)
               const selected = selectedIds?.has(id)
               return (
                 <tr
                   key={id}
                   tabIndex={onRowClick ? 0 : undefined}
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  onClick={onRowClick ? (event) => {
+                    if ((event.target as HTMLElement).closest('a, button, input, select, textarea, [role="menuitem"]')) return
+                    onRowClick(row)
+                  } : undefined}
                   onKeyDown={onRowClick ? (e) => onRowKey(e, row) : undefined}
                   aria-selected={selectable ? selected : undefined}
                   className={cn(
-                    'transition-colors',
+                    'transition-colors hover:bg-surface-subtle',
                     onRowClick &&
-                      'cursor-pointer hover:bg-zinc-50 focus-visible:bg-zinc-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
-                    selected && 'bg-brand-50/60',
+                      'cursor-pointer hover:bg-surface-subtle focus-visible:bg-surface-subtle focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500',
+                    selected && 'bg-brand-50/70',
                   )}
                 >
                   {selectable && (
-                    <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         aria-label="Select row"
                         checked={selected}
                         onChange={() => toggle(id)}
-                        className="size-4 rounded border-zinc-300 text-brand-600 focus:ring-brand-500"
+                        className="size-4 rounded border-line text-brand-700 focus:ring-brand-500"
                       />
                     </td>
                   )}
-                  {columns.map((column) => (
+                  {displayedColumns.map((column) => (
                     <td
+                      title={typeof (row as Record<string, unknown>)[column.key] === 'string' ? String((row as Record<string, unknown>)[column.key]) : undefined}
                       key={column.key}
                       className={cn(
-                        'px-3 py-2.5 text-zinc-700',
+                        'px-3 py-3 text-ink',
                         column.align === 'right' && 'text-right',
                         column.hideBelow && hideClass[column.hideBelow],
                         column.className,
@@ -242,6 +273,7 @@ export function DataTable<T>({
                       {column.cell(row)}
                     </td>
                   ))}
+                  {onRowClick && <td onClick={(event) => event.stopPropagation()}><Menu align="end" trigger={(props) => <button {...props} type="button" aria-label={`Actions for ${caption.toLowerCase()} record ${id}`} className="icon-button" title="Record actions"><MoreHorizontal className="size-4" /></button>}>{(close) => <MenuItem icon={<ArrowUpRight className="size-4" />} onSelect={() => { close(); onRowClick(row) }}>Open record</MenuItem>}</Menu></td>}
                 </tr>
               )
             })}

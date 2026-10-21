@@ -44,7 +44,7 @@ export function Tabs<T extends string>({
           onKeyDown={(event) => move(event, index)}
           onClick={() => onChange(item.value)}
           className={cn(
-            'min-h-9 shrink-0 rounded-lg px-3 text-sm font-medium transition-colors',
+            'min-h-10 shrink-0 rounded-lg px-3 text-sm font-medium transition-colors',
             value === item.value ? 'bg-white text-zinc-950 shadow-card' : 'text-zinc-500 hover:text-zinc-900',
           )}
         >

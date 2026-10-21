@@ -1,3 +1,4 @@
+import { listLeads } from '../leads/api'
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../lib/useAuth'
@@ -10,7 +11,8 @@ import { getFacebookStatus } from '../facebook/api'
 export function useSetupProgress() {
   const { user } = useAuth(),
     allowed = useCan('settings.workspace.manage'),
-    canInvite = useCan('members.invite')
+    canInvite = useCan('members.invite'),
+    canCreateLead = useCan('leads.create')
   const orgId = user?.organization?.id ?? 'none',
     key = `techsync:setup:v1:${orgId}:${user?.id}`
   const [sampleViewed, setSampleViewed] = useState(() => {
@@ -52,6 +54,7 @@ export function useSetupProgress() {
   const sourceConnected =
     Boolean(captureLive && forms.data?.some((f) => f.isActive)) ||
     Boolean(facebook.data?.connected && facebook.data.pages.some((p) => p.enabled && p.forms.some((f) => f.enabled)))
+  const firstLead = useQuery({ queryKey: qk.org(orgId).leads.list({ limit: 1, counts: true }), queryFn: () => listLeads({ limit: 1, counts: true }), enabled: canCreateLead })
   const items = [
     {
       key: 'workspace',
@@ -82,6 +85,7 @@ export function useSetupProgress() {
           },
         ]
       : []),
+    ...(canCreateLead ? [{ key: 'first-lead', title: 'Add your first lead', description: 'Start with a real enquiry and assign the next step.', done: (firstLead.data?.counts?.all ?? firstLead.data?.items.length ?? 0) > 0, href: '/app/leads?create=true' }] : []),
     {
       key: 'sample',
       title: 'Explore a sample lead',

@@ -14,7 +14,7 @@ import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
 import { DataTable, type Column } from '../../components/app/DataTable'
 import { ConfirmDialog } from '../../components/app/Dialog'
-import { FilterBar } from '../../components/app/FilterBar'
+import { FilterChips, FilterBar } from '../../components/app/FilterBar'
 import { EmptyState, ErrorState, ListSkeleton, LoadMore, PageHeader } from '../../components/app/States'
 import { BulkAssignDialog, BulkTagDialog } from '../crm/components/BulkDialogs'
 import { formatCustomValue } from '../crm/customFieldFormat'
@@ -96,7 +96,7 @@ export default function CompaniesPage() {
       key: 'industry',
       header: 'Industry',
       hideBelow: 'md',
-      cell: (c) => c.industry ?? <span className="text-zinc-400">—</span>,
+      cell: (c) => c.industry ?? <span className="text-muted">—</span>,
     },
     {
       key: 'contacts',
@@ -119,7 +119,7 @@ export default function CompaniesPage() {
       sortKey: 'createdAt',
       hideBelow: 'xl',
       align: 'right',
-      cell: (c) => <span className="text-zinc-500">{relativeTime(c.createdAt)}</span>,
+      cell: (c) => <span className="text-muted">{relativeTime(c.createdAt)}</span>,
     },
     ...activeDefs.map((d) => ({
       key: `cf.${d.key}`,
@@ -134,13 +134,13 @@ export default function CompaniesPage() {
       header: 'Company',
       sortKey: 'name',
       cell: (c) => (
-        <span className="flex items-center gap-2.5">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-xs font-semibold text-zinc-600">
+        <span className="flex items-center gap-3">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-subtle text-xs font-semibold text-muted">
             {c.name.slice(0, 2).toUpperCase()}
           </span>
           <span className="min-w-0">
-            <span className="block truncate font-medium text-zinc-900">{c.name}</span>
-            {c.domain && <span className="block truncate text-xs text-zinc-500">{c.domain}</span>}
+            <span className="block truncate font-medium text-ink">{c.name}</span>
+            {c.domain && <span className="block truncate text-xs text-muted">{c.domain}</span>}
           </span>
         </span>
       ),
@@ -149,7 +149,7 @@ export default function CompaniesPage() {
   ]
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+    <div className="app-page">
       <PageHeader
         title="Companies"
         description="The businesses you work with, their people and deals."
@@ -230,7 +230,7 @@ export default function CompaniesPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-9"
+              className="h-10"
               onClick={() => setFilter('deleted', isDeletedView ? undefined : 'true')}
               aria-pressed={isDeletedView}
             >
@@ -245,29 +245,30 @@ export default function CompaniesPage() {
         </div>
       </div>
 
+      <div className="mt-4"><FilterChips filters={filters} onRemove={(key) => setFilter(key, undefined)} onClear={clearFilters} /></div>
       <div className="mt-4 space-y-3">
         {!isDeletedView && canUpdate && (
           <BulkBar count={selected.size} onClear={() => setSelected(new Set())}>
             {canAssign && (
               <BulkButton onClick={() => setDialog('assign')}>
-                <UserRound className="size-3.5" aria-hidden="true" />
+                <UserRound className="size-4" aria-hidden="true" />
                 Change owner
               </BulkButton>
             )}
             <BulkButton onClick={() => setDialog('tag')}>
-              <Tag className="size-3.5" aria-hidden="true" />
+              <Tag className="size-4" aria-hidden="true" />
               Add tags
             </BulkButton>
             <BulkButton onClick={() => setDialog('untag')}>Remove tags</BulkButton>
             {selected.size >= 2 && selected.size <= 10 && (
               <BulkButton onClick={() => setDialog('merge')}>
-                <GitMerge className="size-3.5" aria-hidden="true" />
+                <GitMerge className="size-4" aria-hidden="true" />
                 Merge
               </BulkButton>
             )}
             {canDelete && (
               <BulkButton tone="danger" onClick={() => setDialog('delete')}>
-                <Trash2 className="size-3.5" aria-hidden="true" />
+                <Trash2 className="size-4" aria-hidden="true" />
                 Delete
               </BulkButton>
             )}
@@ -308,6 +309,7 @@ export default function CompaniesPage() {
         ) : (
           <>
             <DataTable
+              showColumnControls={false}
               rows={rows}
               columns={tableColumns}
               getRowId={(c) => c.id}
@@ -318,13 +320,13 @@ export default function CompaniesPage() {
               onSelectionChange={canUpdate && !isDeletedView ? setSelected : undefined}
               onRowClick={(c) => navigate(`/app/companies/${c.id}`)}
               mobileCard={(c) => (
-                <div className="flex items-center gap-3 rounded-xl bg-white p-3 ring-1 ring-zinc-200">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-xs font-semibold text-zinc-600">
+                <div className="flex items-center gap-3 rounded-xl bg-surface p-3 ring-1 ring-line">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-subtle text-xs font-semibold text-muted">
                     {c.name.slice(0, 2).toUpperCase()}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-zinc-900">{c.name}</p>
-                    <p className="truncate text-xs text-zinc-500">
+                    <p className="truncate font-medium text-ink">{c.name}</p>
+                    <p className="truncate text-xs text-muted">
                       {[c.industry, c.billingAddress?.city, `${c.contactCount} contacts`].filter(Boolean).join(' · ')}
                     </p>
                   </div>

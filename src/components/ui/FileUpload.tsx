@@ -36,9 +36,9 @@ export function FileUpload({ onFileSelect, accept, disabled, description = 'Choo
       className={cn('relative rounded-xl border-2 border-dashed p-6 text-center transition-colors sm:p-7', disabled ? 'border-line bg-surface-subtle opacity-60' : dragging ? 'border-brand-500 bg-brand-100/60' : 'border-zinc-300 bg-surface-subtle hover:border-brand-400 hover:bg-brand-50/40', error && 'border-red-300')}
     >
       <input ref={input} type="file" accept={accept} disabled={disabled} className="sr-only" tabIndex={-1} aria-label="Choose a file" aria-describedby={hintId} onChange={(event) => { select(event.target.files); event.target.value = '' }} />
-      <div className="relative mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl border border-line bg-surface text-brand-600 shadow-card" aria-hidden="true">
+      <div className="relative mx-auto mb-5 flex size-16 items-center justify-center rounded-dialog border border-line bg-surface text-brand-700 shadow-card" aria-hidden="true">
         <FileSpreadsheet className="size-7" strokeWidth={1.5} />
-        <span className="absolute -right-2 -bottom-1 flex size-7 items-center justify-center rounded-full border-4 border-surface bg-brand-600 text-white"><ArrowUpFromLine className="size-3.5" /></span>
+        <span className="absolute -right-2 -bottom-1 flex size-7 items-center justify-center rounded-full border-4 border-surface bg-brand-600 text-white"><ArrowUpFromLine className="size-4" /></span>
       </div>
       <p className="text-base font-semibold tracking-tight text-ink">{dragging ? 'Drop your file here' : 'Drag and drop your file here'}</p>
       <p id={hintId} className="mt-2 text-sm text-muted">{description}</p>

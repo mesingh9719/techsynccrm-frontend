@@ -43,7 +43,7 @@ export default function SetupPage() {
         <Badge tone="brand">Getting started</Badge>
       </div>
       <div className="text-center">
-        <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+        <span className="mx-auto flex size-12 items-center justify-center rounded-card bg-brand-50 text-brand-700">
           <Sparkles className="size-6" />
         </span>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">A workspace that works for you</h1>
@@ -117,19 +117,19 @@ export default function SetupPage() {
                       to={`/app/integrations?source=${source.source}`}
                       className="flex items-center gap-3 rounded-xl border border-line p-4 transition-colors hover:border-brand-300 hover:bg-brand-50/30"
                     >
-                      <span className="rounded-lg bg-zinc-100 p-2.5">
-                        <Icon className="size-5 text-zinc-600" />
+                      <span className="rounded-lg bg-zinc-100 p-3">
+                        <Icon className="size-5 text-muted" />
                       </span>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-ink">{source.name}</p>
                         <p className="mt-1 text-xs text-muted">{source.description}</p>
                       </div>
-                      <ArrowRight className="size-4 text-zinc-400" />
+                      <ArrowRight className="size-4 text-muted" />
                     </Link>
                   )
                 })}
               </div>
-              <div className="mt-5 rounded-lg bg-zinc-50 p-4 text-sm text-muted">
+              <div className="mt-5 rounded-lg bg-surface-subtle p-4 text-sm text-muted">
                 Have a spreadsheet?{' '}
                 <Link to="/app/import?entity=lead" className="font-medium text-brand-700">
                   Import your leads instead →
@@ -194,21 +194,21 @@ export default function SetupPage() {
                   </div>
                   <Badge tone="brand">New</Badge>
                 </div>
-                <p className="mt-5 rounded-lg bg-zinc-50 p-4 text-sm leading-6 text-zinc-600">
+                <p className="mt-5 rounded-lg bg-surface-subtle p-4 text-sm leading-6 text-muted">
                   “We’re looking for help managing enquiries from our website. Could we schedule a quick call this
                   week?”
                 </p>
-                <ol className="mt-5 space-y-3 text-sm text-zinc-600">
+                <ol className="mt-5 space-y-3 text-sm text-muted">
                   <li className="flex gap-2">
-                    <Check className="size-4 text-brand-600" />
+                    <Check className="size-4 text-brand-700" />
                     Call or email from the lead header.
                   </li>
                   <li className="flex gap-2">
-                    <Check className="size-4 text-brand-600" />
+                    <Check className="size-4 text-brand-700" />
                     Add a note and schedule the next follow-up.
                   </li>
                   <li className="flex gap-2">
-                    <Check className="size-4 text-brand-600" />
+                    <Check className="size-4 text-brand-700" />
                     When ready, convert the lead into a contact and deal.
                   </li>
                 </ol>

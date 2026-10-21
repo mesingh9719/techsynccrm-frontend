@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { handleGlobalApiError } from '../../lib/apiErrors'
@@ -58,6 +59,8 @@ export function TaskFormDialog({ task = null, record, defaults, onClose }: { tas
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const guard = useUnsavedChanges({ title, type, priority, allDay, due, reminder, repeat, interval, ends, count, until, weekdays, assigneeId, description }, onClose, busy)
+
   async function submit() {
     setBusy(true)
     setErrors({})
@@ -90,14 +93,16 @@ export function TaskFormDialog({ task = null, record, defaults, onClose }: { tas
   }
 
   return (
+    <>
     <Dialog
       open
-      onClose={onClose}
+      onClose={guard.requestClose}
+      busy={busy}
       title={task ? 'Edit task' : 'New task'}
       description={record?.name ? `For ${record.name}` : undefined}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={busy}>
+          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
             Cancel
           </Button>
           <Button onClick={submit} loading={busy} disabled={!title.trim()}>
@@ -108,7 +113,7 @@ export function TaskFormDialog({ task = null, record, defaults, onClose }: { tas
     >
       <div className="space-y-4">
         {error && <FormAlert>{error}</FormAlert>}
-        <Field label="Task" error={errors.title}>
+        <Field label="Task" required error={errors.title}>
           {({ id, invalid }) => <Input id={id} invalid={invalid} autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Call back about the quotation" maxLength={200} />}
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -138,12 +143,12 @@ export function TaskFormDialog({ task = null, record, defaults, onClose }: { tas
             <div className="space-y-2">
               <div className="flex gap-2">
                 <Input id={id} invalid={invalid} type={allDay ? 'date' : 'datetime-local'} value={allDay ? due.slice(0, 10) : due} onChange={(e) => setDue(e.target.value)} />
-                <label className="flex shrink-0 items-center gap-1.5 text-sm text-zinc-700">
-                  <input type="checkbox" checked={allDay} onChange={(e) => { setAllDay(e.target.checked); if (due) setDue(e.target.checked ? due.slice(0, 10) : `${due.slice(0, 10)}T10:00`) }} className="size-4 rounded border-zinc-300 text-brand-600" />
+                <label className="flex shrink-0 items-center gap-2 text-sm text-ink">
+                  <input type="checkbox" checked={allDay} onChange={(e) => { setAllDay(e.target.checked); if (due) setDue(e.target.checked ? due.slice(0, 10) : `${due.slice(0, 10)}T10:00`) }} className="size-4 rounded border-line text-brand-700" />
                   All day
                 </label>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {duePresets(now, tz).map((p) => (
                   <button
                     key={p.key}
@@ -152,12 +157,12 @@ export function TaskFormDialog({ task = null, record, defaults, onClose }: { tas
                       setAllDay(false)
                       setDue(toLocalInput(p.date, tz))
                     }}
-                    className="rounded-full px-2.5 py-1 text-xs font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                    className="rounded-full px-3 py-1 text-xs font-medium text-ink ring-1 ring-line hover:bg-surface-subtle transition-colors"
                   >
                     {p.label}
                   </button>
                 ))}
-                <button type="button" onClick={() => setDue('')} className="rounded-full px-2.5 py-1 text-xs text-zinc-500 ring-1 ring-zinc-200 hover:bg-zinc-50">
+                <button type="button" onClick={() => setDue('')} className="rounded-full px-3 py-1 text-xs text-muted ring-1 ring-line hover:bg-surface-subtle transition-colors">
                   No due date
                 </button>
               </div>
@@ -188,7 +193,7 @@ export function TaskFormDialog({ task = null, record, defaults, onClose }: { tas
           </Field>
         </div>
         {repeat === 'weekly' && (
-          <div role="group" aria-label="Repeat on" className="flex gap-1.5">
+          <div role="group" aria-label="Repeat on" className="flex gap-2">
             {WEEKDAYS.map((d, i) => {
               const on = weekdays.includes(i)
               return (
@@ -198,7 +203,7 @@ export function TaskFormDialog({ task = null, record, defaults, onClose }: { tas
                   aria-pressed={on}
                   aria-label={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][i]}
                   onClick={() => setWeekdays(on ? weekdays.filter((w) => w !== i) : [...weekdays, i].sort())}
-                  className={cn('size-8 rounded-full text-xs font-medium ring-1', on ? 'bg-zinc-900 text-white ring-zinc-900' : 'text-zinc-700 ring-zinc-200 hover:bg-zinc-50')}
+                  className={cn('size-8 rounded-full text-xs font-medium ring-1 transition-colors', on ? 'bg-brand-600 text-white ring-brand-600' : 'text-ink ring-1 ring-line hover:bg-surface-subtle')}
                 >
                   {d}
                 </button>
@@ -226,5 +231,7 @@ export function TaskFormDialog({ task = null, record, defaults, onClose }: { tas
         </Field>
       </div>
     </Dialog>
+    {guard.confirmation}
+    </>
   )
 }

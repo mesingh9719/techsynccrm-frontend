@@ -14,66 +14,86 @@ interface DialogProps {
   /** "dialog" = centred modal; "drawer" = full-height panel from the right (quick-create forms). */
   variant?: 'dialog' | 'drawer'
   className?: string
+  size?: 'sm' | 'md' | 'lg'
+  busy?: boolean
+  dirty?: boolean
 }
 
 /**
  * Modal built on the native <dialog> element: focus is trapped, Escape closes, the page behind is
  * inert, and focus returns to the trigger on close.
  */
-export function Dialog({ open, onClose, title, description, children, footer, variant = 'dialog', className }: DialogProps) {
+let scrollLocks = 0
+let previousOverflow = ''
+
+export function Dialog({ open, onClose, title, description, children, footer, variant = 'dialog', size = 'md', busy = false, dirty = false, className }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const descId = useId()
+  const [confirmLeave, setConfirmLeave] = useState(false)
 
   useEffect(() => {
+    if (!open) return
     const el = ref.current
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null
     if (!el) return
-    if (open && !el.open) el.showModal()
-    if (!open && el.open) el.close()
+    if (scrollLocks++ === 0) {
+      previousOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+    }
+    if (!el.open) el.showModal()
+    window.dispatchEvent(new Event('techsync:overlay-open'))
+    return () => {
+      if (el.open) el.close()
+      if (--scrollLocks === 0) document.body.style.overflow = previousOverflow
+      if (trigger?.isConnected) trigger.focus({ preventScroll: true })
+    }
   }, [open])
 
+  function requestClose() {
+    if (busy) return
+    if (dirty) setConfirmLeave(true)
+    else onClose()
+  }
+
   return (
-    <dialog
-      ref={ref}
-      aria-labelledby={titleId}
-      aria-describedby={description ? descId : undefined}
-      onClose={onClose}
-      onClick={(e) => {
-        // A click on the backdrop lands on the <dialog> itself.
-        if (e.target === e.currentTarget) onClose()
-      }}
-      className={cn(
-        'bg-white p-0 text-zinc-900 shadow-frame backdrop:bg-zinc-950/40 backdrop:backdrop-blur-[2px]',
-        variant === 'dialog'
-          ? 'm-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl'
-          : 'my-0 mr-0 ml-auto h-dvh max-h-dvh w-full max-w-md rounded-none sm:rounded-l-2xl',
-        className,
-      )}
-    >
-      {open && (
-        <div className={cn('flex flex-col', variant === 'drawer' && 'h-full')}>
-          <div className="flex items-start justify-between gap-4 border-b border-zinc-100 px-6 py-4">
-            <div className="min-w-0">
-              <h2 id={titleId} className="text-lg font-semibold text-zinc-950">
-                {title}
-              </h2>
-              {description && (
-                <p id={descId} className="mt-1 text-sm text-zinc-600">
-                  {description}
-                </p>
-              )}
-            </div>
-            <button type="button" onClick={onClose} className="-m-1.5 rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700" aria-label="Close">
-              <X className="size-5" aria-hidden="true" />
-            </button>
+    <>
+      <dialog
+        ref={ref}
+        aria-labelledby={titleId}
+        aria-describedby={description ? descId : undefined}
+        aria-busy={busy || undefined}
+        onCancel={(event) => { event.preventDefault(); requestClose() }}
+        onClick={(event) => {
+          if (event.target !== event.currentTarget) return
+          const box = event.currentTarget.getBoundingClientRect()
+          if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) requestClose()
+        }}
+        className={cn('crm-dialog', variant === 'drawer' ? 'crm-drawer' : 'crm-modal',
+          variant === 'drawer' && { sm: 'sm:max-w-drawer-sm', md: 'sm:max-w-drawer-md', lg: 'sm:max-w-drawer-lg' }[size], className)}
+      >
+        {open && (
+          <div className="crm-dialog-frame">
+            <header className="crm-dialog-header flex items-start justify-between gap-4 border-b border-line p-4 sm:px-6">
+              <div className="min-w-0">
+                <h2 id={titleId} className="font-display text-lg font-semibold text-ink break-words">{title}</h2>
+                {description && <p id={descId} className="mt-2 text-sm leading-6 text-muted">{description}</p>}
+              </div>
+              <button type="button" onClick={requestClose} disabled={busy} className="icon-button" aria-label={`Close ${title}`} title="Close (Esc)">
+                <X className="size-5" aria-hidden="true" />
+              </button>
+            </header>
+            <div className="crm-dialog-body p-6">{children}</div>
+            {footer && <footer className="crm-dialog-footer dialog-actions flex flex-wrap items-center justify-end gap-3 border-t border-line p-4 sm:px-6">{footer}</footer>}
           </div>
-          <div className={cn('px-6 py-5', variant === 'drawer' && 'flex-1 overflow-y-auto')}>{children}</div>
-          {footer && <div className="flex flex-col-reverse gap-2 border-t border-zinc-100 px-6 py-4 sm:flex-row sm:justify-end">{footer}</div>}
-        </div>
-      )}
-    </dialog>
+        )}
+      </dialog>
+      {confirmLeave && <ConfirmDialog open onClose={() => setConfirmLeave(false)} title="Discard unsaved changes?" description="Your changes have not been saved. Stay here to finish editing, or discard them." confirmLabel="Discard changes" tone="danger" onConfirm={() => { setConfirmLeave(false); onClose() }} />}
+    </>
   )
 }
+
+export const Modal = Dialog
 
 /** Quick-create/edit panel sliding in from the right. */
 export function Drawer(props: Omit<DialogProps, 'variant'>) {
@@ -97,17 +117,23 @@ interface ConfirmDialogProps {
 export function ConfirmDialog({ open, onClose, onConfirm, title, description, confirmLabel, tone = 'default', requireText, error }: ConfirmDialogProps) {
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
   const matches = !requireText || typed.trim().toLowerCase() === requireText.trim().toLowerCase()
 
   function close() {
+    if (busy) return
     setTyped('')
+    setLocalError(null)
     onClose()
   }
 
   async function confirm() {
     setBusy(true)
+    setLocalError(null)
     try {
       await onConfirm()
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : 'Couldn’t complete this action. Try again.')
     } finally {
       setBusy(false)
     }
@@ -117,6 +143,7 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, description, co
     <Dialog
       open={open}
       onClose={close}
+      busy={busy}
       title={title}
       description={description}
       footer={
@@ -128,7 +155,7 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, description, co
             onClick={confirm}
             loading={busy}
             disabled={!matches}
-            className={tone === 'danger' ? 'bg-red-600 hover:bg-red-700' : undefined}
+            variant={tone === 'danger' ? 'danger' : 'primary'}
           >
             {confirmLabel}
           </Button>
@@ -140,9 +167,9 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, description, co
           {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />}
         </Field>
       )}
-      {error && (
+      {(error || localError) && (
         <div className={requireText ? 'mt-4' : undefined}>
-          <FormAlert>{error}</FormAlert>
+          <FormAlert>{error || localError}</FormAlert>
         </div>
       )}
     </Dialog>

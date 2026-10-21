@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -43,15 +44,18 @@ function QuickNote({
       setError(err instanceof Error ? err.message : 'Couldn’t save your note. Try again.')
     }
   }
+  const guard = useUnsavedChanges(form.formState.isDirty, onClose, form.formState.isSubmitting, form.formState.isDirty)
   return (
+    <>
     <Dialog
       open
-      onClose={onClose}
+      onClose={guard.requestClose}
+      busy={form.formState.isSubmitting}
       title="Add a note"
       description="Keep the next conversation in context."
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={guard.requestClose}>
             Cancel
           </Button>
           <Button type="submit" form="quick-note" loading={form.formState.isSubmitting}>
@@ -81,6 +85,8 @@ function QuickNote({
         )}
       </form>
     </Dialog>
+    {guard.confirmation}
+    </>
   )
 }
 export function QuickFollowUp({

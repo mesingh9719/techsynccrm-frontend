@@ -4,10 +4,10 @@ import { cn } from '../../lib/cn'
 export function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={cn('size-7', className)} aria-hidden="true">
-      <rect width="32" height="32" rx="8" fill="#18181b" />
-      <path d="M9 11.5h14" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" />
-      <path d="M16 11.5v11" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" />
-      <circle cx="23" cy="21.5" r="2.4" fill="#6e8cf6" />
+      <rect width="32" height="32" rx="8" fill="var(--color-sidebar)" />
+      <path d="M9 11.5h14" stroke="var(--color-white)" strokeWidth="2.6" strokeLinecap="round" />
+      <path d="M16 11.5v11" stroke="var(--color-white)" strokeWidth="2.6" strokeLinecap="round" />
+      <circle cx="23" cy="21.5" r="2.4" fill="var(--color-highlight)" />
     </svg>
   )
 }
@@ -16,7 +16,7 @@ export function Logo({ className }: { className?: string }) {
   return (
     <Link to="/" className={cn('inline-flex items-center gap-2 rounded-md', className)} aria-label="TechSync CRM home">
       <LogoMark />
-      <span className="text-[17px] font-semibold tracking-tight text-zinc-950">
+      <span className="text-base font-semibold tracking-tight text-zinc-950">
         TechSync<span className="ml-1 font-normal text-zinc-500">CRM</span>
       </span>
     </Link>
@@ -47,10 +47,10 @@ export function Monogram({ name, color, size = 'md' }: { name: string; color: st
     .map((w) => w[0])
     .slice(0, 2)
     .join('')
-  const sizes = { sm: 'size-8 rounded-lg text-xs', md: 'size-11 rounded-xl text-sm', lg: 'size-14 rounded-2xl text-base' }
+  const sizes = { sm: 'size-8 rounded-lg text-xs', md: 'size-11 rounded-xl text-sm', lg: 'size-14 rounded-dialog text-base' }
   return (
     <span
-      className={cn('inline-flex shrink-0 items-center justify-center font-semibold text-white shadow-[inset_0_0_0_1px_rgb(0_0_0/0.08)]', sizes[size])}
+      className={cn('inline-flex shrink-0 items-center justify-center font-semibold text-white shadow-card', sizes[size])}
       style={{ backgroundColor: color }}
       aria-hidden="true"
     >
@@ -60,15 +60,15 @@ export function Monogram({ name, color, size = 'md' }: { name: string; color: st
 }
 
 const coverPalettes: Record<string, [string, string, string]> = {
-  'Sales playbooks': ['#eef2ff', '#3349df', '#c6d4fe'],
-  'Product updates': ['#f0fdf4', '#15803d', '#bbf7d0'],
-  Growth: ['#fff7ed', '#c2410c', '#fed7aa'],
-  'Customer stories': ['#faf5ff', '#7e22ce', '#e9d5ff'],
+  'Sales playbooks': ['var(--color-brand-50)', 'var(--color-brand-700)', 'var(--color-brand-200)'],
+  'Product updates': ['var(--color-surface-subtle)', 'var(--color-brand-600)', 'var(--color-brand-100)'],
+  Growth: ['var(--color-brand-50)', 'var(--color-brand-800)', 'var(--color-brand-300)'],
+  'Customer stories': ['var(--color-brand-50)', 'var(--color-brand-700)', 'var(--color-brand-200)'],
 }
 
 /** Generated, category-coloured cover art for blog posts — no stock imagery. */
 export function PostCover({ category, seed, className }: { category: string; seed: string; className?: string }) {
-  const [bg, ink, soft] = coverPalettes[category] ?? ['#f4f4f5', '#3f3f46', '#e4e4e7']
+  const [bg, ink, soft] = coverPalettes[category] ?? ['var(--color-surface-subtle)', 'var(--color-muted)', 'var(--color-line)']
   const n = [...seed].reduce((a, c) => a + c.charCodeAt(0), 0)
   const bars = Array.from({ length: 7 }, (_, i) => 18 + ((n * (i + 3)) % 46))
   return (

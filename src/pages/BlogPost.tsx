@@ -40,7 +40,7 @@ export default function BlogPost() {
         <header className="border-b border-zinc-100">
           <Container className="pt-10 pb-12 sm:pt-14">
             <nav aria-label="Breadcrumb">
-              <Link to="/blog" className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-950">
+              <Link to="/blog" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-950">
                 <ArrowLeft className="size-4" aria-hidden="true" />
                 All articles
               </Link>
@@ -61,7 +61,7 @@ export default function BlogPost() {
                 </div>
               </div>
             </div>
-            <div className="mx-auto mt-12 aspect-[21/9] max-w-5xl overflow-hidden rounded-3xl ring-1 ring-zinc-200">
+            <div className="mx-auto mt-12 aspect-[21/9] max-w-5xl overflow-hidden rounded-dialog ring-1 ring-zinc-200">
               <PostCover category={post.category} seed={post.slug} />
             </div>
           </Container>

@@ -4,7 +4,7 @@ import { cn } from '../../lib/cn'
 type Tone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger'
 
 const tones: Record<Tone, string> = {
-  neutral: 'bg-zinc-100 text-zinc-700 ring-zinc-200',
+  neutral: 'bg-surface-subtle text-ink ring-line',
   brand: 'bg-brand-50 text-brand-700 ring-brand-100',
   success: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
   warning: 'bg-amber-50 text-amber-800 ring-amber-100',
@@ -15,7 +15,7 @@ export function Badge({ tone = 'neutral', children, className }: { tone?: Tone; 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-inset',
+        'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium whitespace-nowrap ring-1 ring-inset',
         tones[tone],
         className,
       )}
@@ -40,7 +40,7 @@ export function IconTile({ children, className }: { children: ReactNode; classNa
   )
 }
 
-const avatarTones = ['bg-brand-100 text-brand-800', 'bg-amber-100 text-amber-900', 'bg-emerald-100 text-emerald-900', 'bg-rose-100 text-rose-900', 'bg-sky-100 text-sky-900', 'bg-violet-100 text-violet-900']
+const avatarTones = ['bg-brand-100 text-brand-900', 'bg-surface-subtle text-ink']
 
 export function Avatar({ name, size = 'md', className }: { name: string; size?: 'xs' | 'sm' | 'md' | 'lg'; className?: string }) {
   const hash = [...name].reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
@@ -50,7 +50,7 @@ export function Avatar({ name, size = 'md', className }: { name: string; size?: 
     .slice(0, 2)
     .join('')
     .toUpperCase()
-  const sizes = { xs: 'size-6 text-[10px]', sm: 'size-8 text-xs', md: 'size-10 text-sm', lg: 'size-14 text-base' }
+  const sizes = { xs: 'size-6 text-xs', sm: 'size-8 text-xs', md: 'size-10 text-sm', lg: 'size-14 text-base' }
   return (
     <span
       className={cn('inline-flex shrink-0 items-center justify-center rounded-full font-semibold', avatarTones[hash % avatarTones.length], sizes[size], className)}

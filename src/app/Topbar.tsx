@@ -140,7 +140,7 @@ function UserMenu() {
           type="button"
           {...props}
           disabled={busy}
-          className="flex items-center gap-2 rounded-full p-0.5 hover:ring-4 hover:ring-zinc-100 disabled:opacity-60"
+          className="icon-button rounded-full"
         >
           <UserAvatar name={user.fullName} url={user.avatarUrl} size="sm" />
           <span className="sr-only">Account menu for {user.fullName}</span>
@@ -149,11 +149,11 @@ function UserMenu() {
     >
       {(close) => (
         <>
-          <div className="px-2.5 py-2">
-            <p className="truncate text-sm font-medium text-zinc-900">{user.fullName}</p>
-            <p className="truncate text-xs text-zinc-500">{user.email}</p>
+          <div className="px-3 py-2">
+            <p className="truncate text-sm font-medium text-ink">{user.fullName}</p>
+            <p className="truncate text-xs text-muted">{user.email}</p>
             {user.organization && (
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-muted">
                 {roleLabels[user.organization.role]} · {user.organization.name}
               </p>
             )}
@@ -192,7 +192,7 @@ function QuickAddLead() {
   const navigate = useNavigate()
   if (!allowed) return null
   return (
-    <Button size="sm" className="h-9" onClick={() => navigate('/app/leads?create=true')}>
+    <Button size="md" onClick={() => navigate('/app/leads?create=true')}>
       <Plus className="size-4" />
       <span className="hidden sm:inline">New lead</span>
       <span className="sr-only sm:hidden">New lead</span>
@@ -205,12 +205,12 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   return (
     <header
       data-topbar
-      className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-zinc-200/80 bg-white/90 px-4 backdrop-blur sm:px-6"
+      className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-line bg-surface/90 px-4 backdrop-blur sm:px-6"
     >
       <button
         type="button"
         onClick={onOpenMenu}
-        className="-ml-1.5 rounded-lg p-1.5 text-zinc-600 hover:bg-zinc-100 lg:hidden"
+        className="icon-button lg:hidden"
         aria-label="Open navigation"
       >
         <MenuIcon className="size-5" aria-hidden="true" />
@@ -220,7 +220,7 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
       <div className="ml-auto flex items-center gap-2">
         <QuickAddLead />
-        <ThemeControl />
+        <div className="hidden md:block"><ThemeControl /></div>
         <CreateMenu />
         <NotificationBell />
         <UserMenu />

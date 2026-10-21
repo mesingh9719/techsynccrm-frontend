@@ -26,7 +26,7 @@ export type Permission =
   | 'records.claim'
   | 'settings.customFields.manage'
   | 'settings.pipelines.manage'
-  | `${'leads' | 'contacts' | 'companies' | 'deals' | 'tasks'}.${'read' | 'create' | 'update' | 'delete'}`
+  | `${'leads' | 'contacts' | 'companies' | 'deals' | 'tasks' | 'campaigns'}.${'read' | 'create' | 'update' | 'delete'}`
 
 export function hasPermission(permissions: readonly string[] | undefined, permission: Permission) {
   return Boolean(permissions?.some((p) => p === permission || p.startsWith(`${permission}.`)))

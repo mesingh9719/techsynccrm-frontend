@@ -1,3 +1,4 @@
+import { useFloatingPanel } from './useFloatingPanel'
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Check, ChevronsUpDown, LoaderCircle } from 'lucide-react'
@@ -34,6 +35,7 @@ export function UserPicker({ value, onChange, excludeIds = [], placeholder = 'Ch
   const [q, setQ] = useState('')
   const [debounced, setDebounced] = useState('')
   const [active, setActive] = useState(0)
+  const panelRef = useFloatingPanel<HTMLUListElement>(open, rootRef)
 
   useEffect(() => {
     const t = window.setTimeout(() => setDebounced(q.trim()), 200)
@@ -62,14 +64,15 @@ export function UserPicker({ value, onChange, excludeIds = [], placeholder = 'Ch
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       setOpen(true)
-      setActive((a) => Math.min(a + 1, items.length - 1))
+      setActive((a) => open ? Math.max(0, Math.min(a + 1, items.length - 1)) : 0)
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActive((a) => Math.max(a - 1, 0))
     } else if (e.key === 'Enter' && open && items[active]) {
       e.preventDefault()
       choose(items[active])
-    } else if (e.key === 'Escape') {
+    } else if (e.key === 'Escape' && open) {
+      e.preventDefault(); e.stopPropagation()
       setOpen(false)
     }
   }
@@ -80,6 +83,7 @@ export function UserPicker({ value, onChange, excludeIds = [], placeholder = 'Ch
         <input
           id={id}
           role="combobox"
+          aria-label={id ? undefined : placeholder}
           aria-expanded={open}
           aria-controls={listId}
           aria-autocomplete="list"
@@ -98,20 +102,21 @@ export function UserPicker({ value, onChange, excludeIds = [], placeholder = 'Ch
           onKeyDown={onKeyDown}
           autoComplete="off"
           className={cn(
-            'block h-11 w-full rounded-lg border bg-white pr-9 pl-3.5 text-[15px] text-zinc-900 placeholder:text-zinc-400 focus:ring-4 focus:outline-none disabled:bg-zinc-50',
+            'block h-10 w-full rounded-lg border bg-surface pr-9 pl-4 text-sm text-ink placeholder:text-muted focus:ring-4 focus:outline-none disabled:bg-surface-subtle',
             invalid ? 'border-red-400 focus:ring-red-100' : 'border-zinc-300 hover:border-zinc-400 focus:border-brand-500 focus:ring-brand-100',
           )}
         />
-        <ChevronsUpDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
+        <ChevronsUpDown className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
       </div>
       {open && (
-        <ul id={listId} role="listbox" className="absolute z-50 mt-1.5 max-h-64 w-full overflow-y-auto rounded-xl bg-white p-1 shadow-float ring-1 ring-zinc-200">
+        <ul ref={panelRef} popover="manual" id={listId} role="listbox" className="crm-popover menu-surface">
           {options.isFetching && !options.data && (
-            <li className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-500">
+            <li className="flex items-center gap-2 px-3 py-2 text-sm text-muted">
               <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> Searching…
             </li>
           )}
-          {options.data && items.length === 0 && <li className="px-3 py-2 text-sm text-zinc-500">No members found</li>}
+          {options.isError && <li role="alert" className="p-3 text-sm text-danger">Couldn’t load members. <button type="button" className="underline" onClick={() => void options.refetch()}>Retry</button></li>}
+          {options.data && items.length === 0 && <li className="px-3 py-2 text-sm text-muted">No members found</li>}
           {items.map((m, i) => (
             <li
               key={m.userId}
@@ -121,19 +126,19 @@ export function UserPicker({ value, onChange, excludeIds = [], placeholder = 'Ch
               onPointerDown={(e) => e.preventDefault()}
               onClick={() => choose(m)}
               onMouseEnter={() => setActive(i)}
-              className={cn('flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2', i === active && 'bg-zinc-100')}
+              className={cn('flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2', i === active && 'bg-zinc-100')}
             >
               <Avatar name={m.fullName} size="xs" className="size-6" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-zinc-900">
+                <span className="block truncate text-sm font-medium text-ink">
                   {m.fullName}
-                  {m.userId === user?.id && <span className="font-normal text-zinc-500"> (you)</span>}
+                  {m.userId === user?.id && <span className="font-normal text-muted"> (you)</span>}
                 </span>
-                <span className="block truncate text-xs text-zinc-500">
+                <span className="block truncate text-xs text-muted">
                   {m.email} · {roleLabels[m.role]}
                 </span>
               </span>
-              {m.userId === value && <Check className="size-4 text-brand-600" aria-hidden="true" />}
+              {m.userId === value && <Check className="size-4 text-brand-700" aria-hidden="true" />}
             </li>
           ))}
         </ul>

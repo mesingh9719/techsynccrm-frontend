@@ -14,7 +14,7 @@ import { Field, FormAlert, Input, Select } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { ConfirmDialog, Dialog } from '../../components/app/Dialog'
 import { SettingsSection } from '../../components/app/SettingsSection'
-import { ErrorState, ListSkeleton } from '../../components/app/States'
+import { ErrorState, ListSkeleton, PageHeader } from '../../components/app/States'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
 import type { Pipeline, PipelineStage } from '../crm/types'
 import { createPipeline, createStage, deletePipeline, deleteStage, listPipelineTemplates, reorderStages, requirableFieldLabels, updatePipeline, updateStage, usePipelines } from '../deals/api'
@@ -74,10 +74,10 @@ function NewPipelineDialog({ onClose }: { onClose: () => void }) {
           )}
         </Field>
         {template && (
-          <ol className="flex flex-wrap items-center gap-1.5 text-xs">
+          <ol className="flex flex-wrap items-center gap-2 text-xs">
             {template.stages.map((s) => (
-              <li key={s.name} className="rounded-md bg-zinc-100 px-2 py-1 text-zinc-700">
-                {s.name} <span className="text-zinc-400">{s.probability}%</span>
+              <li key={s.name} className="rounded-md bg-zinc-100 px-2 py-1 text-ink">
+                {s.name} <span className="text-muted">{s.probability}%</span>
               </li>
             ))}
             <li className="rounded-md bg-emerald-50 px-2 py-1 text-emerald-800">Won</li>
@@ -113,20 +113,20 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
   }
 
   return (
-    <li className={cn('space-y-2 px-3 py-3', system && 'bg-zinc-50')}>
+    <li className={cn('space-y-2 px-3 py-3', system && 'bg-surface-subtle')}>
       <div className="flex flex-wrap items-center gap-2">
-        {system ? stage.type === 'won' ? <Trophy className="size-4 text-emerald-600" aria-hidden="true" /> : <X className="size-4 text-red-500" aria-hidden="true" /> : <span className="w-4 text-center text-xs text-zinc-400 tabular-nums">{index + 1}</span>}
+        {system ? stage.type === 'won' ? <Trophy className="size-4 text-emerald-600" aria-hidden="true" /> : <X className="size-4 text-danger" aria-hidden="true" /> : <span className="w-4 text-center text-xs text-muted tabular-nums">{index + 1}</span>}
         <input
           value={name}
           disabled={!canManage}
           aria-label={`Name of stage ${stage.name}`}
           onChange={(e) => setName(e.target.value)}
           onBlur={() => name.trim() && name.trim() !== stage.name && save({ name: name.trim() })}
-          className="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-sm font-medium text-zinc-900 hover:bg-white focus:bg-white focus:ring-2 focus:ring-brand-100 focus:outline-none"
+          className="min-w-0 flex-1 rounded-md bg-transparent px-2 py-1 text-sm font-medium text-ink hover:bg-surface focus:bg-surface focus:ring-2 focus:ring-brand-100 focus:outline-none"
         />
         {!system && (
           <>
-            <label className="flex items-center gap-1 text-xs text-zinc-600">
+            <label className="flex items-center gap-1 text-xs text-muted">
               <input
                 type="number"
                 min={0}
@@ -135,12 +135,12 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
                 disabled={!canManage}
                 onChange={(e) => setProbability(e.target.value)}
                 onBlur={() => Number(probability) !== stage.probability && save({ probability: Math.max(0, Math.min(100, Number(probability) || 0)) })}
-                className="h-8 w-16 rounded-md border border-zinc-200 px-2 text-sm tabular-nums"
+                className="h-8 w-16 rounded-md border border-line px-2 text-sm tabular-nums"
                 aria-label={`Win probability for ${stage.name}`}
               />
               %
             </label>
-            <label className="flex items-center gap-1 text-xs text-zinc-600" title="Days without activity before a deal is flagged">
+            <label className="flex items-center gap-1 text-xs text-muted" title="Days without activity before a deal is flagged">
               Rots after
               <input
                 type="number"
@@ -154,7 +154,7 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
                   const next = rotting === '' ? null : Math.max(1, Number(rotting) || 1)
                   if (next !== stage.rottingDays) void save({ rottingDays: next })
                 }}
-                className="h-8 w-16 rounded-md border border-zinc-200 px-2 text-sm tabular-nums"
+                className="h-8 w-16 rounded-md border border-line px-2 text-sm tabular-nums"
                 aria-label={`Rotting days for ${stage.name}`}
               />
               days
@@ -162,24 +162,24 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
           </>
         )}
         {system && <Badge>{stage.type === 'won' ? '100%' : '0%'} · system stage</Badge>}
-        <span className="text-xs text-zinc-500 tabular-nums">{stage.dealCount ?? 0} deals</span>
+        <span className="text-xs text-muted tabular-nums">{stage.dealCount ?? 0} deals</span>
         {canManage && !system && (
           <span className="flex">
-            <button type="button" disabled={index === 0} onClick={() => onMove(-1)} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} up`}>
+            <button type="button" disabled={index === 0} onClick={() => onMove(-1)} className="rounded p-2 text-muted hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} up`}>
               <ArrowUp className="size-4" aria-hidden="true" />
             </button>
-            <button type="button" disabled={index === openCount - 1} onClick={() => onMove(1)} className="rounded p-1.5 text-zinc-400 hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} down`}>
+            <button type="button" disabled={index === openCount - 1} onClick={() => onMove(1)} className="rounded p-2 text-muted hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} down`}>
               <ArrowDown className="size-4" aria-hidden="true" />
             </button>
-            <button type="button" disabled={openCount <= 1} onClick={onDelete} className="rounded p-1.5 text-zinc-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30" aria-label={`Delete ${stage.name}`}>
+            <button type="button" disabled={openCount <= 1} onClick={onDelete} className="rounded p-2 text-muted hover:bg-red-50 hover:text-danger disabled:opacity-30" aria-label={`Delete ${stage.name}`}>
               <Trash2 className="size-4" aria-hidden="true" />
             </button>
           </span>
         )}
       </div>
       {stage.type !== 'lost' && (
-        <div className="flex flex-wrap items-center gap-1.5 pl-6">
-          <span className="text-xs text-zinc-500">Required to enter:</span>
+        <div className="flex flex-wrap items-center gap-2 pl-6">
+          <span className="text-xs text-muted">Required to enter:</span>
           {options.map((o) => {
             const on = stage.requiredFields.includes(o.value)
             return (
@@ -189,13 +189,13 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
                 disabled={!canManage}
                 aria-pressed={on}
                 onClick={() => save({ requiredFields: on ? stage.requiredFields.filter((f) => f !== o.value) : [...stage.requiredFields, o.value] })}
-                className={cn('rounded-full px-2 py-0.5 text-xs ring-1', on ? 'bg-brand-50 text-brand-800 ring-brand-200' : 'text-zinc-500 ring-zinc-200 hover:bg-white')}
+                className={cn('rounded-full px-2 py-1 text-xs ring-1', on ? 'bg-brand-50 text-brand-800 ring-brand-200' : 'text-muted ring-line hover:bg-surface')}
               >
                 {o.label}
               </button>
             )
           })}
-          {stage.type === 'won' && <span className="text-xs text-zinc-400">(a value is always required)</span>}
+          {stage.type === 'won' && <span className="text-xs text-muted">(a value is always required)</span>}
         </div>
       )}
     </li>
@@ -239,7 +239,7 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
           <>
             {!pipeline.isDefault && (
               <Button size="sm" variant="secondary" onClick={() => run(() => updatePipeline(pipeline.id, { isDefault: true }), `${pipeline.name} is now the default`)}>
-                <Star className="size-3.5" aria-hidden="true" />
+                <Star className="size-4" aria-hidden="true" />
                 Make default
               </Button>
             )}
@@ -266,11 +266,11 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
             aria-label="Pipeline name"
             onChange={(e) => setName(e.target.value)}
             onBlur={() => name.trim() && name.trim() !== pipeline.name && run(() => updatePipeline(pipeline.id, { name: name.trim() }))}
-            className="rounded-md border border-zinc-200 px-2 py-1 text-sm"
+            className="rounded-md border border-line px-2 py-1 text-sm"
           />
         )}
       </div>
-      <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
+      <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
         {open.map((s, i) => (
           <StageRow
             key={`${s.id}:${s.name}:${s.probability}:${s.rottingDays}`}
@@ -358,6 +358,7 @@ export default function PipelinesSettings() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Pipelines" description="Shape the stages your team uses to move deals forward." />
       <SettingsSection
         title="Pipelines"
         description={`Stages, win probabilities, when deals count as rotting, and what a deal needs before it can move on.${limit.limit !== null ? ` Your plan includes ${limit.limit} pipeline${limit.limit === 1 ? '' : 's'} (${live.length} used).` : ''}`}

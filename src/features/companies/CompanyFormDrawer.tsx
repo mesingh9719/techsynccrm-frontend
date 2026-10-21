@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -127,14 +128,18 @@ export function CompanyFormDrawer({ open, onClose, company = null, initialName, 
     }
   }
 
+  const guard = useUnsavedChanges(draft, close, busy, open)
+
   return (
+    <>
     <Drawer
       open={open}
-      onClose={close}
+      onClose={guard.requestClose}
+      busy={busy}
       title={company ? 'Edit company' : 'New company'}
       footer={
         <>
-          <Button variant="secondary" onClick={close} disabled={busy}>
+          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
             Cancel
           </Button>
           {conflicts.length > 0 && (
@@ -142,7 +147,7 @@ export function CompanyFormDrawer({ open, onClose, company = null, initialName, 
               Save anyway
             </Button>
           )}
-          <Button type="submit" form="company-form" loading={busy && !conflicts.length}>
+          <Button type="submit" form="company-form" disabled={busy} loading={busy && !conflicts.length}>
             {company ? 'Save' : 'Create company'}
           </Button>
         </>
@@ -199,7 +204,7 @@ export function CompanyFormDrawer({ open, onClose, company = null, initialName, 
           </Field>
         </div>
         <fieldset className="space-y-4">
-          <legend className="text-sm font-medium text-zinc-800">Billing address & GST</legend>
+          <legend className="text-sm font-medium text-ink">Billing address & GST</legend>
           <Field label="Address" optional>
             {({ id }) => <Input id={id} value={draft.line1} onChange={(e) => set('line1', e.target.value)} autoComplete="street-address" />}
           </Field>
@@ -238,5 +243,7 @@ export function CompanyFormDrawer({ open, onClose, company = null, initialName, 
         <CustomFieldsEditor entityType="company" values={draft.customFields} onChange={(v) => set('customFields', v)} errors={fieldErrorsUnder(errors, 'customFields')} />
       </form>
     </Drawer>
+    {guard.confirmation}
+    </>
   )
 }

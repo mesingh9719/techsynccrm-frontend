@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { ChartColumn, House, Inbox, ListChecks, Settings, SquareKanban, Users, PlugZap } from 'lucide-react'
+import { ChartColumn, House, Inbox, ListChecks, Megaphone, Settings, SquareKanban, Users, PlugZap } from 'lucide-react'
 import { t } from '../lib/i18n'
 
 export interface NavItem {
@@ -22,6 +22,7 @@ export interface NavItem {
 export const mainNav: NavItem[] = [
   { key: 'home', label: t('nav.home', 'Dashboard'), to: '/app', icon: House, end: true, ready: true, shortcut: 'h' },
   { key: 'leads', label: t('nav.leads', 'Leads'), to: '/app/leads', icon: Inbox, ready: true, shortcut: 'l' },
+  { key: 'campaigns', label: 'Campaigns', to: '/app/campaigns', icon: Megaphone, ready: true, shortcut: 'm' },
   { key: 'deals', label: t('nav.deals', 'Pipeline'), to: '/app/deals', icon: SquareKanban, ready: true, shortcut: 'd' },
   {
     key: 'tasks',

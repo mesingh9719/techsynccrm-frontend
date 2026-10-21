@@ -270,3 +270,123 @@ test('embed resize messages require matching origin, frame and form key', () => 
   handler({ origin: 'https://crm.example.test', source: frame.contentWindow, data: { ...message, height: 999999 } })
   assert.equal(frame.style.height, '12000px')
 })
+
+test('dashboard layouts preserve intentional empty selections and recover from invalid saved data', async () => {
+  const { parsePreferences, defaultPreferences } = await import(moduleUrl('src/features/dashboard/preferences.ts'))
+  for (const raw of [
+    null,
+    '{bad json',
+    'null',
+    '{"version":2,"kpis":[],"widgets":[]}',
+    '{"version":1,"kpis":null,"widgets":[]}',
+  ]) {
+    assert.deepEqual(parsePreferences(raw), defaultPreferences())
+  }
+  assert.deepEqual(parsePreferences('{"version":1,"kpis":[],"widgets":[]}'), {
+    version: 1,
+    kpis: [],
+    widgets: [],
+    leadChartType: 'flow',
+  })
+  assert.deepEqual(
+    parsePreferences(
+      JSON.stringify({
+        version: 1,
+        kpis: ['qualified', 'total', 'qualified', 'obsolete', 42],
+        widgets: ['tasks', 'funnel', 'tasks', null],
+      }),
+    ),
+    { version: 1, kpis: ['qualified', 'total'], widgets: ['tasks', 'funnel'], leadChartType: 'flow' },
+  )
+})
+
+test('dashboard layouts are isolated by workspace and user, including delimiter characters', async (t) => {
+  const { dashboardStorageKey, readPreferences, defaultPreferences } = await import(
+    moduleUrl('src/features/dashboard/preferences.ts')
+  )
+  const originalStorage = globalThis.localStorage
+  t.after(() => {
+    globalThis.localStorage = originalStorage
+  })
+  const storage = new Map()
+  globalThis.localStorage = { getItem: (key) => storage.get(key) ?? null }
+  const key = dashboardStorageKey('workspace-a', 'user-a')
+  storage.set(key, JSON.stringify({ version: 1, kpis: ['new'], widgets: ['attention'] }))
+  assert.deepEqual(readPreferences(key).kpis, ['new'])
+  assert.deepEqual(readPreferences(dashboardStorageKey('workspace-b', 'user-a')), defaultPreferences())
+  assert.deepEqual(readPreferences(dashboardStorageKey('workspace-a', 'user-b')), defaultPreferences())
+  assert.notEqual(dashboardStorageKey('a:b', 'c'), dashboardStorageKey('a', 'b:c'))
+  globalThis.localStorage = {
+    getItem() {
+      throw new Error('Storage blocked')
+    },
+  }
+  assert.deepEqual(readPreferences(key), defaultPreferences())
+})
+
+test('dashboard reordering respects boundaries and never mutates the saved layout', async () => {
+  const { moveItem } = await import(moduleUrl('src/features/dashboard/preferences.ts'))
+  const saved = Object.freeze(['funnel', 'attention', 'tasks'])
+  assert.deepEqual(moveItem(saved, 1, -1), ['attention', 'funnel', 'tasks'])
+  assert.deepEqual(moveItem(saved, 0, -1), saved)
+  assert.deepEqual(moveItem(saved, 2, 1), saved)
+  assert.deepEqual(saved, ['funnel', 'attention', 'tasks'])
+})
+
+test('dashboard funnel geometry stays finite with zero, single-status and uneven cohorts', async () => {
+  const { funnelPath } = await import(moduleUrl('src/features/dashboard/funnel.ts'))
+  for (const values of [
+    [0, 0, 0, 0],
+    [12, 0, 0, 0],
+    [0, 2, 5, 40],
+    [800, 200, 50, 1],
+  ]) {
+    const path = funnelPath(values)
+    assert.ok(path.startsWith('M '))
+    assert.ok(path.endsWith(' Z'))
+    assert.ok(!/NaN|Infinity|undefined/.test(path))
+  }
+})
+
+test('dashboard chart choices survive saved layouts and older layouts keep their cards', async () => {
+  const { parsePreferences } = await import(moduleUrl('src/features/dashboard/preferences.ts'))
+  const { LEAD_CHART_OPTIONS } = await import(moduleUrl('src/features/dashboard/funnel.ts'))
+  const layout = { version: 1, kpis: ['qualified', 'new'], widgets: ['tasks', 'funnel'] }
+  assert.deepEqual(parsePreferences(JSON.stringify(layout)), { ...layout, leadChartType: 'flow' })
+  for (const { id } of LEAD_CHART_OPTIONS) {
+    assert.deepEqual(parsePreferences(JSON.stringify({ ...layout, leadChartType: id })), {
+      ...layout,
+      leadChartType: id,
+    })
+  }
+  for (const leadChartType of ['obsolete-chart', null, {}, 42]) {
+    assert.deepEqual(parsePreferences(JSON.stringify({ ...layout, leadChartType })), {
+      ...layout,
+      leadChartType: 'flow',
+    })
+  }
+})
+
+test('campaigns use paginated authenticated API data instead of browser storage or sample counts', async (t) => {
+  const originalFetch = globalThis.fetch
+  const calls = []
+  t.after(() => { globalThis.fetch = originalFetch; http.clearSession() })
+  http.setSession({ user: { id: 'campaign-fixture' }, accessToken: 'campaign-test-token' })
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, ...options })
+    if (url === '/api/campaigns?limit=100') return respond({ items: [{ id: 'first', metrics: { leadsCount: 0 } }], nextCursor: 'page-two' })
+    if (url === '/api/campaigns?limit=100&cursor=page-two') return respond({ items: [{ id: 'second', metrics: { leadsCount: 125 } }], nextCursor: null })
+    return respond({ campaign: { id: 'first', updatedAt: '2026-10-21T00:00:00Z' } })
+  }
+  const campaigns = await import(moduleUrl('src/features/campaigns/api.ts'))
+  const items = await campaigns.listCampaigns('workspace-not-sent-in-body')
+  assert.equal(items.length, 2)
+  assert.equal(items[0].metrics.leadsCount, 0)
+  assert.equal(items[1].metrics.leadsCount, 125)
+  await campaigns.saveCampaign('workspace', { name: 'Updated' }, 'first', '2026-10-20T00:00:00Z')
+  assert.equal(calls[2].url, '/api/campaigns/first')
+  assert.equal(calls[2].method, 'PATCH')
+  assert.equal(calls[2].headers['If-Match'], '2026-10-20T00:00:00Z')
+  assert.equal(calls[2].body, '{"name":"Updated"}')
+  assert.ok(calls.every((call) => call.credentials === 'include' && call.headers.Authorization === 'Bearer campaign-test-token'))
+})

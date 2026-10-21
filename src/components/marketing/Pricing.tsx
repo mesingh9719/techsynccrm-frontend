@@ -25,7 +25,7 @@ export function PricingToggles({ cycle, setCycle, currency, setCurrency, classNa
             label: (
               <>
                 Annual
-                <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200/60">
+                <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200/60">
                   {pricing.annualDiscountLabel}
                 </span>
               </>
@@ -62,7 +62,7 @@ function PlanPrice({ plan, cycle, currency, dark }: { plan: Plan; cycle: Billing
   const monthly = price.monthly
   return (
     <div className="flex h-[72px] flex-col justify-end">
-      <p className="flex items-baseline gap-1.5">
+      <p className="flex items-baseline gap-2">
         <span className={cn('text-4xl font-semibold tracking-tight tabular-nums', strong)}>{formatPrice(amount, currency)}</span>
         {cycle === 'annual' && amount > 0 && amount !== monthly && (
           <span className={cn('text-base tabular-nums line-through', dark ? 'text-zinc-500' : 'text-zinc-400')}>{formatPrice(monthly, currency)}</span>
@@ -82,7 +82,7 @@ export function PricingCards({ cycle, currency }: Pick<Controls, 'cycle' | 'curr
         <Reveal key={plan.id} delay={i * 60} className="h-full">
           <article
             className={cn(
-              'relative flex h-full flex-col rounded-2xl p-6',
+              'relative flex h-full flex-col rounded-dialog p-6',
               plan.highlighted ? 'bg-zinc-950 text-white shadow-float ring-1 ring-zinc-900' : 'bg-white shadow-card ring-1 ring-zinc-200',
             )}
             aria-labelledby={`plan-${plan.id}`}
@@ -92,7 +92,7 @@ export function PricingCards({ cycle, currency }: Pick<Controls, 'cycle' | 'curr
                 {plan.name}
               </h3>
               {plan.badge && (
-                <span className="rounded-full bg-brand-500 px-2.5 py-0.5 text-xs font-medium text-white">{plan.badge}</span>
+                <span className="rounded-full bg-brand-500 px-3 py-1 text-xs font-medium text-white">{plan.badge}</span>
               )}
             </div>
             <p className={cn('mt-2 min-h-[40px] text-sm leading-snug', plan.highlighted ? 'text-zinc-400' : 'text-zinc-600')}>{plan.tagline}</p>
@@ -115,9 +115,9 @@ export function PricingCards({ cycle, currency }: Pick<Controls, 'cycle' | 'curr
               {plan.features.map((f) => {
                 const heading = f.endsWith(':')
                 return (
-                  <li key={f} className={cn('flex gap-2.5', heading && 'font-medium')}>
+                  <li key={f} className={cn('flex gap-3', heading && 'font-medium')}>
                     {!heading && (
-                      <Check className={cn('mt-0.5 size-4 shrink-0', plan.highlighted ? 'text-brand-300' : 'text-brand-600')} aria-hidden="true" />
+                      <Check className={cn('mt-1 size-4 shrink-0', plan.highlighted ? 'text-brand-300' : 'text-brand-700')} aria-hidden="true" />
                     )}
                     <span className={plan.highlighted ? 'text-zinc-300' : 'text-zinc-700'}>{f}</span>
                   </li>
@@ -132,7 +132,7 @@ export function PricingCards({ cycle, currency }: Pick<Controls, 'cycle' | 'curr
 }
 
 function Cell({ value }: { value: ComparisonValue }) {
-  if (value === true) return <Check className="mx-auto size-4 text-brand-600" aria-label="Included" />
+  if (value === true) return <Check className="mx-auto size-4 text-brand-700" aria-label="Included" />
   if (value === false) return <Minus className="mx-auto size-4 text-zinc-300" aria-label="Not included" />
   return <span className="text-zinc-700">{value}</span>
 }
@@ -140,7 +140,7 @@ function Cell({ value }: { value: ComparisonValue }) {
 export function ComparisonTable() {
   const plans = pricing.plans
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white shadow-card ring-1 ring-zinc-200">
+    <div className="overflow-x-auto rounded-dialog bg-white shadow-card ring-1 ring-zinc-200">
       <table className="w-full min-w-[720px] text-sm">
         <caption className="sr-only">Feature comparison across plans</caption>
         <thead>
@@ -166,11 +166,11 @@ export function ComparisonTable() {
               </tr>
               {group.rows.map((row) => (
                 <tr key={row.label} className="border-b border-zinc-100 last:border-0">
-                  <th scope="row" className="px-6 py-3.5 text-left font-normal text-zinc-700">
+                  <th scope="row" className="px-6 py-4 text-left font-normal text-zinc-700">
                     {row.label}
                   </th>
                   {plans.map((p) => (
-                    <td key={p.id} className={cn('px-4 py-3.5 text-center', p.highlighted && 'bg-brand-50/40')}>
+                    <td key={p.id} className={cn('px-4 py-4 text-center', p.highlighted && 'bg-brand-50/40')}>
                       <Cell value={row.values[p.id]} />
                     </td>
                   ))}

@@ -96,12 +96,12 @@ export function MergeDialog<T extends { id: string }>({
       }
     >
       <fieldset>
-        <legend className="text-sm font-medium text-zinc-900">Keep this record</legend>
+        <legend className="text-sm font-medium text-ink">Keep this record</legend>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           {records.map((r) => (
-            <label key={r.id} className={cn('flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-sm ring-1', primary === r.id ? 'bg-brand-50 ring-brand-300' : 'ring-zinc-200 hover:bg-zinc-50')}>
-              <input type="radio" name="merge-primary" checked={primary === r.id} onChange={() => setPrimaryId(r.id)} className="text-brand-600 focus:ring-brand-500" />
-              <span className="truncate font-medium text-zinc-900">{nameOf(r)}</span>
+            <label key={r.id} className={cn('flex cursor-pointer items-center gap-2 rounded-xl px-3 py-3 text-sm ring-1', primary === r.id ? 'bg-brand-50 ring-brand-300' : 'ring-line hover:bg-surface-subtle')}>
+              <input type="radio" name="merge-primary" checked={primary === r.id} onChange={() => setPrimaryId(r.id)} className="text-brand-700 focus:ring-brand-500" />
+              <span className="truncate font-medium text-ink">{nameOf(r)}</span>
             </label>
           ))}
         </div>
@@ -110,8 +110,8 @@ export function MergeDialog<T extends { id: string }>({
       {conflicting.length > 0 ? (
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[480px] text-left text-sm">
-            <caption className="mb-2 text-left text-sm font-medium text-zinc-900">Choose which values to keep</caption>
-            <thead className="text-xs text-zinc-500">
+            <caption className="mb-2 text-left text-sm font-medium text-ink">Choose which values to keep</caption>
+            <thead className="text-xs text-muted">
               <tr>
                 <th scope="col" className="py-2 pr-3 font-medium">
                   Field
@@ -126,20 +126,20 @@ export function MergeDialog<T extends { id: string }>({
             <tbody className="divide-y divide-zinc-100">
               {conflicting.map((f) => (
                 <tr key={f.key}>
-                  <th scope="row" className="py-2 pr-3 font-medium text-zinc-700">
+                  <th scope="row" className="py-2 pr-3 font-medium text-ink">
                     {f.label}
                   </th>
                   {records.map((r) => {
                     const v = f.value(r)
                     return (
                       <td key={r.id} className="px-2 py-2">
-                        <label className={cn('flex items-start gap-2', isEmpty(v) && 'text-zinc-400')}>
+                        <label className={cn('flex items-start gap-2', isEmpty(v) && 'text-muted')}>
                           <input
                             type="radio"
                             name={`merge-${f.key}`}
                             checked={winner(f) === r.id}
                             onChange={() => setChoices((c) => ({ ...c, [f.key]: r.id }))}
-                            className="mt-0.5 text-brand-600 focus:ring-brand-500"
+                            className="mt-1 text-brand-700 focus:ring-brand-500"
                           />
                           <span className="min-w-0 break-words">{f.render ? f.render(r) : show(v)}</span>
                         </label>
@@ -152,9 +152,9 @@ export function MergeDialog<T extends { id: string }>({
           </table>
         </div>
       ) : (
-        <p className="mt-6 text-sm text-zinc-600">These records don’t disagree on any field.</p>
+        <p className="mt-6 text-sm text-muted">These records don’t disagree on any field.</p>
       )}
-      <p className="mt-4 text-xs text-zinc-500">{combinedNote}</p>
+      <p className="mt-4 text-xs text-muted">{combinedNote}</p>
       {error && (
         <div className="mt-4">
           <FormAlert>{error}</FormAlert>

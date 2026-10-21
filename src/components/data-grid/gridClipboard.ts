@@ -19,13 +19,22 @@ export function parseClipboard(text: string): string[][] {
   if (input.endsWith('\n') && rows[rows.length - 1].length === 1 && rows[rows.length - 1][0] === '') rows.pop()
   return rows
 }
+
+function hasFormulaPrefix(val: string): boolean {
+  let i = 0
+  while (i < val.length && val.charCodeAt(i) <= 32) i++
+  const char = val[i]
+  return char === '=' || char === '+' || char === '@' || char === '-'
+}
+
 export function copyClipboard(rows: string[][]): string {
   return rows.map((row) => row.map((value) => {
     // Prevent spreadsheet formula execution when copied out of the CRM.
-    const safe = /^[\s\u0000-\u001f]*[=+@-]/.test(value) ? `'${value}` : value
+    const safe = hasFormulaPrefix(value) ? `'${value}` : value
     return /[\t\n\r"]/.test(safe) ? `"${safe.replaceAll('"', '""')}"` : safe
   }).join('\t')).join('\n')
 }
+
 export function columnLetter(index: number) {
   let result = '', value = index + 1
   while (value) { value--; result = String.fromCharCode(65 + value % 26) + result; value = Math.floor(value / 26) }

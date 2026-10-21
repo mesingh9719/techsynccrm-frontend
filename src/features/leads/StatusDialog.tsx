@@ -75,10 +75,10 @@ export function StatusDialog({
     >
       <div className="space-y-4">
         <fieldset>
-          <legend className="mb-2 text-sm font-medium text-zinc-800">New status</legend>
+          <legend className="mb-2 text-sm font-medium text-ink">New status</legend>
           <div className="flex flex-wrap gap-2">
             {allowed.map((s) => (
-              <label key={s} className={cn('cursor-pointer rounded-lg px-3 py-1.5 text-sm ring-1', status === s ? 'bg-zinc-900 text-white ring-zinc-900' : 'text-zinc-700 ring-zinc-200 hover:bg-zinc-50')}>
+              <label key={s} className={cn('cursor-pointer rounded-lg px-3 py-2 text-sm ring-1', status === s ? 'bg-zinc-900 text-white ring-zinc-900' : 'text-ink ring-line hover:bg-surface-subtle')}>
                 <input type="radio" name="lead-status" value={s} checked={status === s} onChange={() => setStatus(s)} className="sr-only" />
                 {leadStatusLabels[s]}
               </label>

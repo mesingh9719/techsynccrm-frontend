@@ -3,12 +3,12 @@ import { CircleAlert, Eye, EyeOff, Check, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
 const control =
-  'block w-full rounded-lg border bg-white px-3.5 text-[15px] text-zinc-900 shadow-[0_1px_2px_rgb(16_24_40/0.04)] transition-colors placeholder:text-zinc-400 focus:outline-none focus:ring-4 disabled:bg-zinc-50 disabled:text-zinc-500'
+  'block w-full rounded-lg border bg-surface px-3 text-sm text-ink shadow-card transition-colors placeholder:text-muted focus:outline-none focus:ring-4 disabled:bg-surface-subtle disabled:text-muted'
 
 function controlState(invalid?: boolean) {
   return invalid
     ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
-    : 'border-zinc-300 hover:border-zinc-400 focus:border-brand-500 focus:ring-brand-100'
+    : 'border-line hover:border-zinc-400 focus:border-brand-500 focus:ring-brand-500/10'
 }
 
 interface FieldProps {
@@ -16,6 +16,7 @@ interface FieldProps {
   error?: string
   hint?: ReactNode
   optional?: boolean
+  required?: boolean
   className?: string
   /** Render prop receives ids to wire up aria attributes on the control. */
   children: (ids: { id: string; describedBy?: string; invalid: boolean }) => ReactNode
@@ -23,7 +24,7 @@ interface FieldProps {
 }
 
 /** Label + control + hint/error, with accessible associations. */
-export function Field({ label, error, hint, optional, className, children, labelAside }: FieldProps) {
+export function Field({ label, error, hint, optional, required, className, children, labelAside }: FieldProps) {
   const id = useId()
   // The hint is replaced by the error message, so only one of them is ever referenced.
   const hintId = hint && !error ? `${id}-hint` : undefined
@@ -32,22 +33,23 @@ export function Field({ label, error, hint, optional, className, children, label
 
   return (
     <div className={className}>
-      <div className="mb-1.5 flex items-baseline justify-between gap-2">
-        <label htmlFor={id} className="text-sm font-medium text-zinc-800">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <label htmlFor={id} className="text-sm font-medium text-ink">
           {label}
-          {optional && <span className="ml-1 font-normal text-zinc-500">(optional)</span>}
+          {required && <span className="ml-1 text-danger" aria-label="required">*</span>}
+          {optional && <span className="ml-1 font-normal text-muted">(optional)</span>}
         </label>
         {labelAside}
       </div>
       {children({ id, describedBy, invalid: Boolean(error) })}
       {error ? (
-        <p id={errorId} className="mt-1.5 flex items-center gap-1.5 text-sm text-red-600" role="alert">
-          <CircleAlert className="size-3.5 shrink-0" aria-hidden="true" />
+        <p id={errorId} className="mt-2 flex items-center gap-2 text-sm text-red-600" role="alert">
+          <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
           {error}
         </p>
       ) : (
         hint && (
-          <p id={hintId} className="mt-1.5 text-sm text-zinc-500">
+          <p id={hintId} className="mt-2 text-sm text-muted">
             {hint}
           </p>
         )
@@ -59,7 +61,7 @@ export function Field({ label, error, hint, optional, className, children, label
 type InputProps = ComponentProps<'input'> & { invalid?: boolean }
 
 export function Input({ className, invalid, ...props }: InputProps) {
-  return <input {...props} aria-invalid={invalid || undefined} className={cn(control, 'h-11', controlState(invalid), className)} />
+  return <input {...props} aria-invalid={invalid || undefined} className={cn(control, 'h-10', controlState(invalid), className)} />
 }
 
 export function PasswordInput({ className, invalid, ...props }: InputProps) {
@@ -86,7 +88,7 @@ export function Select({ className, invalid, children, ...props }: ComponentProp
       <select
         {...props}
         aria-invalid={invalid || undefined}
-        className={cn(control, 'h-11 appearance-none pr-10', controlState(invalid), className)}
+        className={cn(control, 'h-10 appearance-none pr-10', controlState(invalid), className)}
       >
         {children}
       </select>
@@ -100,7 +102,7 @@ export function Textarea({ className, invalid, ...props }: ComponentProps<'texta
     <textarea
       {...props}
       aria-invalid={invalid || undefined}
-      className={cn(control, 'min-h-32 resize-y py-2.5 leading-relaxed', controlState(invalid), className)}
+      className={cn(control, 'min-h-32 resize-y py-3 leading-relaxed', controlState(invalid), className)}
     />
   )
 }
@@ -116,15 +118,15 @@ export function Checkbox({ label, invalid, description, className, id, ...props 
   const inputId = id ?? autoId
   return (
     <div className={cn('flex items-start gap-3', className)}>
-      <span className="relative mt-0.5 flex size-[18px] shrink-0">
+      <span className="relative mt-1 flex size-5 shrink-0">
         <input
           {...props}
           id={inputId}
           type="checkbox"
           aria-invalid={invalid || undefined}
           className={cn(
-            'peer size-[18px] appearance-none rounded-[5px] border bg-white shadow-[0_1px_2px_rgb(16_24_40/0.05)] transition-colors checked:border-brand-600 checked:bg-brand-600 focus-visible:ring-4 focus-visible:ring-brand-100 focus-visible:outline-none',
-            invalid ? 'border-red-400' : 'border-zinc-300',
+            'peer size-5 appearance-none rounded-control border bg-surface shadow-card transition-colors checked:border-brand-600 checked:bg-brand-600 focus-visible:ring-4 focus-visible:ring-brand-500/10 focus-visible:outline-none',
+            invalid ? 'border-red-400' : 'border-line',
           )}
         />
         <Check
@@ -133,9 +135,9 @@ export function Checkbox({ label, invalid, description, className, id, ...props 
           aria-hidden="true"
         />
       </span>
-      <label htmlFor={inputId} className="text-sm leading-snug text-zinc-700">
+      <label htmlFor={inputId} className="text-sm leading-snug text-ink">
         {label}
-        {description && <span className="mt-0.5 block text-zinc-500">{description}</span>}
+        {description && <span className="mt-1 block text-xs text-muted">{description}</span>}
       </label>
     </div>
   )
@@ -144,8 +146,8 @@ export function Checkbox({ label, invalid, description, className, id, ...props 
 /** Error summary shown when a server request fails. */
 export function FormAlert({ children }: { children: ReactNode }) {
   return (
-    <div role="alert" className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-3.5 py-3 text-sm text-red-800">
-      <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+    <div role="alert" className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+      <CircleAlert className="mt-1 size-4 shrink-0" aria-hidden="true" />
       <div>{children}</div>
     </div>
   )

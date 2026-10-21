@@ -31,7 +31,7 @@ export default function NotFound() {
         <p className="font-mono text-sm font-medium text-brand-700">404</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight text-zinc-950 sm:text-5xl">This page has gone cold</h1>
         <p className="mt-4 text-lg text-zinc-600">
-          We couldn’t find <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[0.9em] text-zinc-800">{pathname}</code>. It may have moved, or the link
+          We couldn’t find <code className="rounded bg-zinc-100 px-2 py-1 font-mono text-sm text-zinc-800">{pathname}</code>. It may have moved, or the link
           might be mistyped — unlike your leads, we can follow this one up.
         </p>
 
@@ -44,7 +44,7 @@ export default function NotFound() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="What were you looking for?"
               aria-label="Search the site"
-              className="h-11 w-full rounded-lg border border-zinc-300 bg-white pr-3 pl-9 text-[15px] placeholder:text-zinc-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 focus:outline-none"
+              className="h-11 w-full rounded-lg border border-zinc-300 bg-white pr-3 pl-9 text-sm placeholder:text-zinc-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 focus:outline-none"
             />
           </div>
           <Button type="submit" variant="dark" className="h-11">
@@ -60,7 +60,7 @@ export default function NotFound() {
                   <span className="block font-medium text-zinc-900">{s.label}</span>
                   <span className="block text-sm text-zinc-500">{s.text}</span>
                 </span>
-                <ArrowRight className="size-4 text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-600" aria-hidden="true" />
+                <ArrowRight className="size-4 text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-700" aria-hidden="true" />
               </Link>
             </li>
           ))}

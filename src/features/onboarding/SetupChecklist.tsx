@@ -24,7 +24,7 @@ export function SetupChecklist() {
   return (
     <section className="surface overflow-hidden">
       <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-        <span className="rounded-lg bg-brand-50 p-2 text-brand-600">
+        <span className="rounded-lg bg-brand-50 p-2 text-brand-700">
           <Sparkles className="size-4" />
         </span>
         <div className="flex-1">
@@ -37,13 +37,13 @@ export function SetupChecklist() {
           onClick={() => dismiss.mutate()}
           disabled={dismiss.isPending}
           aria-label="Hide setup checklist"
-          className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100"
+          className="rounded-lg p-2 text-muted hover:bg-surface-subtle hover:text-ink"
         >
           <X className="size-4" />
         </button>
       </div>
       <div
-        className="h-1 bg-zinc-100"
+        className="h-1 bg-surface-subtle"
         role="progressbar"
         aria-label="Workspace setup"
         aria-valuenow={done}
@@ -51,34 +51,34 @@ export function SetupChecklist() {
         aria-valuemax={progress.items.length}
       >
         <div
-          className="h-full bg-brand-500 transition-[width]"
+          className="h-full bg-highlight transition-[width]"
           style={{ width: `${(done / progress.items.length) * 100}%` }}
         />
       </div>
       <ul className="divide-y divide-line px-5">
         {progress.items.map((item) => (
           <li key={item.key}>
-            <Link to={item.href} className="flex items-center gap-3 py-3.5">
+            <Link to={item.href} className="flex items-center gap-3 py-4">
               {item.done ? (
-                <span className="flex size-5 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                <span className="flex size-6 items-center justify-center rounded-full bg-highlight text-sidebar">
                   <Check className="size-3" />
                 </span>
               ) : (
-                <Circle className="size-5 text-zinc-300" />
+                <Circle className="size-5 text-muted" />
               )}
               <span className="min-w-0 flex-1">
-                <span className={`block text-sm font-medium ${item.done ? 'text-zinc-400' : 'text-ink'}`}>
+                <span className={`block text-sm font-medium ${item.done ? 'text-muted' : 'text-ink'}`}>
                   {item.title}
                 </span>
-                <span className="mt-0.5 block text-xs text-muted">{item.description}</span>
+                <span className="mt-1 block text-xs text-muted">{item.description}</span>
               </span>
-              {!item.done && <ArrowRight className="size-3.5 text-zinc-400" />}
+              {!item.done && <ArrowRight className="size-4 text-muted" />}
             </Link>
           </li>
         ))}
       </ul>
       {dismiss.isError && (
-        <p role="alert" className="px-5 pb-3 text-xs text-red-600">
+        <p role="alert" className="px-5 pb-3 text-xs text-danger">
           Couldn’t hide this checklist. Try again.
         </p>
       )}

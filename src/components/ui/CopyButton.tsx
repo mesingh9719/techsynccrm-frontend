@@ -16,7 +16,7 @@ export function CopyButton({ text, label = 'Copy' }: { text: string; label?: str
   }
   return (
     <Button size="sm" variant="secondary" onClick={copy} onBlur={() => setCopied(false)}>
-      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
       {copied ? 'Copied' : label}
     </Button>
   )

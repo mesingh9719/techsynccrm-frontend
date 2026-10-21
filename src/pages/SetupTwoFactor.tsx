@@ -15,7 +15,7 @@ export default function SetupTwoFactor() {
   return (
     <RequireStage path="/setup-2fa">
       <div className="mx-auto w-full max-w-lg px-4 py-12 sm:py-16">
-        <div className="rounded-3xl bg-white p-8 shadow-card ring-1 ring-zinc-200 sm:p-10">
+        <div className="rounded-dialog bg-white p-8 shadow-card ring-1 ring-zinc-200 sm:p-10">
           <span className="flex size-12 items-center justify-center rounded-full bg-brand-50 ring-1 ring-brand-100">
             <ShieldCheck className="size-6 text-brand-700" aria-hidden="true" />
           </span>

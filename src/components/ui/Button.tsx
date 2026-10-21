@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { LoaderCircle } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
-type Variant = 'primary' | 'dark' | 'secondary' | 'ghost' | 'link'
+type Variant = 'primary' | 'dark' | 'secondary' | 'ghost' | 'danger' | 'link'
 type Size = 'sm' | 'md' | 'lg'
 
 const base =
@@ -11,17 +11,18 @@ const base =
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-brand-600 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.15),0_1px_2px_rgb(16_24_40/0.12)] hover:bg-brand-700',
-  dark: 'bg-zinc-900 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_1px_2px_rgb(16_24_40/0.12)] hover:bg-zinc-800',
-  secondary: 'bg-white text-zinc-900 ring-1 ring-zinc-200 ring-inset shadow-card hover:bg-zinc-50 hover:ring-zinc-300',
-  ghost: 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900',
+    'bg-action text-white shadow-card hover:bg-action-hover',
+  dark: 'bg-action text-white shadow-card hover:bg-action-hover',
+  secondary: 'bg-surface text-ink ring-1 ring-line ring-inset shadow-card hover:bg-surface-subtle hover:ring-brand-300',
+  danger: 'bg-danger-action text-white shadow-card hover:bg-danger-action-hover',
+  ghost: 'text-muted hover:bg-surface-subtle hover:text-ink',
   link: 'text-brand-700 hover:text-brand-800 underline-offset-4 hover:underline px-0! h-auto!',
 }
 
 const sizes: Record<Size, string> = {
   sm: 'h-8 rounded-lg px-3 text-sm',
   md: 'h-10 rounded-lg px-4 text-sm',
-  lg: 'h-12 rounded-xl px-5 text-[15px]',
+  lg: 'h-11 rounded-control px-5 text-sm',
 }
 
 interface CommonProps {

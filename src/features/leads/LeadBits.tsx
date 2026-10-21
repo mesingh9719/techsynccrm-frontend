@@ -1,4 +1,5 @@
-import { useId, useState } from 'react'
+import { useFloatingPanel } from '../../components/app/useFloatingPanel'
+import { useId, useRef, useState } from 'react'
 import { cn } from '../../lib/cn'
 import { Badge } from '../../components/ui/Badge'
 import { leadStatusLabels, leadStatusTone } from '../crm/format'
@@ -14,8 +15,10 @@ const scoreTone = (score: number) => (score >= 70 ? 'bg-emerald-500' : score >= 
 export function ScorePill({ score, breakdown, frozen }: { score: number; breakdown: ScoreBreakdown | null; frozen?: boolean }) {
   const [open, setOpen] = useState(false)
   const id = useId()
+  const anchor = useRef<HTMLSpanElement>(null)
+  const panel = useFloatingPanel<HTMLSpanElement>(open && Boolean(breakdown), anchor, { matchWidth: false })
   return (
-    <span className="relative inline-flex">
+    <span ref={anchor} className="relative inline-flex">
       <button
         type="button"
         onClick={(e) => {
@@ -23,18 +26,19 @@ export function ScorePill({ score, breakdown, frozen }: { score: number; breakdo
           setOpen((o) => !o)
         }}
         onBlur={() => setOpen(false)}
+        onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); setOpen(false) } }}
         aria-expanded={open}
         aria-controls={id}
         aria-label={`Score ${score} out of 100. Show breakdown`}
-        className="inline-flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-zinc-100"
+        className="inline-flex items-center gap-2 rounded-md px-1 py-1 hover:bg-zinc-100"
       >
         <span className="h-1.5 w-12 rounded-full bg-zinc-100" aria-hidden="true">
           <span className={cn('block h-full rounded-full', scoreTone(score))} style={{ width: `${score}%` }} />
         </span>
-        <span className="font-medium text-zinc-800 tabular-nums">{score}</span>
+        <span className="font-medium text-ink tabular-nums">{score}</span>
       </button>
       {open && breakdown && (
-        <span id={id} role="tooltip" className="absolute top-full left-0 z-40 mt-1 w-64 rounded-xl bg-white p-3 text-left text-xs text-zinc-700 shadow-float ring-1 ring-zinc-200">
+        <span ref={panel} popover="manual" id={id} role="tooltip" className="crm-popover menu-surface w-64 p-3 text-left text-xs text-ink">
           <ScoreBreakdownList breakdown={breakdown} frozen={frozen} />
         </span>
       )}
@@ -45,15 +49,15 @@ export function ScorePill({ score, breakdown, frozen }: { score: number; breakdo
 export function ScoreBreakdownList({ breakdown, frozen }: { breakdown: ScoreBreakdown; frozen?: boolean }) {
   const row = (label: string, points: number) => (
     <li className="flex justify-between gap-2">
-      <span className={points ? 'text-zinc-700' : 'text-zinc-400'}>{label}</span>
+      <span className={points ? 'text-ink' : 'text-muted'}>{label}</span>
       <span className="tabular-nums">{points > 0 ? `+${points}` : points}</span>
     </li>
   )
   return (
     <div className="space-y-2">
       <div>
-        <p className="font-medium text-zinc-900">Fit · {breakdown.fit.total}/50</p>
-        <ul className="mt-1 space-y-0.5">
+        <p className="font-medium text-ink">Fit · {breakdown.fit.total}/50</p>
+        <ul className="mt-1 space-y-1">
           {row('Source', breakdown.fit.source)}
           {row('Has phone', breakdown.fit.phone)}
           {row('Has email', breakdown.fit.email)}
@@ -62,15 +66,15 @@ export function ScoreBreakdownList({ breakdown, frozen }: { breakdown: ScoreBrea
         </ul>
       </div>
       <div>
-        <p className="font-medium text-zinc-900">Engagement · {breakdown.engagement.total}/50</p>
-        <ul className="mt-1 space-y-0.5">
+        <p className="font-medium text-ink">Engagement · {breakdown.engagement.total}/50</p>
+        <ul className="mt-1 space-y-1">
           {row('Messaged in last 7 days', breakdown.engagement.recentInbound)}
           {row('Calls & meetings (14 days)', breakdown.engagement.touches)}
           {row('Qualified', breakdown.engagement.qualified)}
         </ul>
       </div>
       {breakdown.decay > 0 && <p className="text-red-700">−{breakdown.decay} for weeks without activity</p>}
-      {frozen && <p className="text-zinc-500">Score is frozen because the lead is closed.</p>}
+      {frozen && <p className="text-muted">Score is frozen because the lead is closed.</p>}
     </div>
   )
 }

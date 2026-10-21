@@ -13,7 +13,7 @@ export function LegalPage({ doc, sibling }: { doc: LegalDocument; sibling: { lab
     <>
       <header className="border-b border-zinc-100 bg-canvas">
         <Container className="py-14 sm:py-20">
-          <p className="font-mono text-xs font-medium tracking-[0.08em] text-brand-700 uppercase">Legal</p>
+          <p className="font-mono text-xs font-medium tracking-widest text-brand-700 uppercase">Legal</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-zinc-950 sm:text-5xl">{doc.title}</h1>
           <p className="mt-4 text-sm text-zinc-500">
             Last updated <time dateTime={doc.updated}>{formatDate(doc.updated)}</time>

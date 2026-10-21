@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -19,15 +20,15 @@ import { Button } from '../../components/ui/Button'
 import { Field, FormAlert, Input, Select } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { ConfirmDialog } from '../../components/app/Dialog'
-import { ErrorState, Skeleton } from '../../components/app/States'
+import { ErrorState, Skeleton, PageHeader } from '../../components/app/States'
 
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
 
 function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <section className="rounded-2xl bg-white p-6 shadow-card ring-1 ring-zinc-200">
-      <h2 className="font-semibold text-zinc-950">{title}</h2>
-      {description && <p className="mt-1 text-sm text-zinc-500">{description}</p>}
+    <section className="rounded-card bg-surface p-6 shadow-card ring-1 ring-line">
+      <h2 className="font-semibold text-ink">{title}</h2>
+      {description && <p className="mt-1 text-sm text-muted">{description}</p>}
       <div className="mt-5">{children}</div>
     </section>
   )
@@ -103,11 +104,11 @@ function LogoUploader({ org, canEdit, onChanged }: { org: Organization; canEdit:
 
   return (
     <div className="flex items-center gap-4">
-      <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-50 ring-1 ring-zinc-200">
+      <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-subtle ring-1 ring-line">
         {org.logoUrl ? (
           <img src={org.logoUrl} alt={`${org.name} logo`} className="size-full object-contain" />
         ) : (
-          <span className="text-xl font-semibold text-zinc-400" aria-hidden="true">
+          <span className="text-xl font-semibold text-muted" aria-hidden="true">
             {org.name.charAt(0).toUpperCase()}
           </span>
         )}
@@ -127,9 +128,9 @@ function LogoUploader({ org, canEdit, onChanged }: { org: Organization; canEdit:
             )}
           </div>
         )}
-        <p className="mt-1.5 text-xs text-zinc-500">PNG, JPG or WebP, up to 2 MB. A square image works best.</p>
+        <p className="mt-2 text-xs text-muted">PNG, JPG or WebP, up to 2 MB. A square image works best.</p>
         {error && (
-          <p className="mt-1 text-sm text-red-600" role="alert">
+          <p className="mt-1 text-sm text-danger" role="alert">
             {error}
           </p>
         )}
@@ -157,6 +158,8 @@ function SettingsForm({ org, canEdit }: { org: Organization; canEdit: boolean })
     void queryClient.invalidateQueries({ queryKey: qk.org(updated.id).checklist })
   }
 
+  const leaveGuard = useUnsavedChanges(isDirty, () => {}, isSubmitting, isDirty)
+
   const onSubmit = async (values: WorkspaceSettingsValues) => {
     setServerError(null)
     try {
@@ -176,6 +179,7 @@ function SettingsForm({ org, canEdit }: { org: Organization; canEdit: boolean })
   const disabled = !canEdit
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
+        {leaveGuard.confirmation}
       <Section title="Workspace" description="How your company appears to your team.">
         <LogoUploader org={org} canEdit={canEdit} onChanged={applyOrg} />
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
@@ -282,7 +286,7 @@ function SettingsForm({ org, canEdit }: { org: Organization; canEdit: boolean })
           </Button>
         </div>
       ) : (
-        <p className="text-sm text-zinc-500">Only workspace owners and admins can change these settings.</p>
+        <p className="text-sm text-muted">Only workspace owners and admins can change these settings.</p>
       )}
     </form>
   )
@@ -315,10 +319,10 @@ function SecuritySection({ org }: { org: Organization }) {
     <Section title="Security" description="Applies to everyone in this workspace.">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <ShieldCheck className={org.require2fa ? 'mt-0.5 size-5 text-emerald-600' : 'mt-0.5 size-5 text-zinc-400'} aria-hidden="true" />
+          <ShieldCheck className={org.require2fa ? 'mt-1 size-5 text-emerald-600' : 'mt-1 size-5 text-muted'} aria-hidden="true" />
           <div>
-            <p className="font-medium text-zinc-900">Require two-factor authentication</p>
-            <p className="text-sm text-zinc-500">
+            <p className="font-medium text-ink">Require two-factor authentication</p>
+            <p className="text-sm text-muted">
               {!entitlement.enabled && org.require2fa
                 ? 'Paused — this is a Business plan feature. Members can use the workspace without 2FA until you upgrade.'
                 : org.require2fa
@@ -333,7 +337,7 @@ function SecuritySection({ org }: { org: Organization }) {
             size="sm"
             onClick={() => emitAppEvent({ type: 'upgrade', reason: 'feature', feature: 'require2fa', requiredPlan: entitlement.requiredPlan ?? 'business' })}
           >
-            <Lock className="size-3.5" aria-hidden="true" />
+            <Lock className="size-4" aria-hidden="true" />
             Business plan
           </Button>
         ) : (
@@ -343,7 +347,7 @@ function SecuritySection({ org }: { org: Organization }) {
         )}
       </div>
       {error && (
-        <p className="mt-3 text-sm text-red-600" role="alert">
+        <p className="mt-3 text-sm text-danger" role="alert">
           {error}
         </p>
       )}
@@ -371,9 +375,9 @@ function DangerZone({ org }: { org: Organization }) {
   }
 
   return (
-    <section className="rounded-2xl bg-white p-6 shadow-card ring-1 ring-red-200">
+    <section className="rounded-card bg-surface p-6 shadow-card ring-1 ring-red-200">
       <h2 className="font-semibold text-red-700">Delete workspace</h2>
-      <p className="mt-1 text-sm text-zinc-600">
+      <p className="mt-1 text-sm text-muted">
         Everyone loses access immediately. Your data is kept for 30 days in case you change your mind — contact support to restore it.
       </p>
       <Button variant="secondary" className="mt-5 text-red-700" onClick={() => setOpen(true)}>
@@ -407,8 +411,8 @@ export default function WorkspaceSettings() {
   if (query.isPending) {
     return (
       <div className="space-y-6" role="status" aria-label="Loading workspace settings">
-        <Skeleton className="h-64 rounded-2xl" />
-        <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="h-64 rounded-card" />
+        <Skeleton className="h-40 rounded-card" />
       </div>
     )
   }
@@ -416,6 +420,7 @@ export default function WorkspaceSettings() {
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Workspace" description="Manage your business identity, preferences, and access policies." />
       {/* Remount the form when the server copy changes from elsewhere (e.g. switching workspace). */}
       <SettingsForm key={organization.id} org={organization} canEdit={canEdit} />
       {canEdit && <SecuritySection org={organization} />}

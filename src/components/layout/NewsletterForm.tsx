@@ -62,7 +62,7 @@ export default function NewsletterForm() {
         </Button>
       </div>
       {errors.email && (
-        <p id="newsletter-error" className="mt-1.5 text-sm text-red-600" role="alert">
+        <p id="newsletter-error" className="mt-2 text-sm text-red-600" role="alert">
           {errors.email.message}
         </p>
       )}

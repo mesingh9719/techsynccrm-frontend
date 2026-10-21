@@ -104,7 +104,7 @@ function OnboardingForm({ user }: { user: AuthUser }) {
                     : 'bg-white text-zinc-500 ring-1 ring-zinc-200',
               )}
             >
-              {i < step ? <Check className="size-3.5" aria-hidden="true" /> : i + 1}
+              {i < step ? <Check className="size-4" aria-hidden="true" /> : i + 1}
             </span>
             <span
               className={cn('hidden text-sm sm:inline', i === step ? 'font-medium text-zinc-900' : 'text-zinc-500')}
@@ -129,13 +129,13 @@ function OnboardingForm({ user }: { user: AuthUser }) {
               }
         }
         noValidate
-        className="mt-8 rounded-3xl bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-10"
+        className="mt-8 rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-10"
       >
         <p className="font-mono text-xs font-medium tracking-wider text-zinc-500 uppercase">
           Step {step + 1} of {steps.length}
         </p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950 sm:text-3xl">{steps[step].title}</h1>
-        <p className="mt-1.5 text-zinc-600">{steps[step].description}</p>
+        <p className="mt-2 text-zinc-600">{steps[step].description}</p>
 
         {serverError && (
           <div className="mt-6">
@@ -157,7 +157,7 @@ function OnboardingForm({ user }: { user: AuthUser }) {
                       invalid={invalid}
                       {...register('jobRole')}
                     />
-                    <div className="mt-2.5 flex flex-wrap gap-2">
+                    <div className="mt-3 flex flex-wrap gap-2">
                       {roleSuggestions.map((r) => (
                         <button
                           key={r}
@@ -251,7 +251,7 @@ function OnboardingForm({ user }: { user: AuthUser }) {
                   ))}
                 </div>
                 {errors.teamSize && (
-                  <p id="teamsize-error" role="alert" className="mt-1.5 text-sm text-red-600">
+                  <p id="teamsize-error" role="alert" className="mt-2 text-sm text-red-600">
                     {errors.teamSize.message}
                   </p>
                 )}
@@ -283,7 +283,7 @@ function OnboardingForm({ user }: { user: AuthUser }) {
                         )}
                         aria-hidden="true"
                       >
-                        {checked && <Check className="size-3.5" strokeWidth={3} />}
+                        {checked && <Check className="size-4" strokeWidth={3} />}
                       </span>
                     </label>
                   )

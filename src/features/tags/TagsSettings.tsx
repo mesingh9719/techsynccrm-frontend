@@ -31,14 +31,14 @@ function TagRow({ tag, editable, refresh }: { tag: Tag; editable: boolean; refre
           onChange={(e) => setName(e.target.value)}
           disabled={!editable}
           maxLength={40}
-          className="h-9! min-w-32 flex-1 sm:max-w-60"
+          className="h-10! min-w-32 flex-1 sm:max-w-60"
         />
         <Select
           aria-label={`Color of tag ${tag.name}`}
           value={color}
           onChange={(e) => setColor(e.target.value as TagColor)}
           disabled={!editable}
-          className="h-9! text-sm"
+          className="h-10! text-sm"
         >
           {tagColors.map((c) => (
             <option key={c} value={c}>
@@ -68,7 +68,7 @@ function TagRow({ tag, editable, refresh }: { tag: Tag; editable: boolean; refre
                 }
               }}
             >
-              <Save className="size-3.5" />
+              <Save className="size-4" />
               Save
             </Button>
             <Button
@@ -80,7 +80,7 @@ function TagRow({ tag, editable, refresh }: { tag: Tag; editable: boolean; refre
               }}
               aria-label={`Delete tag ${tag.name}`}
             >
-              <Trash2 className="size-3.5" />
+              <Trash2 className="size-4" />
             </Button>
           </>
         )}

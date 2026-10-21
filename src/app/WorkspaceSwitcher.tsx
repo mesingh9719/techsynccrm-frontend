@@ -20,7 +20,7 @@ function WorkspaceMark({ name, className }: { name: string; className?: string }
 }
 
 /** Shows the active workspace; lists the others to switch to, and creates new ones. */
-export function WorkspaceSwitcher({ className }: { className?: string }) {
+export function WorkspaceSwitcher({ className, compact = false }: { className?: string; compact?: boolean }) {
   const { user } = useAuth()
   const notify = useToast()
   const { switchTo } = useWorkspaceSwitch()
@@ -52,14 +52,16 @@ export function WorkspaceSwitcher({ className }: { className?: string }) {
           <button
             type="button"
             {...props}
-            className={cn('flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left hover:bg-zinc-100', className)}
+            title={current.name}
+            aria-label={`Switch workspace: ${current.name}`}
+            className={cn('workspace-switcher flex min-h-10 w-full items-center gap-3 rounded-control px-2 py-2 text-left hover:bg-surface-subtle', className)}
           >
             <WorkspaceMark name={current.name} />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-zinc-900">{current.name}</span>
-              <span className="block truncate text-xs text-zinc-500 capitalize">{current.plan} plan</span>
+            <span className={compact ? 'sr-only' : 'min-w-0 flex-1'}>
+              <span className="workspace-name block truncate text-sm font-semibold text-ink">{current.name}</span>
+              <span className="workspace-plan block truncate text-xs text-muted capitalize">{current.plan} plan</span>
             </span>
-            <ChevronsUpDown className="size-4 shrink-0 text-zinc-400" aria-hidden="true" />
+            <ChevronsUpDown className={cn("size-4 shrink-0 text-muted", compact && "hidden")} aria-hidden="true" />
             <span className="sr-only">Switch workspace</span>
           </button>
         )}
@@ -68,7 +70,7 @@ export function WorkspaceSwitcher({ className }: { className?: string }) {
           <>
             <MenuLabel>Workspaces</MenuLabel>
             {workspaces.isPending && (
-              <p className="flex items-center gap-2 px-2.5 py-2 text-sm text-zinc-500">
+              <p className="flex items-center gap-2 px-3 py-2 text-sm text-muted">
                 <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> Loading…
               </p>
             )}
@@ -76,10 +78,10 @@ export function WorkspaceSwitcher({ className }: { className?: string }) {
               <MenuItem
                 key={ws.id}
                 onSelect={() => onSwitch(ws.id, close)}
-                icon={switchingId === ws.id ? <LoaderCircle className="size-4 animate-spin" /> : ws.id === current.id ? <Check className="size-4 text-brand-600" /> : null}
+                icon={switchingId === ws.id ? <LoaderCircle className="size-4 animate-spin" /> : ws.id === current.id ? <Check className="size-4 text-brand-700" /> : null}
               >
-                <span className="block truncate font-medium text-zinc-900">{ws.name}</span>
-                <span className="block text-xs text-zinc-500">{roleLabels[ws.role]}</span>
+                <span className="block truncate font-medium text-ink">{ws.name}</span>
+                <span className="block text-xs text-muted">{roleLabels[ws.role]}</span>
               </MenuItem>
             ))}
             <MenuSeparator />

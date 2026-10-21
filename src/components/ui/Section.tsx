@@ -51,7 +51,7 @@ export function SectionHeader({ eyebrow, title, description, align = 'center', i
 
 export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <p className={cn('font-mono text-xs font-medium tracking-[0.08em] text-brand-700 uppercase', className)}>{children}</p>
+    <p className={cn('font-mono text-xs font-medium tracking-widest text-brand-700 uppercase', className)}>{children}</p>
   )
 }
 

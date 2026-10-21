@@ -60,12 +60,13 @@ export function PipelineBoard({
   function onDrop(e: DragEvent, stageId: string) {
     e.preventDefault()
     const id = e.dataTransfer.getData('text/plain') || dragId
-    if (id) move(id, stageId)
+    if (canMove && id) move(id, stageId)
     setDragId(null)
     setOverStage(null)
   }
 
   function onCardKey(e: KeyboardEvent, deal: BoardDeal) {
+    if (e.target !== e.currentTarget) return
     if (e.key === 'Enter' && onOpen) {
       e.preventDefault()
       onOpen(deal.id)
@@ -92,7 +93,7 @@ export function PipelineBoard({
       </p>
       <div
         className={cn(
-          'no-scrollbar -mx-1 flex flex-1 gap-3 overflow-x-auto px-1 pb-1',
+          '-mx-1 flex min-w-0 flex-1 gap-4 overflow-x-auto overscroll-x-contain px-1 pb-4',
           compact && '[mask-image:linear-gradient(to_right,black_88%,transparent)]',
         )}
         role="list"
@@ -120,27 +121,27 @@ export function PipelineBoard({
               }}
               onDrop={(e) => onDrop(e, stage.id)}
               className={cn(
-                'flex min-w-[172px] flex-1 flex-col rounded-xl p-2 transition-colors',
-                overStage === stage.id ? 'bg-brand-50 ring-1 ring-brand-200 ring-inset' : 'bg-zinc-100/70',
+                'flex w-72 shrink-0 flex-col rounded-card p-3 transition-colors',
+                overStage === stage.id ? 'bg-brand-50 ring-1 ring-brand-200 ring-inset' : 'border border-line bg-surface-subtle',
               )}
             >
-              <div className="flex items-center justify-between px-1.5 pt-0.5 pb-2">
-                <div className="flex items-center gap-1.5">
+              <div className="flex items-center justify-between px-2 pt-1 pb-3">
+                <div className="flex items-center gap-2">
                   {isWon ? (
-                    <Trophy className="size-3.5 text-emerald-600" aria-hidden="true" />
+                    <Trophy className="size-4 text-emerald-600" aria-hidden="true" />
                   ) : (
                     <span
-                      className={cn('size-1.5 rounded-full', isLost ? 'bg-red-400' : 'bg-zinc-400')}
+                      className={cn('size-2 rounded-full', isLost ? 'bg-red-400' : 'bg-muted')}
                       aria-hidden="true"
                     />
                   )}
-                  <span className="text-xs font-medium text-zinc-800">{stage.name}</span>
-                  <span className="text-xs text-zinc-500 tabular-nums">{count}</span>
+                  <span className="text-xs font-semibold text-ink">{stage.name}</span>
+                  <span className="text-xs text-muted tabular-nums">{count}</span>
                 </div>
                 <span className="text-right">
-                  <span className="block font-mono text-[11px] text-zinc-500 tabular-nums">{total}</span>
+                  <span className="block font-mono text-xs text-muted tabular-nums">{total}</span>
                   {stage.subtitle && (
-                    <span className="block font-mono text-[10px] text-zinc-400 tabular-nums">{stage.subtitle}</span>
+                    <span className="block font-mono text-xs text-muted/70 tabular-nums">{stage.subtitle}</span>
                   )}
                 </span>
               </div>
@@ -172,29 +173,29 @@ export function PipelineBoard({
                       onKeyDown={(e) => onCardKey(e, deal)}
                       onBlur={() => setFocusId(null)}
                       className={cn(
-                        'group rounded-lg bg-white p-2.5 text-left shadow-card ring-1 ring-zinc-200/80 transition-[box-shadow,opacity,transform] hover:shadow-float hover:ring-zinc-300 focus-visible:outline-2 focus-visible:outline-brand-500',
+                        'group rounded-xl border border-line bg-surface p-3 text-left shadow-card transition-[box-shadow,opacity,transform] hover:border-brand-300 hover:shadow-float focus-visible:outline-2 focus-visible:outline-brand-500',
                         canMove ? 'cursor-grab active:cursor-grabbing' : onOpen ? 'cursor-pointer' : '',
                         dragId === deal.id && 'opacity-40',
-                        isWon && 'ring-emerald-200',
+                        isWon && 'border-emerald-200 bg-emerald-50/20',
                         isLost && 'opacity-75',
                       )}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className="truncate text-[13px] font-medium text-zinc-900">{deal.company}</p>
+                        <p title={deal.company} className="truncate text-sm font-semibold text-ink">{deal.company}</p>
                         <GripVertical
-                          className="size-3.5 shrink-0 text-zinc-300 group-hover:text-zinc-400"
+                          className="size-4 shrink-0 text-muted/50 group-hover:text-muted"
                           aria-hidden="true"
                         />
                       </div>
-                      <p className="mt-0.5 truncate text-xs text-zinc-500">{deal.title}</p>
-                      <div className="mt-2.5 flex items-center justify-between">
-                        <span className="text-[13px] font-semibold text-zinc-900 tabular-nums">
+                      <p title={deal.title} className="mt-1 truncate text-xs text-muted">{deal.title}</p>
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-ink tabular-nums">
                           {formatINRCompact(deal.value)}
                         </span>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                           {stale && !isWon && !isLost && (
-                            <span className="inline-flex items-center gap-0.5 rounded bg-amber-50 px-1 py-0.5 text-[10px] font-medium text-amber-800 ring-1 ring-amber-200/70">
-                              <Clock className="size-2.5" aria-hidden="true" />
+                            <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1 py-1 text-xs font-medium text-amber-800 ring-1 ring-amber-200/70">
+                              <Clock className="size-3" aria-hidden="true" />
                               {deal.days}d idle
                             </span>
                           )}
@@ -208,7 +209,7 @@ export function PipelineBoard({
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => e.stopPropagation()}
                           onChange={(e) => onMove(deal.id, e.target.value)}
-                          className="mt-3 h-8 w-full rounded-md border border-zinc-200 bg-zinc-50 px-2 text-xs text-zinc-600"
+                          className="mt-3 h-10 w-full rounded-lg border border-line bg-surface-subtle px-2 text-xs text-muted transition-colors hover:border-brand-300 hover:text-ink focus:border-brand-500 focus:outline-none"
                         >
                           <option value={deal.stageId}>Move to stage…</option>
                           {stages
@@ -224,7 +225,7 @@ export function PipelineBoard({
                   )
                 })}
                 {items.length === 0 && (
-                  <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-zinc-300 p-4 text-center text-xs text-zinc-500">
+                  <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-line p-4 text-center text-xs text-muted">
                     {canMove ? 'Drop a deal here' : 'No deals'}
                   </div>
                 )}

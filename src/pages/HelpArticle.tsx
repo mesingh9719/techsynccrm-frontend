@@ -42,7 +42,7 @@ function Feedback({ slug }: { slug: string }) {
                 }
               }}
               className={cn(
-                'inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium ring-1 transition-colors',
+                'inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium ring-1 transition-colors',
                 vote === v ? 'bg-zinc-900 text-white ring-zinc-900' : 'text-zinc-700 ring-zinc-200 hover:bg-zinc-50',
               )}
             >
@@ -64,7 +64,7 @@ function Feedback({ slug }: { slug: string }) {
           <label htmlFor="feedback-comment" className="text-sm text-zinc-700">
             What was missing or unclear? <span className="text-zinc-500">(optional)</span>
           </label>
-          <Textarea id="feedback-comment" rows={3} className="mt-1.5 min-h-24" value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1000} />
+          <Textarea id="feedback-comment" rows={3} className="mt-2 min-h-24" value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1000} />
           <Button type="submit" size="sm" variant="dark" className="mt-3">
             Send feedback
           </Button>
@@ -87,18 +87,18 @@ export default function HelpArticle() {
   return (
     <Container className="py-10 sm:py-14">
       <nav aria-label="Breadcrumb">
-        <ol className="flex flex-wrap items-center gap-1.5 text-sm text-zinc-500">
+        <ol className="flex flex-wrap items-center gap-2 text-sm text-zinc-500">
           <li>
             <Link to="/help" className="hover:text-zinc-900">
               Help Center
             </Link>
           </li>
           <li aria-hidden="true">
-            <ChevronRight className="size-3.5" />
+            <ChevronRight className="size-4" />
           </li>
           <li>{category?.title}</li>
           <li aria-hidden="true">
-            <ChevronRight className="size-3.5" />
+            <ChevronRight className="size-4" />
           </li>
           <li aria-current="page" className="truncate text-zinc-900">
             {article.title}
@@ -143,7 +143,7 @@ export default function HelpArticle() {
           </div>
           <div className="mt-14 space-y-8 border-t border-zinc-100 pt-8">
             <Feedback key={article.slug} slug={article.slug} />
-            <div className="rounded-2xl bg-canvas p-6 ring-1 ring-zinc-200">
+            <div className="rounded-dialog bg-canvas p-6 ring-1 ring-zinc-200">
               <p className="font-medium text-zinc-900">Still stuck?</p>
               <p className="mt-1 text-sm text-zinc-600">Our support team usually replies within 2 hours on working days.</p>
               <Button to="/contact?topic=support" variant="secondary" size="sm" className="mt-4">

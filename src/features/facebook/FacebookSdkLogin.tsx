@@ -26,10 +26,10 @@ export function FacebookSdkLogin({
   const [loadError, setLoadError] = useState(''),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false)
-  const generation = useRef(0),
-    popupTimer = useRef<number | undefined>(undefined)
+  const popupTimer = useRef<number | undefined>(undefined)
+  const generation = useRef(0)
   useEffect(() => {
-    const current = ++generation.current
+    let cancelled = false
     void loadFacebookSdk({
       appId: config.appId,
       version: config.version,
@@ -37,20 +37,19 @@ export function FacebookSdkLogin({
       scope: config.scope,
     })
       .then(async (instance) => {
-        if (generation.current !== current) return
+        if (cancelled) return
         setSdk(instance)
         const result = await facebookLoginStatus(instance)
-        if (generation.current === current) setStatus(result)
+        if (!cancelled) setStatus(result)
       })
       .catch((err: unknown) => {
-        if (generation.current === current)
+        if (!cancelled)
           setLoadError(err instanceof Error ? err.message : 'Facebook SDK is unavailable.')
       })
-    // The popup timer is created after this effect; cleanup intentionally reads the latest value.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => {
-      generation.current++
-      window.clearTimeout(popupTimer.current)
+      cancelled = true
+      const timer = popupTimer.current
+      if (timer) window.clearTimeout(timer)
     }
   }, [config.appId, config.version, config.configId, config.scope])
   const challenge = useQuery({
@@ -148,7 +147,7 @@ export function FacebookSdkLogin({
       <Button disabled={!sdk || !challenge.data || challenge.isFetching || busy} loading={busy} onClick={connect}>
         {connected ? 'Reconnect with Facebook' : 'Connect with Facebook'}
       </Button>
-      <p role="status" className="max-w-md text-xs text-zinc-600">
+      <p role="status" className="max-w-md text-xs text-muted">
         {loadError || statusText}
       </p>
       {(error || challenge.isError) && (

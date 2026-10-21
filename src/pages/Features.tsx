@@ -49,7 +49,7 @@ export default function Features() {
                     href={`#${c.id}`}
                     aria-current={isActive ? 'true' : undefined}
                     className={cn(
-                      'inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors',
+                      'inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors',
                       isActive ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900',
                     )}
                   >
@@ -80,8 +80,8 @@ export default function Features() {
                 <p className="mt-4 text-lg leading-relaxed text-zinc-600">{cat.description}</p>
                 <ul className="mt-6 space-y-3">
                   {cat.points.map((p) => (
-                    <li key={p} className="flex gap-2.5 text-zinc-700">
-                      <Check className="mt-0.5 size-[18px] shrink-0 text-brand-600" aria-hidden="true" />
+                    <li key={p} className="flex gap-3 text-zinc-700">
+                      <Check className="mt-1 size-[18px] shrink-0 text-brand-700" aria-hidden="true" />
                       {p}
                     </li>
                   ))}

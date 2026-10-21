@@ -46,7 +46,7 @@ export function FocusedLayout() {
                 type="button"
                 onClick={onSignOut}
                 disabled={signingOut}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-60"
+                className="inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-60"
               >
                 <LogOut className="size-4" aria-hidden="true" />
                 <span className="hidden sm:inline">Log out</span>

@@ -82,7 +82,7 @@ export default function Integrations() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search integrations, e.g. WhatsApp or Tally"
             aria-label="Search integrations"
-            className="h-13 w-full rounded-xl border border-zinc-300 bg-white pr-4 pl-12 text-[15px] shadow-card placeholder:text-zinc-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 focus:outline-none"
+            className="h-13 w-full rounded-xl border border-zinc-300 bg-white pr-4 pl-12 text-sm shadow-card placeholder:text-zinc-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 focus:outline-none"
           />
         </div>
       </PageHero>
@@ -99,7 +99,7 @@ export default function Integrations() {
                   aria-pressed={category === c}
                   onClick={() => setCategory(c)}
                   className={cn(
-                    'flex h-9 shrink-0 items-center justify-between gap-3 rounded-lg px-3 text-sm font-medium transition-colors',
+                    'flex h-10 shrink-0 items-center justify-between gap-3 rounded-lg px-3 text-sm font-medium transition-colors',
                     category === c ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900',
                   )}
                 >
@@ -119,21 +119,21 @@ export default function Integrations() {
             {filtered.length > 0 ? (
               <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {filtered.map((app) => (
-                  <li key={app.id} className="flex flex-col rounded-2xl bg-white p-5 shadow-card ring-1 ring-zinc-200 transition-shadow hover:shadow-float">
+                  <li key={app.id} className="flex flex-col rounded-dialog bg-white p-5 shadow-card ring-1 ring-zinc-200 transition-shadow hover:shadow-float">
                     <div className="flex items-start justify-between gap-3">
                       <Monogram name={app.name} color={app.color} />
                       <Badge tone={statusTone[app.status]}>{app.status}</Badge>
                     </div>
                     <h3 className="mt-4 font-semibold text-zinc-950">{app.name}</h3>
                     <p className="text-xs text-zinc-500">{app.category}</p>
-                    <p className="mt-2.5 flex-1 text-sm leading-relaxed text-zinc-600">{app.description}</p>
+                    <p className="mt-3 flex-1 text-sm leading-relaxed text-zinc-600">{app.description}</p>
                     <div className="mt-5 border-t border-zinc-100 pt-4">
                       {app.status === 'Coming soon' ? (
                         <button
                           type="button"
                           onClick={() => notifyMe(app.id, app.name)}
                           disabled={notified.has(app.id)}
-                          className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-700 hover:text-zinc-950 disabled:text-emerald-700"
+                          className="inline-flex items-center gap-2 text-sm font-medium text-zinc-700 hover:text-zinc-950 disabled:text-emerald-700"
                         >
                           <Bell className="size-4" aria-hidden="true" />
                           {notified.has(app.id) ? 'You’ll be notified' : 'Notify me'}
@@ -149,7 +149,7 @@ export default function Integrations() {
                 ))}
               </ul>
             ) : (
-              <div className="rounded-2xl border border-dashed border-zinc-300 px-6 py-16 text-center">
+              <div className="rounded-dialog border border-dashed border-zinc-300 px-6 py-16 text-center">
                 <SearchX className="mx-auto size-8 text-zinc-400" aria-hidden="true" />
                 <p className="mt-4 font-medium text-zinc-900">No integrations found</p>
                 <p className="mt-1 text-sm text-zinc-600">Try another search, or tell us what you’d like us to build next.</p>
@@ -193,19 +193,19 @@ export default function Integrations() {
                   </span>
                   <div>
                     <h3 className="font-semibold text-zinc-950">{f.title}</h3>
-                    <p className="mt-0.5 text-zinc-600">{f.text}</p>
+                    <p className="mt-1 text-zinc-600">{f.text}</p>
                   </div>
                 </li>
               ))}
             </ul>
           </Reveal>
           <Reveal delay={100} className="min-w-0">
-            <figure className="overflow-hidden rounded-2xl bg-zinc-950 shadow-frame">
+            <figure className="overflow-hidden rounded-dialog bg-zinc-950 shadow-frame">
               <figcaption className="flex items-center justify-between border-b border-white/10 px-4 py-3 font-mono text-xs text-zinc-400">
                 <span>Create a lead</span>
-                <span className="rounded bg-emerald-400/10 px-1.5 py-0.5 text-emerald-300">POST /v1/leads</span>
+                <span className="rounded bg-emerald-400/10 px-2 py-1 text-emerald-300">POST /v1/leads</span>
               </figcaption>
-              <pre className="overflow-x-auto p-5 font-mono text-[13px] leading-relaxed text-zinc-300">
+              <pre className="overflow-x-auto p-5 font-mono text-sm leading-relaxed text-zinc-300">
                 <code>{snippet}</code>
               </pre>
             </figure>

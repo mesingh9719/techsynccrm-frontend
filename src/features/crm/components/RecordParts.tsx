@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { CircleAlert, Pencil, Trash2, X } from 'lucide-react'
 import { cn } from '../../../lib/cn'
@@ -10,16 +10,16 @@ import type { Duplicate, OwnerSummary } from '../types'
 /** Small building blocks shared by the contact, company and lead screens. */
 
 export function OwnerCell({ owner, emptyLabel = 'Unassigned' }: { owner: OwnerSummary | null; emptyLabel?: string }) {
-  if (!owner) return <span className="text-zinc-400">{emptyLabel}</span>
+  if (!owner) return <span className="text-muted">{emptyLabel}</span>
   return (
     <span className="inline-flex min-w-0 items-center gap-2">
       <Avatar name={owner.fullName} size="xs" />
-      <span className="truncate">{owner.fullName}</span>
+      <span className="truncate text-ink">{owner.fullName}</span>
     </span>
   )
 }
 
-/** A titled white card on detail pages. */
+/** A titled card on detail pages. */
 export function Panel({
   title,
   actions,
@@ -32,9 +32,9 @@ export function Panel({
   className?: string
 }) {
   return (
-    <section className={cn('rounded-2xl bg-white p-5 shadow-card ring-1 ring-zinc-200', className)}>
+    <section className={cn('surface p-4 sm:p-6', className)}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-zinc-950">{title}</h2>
+        <h2 className="section-title">{title}</h2>
         {actions}
       </div>
       <div className="mt-4">{children}</div>
@@ -45,9 +45,9 @@ export function Panel({
 /** Label/value row in a details panel. */
 export function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-3 py-2 text-sm">
-      <dt className="text-zinc-500">{label}</dt>
-      <dd className="min-w-0 break-words text-zinc-900">{children}</dd>
+    <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3 text-sm">
+      <dt className="text-muted">{label}</dt>
+      <dd className="min-w-0 break-words text-ink">{children}</dd>
     </div>
   )
 }
@@ -74,18 +74,23 @@ export function InlineText({
   format?: (value: string) => ReactNode
 }) {
   const [editing, setEditing] = useState(false)
+  const saving = useRef(false)
+  const cancelled = useRef(false)
   const [text, setText] = useState(value ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const startEditing = () => {
+    cancelled.current = false
     setText(value ?? '')
     setError(null)
     setEditing(true)
   }
 
   async function save() {
+    if (saving.current || cancelled.current) return
     const next = text.trim() || null
     if (next === (value ?? null)) return setEditing(false)
+    saving.current = true
     setBusy(true)
     setError(null)
     try {
@@ -94,6 +99,7 @@ export function InlineText({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Couldn’t save')
     } finally {
+      saving.current = false
       setBusy(false)
     }
   }
@@ -105,17 +111,17 @@ export function InlineText({
         disabled={disabled}
         onClick={startEditing}
         className={cn(
-          'group -mx-1.5 flex w-full items-start gap-1.5 rounded-md px-1.5 py-0.5 text-left',
-          !disabled && 'hover:bg-zinc-50',
+          'group -mx-2 flex w-full items-start gap-2 rounded-md px-2 py-1 text-left',
+          !disabled && 'hover:bg-surface-subtle',
         )}
         aria-label={`Edit ${label}`}
       >
-        <span className={cn('min-w-0 flex-1 whitespace-pre-wrap', !value && 'text-zinc-400')}>
+        <span className={cn('min-w-0 flex-1 whitespace-pre-wrap', !value && 'text-muted')}>
           {value ? (format ? format(value) : value) : disabled ? '—' : placeholder}
         </span>
         {!disabled && (
           <Pencil
-            className="mt-0.5 size-3.5 shrink-0 text-zinc-300 opacity-0 group-hover:opacity-100"
+            className="mt-1 size-4 shrink-0 text-zinc-300 opacity-0 group-hover:opacity-100"
             aria-hidden="true"
           />
         )}
@@ -131,6 +137,7 @@ export function InlineText({
     onBlur: save,
     onKeyDown: (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
+        cancelled.current = true
         setText(value ?? '')
         setEditing(false)
       }
@@ -145,7 +152,7 @@ export function InlineText({
   return (
     <div>
       {multiline ? <textarea rows={3} {...props} /> : <input {...props} />}
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>
   )
 }
@@ -199,12 +206,12 @@ export function BulkBar({ count, onClear, children }: { count: number; onClear: 
       aria-label="Bulk actions"
     >
       <span className="font-medium tabular-nums">{count} selected</span>
-      <span className="mx-1 h-4 w-px bg-white/20" aria-hidden="true" />
-      <div className="flex flex-wrap items-center gap-1.5">{children}</div>
+      <span className="mx-1 h-4 w-px bg-surface/20" aria-hidden="true" />
+      <div className="flex flex-wrap items-center gap-2">{children}</div>
       <button
         type="button"
         onClick={onClear}
-        className="ml-auto rounded-md p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
+        className="ml-auto rounded-control p-3 text-muted hover:bg-surface/10 hover:text-white"
         aria-label="Clear selection"
       >
         <X className="size-4" aria-hidden="true" />
@@ -219,8 +226,8 @@ export function BulkButton({ children, onClick, tone }: { children: ReactNode; o
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium',
-        tone === 'danger' ? 'text-red-300 hover:bg-red-500/20' : 'hover:bg-white/10',
+        'inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-xs font-medium',
+        tone === 'danger' ? 'text-red-300 hover:bg-red-500/20' : 'hover:bg-surface/10',
       )}
     >
       {children}

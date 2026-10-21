@@ -1,3 +1,4 @@
+import { useFloatingPanel } from './useFloatingPanel'
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 
@@ -26,7 +27,7 @@ export function Menu({ trigger, children, align = 'start', side = 'bottom', clas
   const [open, setOpen] = useState(false)
   useEffect(() => onOpenChange?.(open), [open, onOpenChange])
   const rootRef = useRef<HTMLDivElement>(null)
-  const listRef = useRef<HTMLDivElement>(null)
+  const listRef = useFloatingPanel<HTMLDivElement>(open, rootRef, { align, side, matchWidth: false, focusSelector: '[role^="menuitem"]:not([aria-disabled="true"]):not(:disabled)' })
   const menuId = useId()
   const triggerId = useId()
 
@@ -35,17 +36,18 @@ export function Menu({ trigger, children, align = 'start', side = 'bottom', clas
     document.getElementById(triggerId)?.focus()
   }
 
+
   useEffect(() => {
     if (!open) return
     const onPointer = (e: PointerEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('pointerdown', onPointer)
-    listRef.current?.querySelector<HTMLElement>('[role^="menuitem"]:not([aria-disabled="true"])')?.focus()
     return () => document.removeEventListener('pointerdown', onPointer)
   }, [open])
 
   function onKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Tab') { setOpen(false); return }
     if (e.key === 'Escape') {
       e.preventDefault()
       close()
@@ -54,7 +56,7 @@ export function Menu({ trigger, children, align = 'start', side = 'bottom', clas
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return
     e.preventDefault()
     const items = Array.from(
-      listRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]:not([aria-disabled="true"])') ?? [],
+      listRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]:not([aria-disabled="true"]):not(:disabled)') ?? [],
     )
     if (!items.length) return
     const index = items.indexOf(document.activeElement as HTMLElement)
@@ -68,7 +70,10 @@ export function Menu({ trigger, children, align = 'start', side = 'bottom', clas
   }
 
   return (
-    <div ref={rootRef} className="relative" onKeyDown={open ? onKeyDown : undefined}>
+    <div ref={rootRef} className="relative" onKeyDown={(event) => {
+      if (open) onKeyDown(event)
+      else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setOpen(true) }
+    }}>
       {trigger({
         'aria-haspopup': 'menu',
         'aria-expanded': open,
@@ -79,13 +84,12 @@ export function Menu({ trigger, children, align = 'start', side = 'bottom', clas
       {open && (
         <div
           ref={listRef}
+          popover="manual"
           id={menuId}
           role="menu"
           aria-labelledby={triggerId}
           className={cn(
-            'absolute z-50 min-w-56 animate-fade-in rounded-xl bg-white p-1.5 shadow-float ring-1 ring-zinc-200',
-            align === 'end' ? 'right-0' : 'left-0',
-            side === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
+            'crm-popover menu-surface min-w-56 max-w-[calc(100vw-2rem)] animate-fade-in',
             className,
           )}
         >
@@ -111,17 +115,18 @@ export function MenuItem({ onSelect, children, icon, disabled, tone = 'default' 
       role="menuitem"
       tabIndex={-1}
       aria-disabled={disabled || undefined}
+      disabled={disabled}
       onClick={() => !disabled && onSelect()}
       className={cn(
-        'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm outline-none',
+        'flex min-h-10 w-full items-center gap-3 rounded-control px-3 py-2 text-left text-sm outline-none',
         disabled
-          ? 'cursor-not-allowed text-zinc-400'
+          ? 'cursor-not-allowed text-muted'
           : tone === 'danger'
             ? 'text-red-700 hover:bg-red-50 focus:bg-red-50'
-            : 'text-zinc-700 hover:bg-zinc-100 focus:bg-zinc-100',
+            : 'text-ink hover:bg-zinc-100 focus:bg-zinc-100',
       )}
     >
-      {icon && <span className="flex size-4 shrink-0 items-center justify-center text-zinc-500">{icon}</span>}
+      {icon && <span className="flex size-4 shrink-0 items-center justify-center text-muted">{icon}</span>}
       <span className="min-w-0 flex-1">{children}</span>
     </button>
   )
@@ -132,5 +137,5 @@ export function MenuSeparator() {
 }
 
 export function MenuLabel({ children }: { children: ReactNode }) {
-  return <p className="px-2.5 pt-1.5 pb-1 text-xs font-medium text-zinc-500">{children}</p>
+  return <p className="px-3 pt-2 pb-1 text-xs font-medium text-muted">{children}</p>
 }

@@ -200,7 +200,7 @@ export default function IntegrationsPage() {
           { label: 'Source options', value: 6, icon: PlugZap },
         ].map((m) => (
           <div key={m.label} className="surface flex items-center gap-3 p-4">
-            <span className="rounded-lg bg-zinc-50 p-2.5 text-zinc-400">
+            <span className="rounded-lg bg-surface-subtle p-3 text-muted">
               <m.icon className="size-4" />
             </span>
             <div>
@@ -218,7 +218,7 @@ export default function IntegrationsPage() {
         </div>
       )}
       {facebook.isError && allowed && <ErrorState error={facebook.error} onRetry={() => facebook.refetch()} />}
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+      <div className="filter-toolbar">
         <div role="group" aria-label="Source categories" className="flex max-w-full gap-1 overflow-x-auto">
           {['All sources', 'Website', 'Advertising', 'Social', 'Other sources'].map((c) => (
             <button
@@ -232,7 +232,7 @@ export default function IntegrationsPage() {
           ))}
         </div>
         <div className="relative lg:w-64">
-          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
+          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
           <Input
             aria-label="Search lead sources"
             placeholder="Find a source…"
@@ -246,16 +246,19 @@ export default function IntegrationsPage() {
         {filtered.map((provider) => {
           const state = status(provider.id)
           return (
-            <article key={provider.id} className="surface flex flex-col p-6 transition-shadow hover:shadow-float">
+            <article
+              key={provider.id}
+              className="surface flex min-w-0 flex-col p-6 transition-colors hover:border-brand-300"
+            >
               <div className="flex items-start justify-between gap-2">
-                <span className="flex size-11 items-center justify-center rounded-xl border border-line bg-zinc-50">
-                  <provider.icon className="size-5 text-brand-600" />
+                <span className="flex size-11 items-center justify-center rounded-xl border border-line bg-surface-subtle">
+                  <provider.icon className="size-5 text-brand-700" />
                 </span>
                 <Badge tone={state.tone}>{state.text}</Badge>
               </div>
               <h2 className="mt-5 text-base font-semibold text-ink">{provider.title}</h2>
               <p className="mt-2 flex-1 text-sm leading-6 text-muted">{provider.description}</p>
-              <p className="mt-4 text-[11px] text-muted">
+              <p className="mt-4 text-xs text-muted">
                 {provider.id === 'facebook' && connected
                   ? `Last synced ${lastSync ? relativeTime(lastSync) : 'not yet'}`
                   : provider.id === 'website' && !captureLive
@@ -263,8 +266,15 @@ export default function IntegrationsPage() {
                     : provider.tag || 'Guided setup'}
               </p>
               <div className="mt-5 flex items-center justify-between border-t border-line pt-4">
-                <span className="text-[11px] text-zinc-400">{provider.category}</span>
-                <Button variant="secondary" size="sm" onClick={() => setParams({ source: provider.id })}>
+                <span className="text-xs text-muted">{provider.category}</span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setParams({ source: provider.id })
+                  }}
+                >
                   {provider.id === 'facebook' && connected
                     ? 'Manage'
                     : provider.id === 'website'
@@ -272,7 +282,7 @@ export default function IntegrationsPage() {
                       : provider.id === 'import'
                         ? 'Import leads'
                         : 'Setup guide'}
-                  <ArrowRight className="size-3.5" />
+                  <ArrowRight className="size-4" />
                 </Button>
               </div>
             </article>
@@ -281,7 +291,7 @@ export default function IntegrationsPage() {
       </div>
       {!filtered.length && (
         <div className="surface py-12 text-center">
-          <Search className="mx-auto size-6 text-zinc-300" />
+          <Search className="mx-auto size-6 text-muted" />
           <p className="mt-3 text-sm text-muted">No sources match your search.</p>
           <Button
             variant="ghost"
@@ -295,18 +305,18 @@ export default function IntegrationsPage() {
           </Button>
         </div>
       )}
-      <section className="flex flex-wrap items-center gap-4 rounded-xl border border-dashed border-zinc-300 p-5">
-        <HelpCircle className="size-6 text-zinc-400" />
+      <section className="flex flex-wrap items-center gap-4 rounded-xl border border-dashed border-line p-5">
+        <HelpCircle className="size-6 text-muted" />
         <div className="flex-1">
           <h2 className="text-sm font-medium text-ink">A little help getting connected?</h2>
           <p className="mt-1 text-xs text-muted">Start with one source. You can add the rest as your business grows.</p>
         </div>
         <Button variant="ghost" to="/app/setup?step=1">
           Back to setup
-          <ArrowRight className="size-3.5" />
+          <ArrowRight className="size-4" />
         </Button>
         <Button variant="secondary" to="/help">
-          <BookOpen className="size-3.5" />
+          <BookOpen className="size-4" />
           Help center
         </Button>
       </section>
@@ -321,8 +331,7 @@ export default function IntegrationsPage() {
           <div className="space-y-5">
             {['instagram', 'google', 'webhook'].includes(selected.id) && (
               <PreviewNotice>
-                This connector’s backend is not implemented yet. This guide does not connect an account or receive live
-                enquiries.
+                This connection is coming soon. Explore the setup guide; use manual entry or import to capture leads today.
               </PreviewNotice>
             )}
             {selected.id === 'website' && !captureLive && (
@@ -336,7 +345,7 @@ export default function IntegrationsPage() {
                   <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs font-semibold text-brand-700">
                     {i + 1}
                   </span>
-                  <p className="pt-0.5 text-sm leading-6 text-zinc-600">{step}</p>
+                  <p className="pt-1 text-sm leading-6 text-muted">{step}</p>
                 </li>
               ))}
             </ol>
@@ -347,7 +356,7 @@ export default function IntegrationsPage() {
               ) : facebook.isError ? (
                 <ErrorState error={facebook.error} onRetry={() => facebook.refetch()} />
               ) : (
-                <div className="rounded-lg bg-zinc-50 p-4">
+                <div className="rounded-lg bg-surface-subtle p-4">
                   <div className="flex items-center justify-between gap-3">
                     <SourceBadge name="Facebook Lead Ads" />
                     <Badge tone={status('facebook').tone}>{status('facebook').text}</Badge>
@@ -361,7 +370,7 @@ export default function IntegrationsPage() {
                     </p>
                   )}
                   <Button variant="ghost" size="sm" className="mt-3" onClick={() => facebook.refetch()}>
-                    <RefreshCw className="size-3.5" />
+                    <RefreshCw className="size-4" />
                     Refresh status
                   </Button>
                   <Button variant="ghost" size="sm" className="mt-3" onClick={() => setTestGuide(true)}>
@@ -369,12 +378,53 @@ export default function IntegrationsPage() {
                   </Button>
                 </div>
               ))}
+            {selected.id === 'webhook' && (
+              <div className="space-y-3">
+                <div>
+                  <p className="mb-2 text-xs font-medium text-ink">Inbound capture endpoint</p>
+                  <pre className="overflow-x-auto rounded-lg border border-line bg-surface-subtle p-3 text-xs font-mono text-ink">{`${location.origin}/api/webhooks/in/leads/<your-webhook-key>`}</pre>
+                  <div className="mt-2">
+                    <CopyButton text={`${location.origin}/api/webhooks/in/leads/<your-webhook-key>`} label="Copy endpoint URL" />
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-2 text-xs font-medium text-ink">JSON payload structure</p>
+                  <pre className="overflow-x-auto rounded-lg border border-line bg-surface-subtle p-3 text-xs font-mono text-muted">{`{
+  "fullName": "Jane Doe",
+  "email": "jane@example.com",
+  "phone": "+91 98765 43210",
+  "companyName": "Acme Corp",
+  "source": "Website",
+  "requirement": "Product enquiry"
+}`}</pre>
+                </div>
+              </div>
+            )}
+            {selected.id === 'instagram' && (
+              <div className="space-y-3">
+                <div className="rounded-xl border border-line bg-surface-subtle p-4">
+                  <h4 className="text-xs font-semibold text-ink">Meta Business Suite integration</h4>
+                  <p className="mt-1 text-xs text-muted">
+                    For Facebook Lead Ads, manage your connected Pages in Meta settings. Instagram capture is coming soon.
+                  </p>
+                  <Button variant="secondary" size="sm" to="/app/settings/facebook" onClick={close} className="mt-3">
+                    Open Facebook & Meta settings
+                    <ArrowRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
             {selected.id === 'google' && (
-              <div>
-                <p className="mb-2 text-xs text-muted">Example URL · requires a server-issued key</p>
-                <pre className="overflow-x-auto rounded-lg bg-zinc-100 p-3 text-xs text-zinc-600">{`${location.origin}/api/webhooks/in/google-ads/<your-key>`}</pre>
-                <div className="mt-2">
-                  <CopyButton text={`${location.origin}/api/webhooks/in/google-ads/<your-key>`} label="Copy example" />
+              <div className="space-y-3">
+                <div>
+                  <p className="mb-2 text-xs font-medium text-ink">Google Ads lead form webhook URL</p>
+                  <pre className="overflow-x-auto rounded-lg border border-line bg-surface-subtle p-3 text-xs font-mono text-ink">{`${location.origin}/api/webhooks/in/google-ads/<your-key>`}</pre>
+                  <div className="mt-2">
+                    <CopyButton text={`${location.origin}/api/webhooks/in/google-ads/<your-key>`} label="Copy webhook URL" />
+                  </div>
+                </div>
+                <div className="rounded-xl border border-line bg-surface-subtle p-3 text-xs text-muted">
+                  Paste this URL into your Google Ads Lead Form extension under “Lead delivery option → Manage leads with a webhook”.
                 </div>
               </div>
             )}
@@ -390,13 +440,13 @@ export default function IntegrationsPage() {
                 <ArrowRight className="size-4" />
               </Button>
             ) : !selected.to ? (
-              <p className="rounded-lg bg-zinc-50 p-3 text-sm text-muted">
+              <p className="rounded-lg bg-surface-subtle p-3 text-sm text-muted">
                 You can use manual entry or CSV import while this connector is being built.
               </p>
             ) : (
               <p className="text-sm text-muted">Ask your workspace admin to complete this setup.</p>
             )}
-            <p className="flex items-center gap-1.5 text-[11px] text-muted">
+            <p className="flex items-center gap-2 text-xs text-muted">
               <Check className="size-3" />
               Your existing leads stay in your CRM when a source is disconnected.
             </p>
@@ -409,7 +459,7 @@ export default function IntegrationsPage() {
         title="Check Facebook lead capture"
         description="A manual CRM lead would not test your Facebook connection."
       >
-        <ol className="list-decimal space-y-3 pl-5 text-sm leading-6 text-zinc-600">
+        <ol className="list-decimal space-y-3 pl-5 text-sm leading-6 text-muted">
           <li>Open Meta’s Lead Ads testing tool for a Page and form you have enabled.</li>
           <li>Send a test lead from Meta.</li>
           <li>Open Facebook settings → Lead capture history. Verify the delivery and open the resulting CRM lead.</li>
@@ -423,7 +473,7 @@ export default function IntegrationsPage() {
           className="mt-5"
         >
           Open capture history
-          <ArrowRight className="size-3.5" />
+          <ArrowRight className="size-4" />
         </Button>
       </Dialog>
     </div>

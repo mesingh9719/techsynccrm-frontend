@@ -20,7 +20,7 @@ import { Checkbox, FormAlert } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { ConfirmDialog } from '../../components/app/Dialog'
 import { SettingsSection } from '../../components/app/SettingsSection'
-import { ErrorState, Skeleton } from '../../components/app/States'
+import { ErrorState, Skeleton, PageHeader } from '../../components/app/States'
 
 const GB = 1024 ** 3
 const planName = (id: string) => pricing.plans.find((p) => p.id === id)?.name ?? id
@@ -38,8 +38,8 @@ function Meter({ label, used, limit, format = (n) => n.toLocaleString('en-IN') }
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2 text-sm">
-        <span className="font-medium text-zinc-900">{label}</span>
-        <span className={cn('tabular-nums', limit !== null && used > limit ? 'font-medium text-red-700' : 'text-zinc-600')}>
+        <span className="font-medium text-ink">{label}</span>
+        <span className={cn('tabular-nums', limit !== null && used > limit ? 'font-medium text-red-700' : 'text-muted')}>
           {format(used)} {limit === null ? '· Unlimited' : `of ${format(limit)}`}
         </span>
       </div>
@@ -86,7 +86,7 @@ function CurrentPlan({ org }: { org: Organization }) {
       }
     >
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xl font-semibold text-zinc-950">{planName(org.plan)}</span>
+        <span className="text-xl font-semibold text-ink">{planName(org.plan)}</span>
         {org.trialActive && org.trialDaysLeft !== null && (
           <Badge tone={org.trialDaysLeft <= 3 ? 'danger' : 'brand'}>
             Trial · {org.trialDaysLeft === 0 ? 'ends today' : `${org.trialDaysLeft} day${org.trialDaysLeft === 1 ? '' : 's'} left`}
@@ -94,20 +94,20 @@ function CurrentPlan({ org }: { org: Organization }) {
         )}
       </div>
       {org.trialActive && org.trialEndsAt && (
-        <p className="mt-2 text-sm text-zinc-600">
+        <p className="mt-2 text-sm text-muted">
           Your trial ends on {formatDate(org.trialEndsAt)}. After that the workspace moves to the free Starter plan unless you upgrade — nothing is deleted.
         </p>
       )}
       {!org.trialActive && org.plan === 'starter' && (
-        <p className="mt-2 text-sm text-zinc-600">Free for up to 2 users and 1,000 leads and contacts. Upgrade for WhatsApp, automation, quotes and more seats.</p>
+        <p className="mt-2 text-sm text-muted">Free for up to 2 users and 1,000 leads and contacts. Upgrade for WhatsApp, automation, quotes and more seats.</p>
       )}
       {plan && (
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
           {plan.features
             .filter((f) => !f.endsWith(':'))
             .map((feature) => (
-              <li key={feature} className="flex gap-2 text-sm text-zinc-700">
-                <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+              <li key={feature} className="flex gap-2 text-sm text-ink">
+                <Check className="mt-1 size-4 shrink-0 text-emerald-600" aria-hidden="true" />
                 {feature}
               </li>
             ))}
@@ -128,7 +128,7 @@ function Usage({ org }: { org: Organization }) {
         <Meter label="Pipelines" used={usage.pipelines} limit={limits.pipelines} />
         <Meter label="Storage" used={usage.storageBytes} limit={limits.storageGb === null ? null : limits.storageGb * GB} format={formatBytes} />
       </div>
-      <p className="mt-5 text-xs text-zinc-500">Users include pending invitations — each one holds a seat until it’s accepted, revoked or expires.</p>
+      <p className="mt-5 text-xs text-muted">Users include pending invitations — each one holds a seat until it’s accepted, revoked or expires.</p>
     </SettingsSection>
   )
 }
@@ -146,7 +146,7 @@ function SeatSelection({ org }: { org: Organization }) {
   const [error, setError] = useState<string | null>(null)
   const keep = new Set(owner ? [owner.userId, ...picked] : picked)
 
-  if (members.isPending) return <Skeleton className="h-48 rounded-2xl" />
+  if (members.isPending) return <Skeleton className="h-48 rounded-card" />
   if (members.isError) return <ErrorState error={members.error} onRetry={() => members.refetch()} />
 
   const list = members.data
@@ -180,7 +180,7 @@ function SeatSelection({ org }: { org: Organization }) {
       title="Choose who keeps access"
       description={`The ${planName(org.plan)} plan includes ${seats} users and this workspace has ${list.length}. Until you choose, only you and one admin can use the workspace. Everyone you don’t pick is deactivated — nothing they own is deleted, and their open records move to you.`}
     >
-      <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-zinc-200">
+      <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
         {list.map((m) => {
           const isOwner = m.role === 'owner'
           const checked = keep.has(m.userId)
@@ -189,7 +189,7 @@ function SeatSelection({ org }: { org: Organization }) {
               <Checkbox
                 label={
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-zinc-900">{m.fullName}</span>
+                    <span className="font-medium text-ink">{m.fullName}</span>
                     <Badge>{roleLabels[m.role]}</Badge>
                   </span>
                 }
@@ -203,7 +203,7 @@ function SeatSelection({ org }: { org: Organization }) {
         })}
       </ul>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-zinc-600" aria-live="polite">
+        <p className="text-sm text-muted" aria-live="polite">
           {keep.size} of {seats} seats chosen · {leaving.length} will lose access
         </p>
         <div className="flex gap-2">
@@ -246,11 +246,12 @@ export default function PlanSettings() {
     if (hash === '#seats' && organization) document.getElementById('seats')?.scrollIntoView({ behavior: 'smooth' })
   }, [hash, organization])
 
-  if (query.isPending) return <Skeleton className="h-96 rounded-2xl" />
+  if (query.isPending) return <Skeleton className="h-96 rounded-card" />
   if (query.isError || !organization) return <ErrorState error={query.error} onRetry={() => query.refetch()} />
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Plan & usage" description="Review your subscription, seats, and available capacity." />
       {organization.seatSelectionRequired && role === 'owner' && (
         <div id="seats">
           <SeatSelection org={organization} />

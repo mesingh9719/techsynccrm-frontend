@@ -32,14 +32,14 @@ function CostEstimator({ cycle, currency }: { cycle: BillingCycle; currency: Cur
   const yearlySaving = (monthlyEquivalent - price.annual * users) * 12
 
   return (
-    <div className="grid overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-zinc-200 lg:grid-cols-[1.3fr_1fr]">
+    <div className="grid overflow-hidden rounded-dialog bg-white shadow-card ring-1 ring-zinc-200 lg:grid-cols-[1.3fr_1fr]">
       <div className="p-6 sm:p-10">
         <h3 className="text-xl font-semibold text-zinc-950">Estimate your cost</h3>
-        <p className="mt-1.5 text-zinc-600">Pick a plan and team size. Prices update with the toggles above.</p>
+        <p className="mt-2 text-zinc-600">Pick a plan and team size. Prices update with the toggles above.</p>
 
         <fieldset className="mt-8">
           <legend className="text-sm font-medium text-zinc-800">Plan</legend>
-          <div className="mt-2.5 grid grid-cols-2 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2">
             {paidPlans.map((p) => (
               <label
                 key={p.id}
@@ -128,7 +128,7 @@ export default function Pricing() {
         <ul className="mt-12 grid grid-cols-2 gap-6 border-t border-zinc-100 pt-10 lg:grid-cols-4">
           {assurances.map((a) => (
             <li key={a.title} className="flex gap-3">
-              <a.icon className="mt-0.5 size-5 shrink-0 text-zinc-400" aria-hidden="true" />
+              <a.icon className="mt-1 size-5 shrink-0 text-zinc-400" aria-hidden="true" />
               <div>
                 <p className="text-sm font-medium text-zinc-900">{a.title}</p>
                 <p className="text-sm text-zinc-500">{a.text}</p>

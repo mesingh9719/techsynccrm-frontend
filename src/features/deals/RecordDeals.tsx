@@ -6,7 +6,7 @@ import { qk } from '../../lib/queryKeys'
 import { useCan } from '../../lib/useOrg'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { Skeleton } from '../../components/app/States'
+import { ErrorState, Skeleton } from '../../components/app/States'
 import { Panel } from '../crm/components/RecordParts'
 import { formatMinor } from '../crm/format'
 import { useOrgId } from '../crm/hooks'
@@ -31,7 +31,7 @@ export function RecordDeals({ contact, company }: { contact?: { id: string; name
       actions={
         canCreate && (
           <Button size="sm" variant="secondary" onClick={() => setCreating(true)}>
-            <Plus className="size-3.5" aria-hidden="true" />
+            <Plus className="size-4" aria-hidden="true" />
             New deal
           </Button>
         )
@@ -39,16 +39,18 @@ export function RecordDeals({ contact, company }: { contact?: { id: string; name
     >
       {deals.isPending ? (
         <Skeleton className="h-12" />
+      ) : deals.isError ? (
+        <ErrorState error={deals.error} onRetry={() => deals.refetch()} />
       ) : items.length ? (
         <>
-          {open.length > 0 && <p className="mb-2 text-xs text-zinc-500">Open: {formatMinor(open.reduce((n, d) => n + d.valueMinor, 0))}</p>}
+          {open.length > 0 && <p className="mb-2 text-xs text-muted">Open: {formatMinor(open.reduce((n, d) => n + d.valueMinor, 0))}</p>}
           <ul className="divide-y divide-zinc-100">
             {items.map((d) => (
               <li key={d.id}>
-                <Link to={`/app/deals/${d.id}`} className="flex items-center gap-3 py-2.5 hover:bg-zinc-50">
+                <Link to={`/app/deals/${d.id}`} className="flex items-center gap-3 py-3 hover:bg-surface-subtle">
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-zinc-900">{d.title}</span>
-                    <span className="block truncate text-xs text-zinc-500">{d.pipeline.name}</span>
+                    <span className="block truncate text-sm font-medium text-ink">{d.title}</span>
+                    <span className="block truncate text-xs text-muted">{d.pipeline.name}</span>
                   </span>
                   <Badge tone={tone[d.status]}>{d.status === 'open' ? d.stage.name : d.status === 'won' ? 'Won' : 'Lost'}</Badge>
                   <span className="text-sm font-medium tabular-nums">{formatMinor(d.valueMinor)}</span>
@@ -58,7 +60,7 @@ export function RecordDeals({ contact, company }: { contact?: { id: string; name
           </ul>
         </>
       ) : (
-        <p className="text-sm text-zinc-500">No deals yet.</p>
+        <p className="text-sm text-muted">No deals yet.</p>
       )}
       {creating && (
         <DealFormDrawer

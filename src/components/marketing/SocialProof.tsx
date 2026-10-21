@@ -21,7 +21,7 @@ export function LogoCloud({ className, title = 'Trusted by 4,200+ growing busine
               )}
             >
               <span className="size-4 bg-current opacity-80" style={{ borderRadius: i % 2 ? '999px' : '4px' }} aria-hidden="true" />
-              <span className="text-[17px]">{name}</span>
+              <span className="text-base">{name}</span>
             </li>
           ))}
         </ul>
@@ -32,7 +32,7 @@ export function LogoCloud({ className, title = 'Trusted by 4,200+ growing busine
 
 export function StatsBand({ className }: { className?: string }) {
   return (
-    <dl className={cn('grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-zinc-200 ring-1 ring-zinc-200 lg:grid-cols-4', className)}>
+    <dl className={cn('grid grid-cols-2 gap-px overflow-hidden rounded-dialog bg-zinc-200 ring-1 ring-zinc-200 lg:grid-cols-4', className)}>
       {company.stats.map((stat, i) => (
         <Reveal key={stat.label} delay={i * 60} className="bg-white p-6 sm:p-8">
           <dt className="text-sm text-zinc-500">{stat.label}</dt>
@@ -47,23 +47,23 @@ function TestimonialCard({ t, featured }: { t: Testimonial; featured?: boolean }
   return (
     <figure
       className={cn(
-        'flex h-full flex-col rounded-2xl p-6 sm:p-7',
+        'flex h-full flex-col rounded-dialog p-6 sm:p-7',
         featured ? 'bg-zinc-950 text-white' : 'bg-white shadow-card ring-1 ring-zinc-200',
       )}
     >
       <div className="flex items-center justify-between">
-        <div className="flex gap-0.5" aria-label="Rated 5 out of 5">
+        <div className="flex gap-1" aria-label="Rated 5 out of 5">
           {Array.from({ length: 5 }, (_, i) => (
             <Star key={i} className={cn('size-4 fill-current', featured ? 'text-amber-300' : 'text-amber-400')} aria-hidden="true" />
           ))}
         </div>
         {t.metric && (
-          <span className={cn('rounded-full px-2.5 py-1 text-xs font-medium', featured ? 'bg-white/10 text-white' : 'bg-brand-50 text-brand-700')}>
+          <span className={cn('rounded-full px-3 py-1 text-xs font-medium', featured ? 'bg-white/10 text-white' : 'bg-brand-50 text-brand-700')}>
             {t.metric}
           </span>
         )}
       </div>
-      <blockquote className={cn('mt-5 flex-1 leading-relaxed', featured ? 'text-lg text-zinc-100' : 'text-[15px] text-zinc-700')}>
+      <blockquote className={cn('mt-5 flex-1 leading-relaxed', featured ? 'text-lg text-zinc-100' : 'text-sm text-zinc-700')}>
         <Quote className={cn('mb-2 size-5', featured ? 'text-zinc-600' : 'text-zinc-300')} aria-hidden="true" />
         {t.quote}
       </blockquote>

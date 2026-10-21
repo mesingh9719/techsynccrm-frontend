@@ -21,7 +21,7 @@ import { Dialog } from '../components/app/Dialog'
 function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Dialog open={open} onClose={onClose} title="Navigation" variant="drawer" className="mr-auto ml-0 max-w-sm">
-      <Sidebar onNavigate={onClose} />
+      <div className="-m-6 h-[calc(100dvh-5rem)] max-sm:-m-4"><Sidebar onNavigate={onClose} /></div>
     </Dialog>
   )
 }
@@ -33,7 +33,7 @@ function TermsBanner() {
   if (!user || user.termsUpToDate) return null
   return (
     <div
-      className="flex flex-col gap-2 border-b border-brand-100 bg-brand-50 px-4 py-2.5 text-sm text-brand-900 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+      className="flex flex-col gap-2 border-b border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-900 sm:flex-row sm:items-center sm:justify-between sm:px-6"
       role="status"
     >
       <p className="flex items-center gap-2">
@@ -79,7 +79,7 @@ function PlanBanner() {
   if (organization.seatSelectionRequired && role === 'owner') {
     return (
       <div
-        className="flex flex-col gap-2 border-b border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-900 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+        className="flex flex-col gap-2 border-b border-red-100 bg-red-50 px-4 py-3 text-sm text-red-900 sm:flex-row sm:items-center sm:justify-between sm:px-6"
         role="alert"
       >
         <p className="flex items-center gap-2">
@@ -106,7 +106,7 @@ function PlanBanner() {
   return (
     <div
       className={cn(
-        'flex flex-col gap-2 border-b px-4 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6',
+        'flex flex-col gap-2 border-b px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6',
         urgent ? 'border-red-100 bg-red-50 text-red-900' : 'border-brand-100 bg-brand-50 text-brand-900',
       )}
       role="status"
@@ -142,6 +142,16 @@ function PlanBanner() {
 
 function Shell() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem('techsync:sidebar:v1') !== 'expanded' } catch { return true }
+  })
+  function toggleSidebar() {
+    setCollapsed((previous) => {
+      const next = !previous
+      try { localStorage.setItem('techsync:sidebar:v1', next ? 'collapsed' : 'expanded') } catch { /* Session preference still works. */ }
+      return next
+    })
+  }
   const closeNav = useCallback(() => setMobileOpen(false), [])
   useAppShortcuts()
   useNotificationStream()
@@ -157,11 +167,11 @@ function Shell() {
       </a>
       <RouteProgress />
       <ScrollManager />
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-zinc-200/80 bg-white lg:block">
-        <Sidebar />
+      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-sidebar-hover bg-sidebar lg:block", collapsed ? "w-20" : "w-64")} >
+        <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
       </aside>
       <MobileNav open={mobileOpen} onClose={closeNav} />
-      <div className="flex min-h-dvh min-w-0 flex-col lg:pl-64">
+      <div className={cn("flex min-h-dvh min-w-0 flex-col", collapsed ? "lg:pl-20" : "lg:pl-64")}>
         <Topbar onOpenMenu={() => setMobileOpen(true)} />
         <PlanBanner />
         <TermsBanner />

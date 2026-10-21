@@ -50,7 +50,7 @@ export default function WebFormsPage() {
         </PreviewNotice>
       )}
       {limit.limit !== null && (
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted">
           Your plan includes {limit.limit} {limit.limit === 1 ? 'live form' : 'live forms'}. The server enforces
           publishing limits.
         </p>
@@ -76,7 +76,7 @@ export default function WebFormsPage() {
           {query.data.map((form) => (
             <article key={form.id} className="surface p-5">
               <div className="flex items-start gap-3">
-                <span className="rounded-lg bg-brand-50 p-2 text-brand-600">
+                <span className="rounded-lg bg-brand-50 p-2 text-brand-700">
                   <FileInput className="size-5" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -113,11 +113,11 @@ export default function WebFormsPage() {
                   }}
                   aria-label={`Delete ${form.name}`}
                 >
-                  <Trash2 className="size-3.5" />
+                  <Trash2 className="size-4" />
                 </Button>
                 <Button variant="secondary" size="sm" to={`/app/settings/forms/${form.id}`}>
                   Edit form
-                  <ArrowRight className="size-3.5" />
+                  <ArrowRight className="size-4" />
                 </Button>
               </div>
             </article>

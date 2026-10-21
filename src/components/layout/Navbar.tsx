@@ -35,22 +35,22 @@ function AnnouncementBar() {
 
   return (
     <div className="relative border-b border-zinc-800 bg-zinc-950 text-zinc-200">
-      <Container className="flex h-10 items-center justify-center gap-3 pr-12 text-[13px]">
-        <span className="hidden rounded-full bg-brand-500/20 px-2 py-0.5 text-[11px] font-medium text-brand-200 ring-1 ring-brand-400/30 sm:inline">
+      <Container className="flex h-10 items-center justify-center gap-3 pr-12 text-sm">
+        <span className="hidden rounded-full bg-brand-500/20 px-2 py-1 text-xs font-medium text-brand-200 ring-1 ring-brand-400/30 sm:inline">
           {site.announcement.label}
         </span>
-        <Link to={site.announcement.to} className="group inline-flex items-center gap-1.5 truncate hover:text-white">
+        <Link to={site.announcement.to} className="group inline-flex items-center gap-2 truncate hover:text-white">
           <span className="truncate">{site.announcement.text}</span>
-          <ArrowRight className="size-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+          <ArrowRight className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </Link>
       </Container>
       <button
         type="button"
         onClick={dismiss}
-        className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1.5 text-zinc-400 hover:bg-white/10 hover:text-white"
+        className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-2 text-zinc-400 hover:bg-white/10 hover:text-white"
         aria-label="Dismiss announcement"
       >
-        <X className="size-3.5" aria-hidden="true" />
+        <X className="size-4" aria-hidden="true" />
       </button>
     </div>
   )
@@ -86,21 +86,21 @@ function DesktopDropdown({ group, open, onOpen, onClose }: { group: NavGroup; op
         aria-controls={panelId}
         onClick={() => (open ? onClose() : onOpen())}
         className={cn(
-          'inline-flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-medium transition-colors hover:bg-zinc-100 hover:text-zinc-950',
+          'inline-flex h-10 items-center gap-1 rounded-lg px-3 text-sm font-medium transition-colors hover:bg-zinc-100 hover:text-zinc-950',
           active || open ? 'text-zinc-950' : 'text-zinc-600',
         )}
       >
         {group.label}
-        <ChevronDown className={cn('size-3.5 text-zinc-400 transition-transform duration-200', open && 'rotate-180')} aria-hidden="true" />
+        <ChevronDown className={cn('size-4 text-zinc-400 transition-transform duration-200', open && 'rotate-180')} aria-hidden="true" />
       </button>
 
       <div
         id={panelId}
         hidden={!open}
-        className={cn('absolute top-full left-1/2 z-50 -translate-x-1/2 pt-2.5', wide ? 'w-[560px]' : 'w-[340px]')}
+        className={cn('absolute top-full left-1/2 z-50 -translate-x-1/2 pt-3', wide ? 'w-[560px]' : 'w-[340px]')}
       >
-        <div className="animate-fade-in rounded-2xl bg-white p-2 shadow-float ring-1 ring-zinc-200/80">
-          <ul className={cn('grid gap-0.5', wide && 'grid-cols-2')}>
+        <div className="animate-fade-in rounded-dialog bg-white p-2 shadow-float ring-1 ring-zinc-200/80">
+          <ul className={cn('grid gap-1', wide && 'grid-cols-2')}>
             {items.map((item) => {
               const Icon = getIcon(item.icon)
               return (
@@ -111,7 +111,7 @@ function DesktopDropdown({ group, open, onOpen, onClose }: { group: NavGroup; op
                     </span>
                     <span>
                       <span className="block text-sm font-medium text-zinc-900">{item.label}</span>
-                      <span className="mt-0.5 block text-[13px] leading-snug text-zinc-500">{item.description}</span>
+                      <span className="mt-1 block text-sm leading-snug text-zinc-500">{item.description}</span>
                     </span>
                   </Link>
                 </li>
@@ -155,7 +155,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
                         const Icon = getIcon(item.icon)
                         return (
                           <li key={item.to}>
-                            <Link to={item.to} onClick={onClose} className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-[15px] text-zinc-700 hover:bg-zinc-50">
+                            <Link to={item.to} onClick={onClose} className="flex items-center gap-3 rounded-lg px-2 py-3 text-sm text-zinc-700 hover:bg-zinc-50">
                               <Icon className="size-4 text-zinc-400" aria-hidden="true" />
                               {item.label}
                             </Link>
@@ -267,7 +267,7 @@ export function Navbar() {
         <Container className="flex h-16 items-center justify-between gap-6">
           <Logo />
 
-          <nav aria-label="Main" className="hidden items-center gap-0.5 lg:flex">
+          <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
             {navigation.main.map((group) =>
               group.items ? (
                 <DesktopDropdown
@@ -283,7 +283,7 @@ export function Navbar() {
                   to={group.to!}
                   className={({ isActive }) =>
                     cn(
-                      'inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors hover:bg-zinc-100 hover:text-zinc-950',
+                      'inline-flex h-10 items-center rounded-lg px-3 text-sm font-medium transition-colors hover:bg-zinc-100 hover:text-zinc-950',
                       isActive ? 'text-zinc-950' : 'text-zinc-600',
                     )
                   }
@@ -297,22 +297,22 @@ export function Navbar() {
           <div className={cn('hidden items-center gap-2 transition-opacity lg:flex', status === 'loading' && 'opacity-0')}>
             {user ? (
               <>
-                <Button to="/demo" variant="secondary" size="sm" className="h-9">
+                <Button to="/demo" variant="secondary" size="sm" className="h-10">
                   Book a demo
                 </Button>
-                <Button to={nextPathFor(user)} variant="dark" size="sm" className="h-9">
+                <Button to={nextPathFor(user)} variant="dark" size="sm" className="h-10">
                   Open app
                 </Button>
               </>
             ) : (
               <>
-                <Button to="/login" variant="ghost" size="sm" className="h-9 px-3">
+                <Button to="/login" variant="ghost" size="sm" className="h-10 px-3">
                   Log in
                 </Button>
-                <Button to="/demo" variant="secondary" size="sm" className="h-9">
+                <Button to="/demo" variant="secondary" size="sm" className="h-10">
                   Book a demo
                 </Button>
-                <Button to="/signup" variant="dark" size="sm" className="h-9">
+                <Button to="/signup" variant="dark" size="sm" className="h-10">
                   Start free trial
                 </Button>
               </>

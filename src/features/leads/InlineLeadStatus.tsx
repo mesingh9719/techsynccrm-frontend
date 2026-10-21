@@ -76,7 +76,7 @@ export function InlineLeadStatus({ lead }: { lead: LeadRecord }) {
             className="inline-flex items-center gap-1 rounded-lg p-1 hover:bg-zinc-100 disabled:opacity-50"
           >
             <LeadStatusBadge status={lead.status} />
-            <ChevronDown className="size-3 text-zinc-400" />
+            <ChevronDown className="size-3 text-muted" />
           </button>
         )}
       >

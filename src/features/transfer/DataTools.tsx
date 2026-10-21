@@ -66,7 +66,7 @@ export function DataTools({
         align="end"
         trigger={(props) => (
           <Button {...props} variant="secondary" size="sm" loading={busy}>
-            <ArrowDownToLine className="size-3.5" />
+            <ArrowDownToLine className="size-4" />
             {canImport && canExport ? 'Import / export' : canImport ? 'Import' : 'Export'}
             <ChevronDown className="size-3" />
           </Button>
@@ -115,12 +115,12 @@ export function DataTools({
         </a>
       )}
       {current && ['queued', 'running', 'preparing'].includes(current.status) && (
-        <span role="status" className="text-xs text-zinc-500">
+        <span role="status" className="text-xs text-muted">
           Preparing export…
         </span>
       )}
       {(current?.status === 'failed' || job.isError) && (
-        <span role="alert" className="text-xs text-red-600">
+        <span role="alert" className="text-xs text-danger">
           {current?.lastError ?? 'Export status unavailable'}
         </span>
       )}
