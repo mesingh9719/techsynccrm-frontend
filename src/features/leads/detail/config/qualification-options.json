@@ -1,0 +1,28 @@
+{
+  "priorities": [
+    { "value": "hot", "label": "Hot", "hint": "Ready to buy soon" },
+    { "value": "warm", "label": "Warm", "hint": "Interested, needs nurturing" },
+    { "value": "cold", "label": "Cold", "hint": "Early or unresponsive" }
+  ],
+  "timelines": [
+    { "value": "immediate", "label": "Immediately" },
+    { "value": "1_month", "label": "Within a month" },
+    { "value": "3_months", "label": "1–3 months" },
+    { "value": "6_months", "label": "3–6 months" },
+    { "value": "exploring", "label": "Just exploring" }
+  ],
+  "objections": [
+    "Price too high",
+    "Comparing with competitors",
+    "Needs approval from management",
+    "Not the right time",
+    "Unsure about fit",
+    "Wants a demo first"
+  ],
+  "decisionRoles": [
+    { "value": "decision_maker", "label": "Decision-maker" },
+    { "value": "influencer", "label": "Influencer" },
+    { "value": "user", "label": "End user" },
+    { "value": "finance", "label": "Finance / approver" }
+  ]
+}

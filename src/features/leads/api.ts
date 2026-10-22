@@ -7,6 +7,7 @@ import { useOrgId } from '../crm/hooks'
 import type { BulkResult, CustomFieldValues, Duplicate, JunkReason, LeadRecord, LeadSource, LeadStatus, LostReason, Page } from '../crm/types'
 
 export interface LeadInput {
+  qualification?: Partial<Omit<import('./detail/qualification').LeadQualification, 'updatedAt'>>
   firstName?: string | null
   lastName?: string | null
   emails?: EmailDraft[]

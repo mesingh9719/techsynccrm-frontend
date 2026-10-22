@@ -1,0 +1,54 @@
+{
+  "templates": [
+    {
+      "id": "tpl_wa_intro",
+      "channel": "whatsapp",
+      "name": "First reply",
+      "body": "Hi {{firstName}}, this is {{ownerName}} from {{workspaceName}}. Thanks for your enquiry{{requirementClause}}. Is now a good time for a quick call?"
+    },
+    {
+      "id": "tpl_wa_missed_call",
+      "channel": "whatsapp",
+      "name": "Missed your call",
+      "body": "Hi {{firstName}}, I tried calling you just now but couldn't get through. When would be a good time to talk today?"
+    },
+    {
+      "id": "tpl_wa_quote_followup",
+      "channel": "whatsapp",
+      "name": "Quote follow-up",
+      "body": "Hi {{firstName}}, just checking whether you had a chance to look at the quote we shared. Happy to walk you through it or adjust anything."
+    },
+    {
+      "id": "tpl_wa_meeting_confirm",
+      "channel": "whatsapp",
+      "name": "Confirm meeting",
+      "body": "Hi {{firstName}}, confirming our meeting. Please let me know if the time still works for you."
+    },
+    {
+      "id": "tpl_sms_callback",
+      "channel": "sms",
+      "name": "Call back request",
+      "body": "Hi {{firstName}}, {{ownerName}} from {{workspaceName}} here. I tried reaching you about your enquiry. Please call back when convenient."
+    },
+    {
+      "id": "tpl_email_intro",
+      "channel": "email",
+      "name": "Introduction",
+      "subject": "Your enquiry with {{workspaceName}}",
+      "body": "Hi {{firstName}},\n\nThank you for reaching out{{requirementClause}}. I'd love to understand what you need and share how we can help.\n\nWould you have 15 minutes this week for a quick call?\n\nBest regards,\n{{ownerName}}\n{{workspaceName}}"
+    },
+    {
+      "id": "tpl_email_proposal",
+      "channel": "email",
+      "name": "Proposal follow-up",
+      "subject": "Following up on our proposal",
+      "body": "Hi {{firstName}},\n\nI wanted to follow up on the proposal we sent. Do you have any questions, or is there anything you'd like us to change?\n\nBest regards,\n{{ownerName}}"
+    },
+    {
+      "id": "tpl_note_discovery",
+      "channel": "note",
+      "name": "Discovery call notes",
+      "body": "**Need:** \n**Budget:** \n**Timeline:** \n**Decision-maker:** \n**Next step:** "
+    }
+  ]
+}

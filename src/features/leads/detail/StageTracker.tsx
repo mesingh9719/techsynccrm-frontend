@@ -5,6 +5,7 @@ import { junkReasonLabels, leadStatusLabels } from '../../crm/format'
 import type { LeadRecord, LeadStatus } from '../../crm/types'
 import { changeLeadStatus, LEAD_TRANSITIONS, type StatusChange } from '../api'
 import { StatusDialog } from '../StatusDialog'
+import { ConfirmDialog } from '../../../components/app/Dialog'
 
 const STAGES: LeadStatus[] = ['new', 'contacted', 'qualified', 'converted']
 const hints: Partial<Record<LeadStatus, string>> = {
@@ -31,6 +32,8 @@ export function StageTracker({
 }) {
   const [closing, setClosing] = useState<'lost' | 'junk' | null>(null)
   const [busy, setBusy] = useState<LeadStatus | null>(null)
+  const [confirming, setConfirming] = useState<Exclude<LeadStatus, 'converted'> | null>(null)
+  const missing = [!lead.requirement?.trim() && 'requirement', lead.budgetMinor === null && 'budget'].filter(Boolean).join(' and ')
   const allowed = LEAD_TRANSITIONS[lead.status]
   const closed = lead.status === 'lost' || lead.status === 'junk'
   const currentIndex = STAGES.indexOf(lead.status)
@@ -38,8 +41,11 @@ export function StageTracker({
 
   async function move(status: Exclude<LeadStatus, 'converted'>) {
     setBusy(status)
-    await onChange(() => changeLeadStatus(lead.id, { status }), `Moved to ${leadStatusLabels[status]}`)
-    setBusy(null)
+    try {
+      const saved = await onChange(() => changeLeadStatus(lead.id, { status }), `Moved to ${leadStatusLabels[status]}`)
+      if (!saved) throw new Error('Couldn’t change the stage. Try again.')
+      setConfirming(null)
+    } finally { setBusy(null) }
   }
 
   return (
@@ -58,7 +64,7 @@ export function StageTracker({
                 disabled={!reachable || busy !== null}
                 aria-current={current ? 'step' : undefined}
                 title={reachable ? `Move to ${label}` : hints[stage]}
-                onClick={() => (stage === 'converted' ? onConvert() : move(stage as Exclude<LeadStatus, 'converted'>))}
+                onClick={() => (stage === 'converted' ? onConvert() : setConfirming(stage as Exclude<LeadStatus, 'converted'>))}
                 data-state={current ? 'current' : done ? 'done' : closed ? 'closed' : 'todo'}
                 className="stage-step compact-control"
               >
@@ -67,7 +73,7 @@ export function StageTracker({
                   {(done || (current && stage === 'converted')) && <Check className="size-3.5 shrink-0" aria-hidden="true" />}
                   <span className="truncate">{label}</span>
                 </span>
-                <span className="stage-hint">{busy === stage ? 'Saving…' : current ? 'Current stage' : reachable ? `Move here` : hints[stage]}</span>
+                <span className="stage-hint">{busy === stage ? 'Saving…' : stage === 'qualified' && missing && !current ? `Add ${missing}` : current ? 'Current stage' : reachable ? `Move here` : hints[stage]}</span>
               </button>
             </li>
           )
@@ -128,6 +134,7 @@ export function StageTracker({
           }}
         />
       )}
+      <ConfirmDialog open={confirming !== null} onClose={() => setConfirming(null)} title={`Move to ${confirming ? leadStatusLabels[confirming] : 'stage'}?`} description={confirming === 'qualified' && missing ? `Requirement and budget help the team qualify a lead. You can still move now and add the missing ${missing} later.` : 'This updates the lead stage and records the change in its activity history.'} confirmLabel="Confirm stage change" onConfirm={async () => { if (confirming) await move(confirming) }} />
     </div>
   )
 }

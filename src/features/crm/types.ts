@@ -137,6 +137,12 @@ export interface ScoreBreakdown {
 }
 
 export interface LeadRecord extends RecordBase {
+  qualification?: Partial<import('../leads/detail/qualification').LeadQualification>
+  campaignId?: string | null
+  campaign?: { id: string; name: string; code: string } | null
+  webForm?: { id: string; name: string } | null
+  latestWebForm?: { id: string; name: string } | null
+  assignmentHeldAt?: string | null
   firstName: string | null
   lastName: string | null
   displayName: string

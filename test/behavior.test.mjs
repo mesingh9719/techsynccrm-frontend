@@ -390,3 +390,76 @@ test('campaigns use paginated authenticated API data instead of browser storage 
   assert.equal(calls[2].body, '{"name":"Updated"}')
   assert.ok(calls.every((call) => call.credentials === 'include' && call.headers.Authorization === 'Bearer campaign-test-token'))
 })
+
+
+const { computeInsights } = await import(moduleUrl('src/features/leads/detail/insights.ts'))
+const { createFieldFocus, focusElement } = await import(moduleUrl('src/features/leads/detail/fieldFocus.ts'))
+const { followUpSlots } = await import(moduleUrl('src/features/leads/detail/followUpSlots.ts'))
+const { fillTemplate } = await import(moduleUrl('src/features/leads/detail/fillTemplate.ts'))
+const qualification = { priority: null, dealValueMinor: null, expectedCloseDate: null, timeline: null, preferences: null, objections: [], decisionMakers: [], updatedAt: null }
+const leadFixture = { id: 'fixture', displayName: 'Test lead', firstName: 'Test', ownerId: 'owner', status: 'new', requirement: null, budgetMinor: null, score: 50, enquiryCount: 1, phones: [{ raw: '9876543210', e164: '+919876543210' }], emails: [], firstRespondedAt: null, createdAt: '2026-10-22T10:00:00Z', lastActivityAt: '2026-10-22T10:00:00Z' }
+const insightNow = Date.parse('2026-10-22T10:30:00Z')
+
+test('v2 insights prioritize claiming and first contact, with a usable channel for each lead', () => {
+  assert.equal(computeInsights({ ...leadFixture, ownerId: null }, qualification, [], insightNow).next.kind, 'claim')
+  assert.equal(computeInsights(leadFixture, qualification, [], insightNow).next.kind, 'call')
+  assert.equal(computeInsights({ ...leadFixture, phones: [], emails: [{ value: 'fixture@example.test' }] }, qualification, [], insightNow).next.kind, 'email')
+  const missing = computeInsights({ ...leadFixture, phones: [] }, qualification, [], insightNow)
+  assert.equal(missing.next.kind, 'qualify')
+  assert(missing.missing.some((field) => field.target === 'phone'))
+})
+
+test('v2 qualification gaps and recommendations use actual facts, accepting zero budget', () => {
+  const lead = { ...leadFixture, status: 'contacted', firstRespondedAt: leadFixture.createdAt, requirement: 'Consultation', budgetMinor: 0 }
+  const insights = computeInsights(lead, { ...qualification, timeline: 'immediate', dealValueMinor: 100, objections: ['Price'] }, [{ status: 'open', isOverdue: false }], insightNow)
+  assert.equal(insights.next.kind, 'qualify')
+  assert(!insights.missing.some((field) => field.target === 'budget'))
+  assert(insights.recommendations.some((text) => text.includes('Price')))
+  assert(insights.recommendations.some((text) => text.includes('above their budget')))
+})
+
+test('v2 guidance handles overdue tasks, inactivity, qualified, lost, junk and converted stages', () => {
+  const lead = { ...leadFixture, status: 'contacted', firstRespondedAt: leadFixture.createdAt, requirement: 'Consultation', budgetMinor: 50000 }
+  assert.equal(computeInsights(lead, qualification, [{ title: 'Call back', isOverdue: true }], insightNow).next.kind, 'overdue')
+  assert(computeInsights({ ...lead, lastActivityAt: '2026-10-01T10:00:00Z' }, qualification, [], insightNow).inactivity)
+  assert.equal(computeInsights({ ...lead, status: 'qualified' }, qualification, [], insightNow).next.kind, 'convert')
+  assert.equal(computeInsights({ ...lead, status: 'lost' }, qualification, [], insightNow).next.kind, 'reopen')
+  for (const status of ['converted', 'junk']) assert.equal(computeInsights({ ...lead, status }, qualification, [], insightNow).next, null)
+})
+
+test('missing-info activation selects the right inline field and supports registration after reveal', () => {
+  const registry = createFieldFocus(), calls = []
+  registry.register('requirement', () => calls.push('requirement input focused'))
+  const missing = computeInsights(leadFixture, qualification, [], insightNow).missing.find((field) => field.target === 'requirement')
+  const clickMissingField = () => registry.focus(missing.target)
+  clickMissingField()
+  assert.deepEqual(calls, ['requirement input focused'])
+  registry.focus('budget'); registry.register('budget', () => calls.push('budget input focused'))
+  assert.equal(calls.at(-1), 'budget input focused')
+})
+
+test('quick follow-up slots use the workspace date and 10 am regardless of browser timezone', () => {
+  const slots = followUpSlots(new Date('2026-10-22T21:30:00Z'), 'Asia/Kolkata')
+  assert.equal(slots.find((slot) => slot.label === 'Tomorrow').at.toISOString(), '2026-10-24T04:30:00.000Z')
+  assert.equal(slots.find((slot) => slot.label === 'In 2 hours').at.toISOString(), '2026-10-22T23:30:00.000Z')
+  assert.equal(slots.find((slot) => slot.label === 'Next week').at.toISOString(), '2026-10-26T04:30:00.000Z')
+})
+
+test('template placeholders are filled from the real record and unknown placeholders are removed', () => {
+  assert.equal(fillTemplate('Hi {{firstName}} — {{ownerName}}, {{workspaceName}}{{requirementClause}}. {{unknown}}', { firstName: 'Asha', ownerName: 'Rep', workspaceName: 'Clinic', requirement: 'Consultation.' }), 'Hi Asha — Rep, Clinic about Consultation. ')
+})
+
+test('inline field focus respects reduced motion while preserving keyboard focus', (t) => {
+  const original = globalThis.matchMedia, calls = []
+  t.after(() => { globalThis.matchMedia = original })
+  globalThis.matchMedia = () => ({ matches: true })
+  focusElement({ scrollIntoView: (options) => calls.push(options), focus: (options) => calls.push(options) })
+  assert.deepEqual(calls, [{ block: 'center', behavior: 'instant' }, { preventScroll: true }])
+})
+
+test('unavailable task data never asserts that follow-ups are missing, and deleted leads have no next action', () => {
+  const insight = computeInsights(leadFixture, qualification, [], insightNow, { tasksLoaded: false })
+  assert(!insight.health.factors.includes('No follow-up scheduled'))
+  assert(!insight.recommendations.some((text) => text.includes('No follow-up scheduled')))
+  assert.equal(computeInsights({ ...leadFixture, deletedAt: '2026-10-22T10:30:00Z' }, qualification, [], insightNow).next, null)
+})

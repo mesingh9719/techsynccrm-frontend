@@ -1,6 +1,6 @@
 import { useFloatingPanel } from '../../components/app/useFloatingPanel'
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarClock, Mail, MapPin, MessageCircle, MoreHorizontal, NotebookPen, Pencil, Phone, Pin, PinOff, Sparkles, Trash2, Users } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
@@ -129,8 +129,8 @@ function MentionTextarea({ value, onChange, placeholder, id, rows = 3 }: { value
   )
 }
 
-function ComposerForm({ kind, entityType, entityId, onDone }: { kind: Exclude<Composer, 'task'>; entityType: RecordType; entityId: string; onDone: (activity: Activity, followUp: boolean) => void }) {
-  const [body, setBody] = useState('')
+function ComposerForm({ kind, entityType, entityId, onDone, initialBody = '' }: { kind: Exclude<Composer, 'task'>; entityType: RecordType; entityId: string; onDone: (activity: Activity, followUp: boolean) => void; initialBody?: string }) {
+  const [body, setBody] = useState(initialBody)
   const [subject, setSubject] = useState('')
   const [direction, setDirection] = useState<'outbound' | 'inbound'>('outbound')
   const [outcome, setOutcome] = useState<CallOutcome>('connected')
@@ -212,7 +212,7 @@ function ComposerForm({ kind, entityType, entityId, onDone }: { kind: Exclude<Co
           {kind !== 'note' && <Input aria-label="When" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="h-10! w-auto text-sm" />}
           {kind === 'call' && outcome === 'callback_requested' && (
             <label className="flex items-center gap-2 text-sm text-ink">
-              <input type="checkbox" checked={followUp} onChange={(e) => setFollowUp(e.target.checked)} className="size-4 rounded-control border-line text-brand-700" />
+              <input type="checkbox" checked={followUp} onChange={(e) => setFollowUp(e.target.checked)} className="size-4 rounded border-line text-brand-700" />
               Create a follow-up task
             </label>
           )}
@@ -286,7 +286,7 @@ function ActivityEntry({ activity, canPin, onChanged }: { activity: Activity; ca
               <Menu
                 align="end"
                 trigger={(props) => (
-                  <button {...props} type="button" className="rounded-control p-1 text-muted hover:bg-surface-subtle hover:text-ink" aria-label="Entry actions">
+                  <button {...props} type="button" className="rounded p-1 text-muted hover:bg-surface-subtle hover:text-ink" aria-label="Entry actions">
                     <MoreHorizontal className="size-4" aria-hidden="true" />
                   </button>
                 )}
@@ -375,11 +375,29 @@ const dayLabel = (iso: string) => {
  * Timeline for a lead, contact, company or deal: composer (note, call, meeting, site visit, task),
  * filters, pinned entries on top, newest first grouped by day, system updates in a muted style.
  */
-export function Timeline({ entityType, entityId, recordName, canPin = false, notesOnly = false }: { notesOnly?: boolean; entityType: RecordType; entityId: string; recordName?: string; canPin?: boolean }) {
+export type TimelineDraft = { kind: Exclude<Composer, 'task'>; body?: string; nonce: number }
+
+export function Timeline({ entityType, entityId, recordName, canPin = false, notesOnly = false, draft, actions }: {
+  notesOnly?: boolean; entityType: RecordType; entityId: string; recordName?: string; canPin?: boolean
+  /** Extra controls in the card header (e.g. note templates). */
+  actions?: ReactNode
+  /** Switch the composer to a kind and optionally prefill it (e.g. from a template); bump `nonce` to re-apply. */
+  draft?: TimelineDraft | null
+}) {
   const orgId = useOrgId()
   const queryClient = useQueryClient()
   const canLog = useCan('tasks.create')
-  const [composer, setComposer] = useState<Composer>('note')
+  const [composer, setComposer] = useState<Composer>(draft?.kind ?? 'note')
+  const [appliedDraft, setAppliedDraft] = useState(draft?.nonce)
+  // Prefilled text per composer kind; a form remounts only when it receives a new prefill.
+  const [seeds, setSeeds] = useState<Partial<Record<Composer, { nonce: number; body: string }>>>(() =>
+    draft?.body !== undefined ? { [draft.kind]: { nonce: draft.nonce, body: draft.body } } : {},
+  )
+  if (draft && draft.nonce !== appliedDraft) {
+    setAppliedDraft(draft.nonce)
+    setComposer(draft.kind)
+    if (draft.body !== undefined) setSeeds((s) => ({ ...s, [draft.kind]: { nonce: draft.nonce, body: draft.body! } }))
+  }
   const [filter, setFilter] = useState(notesOnly ? 'notes' : 'all')
   const [taskDefaults, setTaskDefaults] = useState<{ title: string; type: 'call' } | null>(null)
   const [taskOpen, setTaskOpen] = useState(false)
@@ -421,7 +439,10 @@ export function Timeline({ entityType, entityId, recordName, canPin = false, not
 
   return (
     <section className="rounded-card bg-surface p-5 shadow-card ring-1 ring-line text-ink" aria-label="Timeline">
-      <h2 className="text-sm font-semibold text-ink">{notesOnly ? 'Notes' : 'Activity timeline'}</h2>
+      <div className="flex min-h-8 items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-ink">{notesOnly ? 'Notes' : 'Activity timeline'}</h2>
+        {actions}
+      </div>
       {canLog && (
         <div className="mt-4 rounded-xl bg-surface-subtle p-3 ring-1 ring-line">
           <div role="group" aria-label="Add to timeline" className="no-scrollbar -mx-1 mb-3 flex gap-1 overflow-x-auto px-1">
@@ -439,8 +460,10 @@ export function Timeline({ entityType, entityId, recordName, canPin = false, not
             ))}
           </div>
           {tabs.filter((item): item is typeof item & { key: Exclude<Composer, 'task'> } => item.key !== 'task' && (!notesOnly || item.key === 'note')).map((item) => (
-            <div key={item.key} hidden={composer !== item.key}>
+            <div key={item.key} data-composer={item.key} hidden={composer !== item.key}>
             <ComposerForm
+              key={seeds[item.key]?.nonce ?? 'base'}
+              initialBody={seeds[item.key]?.body}
               kind={item.key}
               entityType={entityType}
               entityId={entityId}
