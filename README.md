@@ -14,6 +14,13 @@ For a fresh checkout, run `npm ci` first. Vite prints the local URL (normally `h
 
 Keep your existing environment file. For a new setup, copy `.env.example` to `.env`. `VITE_API_BASE_URL=/api` uses the Vite development proxy to `http://localhost:5000`. To change the backend target, provide `VITE_API_PROXY_TARGET` in the process environment when starting Vite.
 
+On Vercel, keep `VITE_API_BASE_URL=/api` (the default). `vercel.json` proxies `/api/*`
+to `https://techsynccrm-backend.vercel.app/api/*` before serving `index.html` for
+React Router pages. This ordering sends POST requests such as login and refresh to
+Express and keeps the refresh cookie on the frontend origin. Vite's development and
+preview proxies do not configure production hosting. If the backend domain changes,
+update the API rewrite destination and redeploy the frontend.
+
 ## Redesigned routes
 
 | Route                                            | Purpose                                                                                |
