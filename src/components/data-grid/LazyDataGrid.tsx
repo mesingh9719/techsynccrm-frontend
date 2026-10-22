@@ -20,7 +20,7 @@ const InitialGrid = loadGrid()
 
 export function GridSkeleton() {
   return <div role="status" aria-label="Loading spreadsheet" className="h-96 animate-pulse space-y-4 rounded-xl border border-line bg-surface-subtle p-5">
-    {Array.from({ length: 8 }, (_, index) => <div key={index} className="h-5 rounded bg-zinc-200/50" />)}
+    {Array.from({ length: 8 }, (_, index) => <div key={index} className="h-5 rounded-control bg-zinc-200/50" />)}
     <span className="sr-only">Loading spreadsheet…</span>
   </div>
 }

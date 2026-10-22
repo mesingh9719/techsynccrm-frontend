@@ -51,7 +51,7 @@ export function RecoveryCodes({ codes, onDone, doneLabel = 'I’ve saved my code
       </ul>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button variant="secondary" size="sm" onClick={copy}>
-          {copied ? <Check className="size-4 text-emerald-600" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}
+          {copied ? <Check className="size-4 text-success" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}
           {copied ? 'Copied' : 'Copy'}
         </Button>
         <Button variant="secondary" size="sm" onClick={download}>

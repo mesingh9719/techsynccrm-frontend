@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, Lock, Plus, Star, Trash2, Trophy, X } from 'lucide-react'
@@ -44,14 +45,17 @@ function NewPipelineDialog({ onClose }: { onClose: () => void }) {
       setBusy(false)
     }
   }
+  const guard = useUnsavedChanges({ name, templateKey }, onClose, busy, true)
   return (
+    <>
     <Dialog
       open
-      onClose={onClose}
+      onClose={guard.requestClose}
+      busy={busy}
       title="New pipeline"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={guard.requestClose}>
             Cancel
           </Button>
           <Button onClick={save} loading={busy} disabled={!name.trim()}>
@@ -87,6 +91,8 @@ function NewPipelineDialog({ onClose }: { onClose: () => void }) {
         {error && <FormAlert>{error}</FormAlert>}
       </div>
     </Dialog>
+    {guard.confirmation}
+    </>
   )
 }
 
@@ -115,7 +121,7 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
   return (
     <li className={cn('space-y-2 px-3 py-3', system && 'bg-surface-subtle')}>
       <div className="flex flex-wrap items-center gap-2">
-        {system ? stage.type === 'won' ? <Trophy className="size-4 text-emerald-600" aria-hidden="true" /> : <X className="size-4 text-danger" aria-hidden="true" /> : <span className="w-4 text-center text-xs text-muted tabular-nums">{index + 1}</span>}
+        {system ? stage.type === 'won' ? <Trophy className="size-4 text-success" aria-hidden="true" /> : <X className="size-4 text-danger" aria-hidden="true" /> : <span className="w-4 text-center text-xs text-muted tabular-nums">{index + 1}</span>}
         <input
           value={name}
           disabled={!canManage}
@@ -165,13 +171,13 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
         <span className="text-xs text-muted tabular-nums">{stage.dealCount ?? 0} deals</span>
         {canManage && !system && (
           <span className="flex">
-            <button type="button" disabled={index === 0} onClick={() => onMove(-1)} className="rounded p-2 text-muted hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} up`}>
+            <button type="button" disabled={index === 0} onClick={() => onMove(-1)} className="rounded-control p-2 text-muted hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} up`}>
               <ArrowUp className="size-4" aria-hidden="true" />
             </button>
-            <button type="button" disabled={index === openCount - 1} onClick={() => onMove(1)} className="rounded p-2 text-muted hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} down`}>
+            <button type="button" disabled={index === openCount - 1} onClick={() => onMove(1)} className="rounded-control p-2 text-muted hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} down`}>
               <ArrowDown className="size-4" aria-hidden="true" />
             </button>
-            <button type="button" disabled={openCount <= 1} onClick={onDelete} className="rounded p-2 text-muted hover:bg-red-50 hover:text-danger disabled:opacity-30" aria-label={`Delete ${stage.name}`}>
+            <button type="button" disabled={openCount <= 1} onClick={onDelete} className="rounded-control p-2 text-muted hover:bg-red-50 hover:text-danger disabled:opacity-30" aria-label={`Delete ${stage.name}`}>
               <Trash2 className="size-4" aria-hidden="true" />
             </button>
           </span>

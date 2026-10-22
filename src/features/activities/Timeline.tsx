@@ -212,7 +212,7 @@ function ComposerForm({ kind, entityType, entityId, onDone }: { kind: Exclude<Co
           {kind !== 'note' && <Input aria-label="When" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="h-10! w-auto text-sm" />}
           {kind === 'call' && outcome === 'callback_requested' && (
             <label className="flex items-center gap-2 text-sm text-ink">
-              <input type="checkbox" checked={followUp} onChange={(e) => setFollowUp(e.target.checked)} className="size-4 rounded border-line text-brand-700" />
+              <input type="checkbox" checked={followUp} onChange={(e) => setFollowUp(e.target.checked)} className="size-4 rounded-control border-line text-brand-700" />
               Create a follow-up task
             </label>
           )}
@@ -286,7 +286,7 @@ function ActivityEntry({ activity, canPin, onChanged }: { activity: Activity; ca
               <Menu
                 align="end"
                 trigger={(props) => (
-                  <button {...props} type="button" className="rounded p-1 text-muted hover:bg-surface-subtle hover:text-ink" aria-label="Entry actions">
+                  <button {...props} type="button" className="rounded-control p-1 text-muted hover:bg-surface-subtle hover:text-ink" aria-label="Entry actions">
                     <MoreHorizontal className="size-4" aria-hidden="true" />
                   </button>
                 )}

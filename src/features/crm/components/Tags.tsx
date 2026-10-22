@@ -86,7 +86,7 @@ export function TagPicker({ value, onChange, id, label = 'Tags' }: { value: stri
   }
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false) }}>
       <div className="flex min-h-10 flex-wrap items-center gap-2 rounded-lg border border-zinc-300 bg-surface px-3 py-2">
         {selected.map((t) => (
           <TagChip key={t.id} tag={t} onRemove={() => toggle(t.id)} />

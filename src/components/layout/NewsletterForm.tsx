@@ -34,7 +34,7 @@ export default function NewsletterForm() {
   if (done) {
     return (
       <p className="flex items-center gap-2 text-sm text-zinc-700" role="status">
-        <CircleCheck className="size-4 text-emerald-600" aria-hidden="true" />
+        <CircleCheck className="size-4 text-success" aria-hidden="true" />
         Almost done — check your inbox and click the link to confirm.
       </p>
     )

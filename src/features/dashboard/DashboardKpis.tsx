@@ -55,7 +55,7 @@ type Metric = {
 const TONES = {
   brand: 'bg-brand-500/10 text-brand-700 ',
   orange: 'bg-orange-500/10 text-warning ',
-  emerald: 'bg-emerald-500/10 text-emerald-600 ',
+  emerald: 'bg-emerald-500/10 text-success ',
   rose: 'bg-rose-500/10 text-danger ',
 }
 
@@ -236,7 +236,7 @@ export function DashboardKpis({
                 {metric.delta && (
                   <span
                     title="Compared with the previous equivalent period"
-                    className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${metric.delta.positive ? 'bg-emerald-500/10 text-emerald-600 ' : 'bg-rose-500/10 text-danger '}`}
+                    className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${metric.delta.positive ? 'bg-emerald-500/10 text-success ' : 'bg-rose-500/10 text-danger '}`}
                   >
                     {metric.delta.positive ? (
                       <ArrowUpRight className="size-3" />

@@ -115,7 +115,7 @@ function SourceRow({ source, canManage, onChanged }: { source: LeadSource; canMa
       </label>
       {canManage && (
         <div className="flex">
-          <button type="button" onClick={() => save({ archived: !source.archived })} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={source.archived ? `Restore ${source.name}` : `Archive ${source.name}`}>
+          <button type="button" onClick={() => save({ archived: !source.archived })} className="rounded-control p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={source.archived ? `Restore ${source.name}` : `Archive ${source.name}`}>
             {source.archived ? <ArchiveRestore className="size-4" aria-hidden="true" /> : <Archive className="size-4" aria-hidden="true" />}
           </button>
           {!source.isSystem && !source.leadCount && (
@@ -129,7 +129,7 @@ function SourceRow({ source, canManage, onChanged }: { source: LeadSource; canMa
                   notify({ tone: 'error', title: 'Couldn’t delete', description: errorText(err) })
                 }
               }}
-              className="rounded p-2 text-muted hover:bg-red-50 hover:text-danger"
+              className="rounded-control p-2 text-muted hover:bg-red-50 hover:text-danger"
               aria-label={`Delete ${source.name}`}
             >
               <Trash2 className="size-4" aria-hidden="true" />
@@ -168,7 +168,7 @@ function ReasonRow({ reason, canManage, onChanged }: { reason: LostReason; canMa
       )}
       {reason.archived && <Badge>Archived</Badge>}
       {canManage && (
-        <button type="button" onClick={() => save({ archived: !reason.archived })} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={reason.archived ? `Restore ${reason.name}` : `Archive ${reason.name}`}>
+        <button type="button" onClick={() => save({ archived: !reason.archived })} className="rounded-control p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={reason.archived ? `Restore ${reason.name}` : `Archive ${reason.name}`}>
           {reason.archived ? <ArchiveRestore className="size-4" aria-hidden="true" /> : <Archive className="size-4" aria-hidden="true" />}
         </button>
       )}

@@ -1,21 +1,56 @@
 import { Check } from 'lucide-react'
 import { cn } from '../../lib/cn'
-
 import { IMPORT_STEPS } from './importConstants'
 
-
+/** Six-step progress: a bar on phones, numbered steps with their purpose from `md` up. Finished steps are clickable. */
 export function ImportStepper({ step, disabled, onStepChange }: { step: number; disabled?: boolean; onStepChange: (step: number) => void }) {
-  return <nav aria-label="Import steps" className="rounded-card border border-line bg-surface p-4 shadow-card sm:p-5">
-    <p className="mb-4 text-xs text-muted sm:hidden">Step {step} of {IMPORT_STEPS.length} · <span className="font-medium text-ink">{IMPORT_STEPS[step - 1].title}</span></p>
-    <ol className="flex">{IMPORT_STEPS.map(({ title }, index) => {
-      const number = index + 1, done = number < step, active = number === step
-      return <li key={title} aria-current={active ? 'step' : undefined} className="relative flex min-w-0 flex-1 flex-col items-center gap-3">
-        {index < IMPORT_STEPS.length - 1 && <span aria-hidden="true" className={cn('absolute top-5 left-1/2 h-px w-full', done ? 'bg-brand-300' : 'bg-line')} />}
-        <button type="button" aria-label={`${number}. ${title}${done ? ', completed' : ''}`} disabled={disabled || !done || step === 6} onClick={() => onStepChange(number)} className={cn('relative flex size-10 items-center justify-center rounded-full text-xs font-semibold transition-colors focus-visible:ring-4 focus-visible:ring-brand-100 focus-visible:outline-none', active ? 'bg-brand-600 text-white ring-4 ring-brand-50' : done ? 'bg-brand-50 text-brand-700 enabled:hover:bg-brand-100' : 'bg-zinc-100 text-muted')}>
-          {done ? <Check className="size-4" aria-hidden="true" /> : number}
-        </button>
-        <span className={cn('hidden text-center text-xs sm:block', active ? 'font-semibold text-brand-700' : done ? 'font-medium text-ink' : 'text-muted')}>{title}</span>
-      </li>
-    })}</ol>
-  </nav>
+  const total = IMPORT_STEPS.length
+  return (
+    <nav aria-label="Import steps" className="rounded-card border border-line bg-surface px-4 py-3 shadow-card sm:px-5">
+      <div className="md:hidden">
+        <div className="flex items-baseline justify-between gap-3 text-sm">
+          <span className="font-semibold text-ink">{IMPORT_STEPS[step - 1].title}</span>
+          <span className="text-xs text-muted tabular-nums">
+            Step {step} of {total}
+          </span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line/70" role="progressbar" aria-valuemin={1} aria-valuemax={total} aria-valuenow={step} aria-label="Import progress">
+          <div className="h-full rounded-full bg-brand-600 transition-[width]" style={{ width: `${(step / total) * 100}%` }} />
+        </div>
+      </div>
+      <ol className="hidden items-center gap-2 md:flex">
+        {IMPORT_STEPS.map(({ title, description }, index) => {
+          const number = index + 1,
+            done = number < step,
+            active = number === step,
+            clickable = done && !disabled && step !== total
+          return (
+            <li key={title} aria-current={active ? 'step' : undefined} className="flex min-w-0 flex-1 items-center gap-2">
+              <button
+                type="button"
+                disabled={!clickable}
+                onClick={() => onStepChange(number)}
+                aria-label={`${number}. ${title}${done ? ', completed — go back to this step' : ''}`}
+                className={cn('group flex min-w-0 items-center gap-2.5 rounded-lg py-1.5 pr-2 text-left', clickable && 'hover:bg-surface-subtle')}
+              >
+                <span
+                  className={cn(
+                    'flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors',
+                    active ? 'bg-brand-600 text-white shadow-sm ring-4 ring-brand-100' : done ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' : 'bg-surface-subtle text-muted ring-1 ring-line',
+                  )}
+                >
+                  {done ? <Check className="size-4" strokeWidth={2.5} aria-hidden="true" /> : number}
+                </span>
+                <span className="min-w-0">
+                  <span className={cn('block truncate text-sm', active ? 'font-semibold text-ink' : done ? 'font-medium text-ink' : 'text-muted')}>{title}</span>
+                  <span className="hidden truncate text-xs text-muted xl:block">{description}</span>
+                </span>
+              </button>
+              {index < total - 1 && <span aria-hidden="true" className={cn('h-px min-w-4 flex-1', done ? 'bg-emerald-300' : 'bg-line')} />}
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
+  )
 }

@@ -73,7 +73,7 @@ function WorkflowVisual() {
         ))}
       </ol>
       <p className="mt-4 flex items-center gap-2 text-xs text-zinc-500">
-        <CircleCheck className="size-4 text-emerald-600" aria-hidden="true" />
+        <CircleCheck className="size-4 text-success" aria-hidden="true" />
         Ran 214 times this month · 0 errors
       </p>
     </Panel>

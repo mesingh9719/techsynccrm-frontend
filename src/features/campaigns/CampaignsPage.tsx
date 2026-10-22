@@ -1,3 +1,4 @@
+import { useAuth } from '../../lib/useAuth'
 import { DataTable } from '../../components/app/DataTable'
 import { FilterBar, FilterChips } from '../../components/app/FilterBar'
 import { LocalViews } from '../../components/app/LocalViews'
@@ -27,7 +28,7 @@ import { buildUtmUrl } from './api'
 import { Dialog } from '../../components/app/Dialog'
 import { CampaignFormDrawer } from './CampaignFormDrawer'
 import { useCampaignMutations, useCampaigns } from './useCampaigns'
-import { CAMPAIGN_STATUS_LABELS, CAMPAIGN_TYPE_LABELS, type Campaign } from './types'
+import { CAMPAIGN_STATUS_LABELS, CAMPAIGN_TYPE_LABELS, isMetaCampaign, type Campaign } from './types'
 
 export default function CampaignsPage() {
   useSeo({ title: 'Campaigns & Attribution', noindex: true })
@@ -35,10 +36,14 @@ export default function CampaignsPage() {
   const orgId = organization?.id ?? 'none'
   const currency = organization?.currency ?? 'INR'
   const notify = useToast()
+  const { user } = useAuth()
   const canRead = useCan('campaigns.read')
   const canCreate = useCan('campaigns.create')
   const canEdit = useCan('campaigns.update')
   const canSync = useCan('settings.workspace.manage')
+  const permissions = user?.organization?.permissions ?? []
+  const canEditCampaign = (campaign: Campaign) => canEdit && (!permissions.includes('campaigns.update.own') || permissions.some((permission) => ['campaigns.update.all', 'campaigns.update.team'].includes(permission)) || campaign.ownerId === user?.id)
+  const canPauseCampaign = (campaign: Campaign) => canEditCampaign(campaign) && (!isMetaCampaign(campaign) || (canSync && campaign.status !== 'archived'))
 
   const navigate = useNavigate()
   const { filters, setFilter, clearFilters, replaceFilters } = useUrlFilters(['q', 'status', 'type'] as const)
@@ -183,16 +188,17 @@ export default function CampaignsPage() {
         <LocalViews module="campaigns" filters={filters} onApply={(value) => { replaceFilters(value); setPage(0); setSelection(new Set()) }} />
       </FilterBar>
       <FilterChips filters={filters} onRemove={(key) => { setFilter(key, undefined); setPage(0) }} onClear={() => { clearFilters(); setPage(0) }} />
-      {canEdit && <BulkBar count={filtered.filter((campaign) => selection.has(campaign.id)).length} onClear={() => setSelection(new Set())}>
+      {canEdit && <BulkBar count={filtered.filter((campaign) => selection.has(campaign.id) && canPauseCampaign(campaign)).length} onClear={() => setSelection(new Set())}>
         <BulkButton onClick={async () => {
           if (bulkBusy) return
           setBulkBusy(true)
-          const picked = filtered.filter((campaign) => selection.has(campaign.id))
+          const picked = filtered.filter((campaign) => selection.has(campaign.id) && canPauseCampaign(campaign))
           const results = await Promise.allSettled(picked.map((campaign) => setStatus.mutateAsync({ id: campaign.id, status: 'paused', ifMatch: campaign.updatedAt })))
           const failed = picked.filter((_, index) => results[index].status === 'rejected')
           setSelection(new Set(failed.map((campaign) => campaign.id))); setBulkBusy(false)
           notify({ tone: failed.length ? 'error' : 'success', title: `${picked.length - failed.length} campaigns paused${failed.length ? ` · ${failed.length} could not be updated` : ''}`, description: failed.length ? 'Failed campaigns remain selected. Review your permissions or reload before retrying.' : undefined })
         }}>{bulkBusy ? 'Pausing…' : 'Pause selected'}</BulkButton>
+        <span className="text-xs text-muted">Linked Meta campaigns are paused on Meta.</span>
       </BulkBar>}
       {/* Campaign List / Table */}
       <section className="surface overflow-hidden">
@@ -231,7 +237,7 @@ export default function CampaignsPage() {
           </div>
         ) : (
           <div className="p-4">
-            <DataTable caption="Campaigns" rows={filtered.slice(Math.min(page, Math.max(0, Math.ceil(filtered.length / 25) - 1)) * 25, (Math.min(page, Math.max(0, Math.ceil(filtered.length / 25) - 1)) + 1) * 25)} getRowId={(campaign) => campaign.id} onRowClick={(campaign) => navigate(`/app/campaigns/${campaign.id}`)} selectedIds={canEdit ? selection : undefined} onSelectionChange={canEdit ? setSelection : undefined}
+            <DataTable caption="Campaigns" rows={filtered.slice(Math.min(page, Math.max(0, Math.ceil(filtered.length / 25) - 1)) * 25, (Math.min(page, Math.max(0, Math.ceil(filtered.length / 25) - 1)) + 1) * 25)} getRowId={(campaign) => campaign.id} canSelectRow={canPauseCampaign} onRowClick={(campaign) => navigate(`/app/campaigns/${campaign.id}`)} selectedIds={canEdit ? selection : undefined} onSelectionChange={canEdit ? setSelection : undefined}
               columns={[
                 { key: 'name', header: 'Campaign', sortKey: 'name', cell: (campaign) => <div className="min-w-48"><Link title={campaign.name} to={`/app/campaigns/${campaign.id}`} className="block max-w-64 truncate font-medium hover:text-brand-700">{campaign.name}</Link><span className="mt-1 block text-xs text-muted">{campaign.startDate}{campaign.endDate ? ` → ${campaign.endDate}` : ' · Ongoing'}</span></div> },
                 { key: 'status', header: 'Status / channel', sortKey: 'status', cell: (campaign) => <div className="space-y-2"><Badge tone={campaign.status === 'active' ? 'success' : campaign.status === 'paused' ? 'warning' : 'neutral'}>{CAMPAIGN_STATUS_LABELS[campaign.status]}</Badge><p className="whitespace-nowrap text-xs text-muted">{CAMPAIGN_TYPE_LABELS[campaign.type]}</p></div> },
@@ -240,7 +246,7 @@ export default function CampaignsPage() {
                 { key: 'leads', header: 'Leads', align: 'right', cell: (campaign) => <Link className="font-semibold text-brand-700" to={`/app/leads?campaignId=${campaign.id}`}>{campaign.metrics.leadsCount}</Link> },
                 { key: 'cpl', header: 'Cost / lead', align: 'right', cell: (campaign) => campaign.metrics.costPerLeadMinor != null ? formatMinor(campaign.metrics.costPerLeadMinor, campaign.currency) : '—' },
                 { key: 'conversion', header: 'Conversion', align: 'right', cell: (campaign) => `${campaign.metrics.conversionRate}%` },
-                { key: 'actions', header: 'Quick actions', align: 'right', cell: (campaign) => <div className="flex justify-end gap-1"><Button variant="ghost" size="sm" aria-label={`Copy tracking link for ${campaign.name}`} title="Copy tracking link" onClick={() => void copyTrackingLink(campaign)}><Copy className="size-4" /></Button>{canEdit && <Button variant="ghost" size="sm" aria-label={`Edit ${campaign.name}`} title="Edit campaign" onClick={() => { setEditingCampaign(campaign); setDrawerOpen(true) }}><Pencil className="size-4" /></Button>}<Button variant="ghost" size="sm" aria-label={`Open ${campaign.name}`} title="Open campaign" to={`/app/campaigns/${campaign.id}`}><ExternalLink className="size-4" /></Button></div> },
+                { key: 'actions', header: 'Quick actions', align: 'right', cell: (campaign) => <div className="flex justify-end gap-1"><Button variant="ghost" size="sm" aria-label={`Copy tracking link for ${campaign.name}`} title="Copy tracking link" onClick={() => void copyTrackingLink(campaign)}><Copy className="size-4" /></Button>{canEditCampaign(campaign) && <Button variant="ghost" size="sm" aria-label={`Edit ${campaign.name}`} title="Edit campaign" onClick={() => { setEditingCampaign(campaign); setDrawerOpen(true) }}><Pencil className="size-4" /></Button>}<Button variant="ghost" size="sm" aria-label={`Open ${campaign.name}`} title="Open campaign" to={`/app/campaigns/${campaign.id}`}><ExternalLink className="size-4" /></Button></div> },
               ]} />
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted"><span>{filtered.length} matching campaigns · 25 per page</span><div className="flex gap-2"><Button variant="secondary" disabled={page <= 0} onClick={() => setPage((value) => Math.max(0, value - 1))}>Previous</Button><Button variant="secondary" disabled={(page + 1) * 25 >= filtered.length} onClick={() => setPage((value) => value + 1)}>Next</Button></div></div>
           </div>

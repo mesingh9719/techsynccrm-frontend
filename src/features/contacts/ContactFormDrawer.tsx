@@ -2,21 +2,22 @@ import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
+import { Building2, Contact, Info, Milestone, ShieldCheck, UserRound } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
 import { qk } from '../../lib/queryKeys'
 import { useAuth } from '../../lib/useAuth'
 import { useCan } from '../../lib/useOrg'
 import { ApiError } from '../../services/http'
 import { Button } from '../../components/ui/Button'
-import { Checkbox, Field, FormAlert, Input, Select } from '../../components/ui/Form'
+import { Checkbox, Field, Input, Select } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
-import { Drawer } from '../../components/app/Dialog'
+import { FieldRow, FormDrawer, FormSection } from '../../components/app/FormDrawer'
 import { UserPicker } from '../../components/app/UserPicker'
 import { listCompanies } from '../companies/api'
 import { EmailsEditor, PhonesEditor, type EmailDraft, type PhoneDraft } from '../crm/components/ContactPoints'
 import { cleanEmails, cleanPhones } from '../crm/listHelpers'
-import { CustomFieldsEditor } from '../crm/components/CustomFieldInput'
+import { CustomFieldsSection } from '../crm/components/CustomFieldInput'
+import { LinkedRecordList } from '../crm/components/LinkedRecords'
 import { RecordPicker, type PickerOption } from '../crm/components/RecordPicker'
 import { DuplicateWarning } from '../crm/components/RecordParts'
 import { TagPicker } from '../crm/components/Tags'
@@ -103,6 +104,7 @@ export function ContactFormDrawer({ open, onClose, contact = null, defaultCompan
   )
 
   function close() {
+    guard.markSaved()
     setErrors({})
     setServerError(null)
     setConflicts([])
@@ -132,134 +134,115 @@ export function ContactFormDrawer({ open, onClose, contact = null, defaultCompan
   }
 
   const shown = conflicts.length ? conflicts : live
+  const consents = [draft.whatsappOptIn && 'WhatsApp', draft.emailOptIn && 'Email'].filter(Boolean).join(' · ')
 
   const guard = useUnsavedChanges(draft, close, busy, open)
 
   return (
     <>
-    <Drawer
-      open={open}
-      onClose={guard.requestClose}
-      busy={busy}
-      title={contact ? 'Edit contact' : 'New contact'}
-      description={contact ? undefined : 'A name, phone or email is enough to start.'}
-      footer={
-        <>
-          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
-            Cancel
-          </Button>
-          {conflicts.length > 0 && (
-            <Button variant="secondary" onClick={() => submit(true)} loading={busy}>
+      <FormDrawer
+        open={open}
+        onClose={guard.requestClose}
+        busy={busy}
+        icon={UserRound}
+        title={contact ? 'Edit contact' : 'New contact'}
+        description={contact ? contact.displayName : 'A name, phone or email is enough to start.'}
+        formId="contact-form"
+        onSubmit={() => void submit(false)}
+        submitLabel={contact ? 'Save changes' : 'Create contact'}
+        actions={
+          conflicts.length > 0 && (
+            <Button variant="secondary" onClick={() => submit(true)} disabled={busy}>
               Save anyway
             </Button>
-          )}
-          <Button type="submit" form="contact-form" disabled={busy} loading={busy && !conflicts.length}>
-            {contact ? 'Save' : 'Create contact'}
-          </Button>
-        </>
-      }
-    >
-      <form
-        id="contact-form"
-        noValidate
-        onSubmit={(e) => {
-          e.preventDefault()
-          void submit(false)
-        }}
-        className="space-y-5"
+          )
+        }
+        error={serverError}
       >
-        {serverError && <FormAlert>{serverError}</FormAlert>}
         <DuplicateWarning duplicates={shown} hrefFor={(d) => `/app/contacts/${d.id}`} />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="First name" error={errors.firstName}>
-            {({ id, invalid }) => <Input id={id} invalid={invalid} autoFocus value={draft.firstName} onChange={(e) => set('firstName', e.target.value)} autoComplete="off" />}
-          </Field>
-          <Field label="Last name" optional error={errors.lastName}>
-            {({ id, invalid }) => <Input id={id} invalid={invalid} value={draft.lastName} onChange={(e) => set('lastName', e.target.value)} autoComplete="off" />}
-          </Field>
-        </div>
-        <Field label="Phone" optional error={errors.phones}>
-          {({ id }) => <PhonesEditor idPrefix={id} value={draft.phones} onChange={(v) => set('phones', v)} errors={fieldErrorsUnder(errors, 'phones')} />}
-        </Field>
-        <Field label="Email" optional error={errors.emails}>
-          {({ id }) => <EmailsEditor idPrefix={id} value={draft.emails} onChange={(v) => set('emails', v)} errors={fieldErrorsUnder(errors, 'emails')} />}
-        </Field>
-        <Field label="Job title" optional error={errors.title}>
-          {({ id, invalid }) => <Input id={id} invalid={invalid} value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. Purchase head" />}
-        </Field>
 
-        <fieldset>
-          <legend className="mb-2 text-sm font-medium text-ink">Companies</legend>
-          <div className="space-y-2">
-            {draft.companies.map((c, i) => (
-              <div key={c.option.id} className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle px-3 py-2 text-sm">
-                <span className="min-w-0 flex-1 truncate font-medium text-ink">{c.option.label}</span>
-                <input
-                  value={c.role}
-                  onChange={(e) => set('companies', draft.companies.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))}
-                  placeholder="Role"
-                  aria-label={`Role at ${c.option.label}`}
-                  className="h-8 w-28 rounded-md border border-line bg-surface px-2 text-sm text-ink placeholder:text-muted"
-                />
-                <label className="flex items-center gap-1 text-xs text-muted">
-                  <input type="radio" name="primary-company" checked={c.isPrimary || draft.companies.length === 1} onChange={() => set('companies', draft.companies.map((x, j) => ({ ...x, isPrimary: j === i })))} />
-                  Primary
-                </label>
-                <button type="button" onClick={() => set('companies', draft.companies.filter((_, j) => j !== i))} className="rounded p-1 text-muted hover:text-danger" aria-label={`Remove ${c.option.label}`}>
-                  <Trash2 className="size-4" aria-hidden="true" />
-                </button>
-              </div>
-            ))}
-            <RecordPicker
-              queryKey={qk.org(orgId).companies.all}
-              search={async (q) => (await listCompanies({ q, limit: 10 })).items.map((co) => ({ id: co.id, label: co.name, hint: co.domain }))}
-              selected={null}
-              onChange={(o) => o && !draft.companies.some((c) => c.option.id === o.id) && set('companies', [...draft.companies, { option: o, role: '', isPrimary: draft.companies.length === 0 }])}
-              placeholder="Link a company…"
-            />
-          </div>
-          {errors.companies && <p className="mt-1 text-sm text-danger">{errors.companies}</p>}
-        </fieldset>
+        <FormSection title="Contact details" icon={Contact}>
+          <FieldRow>
+            <Field label="First name" error={errors.firstName}>
+              {({ id, invalid }) => <Input id={id} invalid={invalid} autoFocus value={draft.firstName} onChange={(e) => set('firstName', e.target.value)} autoComplete="off" />}
+            </Field>
+            <Field label="Last name" optional error={errors.lastName}>
+              {({ id, invalid }) => <Input id={id} invalid={invalid} value={draft.lastName} onChange={(e) => set('lastName', e.target.value)} autoComplete="off" />}
+            </Field>
+          </FieldRow>
+          <Field label="Job title" optional error={errors.title}>
+            {({ id, invalid }) => <Input id={id} invalid={invalid} value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. Purchase head" />}
+          </Field>
+          <Field label="Phone" optional error={errors.phones}>
+            {({ id }) => <PhonesEditor idPrefix={id} value={draft.phones} onChange={(v) => set('phones', v)} errors={fieldErrorsUnder(errors, 'phones')} />}
+          </Field>
+          <Field label="Email" optional error={errors.emails}>
+            {({ id }) => <EmailsEditor idPrefix={id} value={draft.emails} onChange={(v) => set('emails', v)} errors={fieldErrorsUnder(errors, 'emails')} />}
+          </Field>
+        </FormSection>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Lifecycle stage">
-            {({ id }) => (
-              <Select id={id} value={draft.lifecycleStage} onChange={(e) => set('lifecycleStage', e.target.value as LifecycleStage)}>
-                {Object.entries(lifecycleLabels).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </Select>
+        <FormSection title="Companies" icon={Building2} description="Where they work. The primary company shows on their profile.">
+          <LinkedRecordList
+            noun="company"
+            items={draft.companies}
+            onChange={(v) => set('companies', v)}
+            picker={
+              <RecordPicker
+                queryKey={qk.org(orgId).companies.all}
+                search={async (q) => (await listCompanies({ q, limit: 10 })).items.map((co) => ({ id: co.id, label: co.name, hint: co.domain }))}
+                selected={null}
+                onChange={(o) => o && !draft.companies.some((c) => c.option.id === o.id) && set('companies', [...draft.companies, { option: o, role: '', isPrimary: draft.companies.length === 0 }])}
+                placeholder={draft.companies.length ? 'Link another company…' : 'Search companies to link…'}
+              />
+            }
+          />
+          {errors.companies && <p className="text-sm text-danger">{errors.companies}</p>}
+        </FormSection>
+
+        <FormSection title="Stage & owner" icon={Milestone}>
+          <FieldRow>
+            <Field label="Lifecycle stage">
+              {({ id }) => (
+                <Select id={id} value={draft.lifecycleStage} onChange={(e) => set('lifecycleStage', e.target.value as LifecycleStage)}>
+                  {Object.entries(lifecycleLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <Field label="Source" optional>
+              {({ id }) => <Input id={id} value={draft.source} onChange={(e) => set('source', e.target.value)} placeholder="e.g. Trade fair" />}
+            </Field>
+            {canAssign && (
+              <Field label="Owner" error={errors.ownerId}>
+                {({ id, invalid }) => <UserPicker id={id} invalid={invalid} value={draft.ownerId} onChange={(v) => set('ownerId', v)} placeholder="Unassigned" />}
+              </Field>
             )}
-          </Field>
-          <Field label="Source" optional>
-            {({ id }) => <Input id={id} value={draft.source} onChange={(e) => set('source', e.target.value)} placeholder="e.g. Trade fair" />}
-          </Field>
-        </div>
-        {canAssign && (
-          <Field label="Owner" error={errors.ownerId}>
-            {({ id, invalid }) => <UserPicker id={id} invalid={invalid} value={draft.ownerId} onChange={(v) => set('ownerId', v)} placeholder="Unassigned" />}
-          </Field>
-        )}
-        <Field label="Tags" optional error={errors.tagIds}>
-          {({ id }) => <TagPicker id={id} value={draft.tagIds} onChange={(v) => set('tagIds', v)} />}
-        </Field>
-        <fieldset className="space-y-2">
-          <legend className="mb-1 text-sm font-medium text-ink">Marketing consent</legend>
-          <Checkbox label="Agreed to receive WhatsApp messages" checked={draft.whatsappOptIn} onChange={(e) => set('whatsappOptIn', e.target.checked)} />
-          <Checkbox label="Agreed to receive marketing emails" checked={draft.emailOptIn} onChange={(e) => set('emailOptIn', e.target.checked)} />
-        </fieldset>
-        <CustomFieldsEditor entityType="contact" values={draft.customFields} onChange={(v) => set('customFields', v)} errors={fieldErrorsUnder(errors, 'customFields')} />
+            <Field label="Tags" optional error={errors.tagIds} className={canAssign ? undefined : '@md:col-span-2'}>
+              {({ id }) => <TagPicker id={id} value={draft.tagIds} onChange={(v) => set('tagIds', v)} />}
+            </Field>
+          </FieldRow>
+        </FormSection>
+
+        <FormSection title="Marketing consent" icon={ShieldCheck} collapsible defaultOpen={Boolean(contact)} summary={consents ? `Agreed: ${consents}` : 'No consent recorded'}>
+          <div className="space-y-3 rounded-lg border border-line p-3">
+            <Checkbox label="Agreed to receive WhatsApp messages" checked={draft.whatsappOptIn} onChange={(e) => set('whatsappOptIn', e.target.checked)} />
+            <Checkbox label="Agreed to receive marketing emails" checked={draft.emailOptIn} onChange={(e) => set('emailOptIn', e.target.checked)} />
+          </div>
+          <p className="text-xs text-muted">Only tick these when the person has agreed. Record consent before including this contact in marketing.</p>
+        </FormSection>
+
+        <CustomFieldsSection entityType="contact" values={draft.customFields} onChange={(v) => set('customFields', v)} errors={fieldErrorsUnder(errors, 'customFields')} />
         {!contact && (
           <p className="flex items-center gap-2 text-xs text-muted">
-            <Plus className="size-3" aria-hidden="true" />
+            <Info className="size-3.5 shrink-0" aria-hidden="true" />
             Contacts count toward your plan’s leads & contacts limit.
           </p>
         )}
-      </form>
-    </Drawer>
-    {guard.confirmation}
+      </FormDrawer>
+      {guard.confirmation}
     </>
   )
 }

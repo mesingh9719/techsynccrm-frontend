@@ -10,7 +10,7 @@ export function useFloatingPanel<T extends HTMLElement>(open: boolean, anchorRef
     if (!open || !panel || !anchor) return
     panel.showPopover?.()
     const position = () => {
-      const tokens = getComputedStyle(document.documentElement)
+      const tokens = getComputedStyle(panel)
       const gutter = parseFloat(tokens.getPropertyValue('--popover-gutter')) || 16
       const gap = parseFloat(tokens.getPropertyValue('--popover-gap')) || 8
       const maximum = parseFloat(tokens.getPropertyValue('--popover-max-height')) || 384
@@ -30,11 +30,14 @@ export function useFloatingPanel<T extends HTMLElement>(open: boolean, anchorRef
       panel.style.top = `${Math.max(viewportTop + gutter, upwards ? rect.top - panelHeight - gap : rect.bottom + gap)}px`
     }
     position()
+    const observer = new ResizeObserver(position)
+    observer.observe(panel)
     if (focusSelector) panel.querySelector<HTMLElement>(focusSelector)?.focus({ preventScroll: true })
     window.addEventListener('resize', position)
     window.addEventListener('scroll', position, true)
     window.visualViewport?.addEventListener('resize', position)
     return () => {
+      observer.disconnect()
       window.removeEventListener('resize', position)
       window.removeEventListener('scroll', position, true)
       window.visualViewport?.removeEventListener('resize', position)

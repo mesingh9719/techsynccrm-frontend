@@ -22,7 +22,7 @@ export function ColumnChooser({ options, visible, onToggle }: { options: { key: 
         <div className="max-h-80 overflow-y-auto">
           {options.map((o) => (
             <label key={o.key} className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm text-ink transition-colors hover:bg-surface-subtle">
-              <input type="checkbox" role="menuitemcheckbox" aria-checked={visible.includes(o.key)} checked={visible.includes(o.key)} onChange={() => onToggle(o.key)} className="size-4 rounded border-line text-brand-700 focus:ring-brand-500" />
+              <input type="checkbox" role="menuitemcheckbox" aria-checked={visible.includes(o.key)} checked={visible.includes(o.key)} onChange={() => onToggle(o.key)} className="size-4 rounded-control border-line text-brand-700 focus:ring-brand-500" />
               {o.label}
             </label>
           ))}

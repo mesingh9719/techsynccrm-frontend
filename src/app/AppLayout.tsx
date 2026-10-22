@@ -1,29 +1,177 @@
 import { useNewLeads } from '../features/leads/useNewLeads'
 import { useNotificationStream } from '../features/notifications/useNotificationStream'
-import { useCallback, useState } from 'react'
-import { Clock, FileText, UsersRound } from 'lucide-react'
-import { Link, Outlet } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { Clock, Ellipsis, FileText, UsersRound } from 'lucide-react'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { acceptTerms } from '../services/auth'
 import { pricing } from '../services/content'
 import { legal } from '../services/legal'
 import { emitAppEvent } from '../lib/appEvents'
 import { cn } from '../lib/cn'
 import { useAuth } from '../lib/useAuth'
+import { useApplyTheme } from '../lib/theme'
 import { useOrg } from '../lib/useOrg'
+import { lockBodyScroll } from '../components/app/bodyScrollLock'
 import { Button } from '../components/ui/Button'
 import { RequireStage } from '../components/auth/Guards'
 import { RouteProgress, ScrollManager } from '../components/layout/Layout'
-import { Sidebar } from './Sidebar'
+import { OverdueBadge, Sidebar } from './Sidebar'
+import { useNavItemVisible, useSidebarPreference } from './useSidebarPreference'
+import { mainNav, mobileTabKeys } from './navigation'
 import { Topbar } from './Topbar'
 import { useAppShortcuts } from './useAppShortcuts'
-import { Dialog } from '../components/app/Dialog'
 
+/**
+ * Navigation drawer for phones and tablets: slides in from the left on a native modal <dialog>
+ * (focus trap, Escape, inert page), closes on backdrop tap, swipe left, or navigation.
+ */
 function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const swipe = useRef<{ x: number; y: number; dx: number; tracking: boolean } | null>(null)
+  const [closing, setClosing] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!open || !el) return
+    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const unlockScroll = lockBodyScroll()
+    if (!el.open) el.showModal()
+    window.dispatchEvent(new Event('techsync:overlay-open'))
+    // Widening to desktop puts the rail back; drop the drawer.
+    const desktop = window.matchMedia('(min-width: 1024px)')
+    const onDesktop = () => desktop.matches && onClose()
+    desktop.addEventListener('change', onDesktop)
+    return () => {
+      desktop.removeEventListener('change', onDesktop)
+      if (el.open) el.close()
+      unlockScroll()
+      if (trigger?.isConnected) trigger.focus({ preventScroll: true })
+    }
+  }, [open, onClose])
+
+  const requestClose = useCallback(() => setClosing(true), [])
+  // Closed from outside (route change) mid-animation: start fresh next time.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (wasOpen !== open) {
+    setWasOpen(open)
+    if (!open) setClosing(false)
+  }
+
+  function onPointerDown(e: ReactPointerEvent) {
+    if (e.pointerType === 'mouse') return
+    swipe.current = { x: e.clientX, y: e.clientY, dx: 0, tracking: false }
+  }
+  function onPointerMove(e: ReactPointerEvent) {
+    const s = swipe.current
+    const panel = panelRef.current
+    if (!s || !panel) return
+    const dx = e.clientX - s.x
+    const dy = e.clientY - s.y
+    // Decide once: a leftward horizontal drag closes; anything else scrolls as normal.
+    if (!s.tracking) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
+      if (dx > 0 || Math.abs(dy) > Math.abs(dx)) {
+        swipe.current = null
+        return
+      }
+      s.tracking = true
+    }
+    s.dx = Math.min(0, dx)
+    panel.style.transition = 'none'
+    panel.style.transform = `translateX(${s.dx}px)`
+  }
+  function onPointerUp() {
+    const s = swipe.current
+    const panel = panelRef.current
+    swipe.current = null
+    if (!s?.tracking || !panel) return
+    panel.style.transition = ''
+    panel.style.transform = ''
+    if (s.dx < -Math.min(96, panel.offsetWidth / 3)) requestClose()
+  }
+
   return (
-    <Dialog open={open} onClose={onClose} title="Navigation" variant="drawer" className="mr-auto ml-0 max-w-sm">
-      <div className="-m-6 h-[calc(100dvh-5rem)] max-sm:-m-4"><Sidebar onNavigate={onClose} /></div>
-    </Dialog>
+    <dialog
+      ref={ref}
+      aria-label="Navigation"
+      className="mobile-nav"
+      data-closing={closing || undefined}
+      onCancel={(e) => {
+        e.preventDefault()
+        requestClose()
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) requestClose()
+      }}
+      onAnimationEnd={(e) => {
+        if (e.target !== panelRef.current || !closing) return
+        setClosing(false)
+        onClose()
+      }}
+    >
+      {open && (
+        <div
+          ref={panelRef}
+          className="mobile-nav-panel"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        >
+          <Sidebar onNavigate={requestClose} onClose={requestClose} />
+        </div>
+      )}
+    </dialog>
   )
+}
+
+/** Phone tab bar: the four daily destinations plus “More” for the full navigation. */
+function BottomTabs({ onMore, moreOpen }: { onMore: () => void; moreOpen: boolean }) {
+  const visible = useNavItemVisible()
+  const tabs = mainNav.filter((item) => mobileTabKeys.includes(item.key) && visible(item))
+  return (
+    <nav aria-label="Primary" className="bottom-tabs md:hidden">
+      {tabs.map((item) => (
+        <NavLink key={item.key} to={item.to} end={item.end} className="bottom-tab">
+          {({ isActive }) => (
+            <>
+              <span className="bottom-tab-icon relative">
+                <item.icon className="size-[22px]" aria-hidden="true" />
+                {item.key === 'tasks' && <OverdueBadge active={isActive} dot />}
+              </span>
+              <span className="max-w-full truncate">{item.shortLabel ?? item.label}</span>
+            </>
+          )}
+        </NavLink>
+      ))}
+      <button
+        type="button"
+        onClick={onMore}
+        aria-expanded={moreOpen}
+        aria-haspopup="dialog"
+        className="bottom-tab compact-control"
+      >
+        <span className="bottom-tab-icon">
+          <Ellipsis className="size-[22px]" aria-hidden="true" />
+        </span>
+        <span>More</span>
+      </button>
+    </nav>
+  )
+}
+
+/** Lets the app shell draw under iOS notches and home indicators (the chrome pads with safe-area insets). */
+function useEdgeToEdge() {
+  useEffect(() => {
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
+    if (!meta || meta.content.includes('viewport-fit')) return
+    const previous = meta.content
+    meta.content = `${previous}, viewport-fit=cover`
+    return () => {
+      meta.content = previous
+    }
+  }, [])
 }
 
 /** Non-blocking banner when the Terms or Privacy Policy changed since the user last accepted. */
@@ -142,23 +290,24 @@ function PlanBanner() {
 
 function Shell() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [collapsed, setCollapsed] = useState(() => {
-    try { return localStorage.getItem('techsync:sidebar:v1') !== 'expanded' } catch { return true }
-  })
-  function toggleSidebar() {
-    setCollapsed((previous) => {
-      const next = !previous
-      try { localStorage.setItem('techsync:sidebar:v1', next ? 'collapsed' : 'expanded') } catch { /* Session preference still works. */ }
-      return next
-    })
-  }
+  const { collapsed, toggle } = useSidebarPreference()
   const closeNav = useCallback(() => setMobileOpen(false), [])
+  const { pathname } = useLocation()
   useAppShortcuts()
   useNotificationStream()
   useNewLeads()
+  useApplyTheme()
+  useEdgeToEdge()
+
+  // Back/forward while the drawer is open shouldn't leave it covering the new page.
+  const [navPath, setNavPath] = useState(pathname)
+  if (navPath !== pathname) {
+    setNavPath(pathname)
+    setMobileOpen(false)
+  }
 
   return (
-    <div className="crm-shell min-h-dvh bg-canvas text-ink">
+    <div className="crm-shell min-h-dvh bg-canvas text-ink" data-sidebar={collapsed ? 'collapsed' : 'expanded'}>
       <a
         href="#main"
         className="fixed top-3 left-3 z-[80] -translate-y-20 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-transform focus:translate-y-0"
@@ -167,11 +316,11 @@ function Shell() {
       </a>
       <RouteProgress />
       <ScrollManager />
-      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-sidebar-hover bg-sidebar lg:block", collapsed ? "w-20" : "w-64")} >
-        <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
+      <aside className="app-sidebar hidden lg:block">
+        <Sidebar collapsed={collapsed} onToggle={toggle} />
       </aside>
       <MobileNav open={mobileOpen} onClose={closeNav} />
-      <div className={cn("flex min-h-dvh min-w-0 flex-col", collapsed ? "lg:pl-20" : "lg:pl-64")}>
+      <div className="app-content flex min-h-dvh min-w-0 flex-col">
         <Topbar onOpenMenu={() => setMobileOpen(true)} />
         <PlanBanner />
         <TermsBanner />
@@ -179,6 +328,7 @@ function Shell() {
           <Outlet />
         </main>
       </div>
+      <BottomTabs onMore={() => setMobileOpen(true)} moreOpen={mobileOpen} />
     </div>
   )
 }

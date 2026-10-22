@@ -1,11 +1,12 @@
 import { useId } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
-import { FUNNEL_STAGES, funnelPath, type LeadChartType } from './funnel'
+import { funnelPath, sharePercent, type LeadChartType } from './funnel'
 
 export interface LeadChartStage {
   id: string
   label: string
+  hint?: string
   count: number
   color: string
   href: string
@@ -13,79 +14,69 @@ export interface LeadChartStage {
 
 const format = (value: number) => value.toLocaleString('en-IN')
 
-export function LeadStatusChart({ type, stages }: { type: LeadChartType; stages: LeadChartStage[] }) {
+/** `inset` is the card's horizontal padding, so every chart lines up with the header and tiles. */
+export function LeadStatusChart({ type, stages, inset = 'px-6' }: { type: LeadChartType; stages: LeadChartStage[]; inset?: string }) {
   const total = stages.reduce((sum, stage) => sum + stage.count, 0)
   const max = Math.max(1, ...stages.map((stage) => stage.count))
-  if (type === 'flow') return <FlowChart stages={stages} />
+  const wrap = `${inset} py-5`
+
+  if (type === 'flow') return <FlowChart stages={stages} inset={inset} />
 
   if (type === 'table')
     return (
-      <div className="mx-5 my-5 overflow-x-auto rounded-xl border border-line sm:mx-6">
-        <table className="w-full text-left text-xs">
-          <caption className="sr-only">Lead counts and share of the four stages shown</caption>
-          <thead className="bg-surface-subtle text-muted">
-            <tr>
-              <th scope="col" className="px-4 py-3 font-medium">
-                Stage
-              </th>
-              <th scope="col" className="px-4 py-3 text-right font-medium">
-                Leads
-              </th>
-              <th scope="col" className="px-4 py-3 text-right font-medium">
-                Share of shown stages
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {stages.map((stage) => (
-              <tr key={stage.id} className="hover:bg-surface-subtle">
-                <th scope="row" className="px-4 py-3 font-medium">
-                  <Link to={stage.href} className="inline-flex items-center gap-2 text-ink hover:text-brand-700">
-                    <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: stage.color }} />
-                    {stage.label}
-                    <ArrowUpRight className="size-3 shrink-0" />
-                  </Link>
-                </th>
-                <td className="px-4 py-3 text-right font-semibold text-ink tabular-nums">{format(stage.count)}</td>
-                <td className="px-4 py-3 text-right text-muted tabular-nums">
-                  {total ? ((stage.count / total) * 100).toFixed(1) : '0.0'}%
-                </td>
+      <div className={wrap}>
+        <div className="overflow-x-auto rounded-xl border border-line">
+          <table className="w-full text-left text-sm">
+            <caption className="sr-only">Lead counts and share of the four stages shown</caption>
+            <thead className="bg-surface-subtle text-xs text-muted">
+              <tr>
+                <th scope="col" className="px-4 py-2.5 font-medium">Stage</th>
+                <th scope="col" className="px-4 py-2.5 text-right font-medium">Leads</th>
+                <th scope="col" className="px-4 py-2.5 text-right font-medium">Share</th>
               </tr>
-            ))}
-          </tbody>
-          <tfoot className="border-t border-line bg-surface-subtle">
-            <tr>
-              <th scope="row" className="px-4 py-3 font-medium text-ink">
-                Total shown
-              </th>
-              <td className="px-4 py-3 text-right font-semibold text-ink tabular-nums">{format(total)}</td>
-              <td className="px-4 py-3 text-right text-muted">{total ? '100%' : '0%'}</td>
-            </tr>
-          </tfoot>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {stages.map((stage) => (
+                <tr key={stage.id} className="hover:bg-surface-subtle">
+                  <th scope="row" className="px-4 py-2.5 font-medium">
+                    <Link to={stage.href} className="inline-flex items-center gap-2 text-ink hover:text-brand-700">
+                      <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: stage.color }} aria-hidden="true" />
+                      {stage.label}
+                    </Link>
+                  </th>
+                  <td className="px-4 py-2.5 text-right font-semibold text-ink tabular-nums">{format(stage.count)}</td>
+                  <td className="px-4 py-2.5 text-right text-muted tabular-nums">{sharePercent(stage.count, total)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="border-t border-line bg-surface-subtle">
+              <tr>
+                <th scope="row" className="px-4 py-2.5 font-medium text-ink">Total</th>
+                <td className="px-4 py-2.5 text-right font-semibold text-ink tabular-nums">{format(total)}</td>
+                <td className="px-4 py-2.5 text-right text-muted">{total ? '100%' : '0%'}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     )
 
   if (type === 'bars')
     return (
-      <div className="space-y-4 px-6 py-5" aria-label="Lead status horizontal bars">
+      <div className={`${wrap} space-y-3`} aria-label="Lead status horizontal bars">
         {stages.map((stage) => (
-          <Link
-            key={stage.id}
-            to={stage.href}
-            className="group block rounded-lg p-1"
-            title={`${stage.label}: ${format(stage.count)} leads`}
-          >
-            <div className="mb-2 flex items-center justify-between gap-3 text-xs">
-              <span className="text-muted group-hover:text-ink">{stage.label}</span>
+          <Link key={stage.id} to={stage.href} className="group grid grid-cols-[minmax(0,1fr)_minmax(2rem,1fr)_4.5rem] items-center gap-3 text-sm sm:grid-cols-[10rem_minmax(0,1fr)_5rem]" title={`${stage.label}: ${format(stage.count)} leads`}>
+            <span className="flex items-center gap-2 truncate text-muted group-hover:text-ink">
+              <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: stage.color }} aria-hidden="true" />
+              {stage.label}
+            </span>
+            <span className="h-3 overflow-hidden rounded-full bg-line/60">
+              <span className="block h-full rounded-full transition-[width]" style={{ width: `${stage.count ? Math.max(1.5, (stage.count / max) * 100) : 0}%`, backgroundColor: stage.color }} />
+            </span>
+            <span className="text-right">
               <strong className="font-semibold text-ink tabular-nums">{format(stage.count)}</strong>
-            </div>
-            <div className="h-4 overflow-hidden rounded-md bg-surface-subtle">
-              <div
-                className="h-full rounded-md"
-                style={{ width: `${(stage.count / max) * 100}%`, backgroundColor: stage.color }}
-              />
-            </div>
+              <span className="ml-1.5 text-xs text-muted tabular-nums">{sharePercent(stage.count, total)}</span>
+            </span>
           </Link>
         ))}
       </div>
@@ -93,35 +84,24 @@ export function LeadStatusChart({ type, stages }: { type: LeadChartType; stages:
 
   if (type === 'columns')
     return (
-      <div className="px-6 pb-4 pt-6" aria-label="Lead status column chart">
+      <div className={`${inset} pt-6 pb-5`} aria-label="Lead status column chart">
         <div className="relative">
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-44 border-b border-line">
             {[0, 25, 50, 75].map((percent) => (
-              <span
-                key={percent}
-                className="absolute inset-x-0 border-t border-dashed border-line"
-                style={{ top: `${percent}%` }}
-              />
+              <span key={percent} className="absolute inset-x-0 border-t border-dashed border-line" style={{ top: `${percent}%` }} />
             ))}
           </div>
-          <div className="relative grid grid-cols-4 gap-2">
+          <div className="relative grid grid-cols-4 gap-3">
             {stages.map((stage) => (
-              <Link
-                key={stage.id}
-                to={stage.href}
-                className="group min-w-0 rounded-lg px-1"
-                title={`${stage.label}: ${format(stage.count)} leads`}
-              >
-                <span className="flex h-44 flex-col items-center justify-end gap-2">
-                  <strong className="text-xs font-semibold text-ink tabular-nums">{format(stage.count)}</strong>
+              <Link key={stage.id} to={stage.href} className="group min-w-0" title={`${stage.label}: ${format(stage.count)} leads`}>
+                <span className="flex h-44 flex-col items-center justify-end gap-1.5">
+                  <strong className="text-sm font-semibold text-ink tabular-nums">{format(stage.count)}</strong>
                   <span
-                    className="block w-3/5 max-w-16 rounded-t-md opacity-85 group-hover:opacity-100"
-                    style={{ height: `${(stage.count / max) * 140}px`, backgroundColor: stage.color }}
+                    className="block w-3/5 max-w-16 rounded-t-md opacity-90 transition-opacity group-hover:opacity-100"
+                    style={{ height: `${stage.count ? Math.max(4, (stage.count / max) * 140) : 0}px`, backgroundColor: stage.color }}
                   />
                 </span>
-                <span className="mt-3 block text-center text-xs text-muted group-hover:text-ink">
-                  {stage.label}
-                </span>
+                <span className="mt-2.5 block truncate text-center text-xs text-muted group-hover:text-ink">{stage.label}</span>
               </Link>
             ))}
           </div>
@@ -129,94 +109,86 @@ export function LeadStatusChart({ type, stages }: { type: LeadChartType; stages:
       </div>
     )
 
+  if (type === 'donut') {
+    const radius = 78,
+      circumference = 2 * Math.PI * radius
+    let offset = 0
+    return (
+      <div className={`${wrap} flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:gap-12`}>
+        <div className="relative size-48 shrink-0">
+          <svg viewBox="0 0 220 220" className="size-full -rotate-90" role="img" aria-label={`Lead status donut: ${stages.map((s) => `${s.label} ${s.count}`).join(', ')}`}>
+            <circle cx="110" cy="110" r={radius} fill="none" stroke="var(--color-surface-subtle)" strokeWidth="24" />
+            {stages.map((stage) => {
+              if (!stage.count) return null
+              const length = (stage.count / total) * circumference
+              // Small gap between segments; tiny segments keep a visible sliver.
+              const visible = Math.max(2, length - (stages.filter((s) => s.count).length > 1 ? 2 : 0))
+              const node = (
+                <circle key={stage.id} cx="110" cy="110" r={radius} fill="none" stroke={stage.color} strokeWidth="24" strokeDasharray={`${visible} ${circumference - visible}`} strokeDashoffset={-offset}>
+                  <title>
+                    {stage.label}: {format(stage.count)} leads
+                  </title>
+                </circle>
+              )
+              offset += length
+              return node
+            })}
+          </svg>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <strong className="text-3xl font-semibold tracking-tight text-ink tabular-nums">{format(total)}</strong>
+            <span className="mt-0.5 text-xs text-muted">leads</span>
+          </div>
+        </div>
+        <ChartLegend stages={stages} total={total} />
+      </div>
+    )
+  }
+
+  // Stacked bar
   return (
-    <div className="px-6 py-5">
-      {type === 'donut' ? (
-        <div className="flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-8">
-          <div className="relative size-48 shrink-0">
-            <svg
-              viewBox="0 0 220 220"
-              className="size-full -rotate-90"
-              role="img"
-              aria-label={`Lead status donut: ${stages.map((stage) => `${stage.label} ${stage.count}`).join(', ')}`}
-            >
-              <circle cx="110" cy="110" r="78" fill="none" stroke="var(--color-surface-subtle)" strokeWidth="25" />
-              {stages.map((stage, index) => {
-                const circumference = 2 * Math.PI * 78
-                const length = total ? (stage.count / total) * circumference : 0
-                const offset = total
-                  ? (stages.slice(0, index).reduce((sum, item) => sum + item.count, 0) / total) * circumference
-                  : 0
-                return stage.count > 0 ? (
-                  <circle
-                    key={stage.id}
-                    cx="110"
-                    cy="110"
-                    r="78"
-                    fill="none"
-                    stroke={stage.color}
-                    strokeWidth="25"
-                    strokeDasharray={`${length} ${circumference - length}`}
-                    strokeDashoffset={-offset}
-                  >
-                    <title>
-                      {stage.label}: {format(stage.count)} leads
-                    </title>
-                  </circle>
-                ) : null
-              })}
-            </svg>
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <strong className="text-3xl font-semibold tracking-tight text-ink tabular-nums">{format(total)}</strong>
-              <span className="mt-1 text-xs text-muted">Leads shown</span>
-            </div>
-          </div>
-          <ChartLegend stages={stages} />
-        </div>
-      ) : (
-        <div className="py-2" aria-label="Lead status stacked bar">
-          <div className="mb-5 flex items-baseline justify-between gap-3">
-            <span className="text-xs text-muted">Distribution by stage</span>
-            <span className="text-xs font-medium text-ink">{format(total)} leads shown</span>
-          </div>
-          <div className="mb-6 flex h-12 overflow-hidden rounded-xl bg-surface-subtle">
-            {stages
-              .filter((stage) => stage.count > 0)
-              .map((stage) => (
-                <Link
-                  key={stage.id}
-                  to={stage.href}
-                  style={{ width: `${total ? (stage.count / total) * 100 : 0}%`, backgroundColor: stage.color }}
-                  className="flex items-center justify-center border-r border-surface/40 text-xs font-semibold text-white last:border-0 hover:opacity-80"
-                  aria-label={`${stage.label}: ${format(stage.count)} leads`}
-                  title={`${stage.label}: ${format(stage.count)} leads`}
-                >
-                  {stage.count / total >= 0.1 && (
-                    <span className="rounded-md bg-surface/95 px-2 py-1 text-ink">{format(stage.count)}</span>
-                  )}
-                </Link>
-              ))}
-          </div>
-          <ChartLegend stages={stages} />
-        </div>
-      )}
-      <p className="mt-4 text-center text-xs text-muted">
-        Distribution across the four stages shown. Lost and junk are listed below.
-      </p>
+    <div className={wrap} aria-label="Lead status stacked bar">
+      <div className="mb-2 flex items-baseline justify-between gap-3 text-xs">
+        <span className="text-muted">Share of leads by stage</span>
+        <span className="font-medium text-ink tabular-nums">{format(total)} leads</span>
+      </div>
+      <div className="flex h-10 gap-0.5 overflow-hidden rounded-lg bg-surface-subtle">
+        {stages
+          .filter((stage) => stage.count > 0)
+          .map((stage) => {
+            const share = stage.count / total
+            return (
+              <Link
+                key={stage.id}
+                to={stage.href}
+                style={{ width: `${Math.max(0.8, share * 100)}%`, backgroundColor: stage.color }}
+                className="flex min-w-1 items-center justify-center text-xs font-semibold transition-opacity hover:opacity-85"
+                aria-label={`${stage.label}: ${format(stage.count)} leads`}
+                title={`${stage.label}: ${format(stage.count)} leads (${sharePercent(stage.count, total)})`}
+              >
+                
+              </Link>
+            )
+          })}
+      </div>
+      <div className="mt-5">
+        <ChartLegend stages={stages} total={total} columns />
+      </div>
     </div>
   )
 }
 
-function ChartLegend({ stages }: { stages: LeadChartStage[] }) {
+/** Dot · label · count · share. `columns` lays it out in a row of four on wider screens. */
+function ChartLegend({ stages, total, columns = false }: { stages: LeadChartStage[]; total: number; columns?: boolean }) {
   return (
-    <ul className="w-full space-y-3 sm:max-w-xs">
+    <ul className={columns ? 'grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-4' : 'w-full max-w-72 space-y-1'}>
       {stages.map((stage) => (
         <li key={stage.id}>
-          <Link to={stage.href} className="group flex items-center gap-2 text-xs">
-            <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: stage.color }} />
-            <span className="flex-1 text-muted group-hover:text-ink">{stage.label}</span>
+          <Link to={stage.href} className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-subtle">
+            <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: stage.color }} aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate text-muted group-hover:text-ink">{stage.label}</span>
             <strong className="font-semibold text-ink tabular-nums">{format(stage.count)}</strong>
-            <ArrowUpRight className="size-3 text-muted" />
+            <span className="w-9 text-right text-xs text-muted tabular-nums">{sharePercent(stage.count, total)}</span>
+            <ArrowUpRight className="size-3.5 text-muted opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
           </Link>
         </li>
       ))}
@@ -224,42 +196,33 @@ function ChartLegend({ stages }: { stages: LeadChartStage[] }) {
   )
 }
 
-function FlowChart({ stages }: { stages: LeadChartStage[] }) {
+/** Envelope coloured stage by stage (gradient through each stage's colour), labels centred under each stage. */
+function FlowChart({ stages, inset }: { stages: LeadChartStage[]; inset: string }) {
   const id = useId().replace(/:/g, '')
   const values = stages.map((stage) => stage.count)
+  const stops = stages.map((stage, i) => ({ offset: (i * 250 + 125) / 1000, color: stage.color }))
   return (
-    <div className="relative mt-2 px-1">
-      <svg
-        viewBox="0 0 1000 280"
-        preserveAspectRatio="none"
-        className="block h-40 w-full sm:h-48"
-        role="img"
-        aria-label={`Lead status flow: ${stages.map((stage) => `${stage.label} ${stage.count}`).join(', ')}`}
-      >
-        <defs>
-          <linearGradient id={`${id}-glow`} x1="0" x2="1">
-            <stop stopColor="var(--color-chart-1)" stopOpacity="0.25" />
-            <stop offset="0.5" stopColor="var(--color-chart-1)" stopOpacity="0.45" />
-            <stop offset="1" stopColor="var(--color-chart-2)" stopOpacity="0.25" />
-          </linearGradient>
-          <linearGradient id={`${id}-core`} x1="0" x2="1">
-            <stop stopColor="var(--color-chart-2)" />
-            <stop offset="0.5" stopColor="var(--color-chart-3)" />
-            <stop offset="1" stopColor="var(--color-chart-3)" />
-          </linearGradient>
-        </defs>
-        <path d={funnelPath(values, 1.3)} fill={`url(#${id}-glow)`} />
-        <path d={funnelPath(values)} fill="var(--color-chart-4)" fillOpacity="0.62" />
-        <path d={funnelPath(values, 0.76)} fill="var(--color-chart-4)" fillOpacity="0.8" />
-        <path d={funnelPath(values, 0.51)} fill="var(--color-chart-5)" />
-        <path d={funnelPath(values, 0.28)} fill={`url(#${id}-core)`} />
-        {[250, 500, 750].map((x) => (
-          <line key={x} x1={x} x2={x} y1="12" y2="268" stroke="var(--color-surface)" strokeWidth="3" opacity="0.9" />
-        ))}
-      </svg>
-      <div className="pointer-events-none absolute inset-x-6 bottom-0 hidden grid-cols-4 text-xs text-muted sm:grid">
-        {FUNNEL_STAGES.map((stage) => (
-          <span key={stage.id} className="py-2">
+    <div className={`${inset} pt-4 pb-2`}>
+      <div className="overflow-hidden rounded-xl bg-surface-subtle/60">
+        <svg viewBox="0 0 1000 280" preserveAspectRatio="none" className="block h-40 w-full sm:h-48" role="img" aria-label={`Lead status flow: ${stages.map((s) => `${s.label} ${s.count}`).join(', ')}`}>
+          <defs>
+            <linearGradient id={`${id}-flow`} x1="0" x2="1">
+              {stops.map((stop) => (
+                <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
+              ))}
+            </linearGradient>
+          </defs>
+          <path d={funnelPath(values, 1.25)} fill={`url(#${id}-flow)`} fillOpacity="0.14" />
+          <path d={funnelPath(values)} fill={`url(#${id}-flow)`} fillOpacity="0.3" />
+          <path d={funnelPath(values, 0.62)} fill={`url(#${id}-flow)`} />
+          {[250, 500, 750].map((x) => (
+            <line key={x} x1={x} x2={x} y1="0" y2="280" stroke="var(--color-surface)" strokeWidth="3" />
+          ))}
+        </svg>
+      </div>
+      <div className="mt-2 hidden grid-cols-4 text-center text-xs text-muted sm:grid">
+        {stages.map((stage) => (
+          <span key={stage.id} className="truncate px-2">
             {stage.hint}
           </span>
         ))}

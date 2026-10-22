@@ -50,7 +50,7 @@ export function Button(props: ButtonProps) {
   if ('to' in props && props.to !== undefined) {
     const { variant: _v, size: _s, className: _c, ...rest } = props as ButtonAsLink
     return (
-      <Link {...rest} className={classes}>
+      <Link {...rest} title={rest.title ?? rest['aria-label']} className={classes}>
         {children}
       </Link>
     )
@@ -59,7 +59,7 @@ export function Button(props: ButtonProps) {
   if ('href' in props && props.href !== undefined) {
     const { variant: _v, size: _s, className: _c, ...rest } = props as ButtonAsAnchor
     return (
-      <a {...rest} className={classes}>
+      <a {...rest} title={rest.title ?? rest['aria-label']} className={classes}>
         {children}
       </a>
     )
@@ -67,7 +67,7 @@ export function Button(props: ButtonProps) {
 
   const { variant: _v, size: _s, className: _c, loading, type = 'button', disabled, ...rest } = props as ButtonAsButton
   return (
-    <button {...rest} type={type} disabled={disabled || loading} aria-busy={loading || undefined} className={classes}>
+    <button {...rest} type={type} disabled={disabled || loading} aria-busy={loading || undefined} title={rest.title ?? rest['aria-label']} className={classes}>
       {loading && <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />}
       {children}
     </button>

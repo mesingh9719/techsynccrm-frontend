@@ -64,6 +64,18 @@ export function Input({ className, invalid, ...props }: InputProps) {
   return <input {...props} aria-invalid={invalid || undefined} className={cn(control, 'h-10', controlState(invalid), className)} />
 }
 
+/** Amount input with a currency symbol inside the field (₹ by default). */
+export function MoneyInput({ className, symbol = '₹', ...props }: InputProps & { symbol?: string }) {
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted" aria-hidden="true">
+        {symbol}
+      </span>
+      <Input inputMode="decimal" {...props} className={cn(symbol.length > 1 ? 'pl-11' : 'pl-7', className)} />
+    </div>
+  )
+}
+
 export function PasswordInput({ className, invalid, ...props }: InputProps) {
   const [visible, setVisible] = useState(false)
   return (

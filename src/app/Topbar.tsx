@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Building2,
   CircleHelp,
@@ -24,7 +24,8 @@ import { UserAvatar } from '../components/app/UserAvatar'
 import { useToast } from '../components/ui/Toast'
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from '../components/app/Menu'
 import { CommandSearch } from './CommandSearch'
-import { ThemeControl } from './ThemeControl'
+import { ThemeControl, ThemeSegment } from './ThemeControl'
+import { LogoMark } from '../components/ui/Brand'
 import { Button } from '../components/ui/Button'
 
 /** "Create" menu — items enable as their modules ship. Shortcut: c. */
@@ -159,6 +160,8 @@ function UserMenu() {
             )}
           </div>
           <MenuSeparator />
+          <ThemeSegment />
+          <MenuSeparator />
           <MenuItem
             icon={<UserRound className="size-4" />}
             onSelect={() => (close(), navigate('/app/settings/profile'))}
@@ -190,7 +193,9 @@ function UserMenu() {
 function QuickAddLead() {
   const allowed = useCan('leads.create')
   const navigate = useNavigate()
-  if (!allowed) return null
+  const { pathname } = useLocation()
+  // The leads list has its own "New lead" in the page header.
+  if (!allowed || pathname === '/app/leads') return null
   return (
     <Button size="md" onClick={() => navigate('/app/leads?create=true')}>
       <Plus className="size-4" />
@@ -203,14 +208,15 @@ function QuickAddLead() {
 /** Top bar: record search, create, notifications and account controls. */
 export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   return (
-    <header
-      data-topbar
-      className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-line bg-surface/90 px-4 backdrop-blur sm:px-6"
-    >
+    <header data-topbar className="app-topbar">
+      {/* Phones navigate with the bottom tab bar; tablets open the drawer from here. */}
+      <Link to="/app" className="shrink-0 rounded-control md:hidden" aria-label="TechSync CRM home">
+        <LogoMark className="size-8" />
+      </Link>
       <button
         type="button"
         onClick={onOpenMenu}
-        className="icon-button lg:hidden"
+        className="icon-button hidden md:inline-flex lg:hidden"
         aria-label="Open navigation"
       >
         <MenuIcon className="size-5" aria-hidden="true" />
@@ -218,9 +224,11 @@ export function Topbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
       <CommandSearch />
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <QuickAddLead />
-        <div className="hidden md:block"><ThemeControl /></div>
+        <div className="hidden md:block">
+          <ThemeControl />
+        </div>
         <CreateMenu />
         <NotificationBell />
         <UserMenu />

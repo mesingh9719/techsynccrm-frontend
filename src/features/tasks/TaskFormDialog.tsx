@@ -144,7 +144,7 @@ export function TaskFormDialog({ task = null, record, defaults, onClose }: { tas
               <div className="flex gap-2">
                 <Input id={id} invalid={invalid} type={allDay ? 'date' : 'datetime-local'} value={allDay ? due.slice(0, 10) : due} onChange={(e) => setDue(e.target.value)} />
                 <label className="flex shrink-0 items-center gap-2 text-sm text-ink">
-                  <input type="checkbox" checked={allDay} onChange={(e) => { setAllDay(e.target.checked); if (due) setDue(e.target.checked ? due.slice(0, 10) : `${due.slice(0, 10)}T10:00`) }} className="size-4 rounded border-line text-brand-700" />
+                  <input type="checkbox" checked={allDay} onChange={(e) => { setAllDay(e.target.checked); if (due) setDue(e.target.checked ? due.slice(0, 10) : `${due.slice(0, 10)}T10:00`) }} className="size-4 rounded-control border-line text-brand-700" />
                   All day
                 </label>
               </div>

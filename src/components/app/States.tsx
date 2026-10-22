@@ -17,7 +17,7 @@ export function PageHeader({ title, description, actions, className, breadcrumbs
         <h1 className="page-title">{title}</h1>
         {description && <p className="page-description">{description}</p>}
       </div>
-      {actions && <div className="flex max-w-full shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="page-header-actions">{actions}</div>}
     </header>
   )
 }

@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -55,8 +56,10 @@ function PasswordForm() {
     handleSubmit,
     reset,
     setError,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<ChangePasswordValues>({ resolver: zodResolver(changePasswordSchema), defaultValues: { currentPassword: '', newPassword: '', confirm: '' } })
+
+  const guard = useUnsavedChanges(isDirty, () => {}, isSubmitting, isDirty)
 
   const onSubmit = async ({ currentPassword, newPassword }: ChangePasswordValues) => {
     setServerError(null)
@@ -72,6 +75,7 @@ function PasswordForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid max-w-md gap-5">
+      {guard.confirmation}
       <Field label="Current password" error={errors.currentPassword?.message}>
         {({ id, describedBy, invalid }) => <PasswordInput id={id} autoComplete="current-password" aria-describedby={describedBy} invalid={invalid} {...register('currentPassword')} />}
       </Field>
@@ -205,7 +209,7 @@ function TwoFactorSection() {
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          {enabled ? <ShieldCheck className="mt-1 size-5 text-emerald-600" aria-hidden="true" /> : <ShieldOff className="mt-1 size-5 text-muted" aria-hidden="true" />}
+          {enabled ? <ShieldCheck className="mt-1 size-5 text-success" aria-hidden="true" /> : <ShieldOff className="mt-1 size-5 text-muted" aria-hidden="true" />}
           <div>
             <p className="font-medium text-ink">
               {enabled ? 'On' : 'Off'}

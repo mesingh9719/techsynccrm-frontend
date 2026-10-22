@@ -203,7 +203,7 @@ export default function Integrations() {
             <figure className="overflow-hidden rounded-dialog bg-zinc-950 shadow-frame">
               <figcaption className="flex items-center justify-between border-b border-white/10 px-4 py-3 font-mono text-xs text-zinc-400">
                 <span>Create a lead</span>
-                <span className="rounded bg-emerald-400/10 px-2 py-1 text-emerald-300">POST /v1/leads</span>
+                <span className="rounded-control bg-emerald-400/10 px-2 py-1 text-emerald-300">POST /v1/leads</span>
               </figcaption>
               <pre className="overflow-x-auto p-5 font-mono text-sm leading-relaxed text-zinc-300">
                 <code>{snippet}</code>

@@ -375,7 +375,7 @@ export default function DealDetailPage() {
                       <button
                         type="button"
                         onClick={() => contactAction(() => removeDealContact(deal.id, c.contactId))}
-                        className="rounded p-1 text-muted hover:text-danger"
+                        className="rounded-control p-1 text-muted hover:text-danger"
                         aria-label={`Remove ${c.displayName}`}
                       >
                         <X className="size-4" aria-hidden="true" />

@@ -71,6 +71,8 @@ export default function ReportsPage() {
     maxRevenue = Math.max(1, ...(data?.revenue.map((r) => r.valueMinor / 100) ?? [])),
     step = 10 ** Math.floor(Math.log10(maxRevenue)),
     upper = Math.ceil(maxRevenue / step) * step
+  const funnelStages = data?.funnel ?? []
+  const biggestDrop = funnelStages.slice(1).map((stage, index) => ({ from: funnelStages[index].stage, to: stage.stage, lost: Math.max(0, funnelStages[index].count - stage.count), rate: funnelStages[index].count ? Math.max(0, (funnelStages[index].count - stage.count) / funnelStages[index].count * 100) : 0 })).sort((a, b) => b.lost - a.lost)[0]
   const ownerOptions = reportsLive
     ? (members.data?.map((m) => ({ id: m.userId, name: m.fullName })) ?? [])
     : sampleOwners
@@ -363,22 +365,25 @@ export default function ReportsPage() {
                 <p className="mt-2 text-sm text-muted">
                   Lead cohort created in this date range. Stages show progress reached by now.
                 </p>
-                <div className="mt-7 space-y-4">
-                  {data.funnel.map((r, i) => (
+                {biggestDrop && biggestDrop.lost > 0 && <p className="mt-4 rounded-control border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><strong>Largest drop-off:</strong> {biggestDrop.from} → {biggestDrop.to} · {biggestDrop.lost.toLocaleString()} leads ({biggestDrop.rate.toFixed(1)}%).</p>}
+                {!data.funnel.some((stage) => stage.count > 0) && <EmptyState title="No lead journey in this period" description="Choose a wider date range or review incoming leads." action={<Button variant="secondary" to="/app/leads">Open lead inbox</Button>} />}
+                <div className="mt-6 space-y-4">
+                  {data.funnel.map((r) => (
                     <div key={r.stage} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-center gap-3">
                       <span className="text-xs text-muted sm:text-sm">{r.stage}</span>
                       <div className="h-10 overflow-hidden rounded-lg bg-zinc-100">
                         <div
-                          className="flex h-full min-w-1 items-center rounded-lg bg-brand-500 px-3 text-xs font-medium text-white"
+                          className="flex h-full min-w-1 items-center rounded-lg bg-brand-600 px-3 text-xs font-medium text-white"
                           style={{
                             width: `${(r.count / Math.max(1, data.funnel[0]?.count ?? 0)) * 100}%`,
-                            opacity: 1 - i * 0.12,
+                            opacity: 1,
                           }}
                         >
-                          {r.count > 0 ? r.count : ''}
+
                         </div>
                       </div>
-                      <span className="text-right text-xs text-muted">
+                      <span className="flex flex-col items-end gap-1 text-right text-xs text-muted">
+                        <strong className="font-semibold text-ink tabular-nums">{r.count.toLocaleString()}</strong>
                         {data.funnel[0]?.count ? `${Math.round((r.count / data.funnel[0].count) * 100)}%` : '—'}
                       </span>
                     </div>

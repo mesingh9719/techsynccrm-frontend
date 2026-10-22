@@ -2,11 +2,17 @@ import { RecordWorkspace } from '../crm/components/RecordWorkspace'
 import { QuickFollowUp } from '../activities/QuickFollowUp'
 import { InlineLeadStatus } from './InlineLeadStatus'
 import { SourceBadge } from './SourceBadge'
-import { useState } from 'react'
+import { useId, useRef, useState } from 'react'
+import { RecordTasks } from '../tasks/RecordTasks'
+import { TaskFormDialog } from '../tasks/TaskFormDialog'
+import { StageTracker } from './detail/StageTracker'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  Activity,
   ArrowLeft,
+  ListChecks,
+  CalendarClock,
   CircleCheck,
   Hand,
   History,
@@ -69,8 +75,13 @@ export default function LeadDetailPage() {
   const canDeleteAny = useCan('leads.delete')
   const canAssign = useCan('records.assign')
   const canReadCampaigns = useCan('campaigns.read')
-  const [dialog, setDialog] = useState<null | 'edit' | 'convert' | 'assign' | 'delete' | 'campaign'>(null)
+  const [dialog, setDialog] = useState<null | 'edit' | 'convert' | 'assign' | 'delete' | 'campaign' | 'follow-up'>(null)
   const [busy, setBusy] = useState(false)
+  const [tab, setTab] = useState('activity')
+  const tabId = useId()
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const canReadTasks = useCan('tasks.read')
+  const canCreateTasks = useCan('tasks.create')
   const lead = query.data
   useSeo({ title: lead?.displayName ?? 'Lead', noindex: true })
 
@@ -117,6 +128,7 @@ export default function LeadDetailPage() {
       setLead(await fn())
       await queryClient.invalidateQueries({ queryKey: qk.org(orgId).leads.lists })
       notify({ title: success })
+      return true
     } catch (err) {
       if (err instanceof ApiError && err.code === 'ALREADY_ASSIGNED') await refresh()
       if (!handleGlobalApiError(err))
@@ -125,6 +137,7 @@ export default function LeadDetailPage() {
           title: 'Couldn’t do that',
           description: err instanceof ApiError ? err.message : undefined,
         })
+      return false
     } finally {
       setBusy(false)
     }
@@ -134,7 +147,7 @@ export default function LeadDetailPage() {
   const activeDefs = (defs.data ?? []).filter((d) => !d.archived || lead.customFields[d.key] !== undefined)
 
   return (
-    <div className="app-page">
+    <div className="lead-page app-page max-w-wide">
       <Link to="/app/leads" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
         <ArrowLeft className="size-4" aria-hidden="true" />
         Leads
@@ -200,8 +213,9 @@ export default function LeadDetailPage() {
         )}
       </div>
 
-      <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-4">
+      <header className="lead-header surface mt-4">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold tracking-tight text-ink">{lead.displayName}</h1>
             <p className="mt-1 text-sm text-muted">
@@ -246,17 +260,25 @@ export default function LeadDetailPage() {
             </Button>
           )}
         </div>
+      </div>
+      <div className="mt-4 border-t border-line pt-4"><StageTracker lead={lead} canUpdate={Boolean(canUpdate) && !busy} onChange={act} onConvert={() => setDialog('convert')} /></div>
       </header>
 
-      {canUpdate && (
-        <div className="mt-5 rounded-xl border border-brand-500/20 bg-brand-500/5 p-4">
-          <p className="mb-3 text-xs font-medium text-brand-700">Keep the conversation moving</p>
-          <QuickFollowUp entityType="lead" entityId={lead.id} name={lead.displayName} />
+      <div className="lead-layout">
+        <div role="tablist" aria-label="Lead sections" className="lead-tabs">
+          {[
+            { key: 'activity', label: 'Activity', icon: Activity },
+            { key: 'details', label: 'Details', icon: UserRound },
+            { key: 'next', label: 'Next steps', icon: ListChecks },
+          ].map((item, index, items) => <button key={item.key} ref={(element) => { tabRefs.current[index] = element }} type="button" role="tab" id={`${tabId}-${item.key}-tab`} aria-controls={`${tabId}-${item.key}-panel`} aria-selected={tab === item.key} tabIndex={tab === item.key ? 0 : -1} onClick={() => setTab(item.key)} onKeyDown={(event) => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+            event.preventDefault()
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + items.length) % items.length
+            setTab(items[next].key); tabRefs.current[next]?.focus()
+          }} className="lead-tab"><item.icon className="size-4" aria-hidden="true" />{item.label}</button>)}
         </div>
-      )}
-
-      <div className="record-workspace mt-6">
-        <div className="min-w-0 space-y-6">
+        <div className="lead-grid">
+        <section id={`${tabId}-details-panel`} role="tabpanel" aria-labelledby={`${tabId}-details-tab`} aria-label="Lead details" className="lead-col lead-col-profile" data-active={tab === 'details' || undefined}>
           <Panel title="Lead profile">
             <div className="flex items-center gap-3"><Avatar name={lead.displayName} size="lg" /><div className="min-w-0"><p className="truncate font-display text-lg font-semibold" title={lead.displayName}>{lead.displayName}</p><p className="mt-1 truncate text-sm text-muted">{lead.companyName ?? 'Individual enquiry'}</p></div></div>
             <div className="mt-4 flex flex-wrap gap-2">          {phone && (
@@ -361,7 +383,7 @@ export default function LeadDetailPage() {
                   {lead.utm && Object.keys(lead.utm).length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-1 font-mono text-xs text-muted">
                       {Object.entries(lead.utm).map(([k, v]) => (
-                        <span key={k} className="rounded border border-line bg-surface-subtle px-2 py-1">
+                        <span key={k} className="rounded-control border border-line bg-surface-subtle px-2 py-1">
                           {k.replace('utm_', '')}: {v}
                         </span>
                       ))}
@@ -404,12 +426,40 @@ export default function LeadDetailPage() {
               </div>
             </Panel>
           )}
-        </div>
-        <RecordWorkspace key={lead.id} entityType="lead" entityId={lead.id} name={lead.displayName} canPin={canUpdate} allowTasks={lead.status !== 'converted'} deals={
+        </section>
+        <section id={`${tabId}-activity-panel`} role="tabpanel" aria-labelledby={`${tabId}-activity-tab`} aria-label="Lead activity" className="lead-col lead-col-main" data-active={tab === 'activity' || undefined}>
+        <RecordWorkspace key={lead.id} entityType="lead" entityId={lead.id} name={lead.displayName} canPin={canUpdate} allowTasks={false} deals={
           <Panel title="Deals"><p className="text-sm leading-6 text-muted">Convert this lead to manage opportunities from its contact record.</p>{(lead.convertedContactId || lead.contactId) ? <Button className="mt-4" variant="secondary" to={`/app/contacts/${lead.convertedContactId ?? lead.contactId}`}>Open contact and deals</Button> : canUpdate && isOpen ? <Button className="mt-4" onClick={() => setDialog('convert')}>Convert lead</Button> : null}</Panel>
         } />
+        </section>
+        <aside id={`${tabId}-next-panel`} role="tabpanel" aria-labelledby={`${tabId}-next-tab`} aria-label="Next steps" className="lead-col lead-col-next" data-active={tab === 'next' || undefined}>
+          <Panel title="Next best step">
+            <p className="text-sm leading-6 text-muted">{lead.deletedAt ? 'Restore this lead before making changes.' : lead.status === 'converted' ? 'Continue the conversation from the contact record.' : lead.status === 'new' ? 'Start the conversation, confirm what they need, and log the outcome.' : lead.status === 'contacted' ? 'Confirm the requirement and budget, then qualify the enquiry.' : lead.status === 'qualified' ? 'Convert the qualified enquiry into a contact and opportunity.' : 'Review the reason this lead was closed before reopening it.'}</p>
+            <dl className="mt-4 space-y-3 text-sm"><div className="flex justify-between gap-3"><dt className="text-muted">Owner</dt><dd><OwnerCell owner={lead.owner} /></dd></div><div className="flex justify-between gap-3"><dt className="text-muted">Budget</dt><dd className="font-medium tabular-nums">{formatMinor(lead.budgetMinor)}</dd></div></dl>
+            {canClaim && <Button className="mt-4 w-full" loading={busy} onClick={() => act(() => claimLead(lead.id), 'Lead claimed — it’s yours')}>Claim lead</Button>}
+            {canUpdate && lead.status === 'qualified' && <Button className="mt-4 w-full" onClick={() => setDialog('convert')}>Convert lead</Button>}
+          </Panel>
+      {canCreateTasks && !lead.deletedAt && lead.status !== 'converted' && (
+        <div className="surface p-4">
+          <p className="mb-3 text-xs font-medium text-brand-700">Keep the conversation moving</p>
+          <QuickFollowUp key={lead.id} entityType="lead" entityId={lead.id} name={lead.displayName} />
+        </div>
+      )}
+
+
+          {canReadTasks && lead.status !== 'converted' && !lead.deletedAt && <RecordTasks key={lead.id} entityType="lead" entityId={lead.id} recordName={lead.displayName} />}
+        </aside>
+        </div>
       </div>
 
+      {!lead.deletedAt && (phone || lead.primaryEmail || (canCreateTasks && lead.status !== 'converted')) && <nav className="lead-mobile-bar" aria-label="Lead quick actions">
+        {phone && <a href={`tel:${phone.e164 ?? phone.raw}`} className="lead-mobile-action is-primary"><Phone className="size-5" aria-hidden="true" /><span>Call</span></a>}
+        {phone?.e164 && <a href={whatsappLink(phone.e164)!} target="_blank" rel="noreferrer" className="lead-mobile-action"><MessageCircle className="size-5" aria-hidden="true" /><span>WhatsApp</span></a>}
+        {lead.primaryEmail && <a href={`mailto:${lead.primaryEmail}`} className="lead-mobile-action"><Mail className="size-5" aria-hidden="true" /><span>Email</span></a>}
+        {canCreateTasks && lead.status !== 'converted' && <button type="button" className="lead-mobile-action" onClick={() => setDialog('follow-up')}><CalendarClock className="size-5" aria-hidden="true" /><span>Follow-up</span></button>}
+      </nav>}
+
+      {dialog === 'follow-up' && <TaskFormDialog record={{ entityType: 'lead', entityId: lead.id, name: lead.displayName }} defaults={{ type: 'follow_up', title: `Follow up with ${lead.displayName}` }} onClose={() => setDialog(null)} />}
       {dialog === 'edit' && <LeadFormDrawer open lead={lead} onClose={() => setDialog(null)} />}
       {dialog === 'convert' && <ConvertDialog lead={lead} onClose={() => setDialog(null)} />}
       <BulkAssignDialog

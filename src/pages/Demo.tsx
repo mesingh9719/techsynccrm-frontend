@@ -154,7 +154,7 @@ export default function Demo() {
       <Container className="py-20 sm:py-28">
         <div className="mx-auto max-w-xl text-center" role="status">
           <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-100">
-            <CircleCheck className="size-7 text-emerald-600" aria-hidden="true" />
+            <CircleCheck className="size-7 text-success" aria-hidden="true" />
           </span>
           <h1 className="mt-6 text-3xl font-semibold tracking-tight text-zinc-950 sm:text-4xl">You’re booked, {values.firstName}!</h1>
           <p className="mt-3 text-lg text-zinc-600">We’ve sent a calendar invite and video link to {values.email}.</p>

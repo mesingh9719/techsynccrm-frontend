@@ -100,7 +100,7 @@ export function FormRenderer({
     <div ref={frame} className="rounded-card border border-line bg-surface p-6 shadow-card sm:p-8">
       {done ? (
         <div className="py-10 text-center" role="status">
-          <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-50 text-success">
             <Check className="size-6" />
           </span>
           <h2 className="mt-4 text-xl font-semibold text-ink">{preview ? 'Looking good!' : 'You’re all set!'}</h2>

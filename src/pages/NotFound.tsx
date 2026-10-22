@@ -31,7 +31,7 @@ export default function NotFound() {
         <p className="font-mono text-sm font-medium text-brand-700">404</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight text-zinc-950 sm:text-5xl">This page has gone cold</h1>
         <p className="mt-4 text-lg text-zinc-600">
-          We couldn’t find <code className="rounded bg-zinc-100 px-2 py-1 font-mono text-sm text-zinc-800">{pathname}</code>. It may have moved, or the link
+          We couldn’t find <code className="rounded-control bg-zinc-100 px-2 py-1 font-mono text-sm text-zinc-800">{pathname}</code>. It may have moved, or the link
           might be mistyped — unlike your leads, we can follow this one up.
         </p>
 

@@ -1,6 +1,6 @@
 import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
 import { DataTools } from '../transfer/DataTools'
-import { useMemo, useState } from 'react'
+import { createElement, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -19,7 +19,6 @@ import {
   X,
 } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
-import { cn } from '../../lib/cn'
 import { qk } from '../../lib/queryKeys'
 import { useAuth } from '../../lib/useAuth'
 import { useCan } from '../../lib/useOrg'
@@ -29,7 +28,7 @@ import { ApiError } from '../../services/http'
 import { Avatar, Badge } from '../../components/ui/Badge'
 import { Input } from '../../components/ui/Form'
 import { SegmentedControl } from '../../components/ui/SegmentedControl'
-import { SourceBadge } from './SourceBadge'
+import { sourceIcon } from './sourceIcons'
 import { InlineLeadStatus } from './InlineLeadStatus'
 import { memberOptions } from '../../services/team'
 import { downloadCsv } from '../../lib/downloadCsv'
@@ -37,8 +36,9 @@ import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
 import { DataTable, type Column } from '../../components/app/DataTable'
 import { ConfirmDialog, Dialog } from '../../components/app/Dialog'
-import { FilterChips, FilterBar } from '../../components/app/FilterBar'
-import { EmptyState, ErrorState, ListSkeleton, LoadMore, PageHeader } from '../../components/app/States'
+import { FilterChips, SearchInput } from '../../components/app/FilterBar'
+import { useCampaigns } from '../campaigns/useCampaigns'
+import { EmptyState, ErrorState, ListSkeleton, PageHeader } from '../../components/app/States'
 import { BulkAssignDialog, BulkTagDialog } from '../crm/components/BulkDialogs'
 import { formatCustomValue } from '../crm/customFieldFormat'
 import { ColumnChooser, CustomFieldFilters, FilterSelect } from '../crm/components/ListTools'
@@ -91,6 +91,7 @@ export default function LeadsPage() {
   const canDelete = useCan('leads.delete')
   const canAssign = useCan('records.assign')
   const canExport = useCan('records.export')
+  const canReadCampaigns = useCan('campaigns.read')
   const members = useQuery({
     queryKey: qk.org(orgId).memberOptions(''),
     queryFn: () => memberOptions(),
@@ -104,6 +105,7 @@ export default function LeadsPage() {
   const defs = useCustomFieldDefs('lead')
   const tags = useTags()
   const sources = useLeadSources()
+  const campaigns = useCampaigns()
   const keys = useMemo(() => [...CORE_KEYS, ...customFilterKeys(defs.data)], [defs.data])
   const { filters, setFilter, clearFilters, replaceFilters, activeCount } = useUrlFilters(keys)
   const params = useMemo(
@@ -137,6 +139,30 @@ export default function LeadsPage() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: qk.org(orgId).leads.all })
   const isDeletedView = filters.deleted === 'true'
   const unassignedOnly = filters.ownerId === 'none'
+  // Filters set in the dialog (search, status tab, unassigned toggle and bin have their own controls).
+  const extraFilterCount = Object.entries(filters).filter(
+    ([key, value]) => value && !['q', 'status', 'sort', 'deleted'].includes(key) && !(key === 'ownerId' && value === 'none'),
+  ).length
+  const total = counts ? (filters.status ? counts[filters.status as LeadStatus] : counts.all) : undefined
+
+  function exportSelected() {
+    const picked = rows.filter((r) => selected.has(r.id))
+    downloadCsv(
+      'selected-leads.csv',
+      ['Name', 'Email', 'Phone', 'Company', 'Source', 'Status', 'Owner', 'Created'],
+      picked.map((r) => [
+        r.displayName,
+        r.primaryEmail,
+        r.primaryPhoneE164,
+        r.companyName,
+        r.source?.name,
+        leadStatusLabels[r.status],
+        r.owner?.fullName,
+        r.createdAt,
+      ]),
+    )
+    notify({ title: `${picked.length} selected leads exported`, description: 'CSV contains the selected records loaded in this view.' })
+  }
 
   async function runBulk(
     action: 'assign' | 'status' | 'tag' | 'untag' | 'delete',
@@ -175,7 +201,28 @@ export default function LeadsPage() {
   }
 
   const optional: Column<LeadRecord>[] = [
-    { key: 'source', header: 'Source', hideBelow: 'md', cell: (l) => <SourceBadge name={l.source?.name} /> },
+    {
+      key: 'source',
+      header: 'Source',
+      hideBelow: 'md',
+      cell: (l) => (
+        <span className="block max-w-44">
+          {l.source ? (
+            <span className="flex items-center gap-2 text-ink">
+              {createElement(sourceIcon(l.source.name), { className: 'size-4 shrink-0 text-muted' })}
+              <span className="truncate">{l.source.name}</span>
+            </span>
+          ) : (
+            <span className="text-muted">—</span>
+          )}
+          {l.latestSource && l.latestSource.id !== l.source?.id && (
+            <span className="mt-0.5 block truncate text-xs text-muted" title={`Enquired again via ${l.latestSource.name} ${relativeTime(l.latestEnquiryAt)}`}>
+              Latest: {l.latestSource.name}
+            </span>
+          )}
+        </span>
+      ),
+    },
     {
       key: 'score',
       header: 'Score',
@@ -190,18 +237,18 @@ export default function LeadsPage() {
         l.owner ? (
           <OwnerCell owner={l.owner} />
         ) : canClaim && !FROZEN.includes(l.status) && !l.deletedAt ? (
-          <Button
-            size="sm"
-            variant="secondary"
-            loading={claiming === l.id}
+          <button
+            type="button"
+            disabled={claiming === l.id}
             onClick={(e) => {
               e.stopPropagation()
               void claim(l)
             }}
+            className="claim-chip compact-control"
           >
-            <Hand className="size-4" aria-hidden="true" />
-            Claim
-          </Button>
+            <Hand className="size-3.5" aria-hidden="true" />
+            {claiming === l.id ? 'Claiming…' : 'Claim'}
+          </button>
         ) : (
           <span className="text-muted">Unassigned</span>
         ),
@@ -222,7 +269,7 @@ export default function LeadsPage() {
       sortKey: 'lastActivityAt',
       align: 'right',
       hideBelow: 'xl',
-      cell: (l) => <span className="text-muted">{relativeTime(l.lastActivityAt)}</span>,
+      cell: (l) => <span className="text-xs whitespace-nowrap text-muted">{relativeTime(l.lastActivityAt)}</span>,
     },
     {
       key: 'created',
@@ -230,7 +277,7 @@ export default function LeadsPage() {
       sortKey: 'createdAt',
       align: 'right',
       hideBelow: 'xl',
-      cell: (l) => <span className="text-muted">{relativeTime(l.createdAt)}</span>,
+      cell: (l) => <span className="text-xs whitespace-nowrap text-muted">{relativeTime(l.createdAt)}</span>,
     },
     ...activeDefs.map((d) => ({
       key: `cf.${d.key}`,
@@ -255,7 +302,7 @@ export default function LeadsPage() {
               {l.displayName}
               {l.enquiryCount > 1 && (
                 <span
-                  className="inline-flex items-center gap-1 rounded bg-amber-50 px-1 text-xs font-medium text-amber-800"
+                  className="inline-flex items-center gap-1 rounded-control bg-amber-50 px-1 text-xs font-medium text-amber-800"
                   title={`${l.enquiryCount} enquiries`}
                 >
                   <Repeat className="size-3" aria-hidden="true" />
@@ -276,7 +323,33 @@ export default function LeadsPage() {
     <div className="app-page">
       <PageHeader
         title="Leads"
-        description="Your next customer starts here. Follow up while the conversation is warm."
+        description={
+          counts && counts.all > 0 ? (
+            <span className="page-summary">
+              {(
+                [
+                  { status: 'new', label: 'new to contact', dot: 'bg-brand-500' },
+                  { status: 'contacted', label: 'in conversation', dot: 'bg-amber-400' },
+                  { status: 'qualified', label: 'qualified', dot: 'bg-emerald-500' },
+                ] as const
+              ).map((s) => (
+                <button
+                  key={s.status}
+                  type="button"
+                  onClick={() => setFilter('status', filters.status === s.status ? undefined : s.status)}
+                  aria-pressed={filters.status === s.status}
+                  className="compact-control rounded-control hover:text-ink"
+                  title={`Show ${s.label} leads`}
+                >
+                  <span className={`dot ${s.dot}`} aria-hidden="true" />
+                  <b>{counts[s.status].toLocaleString()}</b> {s.label}
+                </button>
+              ))}
+            </span>
+          ) : (
+            'Your next customer starts here. Follow up while the conversation is warm.'
+          )
+        }
         actions={
           <>
             <DataTools
@@ -312,255 +385,224 @@ export default function LeadsPage() {
         }
       />
 
-      <div className="no-scrollbar -mx-1 mt-6 flex gap-1 overflow-x-auto px-1" role="group" aria-label="Lead status">
-        {TABS.map((tab) => {
-          const active = (filters.status ?? undefined) === tab.value
-          const count = counts ? (tab.value ? counts[tab.value] : counts.all) : undefined
-          return (
-            <button
-              key={tab.label}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setFilter('status', tab.value)}
-              className={cn(
-                'inline-flex h-8 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors',
-                active ? 'bg-ink text-surface shadow-xs' : 'text-muted hover:bg-surface-subtle hover:text-ink',
-              )}
-            >
-              {tab.label}
-              {count !== undefined && (
-                <span className={cn('tabular-nums', active ? 'text-surface/70' : 'text-muted')}>{count}</span>
-              )}
-            </button>
-          )
-        })}
-      </div>
-
-      <div className="mt-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <FilterBar
-          search={{
-            value: filters.q,
-            onChange: (v) => setFilter('q', v),
-            placeholder: 'Search name, company, phone…',
-            label: 'Search leads',
-          }}
-          activeCount={activeCount - (filters.q ? 1 : 0) - (filters.status ? 1 : 0)}
-          onClear={() => replaceFilters(filters.status ? { status: filters.status } : {})}
-        >
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-pressed={unassignedOnly}
-              onClick={() => setFilter('ownerId', unassignedOnly ? undefined : 'none')}
-              className={cn(
-                'inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm transition-colors',
-                unassignedOnly
-                  ? 'border-brand-300 bg-brand-50 text-brand-800'
-                  : 'border-line bg-surface text-ink hover:border-brand-300',
-              )}
-            >
-              <CircleDot className="size-4" aria-hidden="true" />
-              Unassigned
-            </button>
-            <Button variant="secondary" size="sm" className="h-10" onClick={() => setFiltersOpen(true)}>
-              <SlidersHorizontal className="size-4" />
-              Filters
-              {activeCount > 0 && (
-                <span className="rounded-full bg-brand-50 px-2 text-xs text-brand-700">{activeCount}</span>
-              )}
-            </Button>
-          </div>
-        </FilterBar>
-        <div className="flex shrink-0 gap-2">
-          <SegmentedControl
-            label="Lead layout"
-            value={view}
-            onChange={setView}
-            size="sm"
-            options={[
-              {
-                value: 'table',
-                label: (
-                  <>
-                    <List className="size-4" />
-                    <span className="sr-only">Table</span>
-                  </>
-                ),
-              },
-              {
-                value: 'cards',
-                label: (
-                  <>
-                    <LayoutGrid className="size-4" />
-                    <span className="sr-only">Cards</span>
-                  </>
-                ),
-              },
-            ]}
-          />
-          <SavedViewsMenu
-            entityType="lead"
-            current={params}
-            columns={columns.visible}
-            onColumnsChange={columns.setVisible}
-            onApply={replaceFilters}
-          />
-          <ColumnChooser
-            options={optional.map((c) => ({ key: c.key, label: String(c.header) }))}
-            visible={columns.visible}
-            onToggle={columns.toggle}
-          />
-          {canDelete && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-10"
-              onClick={() => setFilter('deleted', isDeletedView ? undefined : 'true')}
-              aria-pressed={isDeletedView}
-            >
-              {isDeletedView ? (
-                <X className="size-4" aria-hidden="true" />
-              ) : (
-                <Trash2 className="size-4" aria-hidden="true" />
-              )}
-              {isDeletedView ? 'Exit bin' : 'Bin'}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-4"><FilterChips filters={filters} onRemove={(key) => setFilter(key, undefined)} onClear={clearFilters} /></div>
-      <div className="mt-4 space-y-3">
-        {!isDeletedView && canUpdate && (
-          <BulkBar count={selected.size} onClear={() => setSelected(new Set())}>
-            {canAssign && (
-              <BulkButton onClick={() => setDialog('assign')}>
-                <UserRound className="size-4" aria-hidden="true" />
-                Assign
-              </BulkButton>
-            )}
-            <BulkButton onClick={() => setDialog('status')}>Change status</BulkButton>
-            <BulkButton onClick={() => setDialog('tag')}>
-              <Tag className="size-4" aria-hidden="true" />
-              Add tags
-            </BulkButton>
-            <BulkButton onClick={() => setDialog('untag')}>Remove tags</BulkButton>
-            {canExport && (
-              <BulkButton
-                onClick={() => {
-                  const picked = rows.filter((r) => selected.has(r.id))
-                  downloadCsv(
-                    'selected-leads.csv',
-                    ['Name', 'Email', 'Phone', 'Company', 'Source', 'Status', 'Owner', 'Created'],
-                    picked.map((r) => [
-                      r.displayName,
-                      r.primaryEmail,
-                      r.primaryPhoneE164,
-                      r.companyName,
-                      r.source?.name,
-                      leadStatusLabels[r.status],
-                      r.owner?.fullName,
-                      r.createdAt,
-                    ]),
-                  )
-                  notify({
-                    title: `${picked.length} selected leads exported`,
-                    description: 'CSV contains the selected records loaded in this view.',
-                  })
-                }}
+      <section className="list-card mt-5" aria-label="Lead list">
+        <div className="list-tabs no-scrollbar" role="group" aria-label="Lead status">
+          {TABS.map((tab) => {
+            const active = (filters.status ?? undefined) === tab.value
+            const count = counts ? (tab.value ? counts[tab.value] : counts.all) : undefined
+            return (
+              <button
+                key={tab.label}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setFilter('status', tab.value)}
+                className="list-tab compact-control"
               >
-                <Download className="size-4" />
-                Export selected
-              </BulkButton>
-            )}
+                {tab.label}
+                {count !== undefined && <span className="list-tab-count">{count.toLocaleString()}</span>}
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="list-toolbar" role="search">
+          <SearchInput
+            value={filters.q}
+            onChange={(v) => setFilter('q', v)}
+            placeholder="Search name, company, phone…"
+            label="Search leads"
+            className="w-full sm:w-72"
+          />
+          <button
+            type="button"
+            aria-pressed={unassignedOnly}
+            onClick={() => setFilter('ownerId', unassignedOnly ? undefined : 'none')}
+            className="toolbar-button"
+          >
+            <CircleDot className="size-4" aria-hidden="true" />
+            Unassigned
+          </button>
+          <button type="button" onClick={() => setFiltersOpen(true)} className="toolbar-button" aria-pressed={extraFilterCount > 0}>
+            <SlidersHorizontal className="size-4" aria-hidden="true" />
+            Filters
+            {extraFilterCount > 0 && <span className="toolbar-count">{extraFilterCount}</span>}
+          </button>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <SegmentedControl
+              label="Lead layout"
+              value={view}
+              onChange={setView}
+              size="md"
+              options={[
+                { value: 'table', label: (<><List className="size-4" /><span className="sr-only">Table</span></>) },
+                { value: 'cards', label: (<><LayoutGrid className="size-4" /><span className="sr-only">Cards</span></>) },
+              ]}
+            />
+            <SavedViewsMenu
+              entityType="lead"
+              current={params}
+              columns={columns.visible}
+              onColumnsChange={columns.setVisible}
+              onApply={replaceFilters}
+            />
+            <ColumnChooser
+              options={optional.map((c) => ({ key: c.key, label: String(c.header) }))}
+              visible={columns.visible}
+              onToggle={columns.toggle}
+            />
             {canDelete && (
-              <BulkButton tone="danger" onClick={() => setDialog('delete')}>
-                <Trash2 className="size-4" aria-hidden="true" />
-                Delete
-              </BulkButton>
+              <button
+                type="button"
+                onClick={() => setFilter('deleted', isDeletedView ? undefined : 'true')}
+                aria-pressed={isDeletedView}
+                className="toolbar-button"
+                title={isDeletedView ? 'Back to leads' : 'Deleted leads (restorable for 30 days)'}
+              >
+                {isDeletedView ? <X className="size-4" aria-hidden="true" /> : <Trash2 className="size-4" aria-hidden="true" />}
+                {isDeletedView ? 'Exit bin' : 'Bin'}
+              </button>
             )}
-          </BulkBar>
+          </div>
+        </div>
+
+        <FilterChips
+          filters={filters}
+          exclude={['sort', 'view', 'deleted', 'status', 'q', ...(unassignedOnly ? ['ownerId'] : [])]}
+          onRemove={(key) => setFilter(key, undefined)}
+          onClear={() => replaceFilters(filters.status ? { status: filters.status } : {})}
+          labels={Object.fromEntries([
+            ...(sources.data ?? []).map((s) => [`sourceId:${s.id}`, s.name]),
+            ...(campaigns.data ?? []).map((c) => [`campaignId:${c.id}`, c.name]),
+          ])}
+        />
+
+        {isDeletedView && (
+          <p className="list-notice">
+            <Trash2 className="size-4 shrink-0" aria-hidden="true" />
+            Showing deleted leads. Open one to restore it — they’re kept for 30 days.
+          </p>
+        )}
+
+        {!isDeletedView && canUpdate && selected.size > 0 && (
+          <div className="px-3 pt-3">
+            <BulkBar count={selected.size} onClear={() => setSelected(new Set())}>
+              {canAssign && (
+                <BulkButton onClick={() => setDialog('assign')}>
+                  <UserRound className="size-4" aria-hidden="true" />
+                  Assign
+                </BulkButton>
+              )}
+              <BulkButton onClick={() => setDialog('status')}>Change status</BulkButton>
+              <BulkButton onClick={() => setDialog('tag')}>
+                <Tag className="size-4" aria-hidden="true" />
+                Add tags
+              </BulkButton>
+              <BulkButton onClick={() => setDialog('untag')}>Remove tags</BulkButton>
+              {canExport && (
+                <BulkButton onClick={exportSelected}>
+                  <Download className="size-4" />
+                  Export selected
+                </BulkButton>
+              )}
+              {canDelete && (
+                <BulkButton tone="danger" onClick={() => setDialog('delete')}>
+                  <Trash2 className="size-4" aria-hidden="true" />
+                  Delete
+                </BulkButton>
+              )}
+            </BulkBar>
+          </div>
         )}
 
         {list.isPending ? (
-          <ListSkeleton />
+          <div className="p-4">
+            <ListSkeleton />
+          </div>
         ) : list.isError ? (
-          <ErrorState error={list.error} onRetry={() => list.refetch()} />
+          <div className="p-4">
+            <ErrorState error={list.error} onRetry={() => list.refetch()} />
+          </div>
         ) : rows.length === 0 ? (
-          activeCount > 0 ? (
-            <EmptyState
-              icon={Inbox}
-              title={
-                isDeletedView
-                  ? 'The bin is empty'
-                  : unassignedOnly
-                    ? 'No unassigned leads'
-                    : filters.status
-                      ? `No ${leadStatusLabels[filters.status as LeadStatus]?.toLowerCase() ?? ''} leads`
-                      : 'No leads match'
-              }
-              description={
-                unassignedOnly ? 'Everything has an owner. Nice.' : 'Try a different search or clear the filters.'
-              }
-              action={
-                <Button variant="secondary" onClick={clearFilters}>
-                  Clear filters
-                </Button>
-              }
-            />
-          ) : (
-            <EmptyState
-              icon={Inbox}
-              title="No leads yet"
-              description="Add your first enquiry, import a spreadsheet, or connect a lead source to get started."
-              action={
-                canCreate && (
-                  <Button onClick={() => setCreating(true)}>
-                    <Plus className="size-4" aria-hidden="true" />
-                    New lead
+          <div className="p-4">
+            {activeCount > 0 ? (
+              <EmptyState
+                icon={Inbox}
+                title={
+                  isDeletedView
+                    ? 'The bin is empty'
+                    : unassignedOnly
+                      ? 'No unassigned leads'
+                      : filters.status
+                        ? `No ${leadStatusLabels[filters.status as LeadStatus]?.toLowerCase() ?? ''} leads`
+                        : 'No leads match'
+                }
+                description={unassignedOnly ? 'Everything has an owner. Nice.' : 'Try a different search or clear the filters.'}
+                action={
+                  <Button variant="secondary" onClick={clearFilters}>
+                    Clear filters
                   </Button>
-                )
-              }
-            />
-          )
+                }
+              />
+            ) : (
+              <EmptyState
+                icon={Inbox}
+                title="No leads yet"
+                description="Add your first enquiry, import a spreadsheet, or connect a lead source to get started."
+                action={
+                  canCreate && (
+                    <Button onClick={() => setCreating(true)}>
+                      <Plus className="size-4" aria-hidden="true" />
+                      New lead
+                    </Button>
+                  )
+                }
+              />
+            )}
+          </div>
         ) : (
-          <>
-            <DataTable
-              showColumnControls={false}
-              view={view}
-              rows={rows}
-              columns={tableColumns}
-              getRowId={(l) => l.id}
-              caption="Leads"
-              sort={filters.sort ?? '-createdAt'}
-              onSortChange={(s) => setFilter('sort', s)}
-              selectedIds={canUpdate && !isDeletedView ? selected : undefined}
-              onSelectionChange={canUpdate && !isDeletedView ? setSelected : undefined}
-              onRowClick={(l) => navigate(`/app/leads/${l.id}`)}
-              mobileCard={(l) => (
-                <div className="flex items-center gap-3 rounded-xl bg-surface p-3 ring-1 ring-line">
-                  <Avatar name={l.displayName} size="sm" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-ink">{l.displayName}</p>
-                    <p className="truncate text-xs text-muted">
-                      {[l.source?.name, l.companyName, relativeTime(l.createdAt)].filter(Boolean).join(' · ')}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <LeadStatusBadge status={l.status} />
-                    <span className="text-xs font-medium text-ink tabular-nums">{l.score}</span>
-                  </div>
+          <DataTable
+            bare
+            showColumnControls={false}
+            view={view}
+            rows={rows}
+            columns={tableColumns}
+            getRowId={(l) => l.id}
+            caption="Leads"
+            total={total}
+            sort={filters.sort ?? '-createdAt'}
+            onSortChange={(s) => setFilter('sort', s)}
+            selectedIds={canUpdate && !isDeletedView ? selected : undefined}
+            onSelectionChange={canUpdate && !isDeletedView ? setSelected : undefined}
+            onRowClick={(l) => navigate(`/app/leads/${l.id}`)}
+            footer={
+              list.hasNextPage && (
+                <Button size="sm" variant="secondary" loading={list.isFetchingNextPage} onClick={() => list.fetchNextPage()}>
+                  Load more
+                </Button>
+              )
+            }
+            mobileCard={(l) => (
+              <div className="lead-card p-3">
+                <Avatar name={l.displayName} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1.5 truncate font-medium text-ink">
+                    {l.status === 'new' && <span className="size-2 shrink-0 rounded-full bg-brand-600" aria-label="New lead" />}
+                    <span className="truncate">{l.displayName}</span>
+                  </p>
+                  <p className="truncate text-xs text-muted">
+                    {[l.companyName, l.source?.name, relativeTime(l.lastActivityAt)].filter(Boolean).join(' · ')}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-muted">{l.owner ? l.owner.fullName : 'Unassigned'}</p>
                 </div>
-              )}
-            />
-            <LoadMore
-              hasMore={Boolean(list.hasNextPage)}
-              loading={list.isFetchingNextPage}
-              onLoadMore={() => list.fetchNextPage()}
-            />
-          </>
+                <div className="flex flex-col items-end gap-1.5">
+                  <LeadStatusBadge status={l.status} />
+                  <span className="text-xs text-muted tabular-nums">Score {l.score}</span>
+                </div>
+              </div>
+            )}
+          />
         )}
-      </div>
+      </section>
 
       <Dialog
         open={filtersOpen}
@@ -597,6 +639,12 @@ export default function LeadsPage() {
             onChange={(v) => setFilter('sourceId', v)}
             options={(sources.data ?? []).map((s) => ({ value: s.id, label: s.name }))}
           />
+          {canReadCampaigns && <FilterSelect
+            label="Campaign"
+            value={filters.campaignId}
+            onChange={(value) => setFilter('campaignId', value)}
+            options={(campaigns.data ?? []).map((campaign) => ({ value: campaign.id, label: campaign.name }))}
+          />}
           <FilterSelect
             label="Score"
             value={filters.scoreMin}

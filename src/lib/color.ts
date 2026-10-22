@@ -1,6 +1,7 @@
 /** Pick the higher-contrast text color for a user-selected form brand color. */
 export function readableText(hex: string) {
-  const match = /^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(hex)
+  const normalized = /^#[\da-f]{3}$/i.test(hex) ? `#${hex.slice(1).split('').map((character) => character + character).join('')}` : hex
+  const match = /^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(normalized)
   if (!match) return '#ffffff'
   const linear = match.slice(1).map((part) => {
     const value = Number.parseInt(part, 16) / 255

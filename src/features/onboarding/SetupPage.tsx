@@ -149,7 +149,7 @@ export default function SetupPage() {
               </p>
             ) : invited ? (
               <div className="py-6 text-center" role="status">
-                <UserPlus className="mx-auto size-9 text-emerald-600" />
+                <UserPlus className="mx-auto size-9 text-success" />
                 <h3 className="mt-3 font-semibold text-ink">Your invitations are on their way</h3>
                 <p className="mt-2 text-sm text-muted">Your team can join using the link in their email.</p>
               </div>

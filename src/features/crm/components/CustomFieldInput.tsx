@@ -1,5 +1,7 @@
 import { Check } from 'lucide-react'
 import { cn } from '../../../lib/cn'
+import { ErrorState, Skeleton } from '../../../components/app/States'
+import { FormSection } from '../../../components/app/FormDrawer'
 import { UserPicker } from '../../../components/app/UserPicker'
 import { Field, Input, Select, Textarea } from '../../../components/ui/Form'
 import { minorToRupeesText, rupeesToMinor } from '../format'
@@ -82,7 +84,7 @@ export function CustomFieldInput({ def, value, onChange, id, describedBy, invali
     case 'checkbox':
       return (
         <label className="inline-flex items-center gap-2 text-sm text-ink">
-          <input id={id} type="checkbox" checked={Boolean(value)} onChange={(e) => onChange(e.target.checked)} className="size-4 rounded border-zinc-300 text-brand-700 focus:ring-brand-500" />
+          <input id={id} type="checkbox" checked={Boolean(value)} onChange={(e) => onChange(e.target.checked)} className="size-4 rounded-control border-zinc-300 text-brand-700 focus:ring-brand-500" />
           Yes
         </label>
       )
@@ -125,15 +127,41 @@ export function CustomFieldsEditor({
   const defs = useCustomFieldDefs(entityType)
   const active = (defs.data ?? []).filter((d) => !d.archived)
   if (!active.length) return null
+  // Two columns once the form is wide (container query); long answers keep the full width.
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('grid gap-4 @md:grid-cols-2', className)}>
       {active.map((def) => (
-        <Field key={def.id} label={def.label} optional={!def.required} error={errors[def.key]}>
+        <Field key={def.id} label={def.label} optional={!def.required} error={errors[def.key]} className={['textarea', 'multiselect'].includes(def.type) ? '@md:col-span-2' : undefined}>
           {({ id, describedBy, invalid }) => (
             <CustomFieldInput def={def} id={id} describedBy={describedBy} invalid={invalid} value={values[def.key]} onChange={(v) => onChange({ ...values, [def.key]: v })} />
           )}
         </Field>
       ))}
     </div>
+  )
+}
+
+/** Custom fields as their own drawer section; renders nothing when the entity has none. */
+export function CustomFieldsSection({
+  entityType,
+  values,
+  onChange,
+  errors = {},
+  title = 'Additional details',
+}: {
+  entityType: CustomFieldEntity
+  values: CustomFieldValues
+  onChange: (values: CustomFieldValues) => void
+  errors?: Record<string, string>
+  title?: string
+}) {
+  const defs = useCustomFieldDefs(entityType)
+  if (defs.isPending) return <Skeleton className="h-20" />
+  if (defs.isError) return <ErrorState error={defs.error} onRetry={() => void defs.refetch()} />
+  if (!(defs.data ?? []).some((d) => !d.archived)) return null
+  return (
+    <FormSection title={title} description="Fields your workspace added" collapsible forceOpen={Object.keys(errors).length > 0}>
+      <CustomFieldsEditor entityType={entityType} values={values} onChange={onChange} errors={errors} />
+    </FormSection>
   )
 }

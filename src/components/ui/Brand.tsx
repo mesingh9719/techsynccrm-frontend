@@ -1,3 +1,4 @@
+import { readableText } from '../../lib/color'
 import { Link } from 'react-router-dom'
 import { cn } from '../../lib/cn'
 
@@ -51,7 +52,7 @@ export function Monogram({ name, color, size = 'md' }: { name: string; color: st
   return (
     <span
       className={cn('inline-flex shrink-0 items-center justify-center font-semibold text-white shadow-card', sizes[size])}
-      style={{ backgroundColor: color }}
+      style={{ backgroundColor: color, color: readableText(color) }}
       aria-hidden="true"
     >
       {letters}

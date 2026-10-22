@@ -3,7 +3,7 @@ import { PageHeader } from '../../components/app/States'
 import { useRef, useState, type ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ImageUp, MailWarning } from 'lucide-react'
+import { ImageUp, Mail, MailWarning, UserRound } from 'lucide-react'
 import { discardEmailChange, requestEmailChange, updateProfile } from '../../services/account'
 import { fetchMe } from '../../services/auth'
 import { uploadImage } from '../../services/organizations'
@@ -19,7 +19,7 @@ import { Field, FormAlert, Input, PasswordInput, Select } from '../../components
 import { useToast } from '../../components/ui/Toast'
 import { Dialog } from '../../components/app/Dialog'
 import { UserAvatar } from '../../components/app/UserAvatar'
-import { SettingsSection } from '../../components/app/SettingsSection'
+import { SaveBar, SettingsSection } from '../../components/app/SettingsSection'
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024
 
@@ -94,6 +94,7 @@ function ProfileForm({ user }: { user: AuthUser }) {
     setServerError(null)
     try {
       const updated = await updateProfile({ fullName: values.fullName, jobRole: values.jobRole || null, phone: values.phone || null, timezone: values.timezone || null })
+      leaveGuard.markSaved(false)
       reset({ fullName: updated.fullName, jobRole: updated.jobRole ?? '', phone: updated.phone ?? '', timezone: updated.timezone ?? '' })
       notify({ title: 'Profile saved' })
     } catch (err) {
@@ -130,13 +131,8 @@ function ProfileForm({ user }: { user: AuthUser }) {
           <FormAlert>{serverError}</FormAlert>
         </div>
       )}
-      <div className="mt-6 flex justify-end gap-2">
-        <Button variant="secondary" disabled={!isDirty || isSubmitting} onClick={() => reset(defaults)}>
-          Discard
-        </Button>
-        <Button type="submit" loading={isSubmitting} disabled={!isDirty}>
-          Save changes
-        </Button>
+      <div className="mt-6">
+        <SaveBar dirty={isDirty} saving={isSubmitting} onDiscard={() => reset(defaults)} />
       </div>
     </form>
   )
@@ -253,13 +249,13 @@ export default function ProfileSettings() {
   return (
     <div className="space-y-6">
       <PageHeader title="Profile" description="Manage your personal details and sign-in email." />
-      <SettingsSection title="Profile" description="How you appear to your team.">
+      <SettingsSection icon={UserRound} title="Personal details" description="How you appear to your team.">
         <PhotoUploader user={user} />
         <div className="mt-6">
           <ProfileForm key={user.id} user={user} />
         </div>
       </SettingsSection>
-      <SettingsSection title="Email address">
+      <SettingsSection icon={Mail} title="Email address" description="Used to sign in and for notifications.">
         <EmailSection user={user} />
       </SettingsSection>
     </div>

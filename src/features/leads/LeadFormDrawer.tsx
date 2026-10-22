@@ -9,13 +9,14 @@ import { useAuth } from '../../lib/useAuth'
 import { useCan } from '../../lib/useOrg'
 import { ApiError } from '../../services/http'
 import { Button } from '../../components/ui/Button'
-import { Field, FormAlert, Input, Select, Textarea } from '../../components/ui/Form'
+import { Field, Input, MoneyInput, Select, Textarea } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
-import { Drawer } from '../../components/app/Dialog'
+import { FieldRow, FormDrawer, FormSection } from '../../components/app/FormDrawer'
+import { Contact, MapPin, MessageSquareText, Radio, UserPlus, UserRound } from 'lucide-react'
 import { UserPicker } from '../../components/app/UserPicker'
 import { EmailsEditor, PhonesEditor, type EmailDraft, type PhoneDraft } from '../crm/components/ContactPoints'
 import { cleanEmails, cleanPhones } from '../crm/listHelpers'
-import { CustomFieldsEditor } from '../crm/components/CustomFieldInput'
+import { CustomFieldsSection } from '../crm/components/CustomFieldInput'
 import { DuplicateWarning } from '../crm/components/RecordParts'
 import { TagPicker } from '../crm/components/Tags'
 import { fieldErrorsUnder, minorToRupeesText, rupeesToMinor } from '../crm/format'
@@ -86,7 +87,6 @@ export function LeadFormDrawer({
   const [serverError, setServerError] = useState<string | null>(null)
   const [conflicts, setConflicts] = useState<Duplicate[]>([])
   const [busy, setBusy] = useState(false)
-  const [detailsOpen, setDetailsOpen] = useState(Boolean(lead))
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((d) => ({ ...d, [key]: value }))
 
   const emails = cleanEmails(draft.emails).map((e) => e.value)
@@ -98,6 +98,7 @@ export function LeadFormDrawer({
   )
 
   function close() {
+    guard.markSaved()
     setErrors({})
     setServerError(null)
     setConflicts([])
@@ -128,7 +129,6 @@ export function LeadFormDrawer({
 
   async function submit(allowDuplicate = false) {
     if (draft.budget.trim() && rupeesToMinor(draft.budget) === null) {
-      setDetailsOpen(true)
       return setErrors({ budgetMinor: 'Enter an amount in rupees' })
     }
     setBusy(true)
@@ -141,6 +141,7 @@ export function LeadFormDrawer({
         : await createLead(input, { allowDuplicate })
       await queryClient.invalidateQueries({ queryKey: qk.org(orgId).leads.all })
       await queryClient.invalidateQueries({ queryKey: qk.org(orgId).current })
+      await Promise.all(['campaigns', 'campaign', 'campaign-leads'].map((key) => queryClient.invalidateQueries({ queryKey: ['org', orgId, key] })))
       notify({ title: lead ? 'Lead saved' : `${saved.displayName} added` })
       close()
       if (!lead) navigate(`/app/leads/${saved.id}`)
@@ -151,7 +152,6 @@ export function LeadFormDrawer({
         setConflicts((err.details?.duplicates as Duplicate[]) ?? [])
       else if (err instanceof ApiError && Object.keys(err.fields).length) {
         setErrors(err.fields)
-        setDetailsOpen(true)
       } else if (!handleGlobalApiError(err))
         setServerError(err instanceof ApiError ? err.message : 'Couldn’t save. Please try again.')
     } finally {
@@ -160,283 +160,170 @@ export function LeadFormDrawer({
   }
 
   const activeSources = (sources.data ?? []).filter((s) => !s.archived || s.id === draft.sourceId)
+  // The lead's own campaign stays selectable even if it was archived or deleted since.
+  const campaign = campaigns.find((c) => c.id === draft.utm?.campaign_id || c.code === draft.utm?.utm_campaign || c.name === draft.sourceDetail)
+  const has = (...keys: string[]) => keys.some((k) => Object.keys(errors).some((e) => e === k || e.startsWith(`${k}.`)))
+  const stateName = gstStates.find(([code]) => code === draft.stateCode)?.[1]
+  const sourceSummary = [activeSources.find((s) => s.id === draft.sourceId)?.name, campaign?.name, draft.sourceDetail && draft.sourceDetail !== campaign?.name ? draft.sourceDetail : null].filter(Boolean).join(' · ')
+  const placeSummary = [draft.city, stateName, draft.pincode].filter(Boolean).join(', ')
 
   const guard = useUnsavedChanges(draft, close, busy, open)
 
   return (
     <>
-    <Drawer
-      open={open}
-      onClose={guard.requestClose}
-      busy={busy}
-      title={lead ? 'Edit lead' : 'New lead'}
-      description={lead ? undefined : 'A name, phone or email is enough. Add the rest as you learn it.'}
-      footer={
-        <>
-          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
-            Cancel
-          </Button>
-          {conflicts.length > 0 && (
-            <Button variant="secondary" onClick={() => submit(true)} loading={busy}>
+      <FormDrawer
+        open={open}
+        onClose={guard.requestClose}
+        busy={busy}
+        icon={UserPlus}
+        title={lead ? 'Edit lead' : 'New lead'}
+        description={lead ? lead.displayName : 'A name, phone or email is enough. Add the rest as you learn it.'}
+        formId="lead-form"
+        onSubmit={() => void submit(false)}
+        submitLabel={lead ? 'Save changes' : 'Create lead'}
+        actions={
+          conflicts.length > 0 && (
+            <Button variant="secondary" onClick={() => submit(true)} disabled={busy}>
               Save anyway
             </Button>
-          )}
-          <Button type="submit" form="lead-form" disabled={busy} loading={busy && !conflicts.length}>
-            {lead ? 'Save' : 'Create lead'}
-          </Button>
-        </>
-      }
-    >
-      <form
-        id="lead-form"
-        noValidate
-        onSubmit={(e) => {
-          e.preventDefault()
-          void submit(false)
-        }}
-        className="space-y-5"
+          )
+        }
+        error={serverError}
       >
-        {serverError && <FormAlert>{serverError}</FormAlert>}
-        <DuplicateWarning
-          duplicates={conflicts.length ? conflicts : live}
-          hrefFor={(d) => (d.entityType === 'contact' ? `/app/contacts/${d.id}` : `/app/leads/${d.id}`)}
-        />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="First name" error={errors.firstName}>
-            {({ id, invalid }) => (
-              <Input
-                id={id}
-                invalid={invalid}
-                autoFocus
-                value={draft.firstName}
-                onChange={(e) => set('firstName', e.target.value)}
-                autoComplete="off"
-              />
-            )}
+        <DuplicateWarning duplicates={conflicts.length ? conflicts : live} hrefFor={(d) => (d.entityType === 'contact' ? `/app/contacts/${d.id}` : `/app/leads/${d.id}`)} />
+
+        <FormSection title="Contact details" icon={Contact}>
+          <FieldRow>
+            <Field label="First name" error={errors.firstName}>
+              {({ id, invalid }) => <Input id={id} invalid={invalid} autoFocus value={draft.firstName} onChange={(e) => set('firstName', e.target.value)} autoComplete="off" />}
+            </Field>
+            <Field label="Last name" optional error={errors.lastName}>
+              {({ id, invalid }) => <Input id={id} invalid={invalid} value={draft.lastName} onChange={(e) => set('lastName', e.target.value)} autoComplete="off" />}
+            </Field>
+          </FieldRow>
+          <Field label="Phone" optional error={errors.phones}>
+            {({ id }) => <PhonesEditor idPrefix={id} value={draft.phones} onChange={(v) => set('phones', v)} errors={fieldErrorsUnder(errors, 'phones')} />}
           </Field>
-          <Field label="Last name" optional>
-            {({ id }) => (
-              <Input
-                id={id}
-                value={draft.lastName}
-                onChange={(e) => set('lastName', e.target.value)}
-                autoComplete="off"
-              />
-            )}
+          <Field label="Email" optional error={errors.emails}>
+            {({ id }) => <EmailsEditor idPrefix={id} value={draft.emails} onChange={(v) => set('emails', v)} errors={fieldErrorsUnder(errors, 'emails')} />}
           </Field>
-        </div>
-        <Field label="Phone" optional error={errors.phones}>
-          {({ id }) => (
-            <PhonesEditor
-              idPrefix={id}
-              value={draft.phones}
-              onChange={(v) => set('phones', v)}
-              errors={fieldErrorsUnder(errors, 'phones')}
-            />
-          )}
-        </Field>
-        <Field label="Email" optional error={errors.emails}>
-          {({ id }) => (
-            <EmailsEditor
-              idPrefix={id}
-              value={draft.emails}
-              onChange={(v) => set('emails', v)}
-              errors={fieldErrorsUnder(errors, 'emails')}
-            />
-          )}
-        </Field>
-        <Field label="Company" optional>
-          {({ id }) => (
-            <Input
-              id={id}
-              value={draft.companyName}
-              onChange={(e) => set('companyName', e.target.value)}
-              autoComplete="organization"
-            />
-          )}
-        </Field>
-        <Field label="Requirement" optional error={errors.requirement}>
-          {({ id, invalid }) => (
-            <Textarea
-              id={id}
-              invalid={invalid}
-              rows={3}
-              value={draft.requirement}
-              onChange={(e) => set('requirement', e.target.value)}
-              placeholder="What are they looking for?"
-            />
-          )}
-        </Field>
-        <details
-          open={detailsOpen}
-          onToggle={(e) => setDetailsOpen(e.currentTarget.open)}
-          className="rounded-xl border border-line bg-surface-subtle/40 p-3"
+        </FormSection>
+
+        <FormSection title="Enquiry" icon={MessageSquareText} description="What they need and what it’s worth">
+          <Field label="Requirement" optional error={errors.requirement}>
+            {({ id, invalid }) => <Textarea id={id} invalid={invalid} rows={3} value={draft.requirement} onChange={(e) => set('requirement', e.target.value)} placeholder="What are they looking for?" />}
+          </Field>
+          <FieldRow>
+            <Field label="Company" optional error={errors.companyName}>
+              {({ id, invalid }) => <Input id={id} invalid={invalid} value={draft.companyName} onChange={(e) => set('companyName', e.target.value)} autoComplete="organization" />}
+            </Field>
+            <Field label="Budget" optional error={errors.budgetMinor}>
+              {({ id, invalid }) => <MoneyInput id={id} invalid={invalid} value={draft.budget} onChange={(e) => set('budget', e.target.value)} placeholder="1,85,000" />}
+            </Field>
+          </FieldRow>
+        </FormSection>
+
+        <FormSection
+          title="Where it came from"
+          icon={Radio}
+          collapsible
+          defaultOpen={Boolean(lead)}
+          forceOpen={has('sourceId', 'sourceDetail', 'campaignId')}
+          summary={sourceSummary || 'Source, campaign and reference'}
         >
-          <summary className="cursor-pointer text-sm font-medium text-ink">
-            More details <span className="font-normal text-muted">· source, budget, location & tags</span>
-          </summary>
-          <div className="mt-5 space-y-5">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Source" optional error={errors.sourceId}>
-                {({ id, invalid }) => (
-                  <Select
-                    id={id}
-                    invalid={invalid}
-                    value={draft.sourceId}
-                    onChange={(e) => set('sourceId', e.target.value)}
-                  >
-                    <option value="">—</option>
-                    {activeSources.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </Select>
-                )}
-              </Field>
-              <Field label="Budget" optional error={errors.budgetMinor}>
-                {({ id, invalid }) => (
-                  <div className="relative">
-                    <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted">
-                      ₹
-                    </span>
-                    <Input
-                      id={id}
-                      invalid={invalid}
-                      inputMode="decimal"
-                      className="pl-7"
-                      value={draft.budget}
-                      onChange={(e) => set('budget', e.target.value)}
-                      placeholder="1,85,000"
-                    />
-                  </div>
-                )}
-              </Field>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Attributed Campaign" optional hint="Link to tracked campaign">
-                {({ id }) => (
-                  <Select
-                    id={id}
-                    value={
-                      campaigns.find(
-                        (c) =>
-                          c.code === draft.utm?.utm_campaign ||
-                          c.name === draft.sourceDetail ||
-                          c.id === draft.utm?.campaign_id,
-                      )?.id ?? ''
-                    }
-                    onChange={(e) => {
-                      const found = campaigns.find((c) => c.id === e.target.value)
-                      if (found) {
-                        setDraft((d) => ({
-                          ...d,
-                          sourceDetail: found.name,
-                          utm: {
-                            ...(d.utm || {}),
-                            utm_campaign: found.code,
-                            campaign_id: found.id,
-                            ...(found.utm.utm_source ? { utm_source: found.utm.utm_source } : {}),
-                            ...(found.utm.utm_medium ? { utm_medium: found.utm.utm_medium } : {}),
-                          },
-                        }))
-                      } else {
-                        setDraft((d) => ({
-                          ...d,
-                          utm: d.utm
-                            ? Object.fromEntries(
-                                Object.entries(d.utm).filter(
-                                  ([k]) => k !== 'utm_campaign' && k !== 'campaign_id',
-                                ),
-                              )
-                            : null,
-                        }))
+          <FieldRow>
+            <Field label="Source" optional error={errors.sourceId}>
+              {({ id, invalid }) => (
+                <Select id={id} invalid={invalid} value={draft.sourceId} onChange={(e) => set('sourceId', e.target.value)}>
+                  <option value="">Not set</option>
+                  {activeSources.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <Field label="Campaign" optional error={errors.campaignId}>
+              {({ id, invalid }) => (
+                <Select
+                  id={id}
+                  invalid={invalid}
+                  value={campaign?.id ?? ''}
+                  onChange={(e) => {
+                    const found = campaigns.find((c) => c.id === e.target.value)
+                    setDraft((d) => {
+                      const nextUtm = Object.fromEntries(Object.entries(d.utm ?? {}).filter(([key]) => !['utm_campaign', 'campaign_id', 'campaign'].includes(key)))
+                      return {
+                        ...d,
+                        sourceDetail: found ? found.name : d.sourceDetail === campaign?.name ? '' : d.sourceDetail,
+                        sourceId: d.sourceId || found?.sourceId || '',
+                        utm: found ? { ...nextUtm, utm_campaign: found.code, campaign_id: found.id, ...(found.utm.utm_source ? { utm_source: found.utm.utm_source } : {}), ...(found.utm.utm_medium ? { utm_medium: found.utm.utm_medium } : {}) } : Object.keys(nextUtm).length ? nextUtm : null,
                       }
-                    }}
-                  >
-                    <option value="">No campaign</option>
-                    {campaigns
-                      .filter((c) => c.status !== 'archived')
-                      .map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.code})
-                        </option>
-                      ))}
-                  </Select>
-                )}
-              </Field>
-              <Field label="Source details" optional hint="Partner name, IndiaMART query ID, ad note…">
-                {({ id, describedBy }) => (
-                  <Input
-                    id={id}
-                    aria-describedby={describedBy}
-                    value={draft.sourceDetail}
-                    onChange={(e) => set('sourceDetail', e.target.value)}
-                  />
-                )}
-              </Field>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="City" optional>
-                {({ id }) => <Input id={id} value={draft.city} onChange={(e) => set('city', e.target.value)} />}
-              </Field>
-              <Field label="State" optional error={errors.stateCode}>
-                {({ id }) => (
-                  <Select id={id} value={draft.stateCode} onChange={(e) => set('stateCode', e.target.value)}>
-                    <option value="">—</option>
-                    {gstStates.map(([code, name]) => (
-                      <option key={code} value={code}>
-                        {name}
+                    })
+                  }}
+                >
+                  <option value="">No campaign</option>
+                  {campaign && !campaigns.some((c) => c.id === campaign.id && c.status !== 'archived') && (
+                    <option value={campaign.id}>
+                      {campaign.name} ({campaign.code})
+                    </option>
+                  )}
+                  {campaigns
+                    .filter((c) => c.status !== 'archived')
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.code})
                       </option>
                     ))}
-                  </Select>
-                )}
-              </Field>
-              <Field label="PIN code" optional error={errors.pincode}>
-                {({ id, invalid }) => (
-                  <Input
-                    id={id}
-                    invalid={invalid}
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={draft.pincode}
-                    onChange={(e) => set('pincode', e.target.value)}
-                  />
-                )}
-              </Field>
-            </div>
+                </Select>
+              )}
+            </Field>
+          </FieldRow>
+          <Field label="Reference" optional error={errors.sourceDetail} hint="Partner name, IndiaMART query ID, ad note…">
+            {({ id, describedBy, invalid }) => <Input id={id} invalid={invalid} aria-describedby={describedBy} value={draft.sourceDetail} onChange={(e) => set('sourceDetail', e.target.value)} />}
+          </Field>
+        </FormSection>
+
+        <FormSection title="Location" icon={MapPin} collapsible defaultOpen={Boolean(lead)} forceOpen={has('city', 'stateCode', 'pincode')} summary={placeSummary || 'City, state and PIN code'}>
+          <FieldRow cols={3}>
+            <Field label="City" optional error={errors.city}>
+              {({ id, invalid }) => <Input id={id} invalid={invalid} value={draft.city} onChange={(e) => set('city', e.target.value)} />}
+            </Field>
+            <Field label="State" optional error={errors.stateCode}>
+              {({ id, invalid }) => (
+                <Select id={id} invalid={invalid} value={draft.stateCode} onChange={(e) => set('stateCode', e.target.value)}>
+                  <option value="">Not set</option>
+                  {gstStates.map(([code, name]) => (
+                    <option key={code} value={code}>
+                      {name}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <Field label="PIN code" optional error={errors.pincode}>
+              {({ id, invalid }) => <Input id={id} invalid={invalid} inputMode="numeric" maxLength={6} value={draft.pincode} onChange={(e) => set('pincode', e.target.value)} />}
+            </Field>
+          </FieldRow>
+        </FormSection>
+
+        <FormSection title="Owner & tags" icon={UserRound}>
+          <FieldRow>
             {!lead && canAssign && (
-              <Field
-                label="Owner"
-                hint="Leave empty to put it in the unassigned queue for anyone to claim."
-                error={errors.ownerId}
-              >
-                {({ id, describedBy, invalid }) => (
-                  <UserPicker
-                    id={id}
-                    aria-describedby={describedBy}
-                    invalid={invalid}
-                    value={draft.ownerId}
-                    onChange={(v) => set('ownerId', v)}
-                    placeholder="Unassigned"
-                  />
-                )}
+              <Field label="Owner" hint="Leave empty to put it in the unassigned queue." error={errors.ownerId}>
+                {({ id, describedBy, invalid }) => <UserPicker id={id} aria-describedby={describedBy} invalid={invalid} value={draft.ownerId} onChange={(v) => set('ownerId', v)} placeholder="Unassigned" />}
               </Field>
             )}
-            <Field label="Tags" optional error={errors.tagIds}>
+            <Field label="Tags" optional error={errors.tagIds} className={!lead && canAssign ? undefined : '@md:col-span-2'}>
               {({ id }) => <TagPicker id={id} value={draft.tagIds} onChange={(v) => set('tagIds', v)} />}
             </Field>
-            <CustomFieldsEditor
-              entityType="lead"
-              values={draft.customFields}
-              onChange={(v) => set('customFields', v)}
-              errors={fieldErrorsUnder(errors, 'customFields')}
-            />
-          </div>
-        </details>
-      </form>
-    </Drawer>
-    {guard.confirmation}
+          </FieldRow>
+        </FormSection>
+
+        <CustomFieldsSection entityType="lead" values={draft.customFields} onChange={(v) => set('customFields', v)} errors={fieldErrorsUnder(errors, 'customFields')} />
+      </FormDrawer>
+      {guard.confirmation}
     </>
   )
 }

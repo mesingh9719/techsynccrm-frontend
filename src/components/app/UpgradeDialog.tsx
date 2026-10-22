@@ -117,7 +117,7 @@ export function UpgradeDialog({ prompt, onClose }: { prompt: UpgradePrompt | nul
               .slice(0, 6)
               .map((feature) => (
                 <li key={feature} className="flex gap-2 text-sm text-ink">
-                  <Check className="mt-1 size-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                  <Check className="mt-1 size-4 shrink-0 text-success" aria-hidden="true" />
                   {feature}
                 </li>
               ))}

@@ -2,20 +2,20 @@ import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Trash2 } from 'lucide-react'
+import { CircleDollarSign, Handshake, UserRound, Users } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
 import { qk } from '../../lib/queryKeys'
 import { useAuth } from '../../lib/useAuth'
 import { useCan } from '../../lib/useOrg'
 import { ApiError } from '../../services/http'
-import { Button } from '../../components/ui/Button'
-import { Field, FormAlert, Input, Select } from '../../components/ui/Form'
+import { Field, Input, MoneyInput, Select } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
-import { Drawer } from '../../components/app/Dialog'
+import { FieldRow, FormDrawer, FormSection } from '../../components/app/FormDrawer'
 import { UserPicker } from '../../components/app/UserPicker'
 import { listCompanies } from '../companies/api'
 import { listContacts } from '../contacts/api'
-import { CustomFieldsEditor } from '../crm/components/CustomFieldInput'
+import { CustomFieldsSection } from '../crm/components/CustomFieldInput'
+import { LinkedRecordList } from '../crm/components/LinkedRecords'
 import { RecordPicker, type PickerOption } from '../crm/components/RecordPicker'
 import { TagPicker } from '../crm/components/Tags'
 import { fieldErrorsUnder, formatPhone, minorToRupeesText, rupeesToMinor } from '../crm/format'
@@ -87,6 +87,7 @@ export function DealFormDrawer({
   const stageId = stages.some((s) => s.id === draft.stageId) ? draft.stageId : stages[0]?.id
 
   function close() {
+    guard.markSaved()
     setErrors({})
     setServerError(null)
     onClose()
@@ -126,153 +127,140 @@ export function DealFormDrawer({
   }
 
   const guard = useUnsavedChanges(draft, close, busy, open)
+  const stage = stages.find((s) => s.id === stageId)
 
   return (
     <>
-    <Drawer
-      open={open}
-      onClose={guard.requestClose}
-      busy={busy}
-      title={deal ? 'Edit deal' : 'New deal'}
-      footer={
-        <>
-          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
-            Cancel
-          </Button>
-          <Button type="submit" form="deal-form" loading={busy} disabled={!deal && !stageId}>
-            {deal ? 'Save' : 'Create deal'}
-          </Button>
-        </>
-      }
-    >
-      <form
-        id="deal-form"
-        noValidate
-        onSubmit={(e) => {
-          e.preventDefault()
-          void submit()
-        }}
-        className="space-y-5"
+      <FormDrawer
+        open={open}
+        onClose={guard.requestClose}
+        busy={busy}
+        icon={Handshake}
+        title={deal ? 'Edit deal' : 'New deal'}
+        description={deal ? deal.title : 'Give it a clear name and the stage it’s at.'}
+        formId="deal-form"
+        onSubmit={() => void submit()}
+        submitLabel={deal ? 'Save changes' : 'Create deal'}
+        submitDisabled={!deal && !stageId}
+        error={serverError}
       >
-        {serverError && <FormAlert>{serverError}</FormAlert>}
-        <Field label="Title" error={errors.title}>
-          {({ id, invalid }) => <Input id={id} invalid={invalid} autoFocus value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. Saffron Retail — annual supply" />}
-        </Field>
-        {!deal && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Pipeline">
-              {({ id }) => (
-                <Select id={id} value={pipeline?.id ?? ''} onChange={(e) => setDraft((d) => ({ ...d, pipelineId: e.target.value, stageId: '' }))}>
-                  {livePipelines.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </Select>
-              )}
-            </Field>
-            <Field label="Stage" error={errors.stageId}>
-              {({ id, invalid }) => (
-                <Select id={id} invalid={invalid} value={stageId ?? ''} onChange={(e) => set('stageId', e.target.value)}>
-                  {stages.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.probability}%)
-                    </option>
-                  ))}
-                </Select>
-              )}
-            </Field>
-          </div>
-        )}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Value" optional error={errors.valueMinor}>
-            {({ id, invalid }) => (
-              <div className="relative">
-                <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted">₹</span>
-                <Input id={id} invalid={invalid} inputMode="decimal" className="pl-7" value={draft.value} onChange={(e) => set('value', e.target.value)} placeholder="1,85,000" />
-              </div>
-            )}
+        <FormSection title="Deal" icon={CircleDollarSign}>
+          <Field label="Title" error={errors.title}>
+            {({ id, invalid }) => <Input id={id} invalid={invalid} autoFocus value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. Saffron Retail — annual supply" />}
           </Field>
-          <Field label="Expected close" optional error={errors.expectedCloseDate}>
-            {({ id, invalid }) => <Input id={id} type="date" invalid={invalid} value={draft.expectedCloseDate} onChange={(e) => set('expectedCloseDate', e.target.value)} />}
-          </Field>
-        </div>
-        <Field label="Company" optional error={errors.companyId}>
-          {({ id, invalid }) => (
-            <RecordPicker
-              id={id}
-              invalid={invalid}
-              queryKey={qk.org(orgId).companies.all}
-              search={async (q) => (await listCompanies({ q, limit: 10 })).items.map((c) => ({ id: c.id, label: c.name, hint: c.domain }))}
-              selected={draft.company}
-              onChange={(o) => set('company', o)}
-              placeholder="Search companies…"
-            />
+          {!deal && (
+            <FieldRow>
+              <Field label="Pipeline">
+                {({ id }) => (
+                  <Select id={id} value={pipeline?.id ?? ''} onChange={(e) => setDraft((d) => ({ ...d, pipelineId: e.target.value, stageId: '' }))}>
+                    {livePipelines.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </Field>
+              <Field label="Stage" error={errors.stageId}>
+                {({ id, invalid }) => (
+                  <Select id={id} invalid={invalid} value={stageId ?? ''} onChange={(e) => set('stageId', e.target.value)}>
+                    {stages.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.probability}%)
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </Field>
+            </FieldRow>
           )}
-        </Field>
-        <fieldset>
-          <legend className="mb-2 text-sm font-medium text-ink">Contacts</legend>
-          <div className="space-y-2">
-            {draft.contacts.map((c, i) => (
-              <div key={c.option.id} className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle px-3 py-2 text-sm">
-                <span className="min-w-0 flex-1 truncate font-medium text-ink">{c.option.label}</span>
-                <input
-                  value={c.role}
-                  onChange={(e) => set('contacts', draft.contacts.map((x, j) => (j === i ? { ...x, role: e.target.value } : x)))}
-                  placeholder="Role"
-                  aria-label={`Role of ${c.option.label}`}
-                  className="h-8 w-32 rounded-md border border-line bg-surface px-2 text-sm text-ink placeholder:text-muted"
-                />
-                <label className="flex items-center gap-1 text-xs text-muted">
-                  <input type="radio" name="primary-contact" checked={c.isPrimary || draft.contacts.length === 1} onChange={() => set('contacts', draft.contacts.map((x, j) => ({ ...x, isPrimary: j === i })))} />
-                  Primary
-                </label>
-                <button type="button" onClick={() => set('contacts', draft.contacts.filter((_, j) => j !== i))} className="rounded p-1 text-muted hover:text-danger" aria-label={`Remove ${c.option.label}`}>
-                  <Trash2 className="size-4" aria-hidden="true" />
-                </button>
-              </div>
-            ))}
-            <RecordPicker
-              queryKey={qk.org(orgId).contacts.all}
-              search={async (q) => (await listContacts({ q, limit: 10 })).items.map((c) => ({ id: c.id, label: c.displayName, hint: c.companies[0]?.name ?? formatPhone(c.primaryPhoneE164, c.phones[0]?.raw) }))}
-              selected={null}
-              onChange={(o) => o && !draft.contacts.some((c) => c.option.id === o.id) && set('contacts', [...draft.contacts, { option: o, role: '', isPrimary: draft.contacts.length === 0 }])}
-              placeholder="Add a contact…"
-            />
-          </div>
-          {errors.contacts && <p className="mt-1 text-sm text-danger">{errors.contacts}</p>}
-        </fieldset>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Source" optional>
-            {({ id }) => (
-              <Select id={id} value={draft.sourceId} onChange={(e) => set('sourceId', e.target.value)}>
-                <option value="">—</option>
-                {(sources.data ?? [])
-                  .filter((s) => !s.archived || s.id === draft.sourceId)
-                  .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-              </Select>
+          <FieldRow cols={3}>
+            <Field label="Value" optional error={errors.valueMinor}>
+              {({ id, invalid }) => <MoneyInput id={id} invalid={invalid} value={draft.value} onChange={(e) => set('value', e.target.value)} placeholder="1,85,000" />}
+            </Field>
+            <Field label="Expected close" optional error={errors.expectedCloseDate}>
+              {({ id, invalid }) => <Input id={id} type="date" invalid={invalid} value={draft.expectedCloseDate} onChange={(e) => set('expectedCloseDate', e.target.value)} />}
+            </Field>
+            <Field label="Win probability" optional error={errors.probabilityOverride} hint={stage ? `Stage default: ${stage.probability}%` : 'Empty = the stage’s probability'}>
+              {({ id, describedBy, invalid }) => (
+                <div className="relative">
+                  <Input id={id} invalid={invalid} aria-describedby={describedBy} type="number" min={0} max={100} value={draft.probabilityOverride} onChange={(e) => set('probabilityOverride', e.target.value)} placeholder={stage ? String(stage.probability) : ''} className="pr-8" />
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted" aria-hidden="true">
+                    %
+                  </span>
+                </div>
+              )}
+            </Field>
+          </FieldRow>
+        </FormSection>
+
+        <FormSection title="People" icon={Users} description="The company you’re selling to and who’s involved">
+          <Field label="Company" optional error={errors.companyId}>
+            {({ id, invalid }) => (
+              <RecordPicker
+                id={id}
+                invalid={invalid}
+                queryKey={qk.org(orgId).companies.all}
+                search={async (q) => (await listCompanies({ q, limit: 10 })).items.map((c) => ({ id: c.id, label: c.name, hint: c.domain }))}
+                selected={draft.company}
+                onChange={(o) => set('company', o)}
+                placeholder="Search companies…"
+              />
             )}
           </Field>
-          <Field label="Win probability" optional hint="Leave empty to use the stage’s probability.">
-            {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} type="number" min={0} max={100} value={draft.probabilityOverride} onChange={(e) => set('probabilityOverride', e.target.value)} placeholder="%" />}
-          </Field>
-        </div>
-        {canAssign && (
-          <Field label="Owner" error={errors.ownerId}>
-            {({ id, invalid }) => <UserPicker id={id} invalid={invalid} value={draft.ownerId} onChange={(v) => set('ownerId', v)} placeholder="Unassigned" />}
-          </Field>
-        )}
-        <Field label="Tags" optional>
-          {({ id }) => <TagPicker id={id} value={draft.tagIds} onChange={(v) => set('tagIds', v)} />}
-        </Field>
-        <CustomFieldsEditor entityType="deal" values={draft.customFields} onChange={(v) => set('customFields', v)} errors={fieldErrorsUnder(errors, 'customFields')} />
-      </form>
-    </Drawer>
-    {guard.confirmation}
+          <div>
+            <p className="mb-2 text-sm font-medium text-ink">
+              Contacts <span className="font-normal text-muted">(optional)</span>
+            </p>
+            <LinkedRecordList
+              noun="contact"
+              rolePlaceholder="Role, e.g. Decision maker"
+              items={draft.contacts}
+              onChange={(v) => set('contacts', v)}
+              picker={
+                <RecordPicker
+                  queryKey={qk.org(orgId).contacts.all}
+                  search={async (q) => (await listContacts({ q, limit: 10 })).items.map((c) => ({ id: c.id, label: c.displayName, hint: c.companies[0]?.name ?? formatPhone(c.primaryPhoneE164, c.phones[0]?.raw) }))}
+                  selected={null}
+                  onChange={(o) => o && !draft.contacts.some((c) => c.option.id === o.id) && set('contacts', [...draft.contacts, { option: o, role: '', isPrimary: draft.contacts.length === 0 }])}
+                  placeholder={draft.contacts.length ? 'Add another contact…' : 'Search contacts to add…'}
+                />
+              }
+            />
+            {errors.contacts && <p className="mt-1 text-sm text-danger">{errors.contacts}</p>}
+          </div>
+        </FormSection>
+
+        <FormSection title="Source, owner & tags" icon={UserRound}>
+          <FieldRow>
+            <Field label="Source" optional>
+              {({ id }) => (
+                <Select id={id} value={draft.sourceId} onChange={(e) => set('sourceId', e.target.value)}>
+                  <option value="">Not set</option>
+                  {(sources.data ?? [])
+                    .filter((s) => !s.archived || s.id === draft.sourceId)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                </Select>
+              )}
+            </Field>
+            {canAssign && (
+              <Field label="Owner" error={errors.ownerId}>
+                {({ id, invalid }) => <UserPicker id={id} invalid={invalid} value={draft.ownerId} onChange={(v) => set('ownerId', v)} placeholder="Unassigned" />}
+              </Field>
+            )}
+            <Field label="Tags" optional className="@md:col-span-2">
+              {({ id }) => <TagPicker id={id} value={draft.tagIds} onChange={(v) => set('tagIds', v)} />}
+            </Field>
+          </FieldRow>
+        </FormSection>
+
+        <CustomFieldsSection entityType="deal" values={draft.customFields} onChange={(v) => set('customFields', v)} errors={fieldErrorsUnder(errors, 'customFields')} />
+      </FormDrawer>
+      {guard.confirmation}
     </>
   )
 }

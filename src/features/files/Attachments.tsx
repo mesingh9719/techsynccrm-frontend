@@ -22,7 +22,7 @@ function Attachment({ file, onDelete }: { file: FileRecord; onDelete: () => void
     catch (err) { notify({ tone: 'error', title: err instanceof Error ? err.message : 'Could not delete file' }); throw err }
   }
   return <div className="flex flex-wrap items-center gap-3 rounded-control border border-line p-3">
-    {details.data?.thumbnailUrl && <img src={details.data.thumbnailUrl} alt="" className="size-12 rounded object-cover" />}
+    {details.data?.thumbnailUrl && <img src={details.data.thumbnailUrl} alt="" className="size-12 rounded-control object-cover" />}
     <div className="min-w-0 flex-1"><p title={file.name} className="truncate text-sm font-medium">{file.name}</p><p className="text-xs text-muted">{Math.ceil(file.size / 1024)} KB</p>{details.isError && <p className="text-xs text-danger">Download unavailable</p>}</div>
     {viewable && <Button size="sm" variant="ghost" disabled={!details.data?.url} onClick={() => setPreview(true)}>Preview</Button>}
     {details.data?.url && <a className="text-sm text-brand-700" href={details.data.url} target="_blank" rel="noreferrer">Download</a>}

@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { PageHeader } from '../../components/app/States'
 import { useState, type FormEvent } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -122,13 +123,14 @@ function InviteDrawer({ open, onClose, orgId }: { open: boolean; onClose: () => 
     control,
     setValue,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<InviteValues>({ resolver: zodResolver(inviteSchema), defaultValues: { emails: '', role: 'sales_rep' } })
   const emailsText = useWatch({ control, name: 'emails' })
   const role = useWatch({ control, name: 'role' })
   const parsed = parseEmails(emailsText ?? '')
 
   function close() {
+    guard.markSaved({ isDirty: false, teamIds: [] })
     reset()
     setTeamIds([])
     setResults(null)
@@ -156,18 +158,21 @@ function InviteDrawer({ open, onClose, orgId }: { open: boolean; onClose: () => 
 
   const statusLabel = { invited: 'Invitation sent', already_member: 'Already a member', email_failed: 'Saved, but the email failed — resend it' }
 
+  const guard = useUnsavedChanges({ isDirty, teamIds }, close, isSubmitting, open && !results)
   return (
+    <>
     <Drawer
       open={open}
-      onClose={close}
+      onClose={guard.requestClose}
+      busy={isSubmitting}
       title="Invite people"
       description="They’ll get an email with a link to join this workspace. Links expire after 7 days."
       footer={
         results ? (
-          <Button onClick={close}>Done</Button>
+          <Button onClick={guard.requestClose}>Done</Button>
         ) : (
           <>
-            <Button variant="secondary" onClick={close} disabled={isSubmitting}>
+            <Button variant="secondary" onClick={guard.requestClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button type="submit" form="invite-form" loading={isSubmitting}>
@@ -209,6 +214,8 @@ function InviteDrawer({ open, onClose, orgId }: { open: boolean; onClose: () => 
         </form>
       )}
     </Drawer>
+    {guard.confirmation}
+    </>
   )
 }
 
@@ -242,14 +249,17 @@ function EditMemberDialog({ member, onClose, orgId }: { member: Member | null; o
     }
   }
 
+  const guard = useUnsavedChanges({ role, title, teamIds }, onClose, busy, Boolean(member))
   return (
+    <>
     <Dialog
       open={Boolean(member)}
-      onClose={onClose}
+      onClose={guard.requestClose}
+      busy={busy}
       title={member ? `Edit ${member.fullName}` : 'Edit member'}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={busy}>
+          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
             Cancel
           </Button>
           <Button type="submit" form="edit-member-form" loading={busy}>
@@ -270,6 +280,8 @@ function EditMemberDialog({ member, onClose, orgId }: { member: Member | null; o
         {error && <FormAlert>{error}</FormAlert>}
       </form>
     </Dialog>
+    {guard.confirmation}
+    </>
   )
 }
 
@@ -443,7 +455,7 @@ function MembersTab({ orgId }: { orgId: string }) {
                   <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink">
                     {m.fullName}
                     {m.userId === user?.id && <span className="font-normal text-muted">(you)</span>}
-                    {m.twoFactorEnabled && <ShieldCheck className="size-4 text-emerald-600" aria-label="Two-factor authentication on" />}
+                    {m.twoFactorEnabled && <ShieldCheck className="size-4 text-success" aria-label="Two-factor authentication on" />}
                   </p>
                   <p className="truncate text-xs text-muted">
                     {m.email}
@@ -594,15 +606,18 @@ function TeamDialog({ team, open, onClose, orgId }: { team: Team | null; open: b
     }
   }
 
+  const guard = useUnsavedChanges({ name, members }, onClose, busy, open)
   return (
+    <>
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={guard.requestClose}
+      busy={busy}
       title={team ? `Edit ${team.name}` : 'New team'}
       description="Managers see and update records owned by everyone in their team."
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={busy}>
+          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
             Cancel
           </Button>
           <Button type="submit" form="team-form" loading={busy}>
@@ -635,14 +650,14 @@ function TeamDialog({ team, open, onClose, orgId }: { team: Team | null; open: b
                     type="checkbox"
                     checked={m.isManager}
                     onChange={() => setMembers((all) => all.map((x) => (x.userId === m.userId ? { ...x, isManager: !x.isManager } : x)))}
-                    className="size-4 rounded border-zinc-300 text-brand-700 focus:ring-brand-500"
+                    className="size-4 rounded-control border-zinc-300 text-brand-700 focus:ring-brand-500"
                   />
                   Manager
                 </label>
                 <button
                   type="button"
                   onClick={() => setMembers((all) => all.filter((x) => x.userId !== m.userId))}
-                  className="rounded p-1 text-muted hover:bg-zinc-100 hover:text-ink"
+                  className="rounded-control p-1 text-muted hover:bg-zinc-100 hover:text-ink"
                   aria-label={`Remove ${m.fullName} from the team`}
                 >
                   <X className="size-4" aria-hidden="true" />
@@ -654,6 +669,8 @@ function TeamDialog({ team, open, onClose, orgId }: { team: Team | null; open: b
         {error && <FormAlert>{error}</FormAlert>}
       </form>
     </Dialog>
+    {guard.confirmation}
+    </>
   )
 }
 

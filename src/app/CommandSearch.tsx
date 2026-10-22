@@ -16,7 +16,7 @@ import { cn } from '../lib/cn'
 const links = [
   { label: 'Leads', to: '/app/leads', icon: Inbox, color: 'text-blue-500 bg-blue-50' },
   { label: 'Pipeline', to: '/app/deals', icon: SquareKanban, color: 'text-amber-500 bg-amber-50' },
-  { label: 'Contacts', to: '/app/contacts', icon: Users, color: 'text-emerald-500 bg-emerald-50' },
+  { label: 'Contacts', to: '/app/contacts', icon: Users, color: 'text-success bg-emerald-50' },
   { label: 'Integrations', to: '/app/integrations', icon: Building2, color: 'text-purple-500 bg-purple-50' },
 ]
 
@@ -162,7 +162,7 @@ export function CommandSearch() {
       >
         <Search className="size-4 shrink-0 text-muted" />
         <span className="hidden truncate sm:inline">Search your workspace…</span>
-        <kbd className="ml-auto hidden whitespace-nowrap rounded border border-line bg-surface px-2 py-1 text-xs font-medium text-muted shadow-xs sm:block">
+        <kbd className="ml-auto hidden whitespace-nowrap rounded-control border border-line bg-surface px-2 py-1 text-xs font-medium text-muted shadow-xs sm:block">
           ⌘ / Ctrl K
         </kbd>
       </button>
@@ -177,16 +177,16 @@ export function CommandSearch() {
           <div className="flex w-full items-center justify-between text-xs text-muted">
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-1">
-                <kbd className="rounded border border-line bg-surface-subtle px-2 py-1 text-xs font-medium">↑</kbd>
-                <kbd className="rounded border border-line bg-surface-subtle px-2 py-1 text-xs font-medium">↓</kbd>
+                <kbd className="rounded-control border border-line bg-surface-subtle px-2 py-1 text-xs font-medium">↑</kbd>
+                <kbd className="rounded-control border border-line bg-surface-subtle px-2 py-1 text-xs font-medium">↓</kbd>
                 Navigate
               </span>
               <span className="inline-flex items-center gap-1">
-                <kbd className="rounded border border-line bg-surface-subtle px-2 py-1 text-xs font-medium">↵</kbd>
+                <kbd className="rounded-control border border-line bg-surface-subtle px-2 py-1 text-xs font-medium">↵</kbd>
                 Select
               </span>
               <span className="inline-flex items-center gap-1">
-                <kbd className="rounded border border-line bg-surface-subtle px-2 py-1 text-xs font-medium">ESC</kbd>
+                <kbd className="rounded-control border border-line bg-surface-subtle px-2 py-1 text-xs font-medium">ESC</kbd>
                 Close
               </span>
             </div>

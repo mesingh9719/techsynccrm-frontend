@@ -128,7 +128,7 @@ export function PipelineBoard({
               <div className="flex items-center justify-between px-2 pt-1 pb-3">
                 <div className="flex items-center gap-2">
                   {isWon ? (
-                    <Trophy className="size-4 text-emerald-600" aria-hidden="true" />
+                    <Trophy className="size-4 text-success" aria-hidden="true" />
                   ) : (
                     <span
                       className={cn('size-2 rounded-full', isLost ? 'bg-red-400' : 'bg-muted')}
@@ -194,7 +194,7 @@ export function PipelineBoard({
                         </span>
                         <div className="flex items-center gap-2">
                           {stale && !isWon && !isLost && (
-                            <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1 py-1 text-xs font-medium text-amber-800 ring-1 ring-amber-200/70">
+                            <span className="inline-flex items-center gap-1 rounded-control bg-amber-50 px-1 py-1 text-xs font-medium text-amber-800 ring-1 ring-amber-200/70">
                               <Clock className="size-3" aria-hidden="true" />
                               {deal.days}d idle
                             </span>

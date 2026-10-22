@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Archive, ArchiveRestore, ArrowDown, ArrowUp, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react'
@@ -91,14 +92,17 @@ function FieldDialog({ entityType, field, onClose }: { entityType: CustomFieldEn
     setNewOption('')
   }
 
+  const guard = useUnsavedChanges({ label, key, type, options, newOption, required }, onClose, busy, true)
   return (
+    <>
     <Dialog
       open
-      onClose={onClose}
+      onClose={guard.requestClose}
+      busy={busy}
       title={field ? `Edit “${field.label}”` : 'New custom field'}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} disabled={busy}>
+          <Button variant="secondary" onClick={guard.requestClose} disabled={busy}>
             Cancel
           </Button>
           <Button onClick={save} loading={busy} disabled={!label.trim() || (hasOptions && !options.length)}>
@@ -164,7 +168,7 @@ function FieldDialog({ entityType, field, onClose }: { entityType: CustomFieldEn
                     onChange={(e) => setOptions(options.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
                     className="min-w-0 flex-1 bg-transparent focus:outline-none"
                   />
-                  <button type="button" onClick={() => setOptions(options.filter((_, j) => j !== i))} className="rounded p-1 text-muted hover:text-danger" aria-label={`Remove ${o.label}`}>
+                  <button type="button" onClick={() => setOptions(options.filter((_, j) => j !== i))} className="rounded-control p-1 text-muted hover:text-danger" aria-label={`Remove ${o.label}`}>
                     <X className="size-4" aria-hidden="true" />
                   </button>
                 </li>
@@ -194,6 +198,8 @@ function FieldDialog({ entityType, field, onClose }: { entityType: CustomFieldEn
         <Checkbox label="Required" description="Records can’t be saved without it (web forms and imports skip this)." checked={required} onChange={(e) => setRequired(e.target.checked)} />
       </div>
     </Dialog>
+    {guard.confirmation}
+    </>
   )
 }
 
@@ -219,6 +225,8 @@ export default function CustomFieldsSettings() {
     queryClient.setQueryData(qk.org(orgId).customFields(entityType), ids.map((id) => fields.find((f) => f.id === id)!))
     try {
       await reorderCustomFields(entityType, ids)
+    } catch (error) {
+      notify({ tone: 'error', title: 'Couldn’t reorder fields', description: error instanceof Error ? error.message : 'Try again.' })
     } finally {
       await refresh()
     }
@@ -312,19 +320,19 @@ export default function CustomFieldsSettings() {
                   </div>
                   {canManage && (
                     <div className="flex shrink-0 items-center gap-1">
-                      <button type="button" disabled={i === 0} onClick={() => swap(i, i - 1)} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink disabled:opacity-30" aria-label={`Move ${f.label} up`}>
+                      <button type="button" disabled={i === 0} onClick={() => swap(i, i - 1)} className="rounded-control p-2 text-muted hover:bg-zinc-100 hover:text-ink disabled:opacity-30" aria-label={`Move ${f.label} up`}>
                         <ArrowUp className="size-4" aria-hidden="true" />
                       </button>
-                      <button type="button" disabled={i === fields.length - 1} onClick={() => swap(i, i + 1)} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink disabled:opacity-30" aria-label={`Move ${f.label} down`}>
+                      <button type="button" disabled={i === fields.length - 1} onClick={() => swap(i, i + 1)} className="rounded-control p-2 text-muted hover:bg-zinc-100 hover:text-ink disabled:opacity-30" aria-label={`Move ${f.label} down`}>
                         <ArrowDown className="size-4" aria-hidden="true" />
                       </button>
-                      <button type="button" onClick={() => setEditing(f)} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={`Edit ${f.label}`}>
+                      <button type="button" onClick={() => setEditing(f)} className="rounded-control p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={`Edit ${f.label}`}>
                         <Pencil className="size-4" aria-hidden="true" />
                       </button>
-                      <button type="button" onClick={() => toggleArchive(f)} className="rounded p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={f.archived ? `Restore ${f.label}` : `Archive ${f.label}`}>
+                      <button type="button" onClick={() => toggleArchive(f)} className="rounded-control p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={f.archived ? `Restore ${f.label}` : `Archive ${f.label}`}>
                         {f.archived ? <ArchiveRestore className="size-4" aria-hidden="true" /> : <Archive className="size-4" aria-hidden="true" />}
                       </button>
-                      <button type="button" onClick={() => setDeleting(f)} className="rounded p-2 text-muted hover:bg-red-50 hover:text-danger" aria-label={`Delete ${f.label}`}>
+                      <button type="button" onClick={() => setDeleting(f)} className="rounded-control p-2 text-muted hover:bg-red-50 hover:text-danger" aria-label={`Delete ${f.label}`}>
                         <Trash2 className="size-4" aria-hidden="true" />
                       </button>
                     </div>

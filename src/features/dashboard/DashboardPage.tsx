@@ -234,7 +234,7 @@ function DashboardWorkspace({ storageKey }: { storageKey: string }) {
             ) : !attention.data?.items.length ? (
               <div className="flex min-h-52 flex-col items-center justify-center p-6 text-center">
                 <span className="flex size-11 items-center justify-center rounded-full bg-emerald-500/10">
-                  <CircleCheck className="size-5 text-emerald-600" />
+                  <CircleCheck className="size-5 text-success" />
                 </span>
                 <p className="mt-3 text-sm font-semibold text-ink">You’re all caught up</p>
                 <p className="mt-1 text-xs leading-5 text-muted">No new enquiries waiting for a first response.</p>
@@ -423,13 +423,13 @@ function DashboardWorkspace({ storageKey }: { storageKey: string }) {
         boardLoading={board.isPending}
         taskLoading={tasks.isPending}
       />
-      {visibleWidgets.length > 0 && (
+      {visibleWidgets.some((id) => id !== 'attention') && (
         <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
           {visibleWidgets.filter((id) => id !== 'attention').map((id) => (
             <div
               key={id}
               data-dashboard-widget={id}
-              className={`min-w-0 [&>section]:h-full ${id === 'funnel' ? 'md:col-span-2 xl:col-span-3' : id === 'campaigns' ? 'md:col-span-2 xl:col-span-3' : ''}`}
+              className={`min-w-0 empty:hidden [&>section]:h-full ${id === 'funnel' ? 'md:col-span-2 xl:col-span-3' : id === 'campaigns' ? 'md:col-span-2 xl:col-span-3' : ''}`}
             >
               {widget(id)}
             </div>

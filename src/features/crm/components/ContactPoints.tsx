@@ -93,7 +93,7 @@ export function PhonesEditor({ value, onChange, idPrefix, errors = {} }: { value
               onChange={(e) => set(i, { raw: e.target.value })}
             />
             <label className="flex h-10 shrink-0 items-center gap-1 rounded-lg px-2 text-xs text-muted hover:bg-surface-subtle" title="This number is on WhatsApp">
-              <input type="checkbox" checked={Boolean(row.whatsapp)} onChange={(e) => set(i, { whatsapp: e.target.checked })} className="size-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500" />
+              <input type="checkbox" checked={Boolean(row.whatsapp)} onChange={(e) => set(i, { whatsapp: e.target.checked })} className="size-4 rounded-control border-zinc-300 text-success focus:ring-emerald-500" />
               WA
             </label>
             <PrimaryButton on={Boolean(row.primary) || (rows.length === 1 && i === 0)} onClick={() => onChange(rows.map((r, j) => ({ ...r, primary: j === i })))} what="phone" />

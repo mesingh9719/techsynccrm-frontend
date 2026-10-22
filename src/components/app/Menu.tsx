@@ -47,7 +47,7 @@ export function Menu({ trigger, children, align = 'start', side = 'bottom', clas
   }, [open])
 
   function onKeyDown(e: KeyboardEvent) {
-    if (e.key === 'Tab') { setOpen(false); return }
+    if (e.key === 'Tab') { close(); return }
     if (e.key === 'Escape') {
       e.preventDefault()
       close()

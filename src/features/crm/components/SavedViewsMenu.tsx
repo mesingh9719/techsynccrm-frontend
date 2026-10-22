@@ -7,7 +7,7 @@ import { ApiError } from '../../../services/http'
 import { Button } from '../../../components/ui/Button'
 import { useToast } from '../../../components/ui/Toast'
 import { Checkbox, Field, FormAlert, Input } from '../../../components/ui/Form'
-import { Dialog } from '../../../components/app/Dialog'
+import { ConfirmDialog, Dialog } from '../../../components/app/Dialog'
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from '../../../components/app/Menu'
 import { createSavedView, deleteSavedView } from '../api'
 import { useOrgId, useSavedViews } from '../hooks'
@@ -40,8 +40,9 @@ export function SavedViewsMenu({
   const [shared, setShared] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [removing, setRemoving] = useState<SavedView | null>(null)
   const refresh = () => queryClient.invalidateQueries({ queryKey: qk.org(orgId).savedViews(entityType) })
-  const active = (views.data ?? []).find((v) => JSON.stringify(v.filters) === JSON.stringify(current))
+  const active = (views.data ?? []).find((v) => Object.keys(v.filters).length === Object.keys(current).length && Object.entries(current).every(([key, value]) => v.filters[key] === value))
 
   async function save() {
     setBusy(true)
@@ -125,14 +126,7 @@ export function SavedViewsMenu({
                   tabIndex={-1}
                   className="rounded-md p-2 text-muted hover:bg-zinc-100 hover:text-danger"
                   aria-label={`Delete view ${v.name}`}
-                  onClick={async () => {
-                    try {
-                      await deleteSavedView(v.id)
-                      await refresh()
-                    } catch (err) {
-                      notify({ title: err instanceof Error ? err.message : 'Couldn’t delete view', tone: 'error' })
-                    }
-                  }}
+                  onClick={() => { close(); setRemoving(v) }}
                 >
                   <Trash2 className="size-4" aria-hidden="true" />
                 </button>
@@ -152,6 +146,13 @@ export function SavedViewsMenu({
           </>
         )}
       </Menu>
+      <ConfirmDialog open={Boolean(removing)} onClose={() => setRemoving(null)} title="Delete this saved view?" description={`“${removing?.name ?? ''}” will be removed. Your records are kept.`} confirmLabel="Delete view" tone="danger" onConfirm={async () => {
+        if (!removing) return
+        await deleteSavedView(removing.id)
+        await refresh()
+        setRemoving(null)
+        notify({ title: 'Saved view deleted' })
+      }} />
       <Dialog
         open={saving}
         onClose={() => setSaving(false)}

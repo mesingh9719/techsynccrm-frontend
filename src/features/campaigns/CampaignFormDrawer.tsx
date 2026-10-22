@@ -1,9 +1,9 @@
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useId, useState } from 'react'
-import { Copy, Check, Globe, Sparkles } from 'lucide-react'
-import { Drawer } from '../../components/app/Dialog'
+import { CalendarRange, Check, Copy, Globe, Link2, Megaphone, NotebookPen, Target } from 'lucide-react'
+import { FieldRow, FormDrawer, FormSection } from '../../components/app/FormDrawer'
 import { Button } from '../../components/ui/Button'
-import { Field, FormAlert, Input, Select, Textarea } from '../../components/ui/Form'
+import { Field, Input, MoneyInput, Select, Textarea } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { useOrg } from '../../lib/useOrg'
 import { ApiError } from '../../services/http'
@@ -12,6 +12,7 @@ import {
   CAMPAIGN_OBJECTIVE_LABELS,
   CAMPAIGN_STATUS_LABELS,
   CAMPAIGN_TYPE_LABELS,
+  isMetaCampaign,
   type Campaign,
   type CampaignInput,
   type CampaignObjective,
@@ -94,6 +95,7 @@ function CampaignFormContent({
 }) {
   const { organization } = useOrg()
   const notify = useToast()
+  const linkedMeta = isMetaCampaign(campaign)
 
   const [draft, setDraft] = useState<CampaignDraft>(() => initDraft(campaign))
   const [busy, setBusy] = useState(false)
@@ -149,14 +151,15 @@ function CampaignFormContent({
     utm_term: draft.utmTerm || undefined,
   })
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit() {
+    // Amounts may be typed Indian-style ("1,85,000"); commas are only grouping.
+    const amount = (v: string) => Number(v.replace(/[,\s]/g, ''))
     const invalid: Record<string, string> = {}
     if (!draft.name.trim()) invalid.name = 'Enter a campaign name.'
     if (!draft.startDate) invalid.startDate = 'Choose a start date.'
     if (draft.endDate && draft.endDate < draft.startDate) invalid.endDate = 'End date must be on or after the start date.'
-    if (draft.budget && (!Number.isFinite(Number(draft.budget)) || Number(draft.budget) < 0)) invalid.budgetMinor = 'Enter a positive amount or zero.'
-    if (draft.actualSpend && (!Number.isFinite(Number(draft.actualSpend)) || Number(draft.actualSpend) < 0)) invalid.actualSpendMinor = 'Enter a positive amount or zero.'
+    if (draft.budget.trim() && (!Number.isFinite(amount(draft.budget)) || amount(draft.budget) < 0)) invalid.budgetMinor = 'Enter a positive amount or zero.'
+    if (draft.actualSpend.trim() && (!Number.isFinite(amount(draft.actualSpend)) || amount(draft.actualSpend) < 0)) invalid.actualSpendMinor = 'Enter a positive amount or zero.'
     if (draft.landingUrl.trim() && !buildUtmUrl(draft.landingUrl, {})) invalid.landingUrl = 'Enter a valid http or https address.'
     setFieldErrors(invalid)
     if (Object.keys(invalid).length) { setError('Check the highlighted fields before saving.'); return }
@@ -165,8 +168,8 @@ function CampaignFormContent({
       setBusy(true)
       setError(null)
 
-      const budgetMinor = draft.budget.trim() ? Math.round(parseFloat(draft.budget) * 100) : null
-      const actualSpendMinor = draft.actualSpend.trim() ? Math.round(parseFloat(draft.actualSpend) * 100) : null
+      const budgetMinor = draft.budget.trim() ? Math.round(amount(draft.budget) * 100) : null
+      const actualSpendMinor = draft.actualSpend.trim() ? Math.round(amount(draft.actualSpend) * 100) : null
 
       const input: CampaignInput = {
         name: draft.name.trim(),
@@ -193,6 +196,7 @@ function CampaignFormContent({
       }
 
       await onSave(input, campaign?.id)
+      guard.markSaved()
       notify({
         title: campaign ? 'Campaign updated' : 'Campaign created',
         description: `"${draft.name}" is ready for lead attribution and tracking.`,
@@ -211,260 +215,146 @@ function CampaignFormContent({
     try { await navigator.clipboard.writeText(generatedUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); notify({ title: 'Tracking link copied' }) } catch { notify({ tone: 'error', title: 'Couldn’t copy the link', description: 'Check clipboard permission and try again.' }) }
   }
 
+  const currency = campaign?.currency ?? organization?.currency ?? 'INR'
+  const symbol = currency === 'INR' ? '₹' : currency
+  const utmSummary = [draft.utmSource, draft.utmMedium].filter(Boolean).join(' / ')
+
   return (
     <>
-    <Drawer open onClose={guard.requestClose} busy={busy} title={campaign ? 'Edit campaign' : 'Create campaign'} description="Campaign details, spend, and attribution tracking." footer={<>
-      <Button variant="secondary" disabled={busy} onClick={guard.requestClose}>Cancel</Button>
-      <Button type="submit" form={formId} loading={busy}>{campaign ? 'Save changes' : 'Create campaign'}</Button>
-    </>}>
-    <form id={formId} noValidate onSubmit={handleSubmit} className="space-y-4">
-      {error && <FormAlert>{error}</FormAlert>}
-
-      <Field label="Campaign name" error={fieldErrors.name} required>
-        {({ id, invalid, describedBy }) => (
-          <Input
-            id={id} aria-describedby={describedBy}
-            invalid={invalid}
-            value={draft.name}
-            onChange={(e) => handleNameChange(e.target.value)}
-            placeholder="e.g. Q4 Meta Ads — High Intent Founders"
-            required
-          />
-        )}
-      </Field>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Channel / Type">
-          {({ id, invalid, describedBy }) => (
-            <Select id={id} aria-describedby={describedBy} invalid={invalid} value={draft.type} onChange={(e) => handleTypeChange(e.target.value as CampaignType)}>
-              {Object.entries(CAMPAIGN_TYPE_LABELS).map(([k, label]) => (
-                <option key={k} value={k}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-
-        <Field label="Objective">
-          {({ id, invalid, describedBy }) => (
-            <Select
-              id={id} aria-describedby={describedBy} invalid={invalid}
-              value={draft.objective}
-              onChange={(e) => setField('objective', e.target.value as CampaignObjective)}
-            >
-              {Object.entries(CAMPAIGN_OBJECTIVE_LABELS).map(([k, label]) => (
-                <option key={k} value={k}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Status">
-          {({ id, invalid, describedBy }) => (
-            <Select id={id} aria-describedby={describedBy} invalid={invalid} value={draft.status} onChange={(e) => setField('status', e.target.value as CampaignStatus)}>
-              {Object.entries(CAMPAIGN_STATUS_LABELS).map(([k, label]) => (
-                <option key={k} value={k}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-
-        <Field
-          label="Tracking code (slug)"
-          hint={
-            campaign
-              ? 'Tracking codes stay fixed so existing links keep working.'
-              : 'Used in the utm_campaign query tag'
-          }
-        >
-          {({ id, invalid, describedBy }) => (
-            <Input
-              id={id} aria-describedby={describedBy} invalid={invalid}
-              value={draft.code}
-              readOnly={Boolean(campaign)}
-              onChange={(e) => setField('code', e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
-              placeholder="e.g. q4-meta-founders"
-            />
-          )}
-        </Field>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Start date" error={fieldErrors.startDate} required>
-          {({ id, invalid, describedBy }) => (
-            <Input
-              id={id} aria-describedby={describedBy} invalid={invalid}
-              type="date"
-              value={draft.startDate}
-              onChange={(e) => setField('startDate', e.target.value)}
-            />
-          )}
-        </Field>
-
-        <Field label="End date" error={fieldErrors.endDate} optional>
-          {({ id, invalid, describedBy }) => (
-            <Input
-              id={id} aria-describedby={describedBy} invalid={invalid}
-              type="date"
-              value={draft.endDate}
-              min={draft.startDate}
-              onChange={(e) => setField('endDate', e.target.value)}
-            />
-          )}
-        </Field>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label={`Budget (${campaign?.currency ?? organization?.currency ?? 'INR'})`} error={fieldErrors.budgetMinor}>
-          {({ id, invalid, describedBy }) => (
-            <Input
-              id={id} aria-describedby={describedBy} invalid={invalid}
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="e.g. 50000"
-              value={draft.budget}
-              onChange={(e) => setField('budget', e.target.value)}
-            />
-          )}
-        </Field>
-
-        <Field label={`Actual spend (${campaign?.currency ?? organization?.currency ?? 'INR'})`} error={fieldErrors.actualSpendMinor}>
-          {({ id, invalid, describedBy }) => (
-            <Input
-              id={id} aria-describedby={describedBy} invalid={invalid}
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="e.g. 24500"
-              value={draft.actualSpend}
-              onChange={(e) => setField('actualSpend', e.target.value)}
-            />
-          )}
-        </Field>
-      </div>
-
-      <Field label="Landing page URL" error={fieldErrors.landingUrl} hint="Destination URL for your campaign ads or links">
-        {({ id, invalid, describedBy }) => (
-          <div className="relative">
-            <Globe className="pointer-events-none absolute left-3 top-3 size-4 text-muted" />
-            <Input
-              id={id} aria-describedby={describedBy} invalid={invalid}
-              value={draft.landingUrl}
-              onChange={(e) => setField('landingUrl', e.target.value)}
-              placeholder="https://yourcompany.com/lead-page"
-              className="pl-9!"
-            />
-          </div>
-        )}
-      </Field>
-
-      {/* UTM Attribution Parameters */}
-      <div className="rounded-xl border border-line bg-surface-subtle p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="size-4 text-brand-700" />
-          <span className="text-xs font-semibold text-ink uppercase tracking-wide">Attribution & UTM Tags</span>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="utm_source">
+      <FormDrawer
+        open
+        onClose={guard.requestClose}
+        busy={busy}
+        icon={Megaphone}
+        title={campaign ? 'Edit campaign' : 'Create campaign'}
+        description={campaign ? linkedMeta ? 'Name, channel, status and schedule are managed by Meta. Other fields are CRM tracking details and recorded costs.' : campaign.name : 'Create a CRM tracking record. Launch and configure ads in your advertising platform.'}
+        formId={formId}
+        onSubmit={() => void handleSubmit()}
+        submitLabel={campaign ? 'Save changes' : 'Create campaign'}
+        error={error}
+      >
+        <FormSection title="Campaign" icon={Target}>
+          <Field label="Campaign name" error={fieldErrors.name} required>
             {({ id, invalid, describedBy }) => (
+              <Input id={id} aria-describedby={describedBy} invalid={invalid} autoFocus={!linkedMeta} readOnly={linkedMeta} value={draft.name} onChange={(e) => handleNameChange(e.target.value)} placeholder="e.g. Diwali Meta ads — Mumbai" />
+            )}
+          </Field>
+          <FieldRow cols={3}>
+            <Field label="Channel">
+              {({ id }) => (
+                <Select id={id} disabled={linkedMeta} value={draft.type} onChange={(e) => handleTypeChange(e.target.value as CampaignType)}>
+                  {Object.entries(CAMPAIGN_TYPE_LABELS).map(([k, label]) => (
+                    <option key={k} value={k}>
+                      {label}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <Field label="Objective">
+              {({ id }) => (
+                <Select id={id} value={draft.objective} onChange={(e) => setField('objective', e.target.value as CampaignObjective)}>
+                  {Object.entries(CAMPAIGN_OBJECTIVE_LABELS).map(([k, label]) => (
+                    <option key={k} value={k}>
+                      {label}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+            <Field label="Status" hint={linkedMeta ? 'Use Enable on Meta / Pause on Meta on the campaign page.' : 'Status of this CRM tracking record.'}>
+              {({ id }) => (
+                <Select id={id} disabled={linkedMeta} value={draft.status} onChange={(e) => setField('status', e.target.value as CampaignStatus)}>
+                  {Object.entries(CAMPAIGN_STATUS_LABELS).map(([k, label]) => (
+                    <option key={k} value={k}>
+                      {label}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+          </FieldRow>
+        </FormSection>
+
+        <FormSection title="Schedule & budget" icon={CalendarRange}>
+          <FieldRow>
+            <Field label="Start date" error={fieldErrors.startDate} required>
+              {({ id, invalid, describedBy }) => <Input id={id} aria-describedby={describedBy} invalid={invalid} readOnly={linkedMeta} type="date" value={draft.startDate} onChange={(e) => setField('startDate', e.target.value)} />}
+            </Field>
+            <Field label="End date" error={fieldErrors.endDate} optional>
+              {({ id, invalid, describedBy }) => <Input id={id} aria-describedby={describedBy} invalid={invalid} readOnly={linkedMeta} type="date" value={draft.endDate} min={draft.startDate} onChange={(e) => setField('endDate', e.target.value)} />}
+            </Field>
+            <Field label={linkedMeta ? 'CRM budget' : 'Budget'} optional error={fieldErrors.budgetMinor} hint={linkedMeta ? 'Planning value only. Manage the delivery budget in Meta Ads Manager.' : undefined}>
+              {({ id, invalid, describedBy }) => <MoneyInput id={id} aria-describedby={describedBy} invalid={invalid} symbol={symbol} value={draft.budget} onChange={(e) => setField('budget', e.target.value)} placeholder="50,000" />}
+            </Field>
+            <Field label="Spent so far" optional error={fieldErrors.actualSpendMinor} hint="Used for cost per lead.">
+              {({ id, invalid, describedBy }) => <MoneyInput id={id} aria-describedby={describedBy} invalid={invalid} symbol={symbol} value={draft.actualSpend} onChange={(e) => setField('actualSpend', e.target.value)} placeholder="24,500" />}
+            </Field>
+          </FieldRow>
+        </FormSection>
+
+        <FormSection title="Tracking link" icon={Link2} description="Leads that arrive through this link are credited to the campaign.">
+          <Field label="Landing page" optional error={fieldErrors.landingUrl}>
+            {({ id, invalid, describedBy }) => (
+              <div className="relative">
+                <Globe className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+                <Input id={id} aria-describedby={describedBy} invalid={invalid} value={draft.landingUrl} onChange={(e) => setField('landingUrl', e.target.value)} placeholder="https://yourcompany.com/offer" className="pl-9" />
+              </div>
+            )}
+          </Field>
+          <Field label="Tracking code" error={fieldErrors.code} hint={campaign ? 'Stays fixed so existing links keep working.' : 'Filled from the name. Sent as utm_campaign.'}>
+            {({ id, describedBy }) => (
               <Input
-                id={id} aria-describedby={describedBy} invalid={invalid}
-                value={draft.utmSource}
-                onChange={(e) => setField('utmSource', e.target.value)}
-                placeholder="facebook, google, newsletter"
-                className="h-8! text-xs"
+                id={id}
+                aria-describedby={describedBy}
+                value={draft.code}
+                readOnly={Boolean(campaign)}
+                onChange={(e) => setField('code', e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                placeholder="diwali-meta-mumbai"
+                className="font-mono read-only:bg-surface-subtle read-only:text-muted"
               />
             )}
           </Field>
-
-          <Field label="utm_medium">
-            {({ id, invalid, describedBy }) => (
-              <Input
-                id={id} aria-describedby={describedBy} invalid={invalid}
-                value={draft.utmMedium}
-                onChange={(e) => setField('utmMedium', e.target.value)}
-                placeholder="paid_social, cpc, email"
-                className="h-8! text-xs"
-              />
-            )}
-          </Field>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="utm_content" optional>
-            {({ id, invalid, describedBy }) => (
-              <Input
-                id={id} aria-describedby={describedBy} invalid={invalid}
-                value={draft.utmContent}
-                onChange={(e) => setField('utmContent', e.target.value)}
-                placeholder="banner_v1, carousel, cta_top"
-                className="h-8! text-xs"
-              />
-            )}
-          </Field>
-
-          <Field label="utm_term" optional>
-            {({ id, invalid, describedBy }) => (
-              <Input
-                id={id} aria-describedby={describedBy} invalid={invalid}
-                value={draft.utmTerm}
-                onChange={(e) => setField('utmTerm', e.target.value)}
-                placeholder="b2b crm, lead manager"
-                className="h-8! text-xs"
-              />
-            )}
-          </Field>
-        </div>
-
-        {generatedUrl && (
-          <div className="mt-2 space-y-1">
-            <span className="text-xs font-medium text-muted">Generated tracking URL:</span>
-            <div className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2 text-xs">
-              <span className="min-w-0 flex-1 truncate font-mono text-xs text-ink">{generatedUrl}</span>
-              <Button size="sm" variant="ghost" onClick={copyTrackingLink} type="button">
-                {copied ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
-                {copied ? 'Copied' : 'Copy'}
-              </Button>
+          {generatedUrl && (
+            <div className="rounded-lg border border-brand-100 bg-brand-50/50 p-3">
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-ink">Your tracking link</span>
+                <Button size="sm" variant="secondary" onClick={copyTrackingLink} type="button" className="compact-control min-h-0!">
+                  {copied ? <Check className="size-3.5 text-success" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
+                  {copied ? 'Copied' : 'Copy'}
+                </Button>
+              </div>
+              <p className="font-mono text-xs break-all text-ink">{generatedUrl}</p>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+          <FormSection title="UTM tags" collapsible defaultOpen={false} summary={utmSummary ? `Source / medium: ${utmSummary}` : 'Source, medium, content and term'}>
+            <FieldRow>
+              <Field label="Source" hint="utm_source">
+                {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} value={draft.utmSource} onChange={(e) => setField('utmSource', e.target.value)} placeholder="facebook, google" />}
+              </Field>
+              <Field label="Medium" hint="utm_medium">
+                {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} value={draft.utmMedium} onChange={(e) => setField('utmMedium', e.target.value)} placeholder="paid_social, cpc" />}
+              </Field>
+              <Field label="Content" optional hint="utm_content">
+                {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} value={draft.utmContent} onChange={(e) => setField('utmContent', e.target.value)} placeholder="banner_v1" />}
+              </Field>
+              <Field label="Term" optional hint="utm_term">
+                {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} value={draft.utmTerm} onChange={(e) => setField('utmTerm', e.target.value)} placeholder="crm software" />}
+              </Field>
+            </FieldRow>
+          </FormSection>
+        </FormSection>
 
-      <Field label="Target audience" optional>
-        {({ id, invalid, describedBy }) => (
-          <Input
-            id={id} aria-describedby={describedBy} invalid={invalid}
-            value={draft.targetAudience}
-            onChange={(e) => setField('targetAudience', e.target.value)}
-            placeholder="e.g. Founders, CXOs, Tier 1/2 Cities"
-          />
-        )}
-      </Field>
-
-      <Field label="Notes / Campaign strategy" optional>
-        {({ id, invalid, describedBy }) => (
-          <Textarea
-            id={id} aria-describedby={describedBy} invalid={invalid}
-            rows={2}
-            value={draft.description}
-            onChange={(e) => setField('description', e.target.value)}
-            placeholder="Outline target metrics, creative variations, or campaign schedule..."
-          />
-        )}
-      </Field>
-
-    </form>
-    </Drawer>
-    {guard.confirmation}
+        <FormSection title="Audience & notes" icon={NotebookPen} collapsible defaultOpen={Boolean(campaign?.targetAudience || campaign?.description)} summary={draft.targetAudience || 'Who it targets and the plan'}>
+          <Field label="Target audience" optional>
+            {({ id }) => <Input id={id} value={draft.targetAudience} onChange={(e) => setField('targetAudience', e.target.value)} placeholder="e.g. Shop owners in Tier 1–2 cities" />}
+          </Field>
+          <Field label="Notes" optional>
+            {({ id }) => <Textarea id={id} rows={3} value={draft.description} onChange={(e) => setField('description', e.target.value)} placeholder="Goals, creatives, schedule…" />}
+          </Field>
+        </FormSection>
+      </FormDrawer>
+      {guard.confirmation}
     </>
   )
 }

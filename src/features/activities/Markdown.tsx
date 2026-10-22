@@ -18,7 +18,7 @@ function inline(text: string, key: string): ReactNode[] {
     if (m.index! > last) out.push(unescape(text.slice(last, m.index)))
     const k = `${key}-${i++}`
     if (t.startsWith('**')) out.push(<strong key={k}>{unescape(t.slice(2, -2))}</strong>)
-    else if (t.startsWith('@[')) out.push(<span key={k} className="rounded bg-brand-50 px-1 font-medium text-brand-800">@{unescape(t.slice(2, t.indexOf(']')))}</span>)
+    else if (t.startsWith('@[')) out.push(<span key={k} className="rounded-control bg-brand-50 px-1 font-medium text-brand-800">@{unescape(t.slice(2, t.indexOf(']')))}</span>)
     else if (t.startsWith('[')) {
       const label = t.slice(1, t.indexOf(']'))
       const href = t.slice(t.indexOf('(') + 1, -1)

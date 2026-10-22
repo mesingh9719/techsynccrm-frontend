@@ -4,14 +4,15 @@ import { Avatar } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { formatMinor } from '../crm/format'
 import type { Campaign } from '../campaigns/types'
+import { STATUS_COLORS } from './funnel'
 
 const STATUS_STYLES = [
-  { id: 'new', label: 'New', color: 'var(--color-chart-1)' },
-  { id: 'contacted', label: 'Contacted', color: 'var(--color-chart-2)' },
-  { id: 'qualified', label: 'Qualified', color: 'var(--color-chart-3)' },
-  { id: 'converted', label: 'Converted', color: 'var(--color-chart-4)' },
-  { id: 'lost', label: 'Lost', color: 'var(--color-chart-5)' },
-  { id: 'junk', label: 'Junk', color: 'var(--color-chart-6)' },
+  { id: 'new', label: 'New', color: STATUS_COLORS.new },
+  { id: 'contacted', label: 'Contacted', color: STATUS_COLORS.contacted },
+  { id: 'qualified', label: 'Qualified', color: STATUS_COLORS.qualified },
+  { id: 'converted', label: 'Converted', color: STATUS_COLORS.converted },
+  { id: 'lost', label: 'Lost', color: STATUS_COLORS.lost },
+  { id: 'junk', label: 'Junk', color: STATUS_COLORS.junk },
 ]
 
 export function LeadBreakdown({
@@ -27,7 +28,7 @@ export function LeadBreakdown({
       <h2 className="section-title">Lead breakdown</h2>
       <p className="mt-1 text-xs text-muted">Current statuses · selected period</p>
       <div
-        className="mb-5 mt-6 flex h-3 gap-1 overflow-hidden rounded-full bg-surface-subtle"
+        className="mb-5 mt-6 flex h-3 gap-0.5 overflow-hidden rounded-full bg-surface-subtle"
         role="img"
         aria-label={`${total} leads by status`}
       >
@@ -133,7 +134,7 @@ export function CampaignPerformance({ campaigns, currency = 'INR' }: { campaigns
                     </td>
                     <td className="px-4 py-4">
                       <span
-                        className={`rounded-full px-2 py-1 text-xs capitalize ${campaign.status === 'active' ? 'bg-emerald-500/10 text-emerald-600 ' : 'bg-surface-subtle text-muted'}`}
+                        className={`rounded-full px-2 py-1 text-xs capitalize ${campaign.status === 'active' ? 'bg-emerald-500/10 text-success ' : 'bg-surface-subtle text-muted'}`}
                       >
                         {campaign.status}
                       </span>

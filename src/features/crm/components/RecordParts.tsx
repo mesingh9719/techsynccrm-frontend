@@ -45,7 +45,7 @@ export function Panel({
 /** Label/value row in a details panel. */
 export function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3 text-sm">
+    <div className="record-field-row grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3 text-sm">
       <dt className="text-muted">{label}</dt>
       <dd className="min-w-0 break-words text-ink">{children}</dd>
     </div>

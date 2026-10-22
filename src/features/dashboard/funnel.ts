@@ -1,3 +1,15 @@
+export const STATUS_COLORS = {
+  new: 'var(--color-chart-1)', contacted: 'var(--color-chart-2)',
+  qualified: 'var(--color-chart-3)', converted: 'var(--color-chart-4)',
+  lost: 'var(--color-danger)', junk: 'var(--color-muted)',
+} as const
+
+export function sharePercent(value: number, total: number) {
+  if (total <= 0 || value <= 0) return '0%'
+  const percent = value / total * 100
+  return percent < 1 ? '<1%' : `${Math.round(percent)}%`
+}
+
 export const FUNNEL_STAGES = [
   { id: 'new', label: 'New enquiries', hint: 'Ready for first contact', color: 'var(--color-chart-1)' },
   { id: 'contacted', label: 'Contacted', hint: 'Conversations started', color: 'var(--color-chart-2)' },

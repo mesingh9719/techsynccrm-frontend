@@ -1,6 +1,15 @@
 import { api } from '../../services/http'
 import type { LeadPage } from '../leads/api'
-import type { Campaign, CampaignInput, CampaignStatus, UtmParameters } from './types'
+import type { Campaign, CampaignInput, CampaignStatus, MetaCampaignState, UtmParameters } from './types'
+
+export const getMetaCampaignState = (id: string) => api<MetaCampaignState>(`/campaigns/${id}/meta-status`)
+
+export function metaAdsManagerUrl(campaign: Campaign) {
+  const accountId = campaign.externalAccountId?.replace(/^act_/, '')
+  return accountId && /^\d+$/.test(accountId) && /^\d+$/.test(campaign.externalCampaignId ?? '')
+    ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${accountId}&selected_campaign_ids=${campaign.externalCampaignId}`
+    : 'https://adsmanager.facebook.com/'
+}
 
 export function generateCampaignCode(name: string): string {
   return name

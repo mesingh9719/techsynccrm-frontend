@@ -1,3 +1,4 @@
+import { useAuth } from '../../lib/useAuth'
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
@@ -16,6 +17,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
+import { ConfirmDialog } from '../../components/app/Dialog'
 import { Badge } from '../../components/ui/Badge'
 import { EmptyState, ErrorState, Skeleton } from '../../components/app/States'
 import { useToast } from '../../components/ui/Toast'
@@ -25,21 +27,24 @@ import { relativeTime } from '../crm/format'
 import { formatCampaignMoney as formatMinor } from './format'
 import { LeadStatusBadge, ScorePill } from '../leads/LeadBits'
 import { OwnerCell } from '../crm/components/RecordParts'
-import { buildUtmUrl, getCampaign, getCampaignLeads } from './api'
+import { buildUtmUrl, getCampaign, getCampaignLeads, getMetaCampaignState, metaAdsManagerUrl } from './api'
 import { CampaignFormDrawer } from './CampaignFormDrawer'
 import { useCampaignMutations } from './useCampaigns'
-import { CAMPAIGN_OBJECTIVE_LABELS, CAMPAIGN_STATUS_LABELS, CAMPAIGN_TYPE_LABELS } from './types'
+import { CAMPAIGN_OBJECTIVE_LABELS, CAMPAIGN_STATUS_LABELS, CAMPAIGN_TYPE_LABELS, isMetaCampaign } from './types'
 
 export default function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { organization } = useOrg()
   const orgId = organization?.id ?? 'none'
   const notify = useToast()
+  const { user } = useAuth()
   const canRead = useCan('campaigns.read')
   const canEdit = useCan('campaigns.update')
+  const canManageMeta = useCan('settings.workspace.manage')
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [metaConfirmation, setMetaConfirmation] = useState<{ status: 'active' | 'paused'; ifMatch: string } | null>(null)
 
   const { save, setStatus } = useCampaignMutations()
 
@@ -50,6 +55,14 @@ export default function CampaignDetailPage() {
   })
 
   const campaign = campaignQuery.data
+  const linkedMeta = isMetaCampaign(campaign)
+  const metaQuery = useQuery({
+    queryKey: ['org', orgId, 'campaign-meta', id],
+    queryFn: () => getMetaCampaignState(id!),
+    enabled: Boolean(id && linkedMeta && canRead && canManageMeta),
+    retry: false,
+    staleTime: 10_000,
+  })
 
   useSeo({
     title: campaign ? `${campaign.name} · Campaigns` : 'Campaign Details',
@@ -107,14 +120,17 @@ export default function CampaignDetailPage() {
   const cpl = campaign.metrics.costPerLeadMinor
   const conversionRate = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 1000) / 10 : 0
 
-  const trackingUrl = buildUtmUrl(campaign.landingUrl ?? '', campaign.utm)
+  const permissions = user?.organization?.permissions ?? []
+  const editable = canEdit && (!permissions.includes('campaigns.update.own') || permissions.some((permission) => ['campaigns.update.all', 'campaigns.update.team'].includes(permission)) || campaign.ownerId === user?.id)
 
-  function copyLink() {
+  const trackingUrl = buildUtmUrl(campaign.landingUrl ?? '', campaign.utm)
+  const metaEnabled = metaQuery.data?.configuredStatus === 'ACTIVE'
+  const metaEnded = Boolean(metaQuery.data?.stopsAt && new Date(metaQuery.data.stopsAt).getTime() <= metaQuery.dataUpdatedAt)
+  const metaArchived = ['ARCHIVED', 'DELETED'].includes(metaQuery.data?.configuredStatus ?? '')
+
+  async function copyLink() {
     if (!trackingUrl) return
-    void navigator.clipboard.writeText(trackingUrl)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-    notify({ title: 'Tracking URL copied' })
+    try { await navigator.clipboard.writeText(trackingUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); notify({ title: 'Tracking URL copied' }) } catch { notify({ tone: 'error', title: 'Couldn’t copy the tracking URL', description: 'Check clipboard permission and try again.' }) }
   }
 
   async function toggleStatus() {
@@ -130,6 +146,13 @@ export default function CampaignDetailPage() {
         description: error instanceof Error ? error.message : 'Please try again.',
       })
     }
+  }
+
+  async function confirmMetaStatus() {
+    if (!campaign || !metaConfirmation) return
+    await setStatus.mutateAsync({ id: campaign.id, status: metaConfirmation.status, ifMatch: metaConfirmation.ifMatch })
+    notify({ title: metaConfirmation.status === 'active' ? 'Campaign enabled on Meta' : 'Campaign paused on Meta', description: 'Meta confirmed the change. Ad delivery also depends on ad sets, ads, schedule and review.' })
+    setMetaConfirmation(null)
   }
 
   return (
@@ -166,21 +189,21 @@ export default function CampaignDetailPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {canEdit && (
+            {editable && (
               <>
-                <Button variant="secondary" size="sm" onClick={toggleStatus} loading={setStatus.isPending}>
-                  {campaign.status === 'active' ? (
+                {(!linkedMeta || canManageMeta) && <Button variant="secondary" size="sm" onClick={() => linkedMeta ? setMetaConfirmation({ status: metaEnabled ? 'paused' : 'active', ifMatch: campaign.updatedAt }) : void toggleStatus()} loading={setStatus.isPending} disabled={linkedMeta && (!metaQuery.data || metaQuery.isError || metaArchived || (!metaEnabled && metaEnded))}>
+                  {(linkedMeta ? metaEnabled : campaign.status === 'active') ? (
                     <>
                       <Pause className="size-4" />
-                      Pause
+                      {linkedMeta ? 'Pause on Meta' : 'Pause'}
                     </>
                   ) : (
                     <>
                       <Play className="size-4" />
-                      Activate
+                      {linkedMeta ? 'Enable on Meta' : 'Activate'}
                     </>
                   )}
-                </Button>
+                </Button>}
                 <Button variant="secondary" size="sm" onClick={() => setDrawerOpen(true)}>
                   <Pencil className="size-4" />
                   Edit
@@ -190,6 +213,16 @@ export default function CampaignDetailPage() {
           </div>
         </div>
       </div>
+
+      {linkedMeta && <section className="surface space-y-3 p-5" aria-label="Meta delivery">
+        <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="section-title">Meta delivery</h2><p className="mt-1 text-sm text-muted">Enable and Pause update Meta. Sync Meta reads its latest status into the CRM.</p></div><a href={metaAdsManagerUrl(campaign)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-brand-700 hover:underline">Open Meta Ads Manager<ExternalLink className="size-4" aria-hidden="true" /></a></div>
+        {!canManageMeta ? <p className="text-sm text-muted">Your workspace integration administrator manages Meta delivery. You can still edit CRM tracking details.</p> : metaQuery.isPending ? <p role="status" className="text-sm text-muted">Checking Meta status…</p> : metaQuery.isError ? <div role="alert" className="text-sm text-danger"><p>{metaQuery.error instanceof Error ? metaQuery.error.message : 'Could not check Meta status.'}</p><Button variant="secondary" size="sm" onClick={() => void metaQuery.refetch()} className="mt-2">Retry Meta status</Button></div> : metaQuery.data && <>
+          <dl className="grid gap-3 text-sm sm:grid-cols-3"><div><dt className="text-xs text-muted">Configured on Meta</dt><dd className="mt-1 font-medium">{metaQuery.data.configuredStatus?.replaceAll('_', ' ') ?? 'Unknown'}</dd></div><div><dt className="text-xs text-muted">Effective status</dt><dd className="mt-1 font-medium">{metaQuery.data.effectiveStatus?.replaceAll('_', ' ') ?? 'Unknown'}</dd></div><div><dt className="text-xs text-muted">Meta schedule ends</dt><dd className="mt-1 font-medium">{metaQuery.data.stopsAt ? new Date(metaQuery.data.stopsAt).toLocaleString() : 'No end time returned'}</dd></div></dl>
+          {metaEnded && <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">The Meta schedule has ended. Update the campaign/ad set schedule in Ads Manager, then Sync Meta. Enabling the campaign switch does not extend its schedule.</p>}
+          {metaEnabled && <p className="text-xs text-muted">Enabled is the campaign switch setting. Delivery also depends on active ad sets and ads, their schedules, budget and Meta review.</p>}
+        </>}
+      </section>}
+      {!linkedMeta && <p className="text-xs text-muted">Campaign status tracks this CRM record. Advertising delivery is managed in the channel’s advertising platform.</p>}
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -270,14 +303,14 @@ export default function CampaignDetailPage() {
               title="No leads attributed yet"
               description="Share the campaign tracking URL or connect a lead form to automatically attribute incoming leads."
               action={
-                <Button variant="secondary" size="sm" onClick={copyLink}>
+                <Button variant="secondary" size="sm" onClick={copyLink} disabled={!trackingUrl}>
                   <Copy className="size-4" />
                   Copy tracking link
                 </Button>
               }
             />
           ) : (
-            <div className="overflow-x-auto">
+            <div className="table-viewport">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-line text-xs text-muted">
@@ -341,10 +374,10 @@ export default function CampaignDetailPage() {
                 <input
                   readOnly
                   value={trackingUrl || 'No landing page URL configured'}
-                  className="min-w-0 flex-1 rounded border border-line bg-surface px-3 py-2 font-mono text-xs text-ink"
+                  className="min-w-0 flex-1 rounded-control border border-line bg-surface px-3 py-2 font-mono text-xs text-ink"
                 />
                 <Button size="sm" variant="secondary" onClick={copyLink} disabled={!trackingUrl}>
-                  {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
+                  {copied ? <Check className="size-4 text-success" /> : <Copy className="size-4" />}
                 </Button>
               </div>
               {trackingUrl && (
@@ -420,6 +453,14 @@ export default function CampaignDetailPage() {
         </div>
       </div>
 
+      <ConfirmDialog
+        open={Boolean(metaConfirmation)}
+        onClose={() => setMetaConfirmation(null)}
+        title={metaConfirmation?.status === 'active' ? 'Enable campaign on Meta?' : 'Pause campaign on Meta?'}
+        description={metaConfirmation?.status === 'active' ? 'This changes the real Meta campaign. Eligible ads may resume spending under their existing Meta budgets. Delivery also depends on ad sets, ads, schedule and review.' : 'This pauses the real Meta campaign and affects its ad delivery. The CRM will save the status returned by Meta.'}
+        confirmLabel={metaConfirmation?.status === 'active' ? 'Enable on Meta' : 'Pause on Meta'}
+        onConfirm={confirmMetaStatus}
+      />
       <CampaignFormDrawer
         open={drawerOpen}
         campaign={campaign}

@@ -1,10 +1,10 @@
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
-import { useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
-import { ImageUp, Lock, ShieldCheck, Trash2 } from 'lucide-react'
+import { Building2, Globe2, ImageUp, Lock, ReceiptText, ShieldCheck, Trash2, TriangleAlert } from 'lucide-react'
 import { emitAppEvent } from '../../lib/appEvents'
 import { deleteCurrentOrganization, updateCurrentOrganization, uploadImage, type OrganizationUpdate } from '../../services/organizations'
 import { fetchMe } from '../../services/auth'
@@ -21,18 +21,9 @@ import { Field, FormAlert, Input, Select } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { ConfirmDialog } from '../../components/app/Dialog'
 import { ErrorState, Skeleton, PageHeader } from '../../components/app/States'
+import { SaveBar, SettingsSection } from '../../components/app/SettingsSection'
 
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
-
-function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
-  return (
-    <section className="rounded-card bg-surface p-6 shadow-card ring-1 ring-line">
-      <h2 className="font-semibold text-ink">{title}</h2>
-      {description && <p className="mt-1 text-sm text-muted">{description}</p>}
-      <div className="mt-5">{children}</div>
-    </section>
-  )
-}
 
 const toValues = (org: Organization): WorkspaceSettingsValues => ({
   name: org.name,
@@ -165,6 +156,7 @@ function SettingsForm({ org, canEdit }: { org: Organization; canEdit: boolean })
     try {
       const updated = await updateCurrentOrganization(toUpdate(values))
       applyOrg(updated)
+      leaveGuard.markSaved(false)
       reset(toValues(updated))
       // Name/slug appear in the session (sidebar, switcher).
       if (updated.name !== org.name || updated.slug !== org.slug) await fetchMe().catch(() => {})
@@ -180,7 +172,7 @@ function SettingsForm({ org, canEdit }: { org: Organization; canEdit: boolean })
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
         {leaveGuard.confirmation}
-      <Section title="Workspace" description="How your company appears to your team.">
+      <SettingsSection icon={Building2} title="Company profile" description="How your company appears to your team.">
         <LogoUploader org={org} canEdit={canEdit} onChanged={applyOrg} />
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <Field label="Company name" error={errors.name?.message}>
@@ -212,9 +204,9 @@ function SettingsForm({ org, canEdit }: { org: Organization; canEdit: boolean })
             )}
           </Field>
         </div>
-      </Section>
+      </SettingsSection>
 
-      <Section title="Regional settings" description="Used for “today”, reminders, reports and money formatting.">
+      <SettingsSection icon={Globe2} title="Regional settings" description="Used for “today”, reminders, reports and money formatting.">
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Time zone" error={errors.timezone?.message}>
             {({ id, describedBy, invalid }) => (
@@ -234,9 +226,9 @@ function SettingsForm({ org, canEdit }: { org: Organization; canEdit: boolean })
             )}
           </Field>
         </div>
-      </Section>
+      </SettingsSection>
 
-      <Section title="Business details" description="Printed on quotes and invoices. GSTIN must match the state.">
+      <SettingsSection icon={ReceiptText} title="Business details" description="Printed on quotes and invoices. GSTIN must match the state.">
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Legal name" optional error={errors.legalName?.message}>
             {({ id, describedBy, invalid }) => <Input id={id} disabled={disabled} placeholder="e.g. Saffron Retail Pvt. Ltd." aria-describedby={describedBy} invalid={invalid} {...register('legalName')} />}
@@ -273,21 +265,15 @@ function SettingsForm({ org, canEdit }: { org: Organization; canEdit: boolean })
             )}
           </Field>
         </div>
-      </Section>
+      </SettingsSection>
 
       {serverError && <FormAlert>{serverError}</FormAlert>}
-      {canEdit ? (
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" disabled={!isDirty || isSubmitting} onClick={() => reset(toValues(org))}>
-            Discard
-          </Button>
-          <Button type="submit" loading={isSubmitting} disabled={!isDirty}>
-            Save changes
-          </Button>
-        </div>
-      ) : (
-        <p className="text-sm text-muted">Only workspace owners and admins can change these settings.</p>
-      )}
+      <SaveBar
+        dirty={isDirty}
+        saving={isSubmitting}
+        onDiscard={() => reset(toValues(org))}
+        readOnlyNote={canEdit ? undefined : 'Only workspace owners and admins can change these settings.'}
+      />
     </form>
   )
 }
@@ -316,10 +302,10 @@ function SecuritySection({ org }: { org: Organization }) {
   }
 
   return (
-    <Section title="Security" description="Applies to everyone in this workspace.">
+    <SettingsSection icon={ShieldCheck} title="Security" description="Applies to everyone in this workspace.">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <ShieldCheck className={org.require2fa ? 'mt-1 size-5 text-emerald-600' : 'mt-1 size-5 text-muted'} aria-hidden="true" />
+          <ShieldCheck className={org.require2fa ? 'mt-1 size-5 text-success' : 'mt-1 size-5 text-muted'} aria-hidden="true" />
           <div>
             <p className="font-medium text-ink">Require two-factor authentication</p>
             <p className="text-sm text-muted">
@@ -351,7 +337,7 @@ function SecuritySection({ org }: { org: Organization }) {
           {error}
         </p>
       )}
-    </Section>
+    </SettingsSection>
   )
 }
 
@@ -375,15 +361,19 @@ function DangerZone({ org }: { org: Organization }) {
   }
 
   return (
-    <section className="rounded-card bg-surface p-6 shadow-card ring-1 ring-red-200">
-      <h2 className="font-semibold text-red-700">Delete workspace</h2>
-      <p className="mt-1 text-sm text-muted">
-        Everyone loses access immediately. Your data is kept for 30 days in case you change your mind — contact support to restore it.
-      </p>
-      <Button variant="secondary" className="mt-5 text-red-700" onClick={() => setOpen(true)}>
-        <Trash2 className="size-4" aria-hidden="true" />
-        Delete workspace
-      </Button>
+    <SettingsSection
+      tone="danger"
+      icon={TriangleAlert}
+      title="Delete workspace"
+      description="Everyone loses access immediately. Your data is kept for 30 days in case you change your mind — contact support to restore it."
+      actions={
+        <Button variant="secondary" size="sm" className="h-9 text-red-700" onClick={() => setOpen(true)}>
+          <Trash2 className="size-4" aria-hidden="true" />
+          Delete workspace
+        </Button>
+      }
+    >
+      <p className="text-sm text-muted">This can’t be undone from here. You’ll be asked to type the workspace name to confirm.</p>
       <ConfirmDialog
         open={open}
         onClose={() => {
@@ -398,7 +388,7 @@ function DangerZone({ org }: { org: Organization }) {
         requireText={org.name}
         error={error}
       />
-    </section>
+    </SettingsSection>
   )
 }
 
@@ -420,7 +410,7 @@ export default function WorkspaceSettings() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Workspace" description="Manage your business identity, preferences, and access policies." />
+      <PageHeader title="General" description="Your company’s identity, region and workspace-wide policies." />
       {/* Remount the form when the server copy changes from elsewhere (e.g. switching workspace). */}
       <SettingsForm key={organization.id} org={organization} canEdit={canEdit} />
       {canEdit && <SecuritySection org={organization} />}

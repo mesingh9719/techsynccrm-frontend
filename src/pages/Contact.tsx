@@ -84,7 +84,7 @@ export default function Contact() {
             {ticket ? (
               <div className="py-10 text-center" role="status">
                 <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-100">
-                  <CircleCheck className="size-6 text-emerald-600" aria-hidden="true" />
+                  <CircleCheck className="size-6 text-success" aria-hidden="true" />
                 </span>
                 <h2 className="mt-5 text-2xl font-semibold text-zinc-950">Message received</h2>
                 <p className="mx-auto mt-2 max-w-md text-zinc-600">

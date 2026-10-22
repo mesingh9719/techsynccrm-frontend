@@ -2,13 +2,12 @@ import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowDown, ArrowLeft, ArrowUp, Code2, ExternalLink, GripVertical, Save, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowUp, Code2, GripVertical, Save, Trash2 } from 'lucide-react'
 import { useAuth } from '../../lib/useAuth'
 import { useCan } from '../../lib/useOrg'
 import { Button } from '../../components/ui/Button'
 import { Field, FormAlert, Input, Select, Textarea } from '../../components/ui/Form'
 import { Tabs } from '../../components/ui/Tabs'
-import { CopyButton } from '../../components/ui/CopyButton'
 import { EmptyState, ErrorState, Skeleton } from '../../components/app/States'
 import { PreviewNotice } from '../../components/app/PreviewNotice'
 import { useToast } from '../../components/ui/Toast'
@@ -24,6 +23,7 @@ import {
   type WebForm,
 } from './types'
 import { FormRenderer } from './FormRenderer'
+import { EmbedPanel } from './EmbedPanel'
 
 const coreFields: FormField[] = [
   ...defaultFields,
@@ -57,73 +57,6 @@ function fresh(): WebForm {
     createdAt: now,
     updatedAt: now,
   }
-}
-
-function EmbedPanel({ form, scope }: { form: WebForm; scope: string }) {
-  const service = makeCaptureApi(scope)
-  const query = useQuery({
-    queryKey: [...captureKeys(scope), 'embed', form.id],
-    queryFn: () => service.embedCode(form.id),
-    enabled: captureLive,
-  })
-  const hosted = new URL(`/f/${form.key}`, window.location.origin).href
-  const examples = query.data ?? {
-    script: `<script src="${window.location.origin}/embed.js" data-form="${form.key}"></script>`,
-    iframe: `<iframe src="${hosted}?embed=1" title="Enquiry form" width="100%" height="720" style="border:0"></iframe>`,
-    hostedUrl: hosted,
-  }
-  return (
-    <div className="space-y-5">
-      {!captureLive && (
-        <PreviewNotice>
-          These snippets show the publishing format. They will accept enquiries only after the live capture API is
-          enabled.
-        </PreviewNotice>
-      )}
-      {query.isPending && captureLive ? (
-        <Skeleton className="h-40" />
-      ) : query.isError ? (
-        <ErrorState error={query.error} onRetry={() => query.refetch()} />
-      ) : (
-        <>
-          {[
-            {
-              label: 'Recommended · website script',
-              value: examples.script,
-              help: 'Paste before the closing body tag. The form resizes automatically.',
-            },
-            {
-              label: 'Iframe embed',
-              value: examples.iframe,
-              help: 'Use this when your website builder supports embedded HTML.',
-            },
-            {
-              label: 'Hosted form link',
-              value: examples.hostedUrl,
-              help: 'Share a standalone form with your customers.',
-            },
-          ].map((snippet) => (
-            <div key={snippet.label}>
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <h3 className="text-sm font-medium text-ink">{snippet.label}</h3>
-                <CopyButton text={snippet.value} />
-              </div>
-              <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-surface-subtle p-4 text-xs leading-6 text-ink">
-                <code>{snippet.value}</code>
-              </pre>
-              <p className="mt-2 text-xs text-muted">{snippet.help}</p>
-            </div>
-          ))}
-        </>
-      )}
-      {captureLive && (
-        <Button variant="secondary" href={hosted} target="_blank" rel="noreferrer">
-          Open hosted form
-          <ExternalLink className="size-4" />
-        </Button>
-      )}
-    </div>
-  )
 }
 
 function SettingsEditor({
@@ -474,7 +407,7 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
                       disabled={index === 0}
                       onClick={() => move(index, index - 1)}
                       aria-label={`Move ${f.label} up`}
-                      className="rounded p-1 text-muted hover:bg-surface hover:text-ink disabled:opacity-30"
+                      className="rounded-control p-1 text-muted hover:bg-surface hover:text-ink disabled:opacity-30"
                     >
                       <ArrowUp className="size-4" />
                     </button>
@@ -483,7 +416,7 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
                       disabled={index === form.fields.length - 1}
                       onClick={() => move(index, index + 1)}
                       aria-label={`Move ${f.label} down`}
-                      className="rounded p-1 text-muted hover:bg-surface hover:text-ink disabled:opacity-30"
+                      className="rounded-control p-1 text-muted hover:bg-surface hover:text-ink disabled:opacity-30"
                     >
                       <ArrowDown className="size-4" />
                     </button>
@@ -491,7 +424,7 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
                       type="button"
                       onClick={() => change({ ...form, fields: form.fields.filter((_, i) => i !== index) })}
                       aria-label={`Remove ${f.label}`}
-                      className="rounded p-1 text-muted hover:text-danger"
+                      className="rounded-control p-1 text-muted hover:text-danger"
                     >
                       <Trash2 className="size-4" />
                     </button>

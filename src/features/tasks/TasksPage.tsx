@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { LocalViews } from '../../components/app/LocalViews'
 import { FilterChips } from '../../components/app/FilterBar'
 import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
@@ -62,6 +63,7 @@ function QuickAdd() {
   const [title, setTitle] = useState('')
   const [preset, setPreset] = useState(presets[0].key)
   const [busy, setBusy] = useState(false)
+  const guard = useUnsavedChanges({ title, preset }, () => {}, busy, Boolean(title.trim()))
   async function add() {
     if (!title.trim()) return
     setBusy(true)
@@ -71,6 +73,8 @@ function QuickAdd() {
         dueAt: (presets.find((p) => p.key === preset) ?? presets[0]).date.toISOString(),
       })
       setTitle('')
+      guard.markSaved({ title: '', preset })
+      notify({ title: 'Task added' })
       await queryClient.invalidateQueries({ queryKey: qk.org(orgId).tasks })
     } catch (err) {
       if (!handleGlobalApiError(err))
@@ -91,6 +95,7 @@ function QuickAdd() {
       }}
       className="flex flex-col gap-2 rounded-card bg-surface p-3 shadow-card ring-1 ring-line sm:flex-row"
     >
+      {guard.confirmation}
       <Input
         aria-label="New task"
         placeholder="Add a task… e.g. Send price list to Ritika"

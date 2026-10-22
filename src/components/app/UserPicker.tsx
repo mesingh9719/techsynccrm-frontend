@@ -78,7 +78,7 @@ export function UserPicker({ value, onChange, excludeIds = [], placeholder = 'Ch
   }
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false) }}>
       <div className="relative">
         <input
           id={id}

@@ -24,7 +24,7 @@ export const listImports = () => api<{ imports: ImportJob[] }>('/imports').then(
 export const cancelImport = (id: string) => api<ImportJob>(`/imports/${id}/cancel`, { method: 'POST' })
 export const undoImport = (id: string) => api<{ removed: number; kept: number }>(`/imports/${id}/undo`, { method: 'POST' })
 export const importErrors = (id: string) => api<FileRecord>(`/imports/${id}/errors`)
-export interface ExportJob { exportId?: string; id?: string; status: string; file?: FileRecord; lastError?: string }
+export interface ExportJob { exportId?: string; id?: string; status: string; file?: FileRecord; lastError?: string; entityType?: TransferEntity; format?: 'csv' | 'xlsx'; rowCount?: number; columns?: string[]; createdAt?: string; finishedAt?: string | null }
 export const createExport = (entityType: TransferEntity, filters: Record<string, string | number | boolean | undefined>, columns: string[], format: 'csv' | 'xlsx') => api<ExportJob>('/exports', { method: 'POST', body: { entityType, filters, columns, format } })
 export const getExport = (id: string) => api<ExportJob>(`/exports/${id}`)
 export const listExports = () => api<{ exports: ExportJob[] }>('/exports').then((d) => d.exports)

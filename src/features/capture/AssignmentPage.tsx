@@ -213,7 +213,7 @@ function RuleEditor({
                       draft.conditions.filter((_, n) => n !== i),
                     )
                   }
-                  className="rounded p-1 text-muted hover:text-danger"
+                  className="rounded-control p-1 text-muted hover:text-danger"
                 >
                   <Trash2 className="size-4" />
                 </button>
@@ -335,8 +335,10 @@ function HoursEditor({
     [error, setError] = useState('')
   const notify = useToast(),
     territories = useEntitlement('territories')
+  const guard = useUnsavedChanges(draft, () => {}, busy)
   return (
     <section className="surface space-y-5 p-5">
+      {guard.confirmation}
       <div>
         <h2 className="section-title">A schedule that works for your team</h2>
         <p className="mt-1 text-sm text-muted">
@@ -461,6 +463,7 @@ function HoursEditor({
           setBusy(true)
           try {
             await onSave(draft)
+            guard.markSaved(draft)
             notify({ title: captureLive ? 'Working hours saved' : 'Working-hours preview saved' })
           } catch (err) {
             setError(err instanceof Error ? err.message : 'Couldn’t save.')
@@ -657,7 +660,7 @@ export default function AssignmentPage() {
                       aria-label={`Move ${rule.name} up`}
                       disabled={busy || !index}
                       onClick={() => reorder(index, index - 1)}
-                      className="rounded p-2 text-muted hover:bg-zinc-100 disabled:opacity-30"
+                      className="rounded-control p-2 text-muted hover:bg-zinc-100 disabled:opacity-30"
                     >
                       <ArrowUp className="size-4" />
                     </button>
@@ -665,7 +668,7 @@ export default function AssignmentPage() {
                       aria-label={`Move ${rule.name} down`}
                       disabled={busy || index === rules.data.length - 1}
                       onClick={() => reorder(index, index + 1)}
-                      className="rounded p-2 text-muted hover:bg-zinc-100 disabled:opacity-30"
+                      className="rounded-control p-2 text-muted hover:bg-zinc-100 disabled:opacity-30"
                     >
                       <ArrowDown className="size-4" />
                     </button>
@@ -673,7 +676,7 @@ export default function AssignmentPage() {
                       aria-label={`Delete ${rule.name}`}
                       disabled={busy}
                       onClick={() => setRemoving(rule)}
-                      className="rounded p-2 text-muted hover:text-danger"
+                      className="rounded-control p-2 text-muted hover:text-danger"
                     >
                       <Trash2 className="size-4" />
                     </button>

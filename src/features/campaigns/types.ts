@@ -5,6 +5,15 @@ export type CampaignObjective =
 
 export type CampaignStatus = 'draft' | 'scheduled' | 'active' | 'paused' | 'completed' | 'archived'
 
+export interface MetaCampaignState {
+  configuredStatus: string | null
+  effectiveStatus: string | null
+  startsAt: string | null
+  stopsAt: string | null
+}
+
+export const isMetaCampaign = (campaign?: Campaign | null) => campaign?.externalPlatform === 'facebook' && Boolean(campaign.externalCampaignId)
+
 export interface UtmParameters {
   utm_source?: string
   utm_medium?: string

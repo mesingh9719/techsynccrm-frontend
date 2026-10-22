@@ -45,13 +45,14 @@ export function AreaChart({ data, formatValue, ticks, height = 200, ariaLabel }:
   const last = data.length - 1
 
   function onMove(e: PointerEvent<SVGSVGElement>) {
+    if (innerW <= 0) { setActive(0); return }
     const rect = e.currentTarget.getBoundingClientRect()
     const px = e.clientX - rect.left - pad.left
     const i = Math.round((px / innerW) * (data.length - 1))
     setActive(Math.min(data.length - 1, Math.max(0, i)))
   }
 
-  const shown = active ?? null
+  const shown = active === null ? null : Math.min(last, Math.max(0, Number.isFinite(active) ? active : 0))
 
   return (
     <div ref={ref} className="relative w-full" style={{ height }}>
@@ -121,7 +122,7 @@ export function AreaChart({ data, formatValue, ticks, height = 200, ariaLabel }:
           <div className="font-semibold text-zinc-900 tabular-nums">{formatValue(data[shown ?? last].value)}</div>
         </div>
       )}
-      <span className="sr-only" aria-live="polite">{active !== null ? `${data[active].label}: ${formatValue(data[active].value)}` : ''}</span>
+      <span className="sr-only" aria-live="polite">{shown !== null ? `${data[shown].label}: ${formatValue(data[shown].value)}` : ''}</span>
       {/* Accessible data table for screen readers */}
       <table className="sr-only">
         <caption>{ariaLabel}</caption>

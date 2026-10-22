@@ -91,7 +91,7 @@ export function FilterChips<K extends string>({ filters, onRemove, onClear, excl
   exclude?: string[]
   labels?: Record<string, string>
 }) {
-  const active = Object.entries(filters).filter(([key, value]) => value && !exclude.includes(key))
+  const active = (Object.entries(filters) as [string, string | undefined][]).filter(([key, value]) => value && !exclude.includes(key))
   if (!active.length) return null
   const names: Record<string, string> = { q: 'Search', sourceId: 'Source', ownerId: 'Owner', status: 'Status', tag: 'Tag', createdFrom: 'From', createdTo: 'Until', campaignId: 'Campaign', lifecycleStage: 'Stage', industry: 'Industry', assignee: 'Assignee', type: 'Channel' }
   return <div aria-label="Active filters" className="flex flex-wrap items-center gap-2">

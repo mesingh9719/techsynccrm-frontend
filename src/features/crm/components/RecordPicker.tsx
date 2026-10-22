@@ -77,7 +77,7 @@ export function RecordPicker({
   }
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false) }}>
       <div className={cn('flex h-10 items-center rounded-lg border bg-surface pr-2', invalid ? 'border-red-400' : 'border-zinc-300', open && 'border-brand-500 ring-4 ring-brand-100')}>
         <input
           id={id}
@@ -101,7 +101,7 @@ export function RecordPicker({
           className="h-full min-w-0 flex-1 rounded-lg bg-transparent px-4 text-sm text-ink placeholder:text-muted focus:outline-none"
         />
         {selected && !open ? (
-          <button type="button" onClick={() => onChange(null)} className="rounded p-1 text-muted hover:text-ink" aria-label="Clear">
+          <button type="button" onClick={() => onChange(null)} className="rounded-control p-1 text-muted hover:text-ink" aria-label="Clear">
             <X className="size-4" aria-hidden="true" />
           </button>
         ) : results.isFetching ? (

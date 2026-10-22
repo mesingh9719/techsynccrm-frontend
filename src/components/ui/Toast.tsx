@@ -16,6 +16,7 @@ const ToastContext = createContext<Notify | null>(null)
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
+  const [actionBusy, setActionBusy] = useState<number | null>(null)
   const layer = useRef<HTMLDivElement>(null)
   const timers = useRef<Set<number>>(new Set())
   useEffect(() => () => { for (const timer of timers.current) window.clearTimeout(timer) }, [])
@@ -64,14 +65,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             className="pointer-events-auto flex w-full max-w-sm animate-fade-up items-start gap-3 rounded-xl bg-white p-4 shadow-float ring-1 ring-zinc-200"
           >
             {t.tone === 'success' ? (
-              <CircleCheck className="mt-1 size-5 shrink-0 text-emerald-600" aria-hidden="true" />
+              <CircleCheck className="mt-1 size-5 shrink-0 text-success" aria-hidden="true" />
             ) : (
               <CircleAlert className="mt-1 size-5 shrink-0 text-red-600" aria-hidden="true" />
             )}
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-zinc-900">{t.title}</p>
               {t.description && <p className={cn('mt-1 text-sm text-zinc-600')}>{t.description}</p>}
-              {t.action && <button type="button" className="mt-2 text-sm font-medium text-brand-700" onClick={() => { void t.action?.onClick(); dismiss(t.id) }}>{t.action.label}</button>}
+              {t.action && <button type="button" disabled={actionBusy === t.id} className="mt-2 min-h-10 text-sm font-medium text-brand-700 disabled:opacity-60" onClick={async () => {
+                if (actionBusy === t.id) return
+                setActionBusy(t.id)
+                try { await t.action?.onClick(); dismiss(t.id) }
+                catch (error) { notify({ tone: 'error', title: 'Couldn’t complete this action', description: error instanceof Error ? error.message : 'Try again.' }) }
+                finally { setActionBusy(null) }
+              }}>{actionBusy === t.id ? 'Working…' : t.action.label}</button>}
             </div>
             <button
               type="button"

@@ -22,6 +22,7 @@ export function useCampaignMutations() {
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ['org', orgId, 'campaigns'] }),
       queryClient.invalidateQueries({ queryKey: ['org', orgId, 'campaign'] }),
+      queryClient.invalidateQueries({ queryKey: ['org', orgId, 'campaign-meta'] }),
       queryClient.invalidateQueries({ queryKey: ['org', orgId, 'campaign-leads'] }),
       queryClient.invalidateQueries({ queryKey: ['org', orgId, 'dashboard'] }),
     ])
@@ -37,7 +38,7 @@ export function useCampaignMutations() {
   const setStatus = useMutation({
     mutationFn: ({ id, status, ifMatch }: { id: string; status: CampaignStatus; ifMatch?: string }) =>
       updateCampaignStatus(orgId, id, status, ifMatch),
-    onSuccess: invalidate,
+    onSettled: invalidate,
   })
   const syncMeta = useMutation({
     mutationFn: (adAccountId: string) => syncMetaCampaigns(orgId, adAccountId),

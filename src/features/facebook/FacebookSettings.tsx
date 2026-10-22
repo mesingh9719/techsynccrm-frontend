@@ -19,6 +19,22 @@ const panel = 'space-y-4 rounded-xl bg-surface p-5 ring-1 ring-line'
 function Paging({ next, first, onNext, onFirst }: { next?: string | null; first: boolean; onNext: (cursor: string) => void; onFirst: () => void }) {
   return <div className="flex gap-2">{!first && <Button size="sm" variant="ghost" onClick={onFirst}>First page</Button>}{next && <Button size="sm" variant="secondary" onClick={() => onNext(next)}>Next page</Button>}</div>
 }
+function CaptureGuide() {
+  const canImport = useCan('records.import')
+  return <section className={panel} aria-labelledby="facebook-capture-guide">
+    <div><h2 id="facebook-capture-guide" className="font-semibold">What gets synced</h2><p className="mt-2 text-sm leading-6 text-muted">This connection imports submissions from the Facebook Instant Forms you enable below.</p></div>
+    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"><p className="font-medium">Adding a contact in Business Suite is a separate workflow.</p><p className="mt-1">Contacts entered with “Add leads” in Leads Center (shown with source “Direct”) are outside this Instant Form connection. Add those contacts in this CRM, or import a spreadsheet containing their details.</p></div>
+    <div className="flex flex-wrap gap-2"><Button size="sm" variant="secondary" to="/app/leads">Open CRM leads</Button>{canImport && <Button size="sm" variant="ghost" to="/app/import?entity=lead">Import a spreadsheet</Button>}</div>
+    <details className="rounded-lg border border-line p-4 text-sm"><summary className="cursor-pointer font-medium text-ink">How to test lead capture</summary>
+      <ol className="mt-3 list-decimal space-y-2 pl-5 leading-6 text-muted">
+        <li>Open <a href="https://developers.facebook.com/tools/lead-ads-testing" target="_blank" rel="noreferrer" className="text-brand-700 underline underline-offset-2">Meta’s Lead Ads Testing Tool</a> and select the connected Page and an enabled Instant Form.</li>
+        <li>Use the form preview to submit a test with valid contact details. If Meta reports an existing test lead, remove that test in Meta’s tool before creating another. Each form allows one test lead at a time.</li>
+        <li>Here, choose “Sync available leads” under that form, then check “Lead capture history” for its result. Automatic checks also run periodically while the backend worker is running.</li>
+        <li>Open the captured lead from its history row. A repeated email or phone may update an existing open lead instead of creating a new row.</li>
+      </ol>
+    </details>
+  </section>
+}
 function FormEditor({ form, pageId, onSaved }: { form: fb.FacebookForm; pageId: string; onSaved: () => Promise<void> }) {
   const notify = useToast()
   const [enabled, setEnabled] = useState(form.settings?.enabled ?? false)
@@ -52,7 +68,7 @@ function FormEditor({ form, pageId, onSaved }: { form: fb.FacebookForm; pageId: 
 function PageForms({ page, orgId }: { page: fb.FacebookPage; orgId: string }) {
   const [after, setAfter] = useState<string>()
   const query = useQuery({ queryKey: ['org', orgId, 'facebook', 'forms', page.id, after], queryFn: () => fb.getFacebookForms(page.id, after), refetchInterval: (q) => q.state.data?.items.some((f) => ['queued', 'running'].includes(f.settings?.syncStatus ?? '')) ? 5000 : false })
-  return <section className={panel}><div className="flex items-center justify-between gap-2"><h2 className="font-semibold">Lead forms · {page.name}</h2><Button size="sm" variant="ghost" disabled={query.isFetching} onClick={() => void query.refetch()}><RefreshCw className="size-4" />Refresh</Button></div><p className="text-sm text-muted">Select the fields to bring into the CRM, choose an owner, then enable capture. Sync brings in available historical leads.</p>
+  return <section className={panel}><div className="flex items-center justify-between gap-2"><h2 className="font-semibold">Lead forms · {page.name}</h2><Button size="sm" variant="ghost" disabled={query.isFetching} onClick={() => void query.refetch()}><RefreshCw className="size-4" />Refresh</Button></div><p className="text-sm text-muted">Map your fields and save with capture enabled. While the background worker is running, enabled forms are checked about every five minutes. Use “Sync available leads” to check now.</p>
     {query.isPending ? <ListSkeleton rows={3} label="Loading forms…" /> : query.isError ? <ErrorState error={query.error} onRetry={() => void query.refetch()} /> : <>{!query.data.items.length && <p className="text-sm text-muted">No Lead Ads forms were returned for this Page.</p>}{query.data.items.map((form) => <FormEditor key={`${form.id}:${JSON.stringify([form.settings?.mapping, form.settings?.enabled, form.settings?.defaultOwnerId, form.settings?.dedupe])}`} form={form} pageId={page.id} onSaved={async () => { await query.refetch() }} />)}<Paging next={query.data.nextCursor} first={!after} onNext={setAfter} onFirst={() => setAfter(undefined)} /></>}
   </section>
 }
@@ -86,7 +102,8 @@ function FacebookPanel({ orgId }: { orgId: string }) {
   const page = status?.pages.find((p) => p.id === selectedPage && p.enabled) ?? status?.pages.find((p) => p.enabled)
   const result = params.get('facebook'), returnedWorkspace = params.get('workspace')
   return <div className="max-w-5xl space-y-6">
-    <PageHeader title="Facebook Lead Ads" description="Connect your Facebook Pages, view campaigns and bring enquiries into your CRM." actions={<Button variant="secondary" to="/app/leads">Manage leads</Button>} />
+    <PageHeader title="Facebook Lead Ads" description="Connect Facebook Pages and capture submissions from your Instant Forms." actions={<Button variant="secondary" to="/app/leads">Manage leads</Button>} />
+    <CaptureGuide />
     {result && <div role="status" className="flex items-start justify-between gap-3 rounded-lg bg-blue-50 p-4 text-sm text-blue-900"><p>{result === 'connected' ? returnedWorkspace && returnedWorkspace !== orgId ? 'Facebook connected to another workspace. Switch to that workspace to configure its Pages.' : 'Facebook connected. Select a Page and enable its lead forms below.' : result === 'cancelled' ? 'Facebook connection was cancelled. You can connect again when ready.' : 'Facebook connection did not finish. Check the app configuration, permissions and allowed callback URL, then connect again.'}</p><button aria-label="Dismiss connection message" onClick={() => { const next = new URLSearchParams(params); next.delete('facebook'); next.delete('workspace'); setParams(next, { replace: true }) }}>Dismiss</button></div>}
     {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
     {query.isPending ? <ListSkeleton rows={3} label="Loading Facebook settings…" /> : query.isError ? <ErrorState error={query.error} onRetry={() => void query.refetch()} /> : status && <>

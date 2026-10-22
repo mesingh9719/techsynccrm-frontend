@@ -21,7 +21,7 @@ function Card({ icon, title, children }: { icon: ReactNode; title: string; child
 
 const ok = (
   <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-100">
-    <CircleCheck className="size-6 text-emerald-600" aria-hidden="true" />
+    <CircleCheck className="size-6 text-success" aria-hidden="true" />
   </span>
 )
 const bad = (
