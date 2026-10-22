@@ -165,6 +165,9 @@ export interface LeadRecord extends RecordBase {
   firstRespondedAt: string | null
   firstResponseSeconds: number | null
   enquiryCount: number
+  /** Latest repeat enquiry; older API responses may omit these fields. */
+  latestSource?: { id: string; name: string; key: string | null } | null
+  latestEnquiryAt?: string | null
   contactId: string | null
   isExistingCustomer: boolean
   previousLeadId: string | null
