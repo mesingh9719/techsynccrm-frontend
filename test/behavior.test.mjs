@@ -481,7 +481,7 @@ test('email retries retain an explicit idempotency key in the actual HTTP client
 })
 
 test('Gmail callback failures use safe actionable messages rather than raw provider text', () => {
-  assert.match(emailContent.gmailConnectionError('GMAIL_SCOPES_MISSING'), /both sending and reading/)
+  assert.match(emailContent.gmailConnectionError('GMAIL_SCOPES_MISSING'), /allow sending email/)
   assert.match(emailContent.gmailConnectionError('GMAIL_OAUTH_CANCELLED'), /cancelled/)
   assert.match(emailContent.gmailConnectionError('GMAIL_ENCRYPTION_UNAVAILABLE'), /credential storage/)
   assert(!emailContent.gmailConnectionError('<script>provider-secret</script>').includes('provider-secret'))
