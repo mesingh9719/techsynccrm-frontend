@@ -22,11 +22,13 @@ let failNextSave = false, tasks = [], activities = []
 const fullOrg = { ...org, timezone: 'Asia/Kolkata', country: 'IN', currency: 'INR', locale: 'en-IN', logoUrl: null, seatSelectionRequired: false, trialActive: false, trialEndsAt: null, unreadNotificationCount: 0, entitlements: { features: ['files', 'customFields', 'require2fa'], limits: { users: null, records: null, pipelines: null, customFields: null, webForms: null, storageGb: 10 }, upgrades: {} }, usage: { users: 1, records: 1, pipelines: 1, storageBytes: 0, updatedAt: now() } }
 let gmailEnabled = false, mailbox = null, retryRequest = true, sendCalls = [], storedMessage = null, templateSaved = false
 const accountId = '80000000-0000-4000-8000-000000000001', threadId = '90000000-0000-4000-8000-000000000001'
+const connectedMailbox = () => ({ id: accountId, userId: owner.id, email: owner.email, status: 'connected', lastError: null, lastSyncedAt: now(), coverageGap: false, signatureHtml: '<p>QA signature</p>', excludedAddresses: [], excludedDomains: [], retentionDays: 365, createdAt: now() })
 const templates = [{ id: 'intro', ownerId: owner.id, name: 'Personal intro', subject: 'Hello {{name}}', bodyHtml: '<p>Hello <strong>{{firstName}}</strong></p>', shared: false, version: 1 }, { id: 'missing', ownerId: owner.id, name: 'Incomplete', subject: '{{unknown}}', bodyHtml: '<p>Check missing fields</p>', shared: false, version: 1 }]
 const messageContent = { from: owner.email, to: [lead.primaryEmail], subject: 'Fixture email', html: '<p>Fixture email body</p>', text: 'Fixture email body', rfcMessageId: '<fixture@example.test>', attachments: [] }
-await page.addInitScript(() => { window.__openedUrls = []; window.open = (url) => { window.__openedUrls.push(String(url)); return null } })
+await page.addInitScript(() => { window.__nativeOpen = window.open; window.__openedUrls = []; window.open = (url) => { window.__openedUrls.push(String(url)); return null } })
 await context.route('**/*', async (route) => {
   const request = route.request(), url = new URL(request.url()), path = url.pathname, method = request.method()
+  if (path === '/gmail/callback' && url.searchParams.get('gmail') === 'connected') mailbox = connectedMailbox()
   if (!path.startsWith('/api/')) { if (url.hostname === '127.0.0.1' || url.hostname === 'localhost') return route.continue(); return route.abort() }
   requests.push(`${method} ${path}`)
   const reply = (data, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(status < 400 ? { success: true, data } : { success: false, error: data }) })
@@ -67,8 +69,9 @@ await context.route('**/*', async (route) => {
     const values = request.postDataJSON(), activity = { ...values, id: crypto.randomUUID(), occurredAt: values.occurredAt ?? now(), createdAt: now(), actor: owner, actorId: owner.id, participants: [], mentions: [], meta: {}, isPinned: false, canEditNow: true, record: { entityType: 'lead', entityId: lead.id, name: lead.displayName } }
     activities.unshift(activity); return reply({ activity }, 201)
   }
-  if (path === '/api/integrations/gmail/me' && method === 'GET') return reply({ enabled: gmailEnabled, syncEnabled: true, entitled: true, consentVersion: '2026-10-23-team-history-v1', account: mailbox })
+  if (path === '/api/integrations/gmail/me' && method === 'GET') return reply({ enabled: gmailEnabled, setup: { ready: gmailEnabled, missing: gmailEnabled ? [] : ['enabled', 'encryption'], redirectUri: 'http://localhost:5000/api/integrations/gmail/callback' }, syncEnabled: true, entitled: true, consentVersion: '2026-10-23-team-history-v1', account: mailbox })
   if (path === '/api/integrations/gmail/me' && method === 'PATCH') { mailbox = { ...mailbox, ...request.postDataJSON() }; return reply({ account: mailbox }) }
+  if (path === '/api/integrations/gmail/oauth/start') { assert.equal(request.postDataJSON().shareWithTeam, true); return reply({ url: 'https://accounts.google.com/o/oauth2/v2/auth?state=synthetic-only' }) }
   if (path === '/api/integrations/gmail/accounts') return reply({ items: mailbox ? [{ ...mailbox, userName: owner.fullName }] : [], nextCursor: null })
   if (path === '/api/integrations/gmail/me/sync') return reply({ queued: true, syncEnabled: true }, 202)
   if (path === '/api/integrations/gmail/accounts/'+accountId && method === 'DELETE') { mailbox.status = 'disconnected'; return reply({ disconnected: true }) }
@@ -93,6 +96,8 @@ try {
   const openComposer = async () => { await page.getByRole('group', { name: 'Contact this lead' }).getByRole('button', { name: 'Email', exact: true }).click(); await page.getByRole('dialog', { name: 'Email lead or contact', exact: true }).waitFor() }
   await visitLead(); await openComposer()
   await page.getByText('Gmail setup is pending', { exact: true }).waitFor()
+  await page.getByText('Administrator setup', { exact: true }).waitFor()
+  await page.getByText('http://localhost:5000/api/integrations/gmail/callback', { exact: true }).waitFor()
   assert.equal(await page.getByRole('button', { name: 'Send with Gmail', exact: true }).count(), 0)
   await page.getByRole('button', { name: 'Close Email lead or contact', exact: true }).click()
   gmailEnabled = true; await page.reload(); await openComposer()
@@ -100,9 +105,22 @@ try {
   assert(await connect.isDisabled())
   await page.getByRole('checkbox', { name: /I understand that matched/ }).check()
   await connect.click(); await page.getByText('Allow a popup to connect Gmail, then try again.', { exact: true }).waitFor()
-  await page.getByRole('button', { name: 'Close Email lead or contact', exact: true }).click()
-  mailbox = { id: accountId, userId: owner.id, email: owner.email, status: 'connected', lastError: null, lastSyncedAt: now(), coverageGap: false, signatureHtml: '<p>QA signature</p>', excludedAddresses: [], excludedDomains: [], retentionDays: 365, createdAt: now() }
-  await page.reload(); await openComposer()
+  await page.getByRole('textbox', { name: 'Subject', exact: true }).fill('Draft survives Google')
+  await page.getByRole('textbox', { name: 'Message', exact: true }).fill('Keep this draft while connecting')
+  await page.evaluate(() => { window.open = window.__nativeOpen })
+  // Google is simulated, including the COOP header that severs the popup opener.
+  await context.route('https://accounts.google.com/**', (route) => route.fulfill({ status: 200, contentType: 'text/html', headers: { 'Cross-Origin-Opener-Policy': 'same-origin' }, body: `<form action="${qaUrl.origin}/gmail/callback"><input type="hidden" name="gmail" value="connected"><button>Approve synthetic Gmail connection</button></form>` }))
+  const popupEvent = context.waitForEvent('page')
+  await connect.click()
+  const popup = await popupEvent
+  await popup.getByRole('button', { name: 'Approve synthetic Gmail connection', exact: true }).waitFor()
+  assert(await popup.evaluate(() => window.opener === null), 'Synthetic Google COOP must sever the opener to exercise status-poll recovery')
+  await popup.getByRole('button', { name: 'Approve synthetic Gmail connection', exact: true }).click()
+  await page.getByRole('combobox', { name: 'Email template', exact: true }).waitFor()
+  assert.equal(await page.getByRole('textbox', { name: 'Subject', exact: true }).inputValue(), 'Draft survives Google')
+  assert.equal(await page.getByRole('textbox', { name: 'Message', exact: true }).innerText(), 'Keep this draft while connecting')
+  assert.equal(sendCalls.length, 0, 'Connecting must never send the draft')
+  await popup.close().catch(() => {})
   await page.getByRole('combobox', { name: 'Email template', exact: true }).selectOption('missing')
   assert(await page.getByRole('button', { name: 'Send with Gmail', exact: true }).isDisabled())
   await page.getByRole('combobox', { name: 'Email template', exact: true }).selectOption('intro')
@@ -144,6 +162,6 @@ try {
   await visitLead(); await page.getByRole('button', { name: 'View email conversation', exact: true }).click()
   await page.getByText('Customer reply', { exact: true }).waitFor(); assert.equal(await page.getByRole('button', { name: 'Reply with Gmail', exact: true }).count(), 0)
   assert.deepEqual(unexpected, []); assert.deepEqual(errors, [])
-  console.log(JSON.stringify({ passed: ['disabled configuration', 'explicit sharing consent', 'popup blocked error', 'prefilled recipient', 'missing merge field guard', 'rich text editor', 'immutable retry and idempotency key', 'truthful provider acceptance', 'thread expansion', 'reply recipient', 'mobile composer', 'team connection permissions', 'sync request', 'template save', 'viewer history without send'], screenshots: ['/tmp/gmail-composer-mobile.png', '/tmp/gmail-settings-desktop.png'], apiRequests: requests.length }, null, 2))
+  console.log(JSON.stringify({ passed: ['disabled configuration', 'administrator setup diagnostics', 'OAuth popup with severed opener', 'draft survives OAuth without sending', 'explicit sharing consent', 'popup blocked error', 'prefilled recipient', 'missing merge field guard', 'rich text editor', 'immutable retry and idempotency key', 'truthful provider acceptance', 'thread expansion', 'reply recipient', 'mobile composer', 'team connection permissions', 'sync request', 'template save', 'viewer history without send'], screenshots: ['/tmp/gmail-composer-mobile.png', '/tmp/gmail-settings-desktop.png'], apiRequests: requests.length }, null, 2))
 } catch (error) { await page.screenshot({ path: '/tmp/gmail-browser-failure.png', fullPage: true }).catch(() => {}); console.error(JSON.stringify({ error: error.stack, unexpected, errors, requests }, null, 2)); process.exitCode = 1 }
 finally { await browser.close() }

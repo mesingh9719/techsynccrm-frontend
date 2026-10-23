@@ -4,7 +4,8 @@ export interface GmailAccount {
   id: string; userId: string | null; userName?: string; email: string; status: string; lastError: string | null
   lastSyncedAt: string | null; coverageGap: boolean; signatureHtml: string; excludedAddresses: string[]; excludedDomains: string[]; retentionDays: number; createdAt: string
 }
-export interface GmailState { enabled: boolean; syncEnabled: boolean; entitled: boolean; consentVersion: string; account: GmailAccount | null }
+export type GmailSetupIssue = 'enabled' | 'clientId' | 'clientSecret' | 'redirectUri' | 'encryption'
+export interface GmailState { enabled: boolean; setup?: { ready: boolean; missing: GmailSetupIssue[]; redirectUri: string | null }; syncEnabled: boolean; entitled: boolean; consentVersion: string; account: GmailAccount | null }
 export interface EmailContent { from: string; to: string[]; subject: string; html: string; text: string; rfcMessageId: string; attachments: { name: string; size: number; contentType: string }[] }
 export interface EmailMessage { id: string; threadId: string; status: string; direction: string; occurredAt: string; acceptedAt: string | null; lastError: string | null; content: EmailContent | null }
 export interface EmailTemplate { id: string; ownerId: string | null; name: string; subject: string; bodyHtml: string; shared: boolean; version: number }
