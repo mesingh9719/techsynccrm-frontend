@@ -1,3 +1,4 @@
+import { EmailPrompt } from '../features/email/EmailPrompt'
 import { useNewLeads } from '../features/leads/useNewLeads'
 import { useNotificationStream } from '../features/notifications/useNotificationStream'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
@@ -324,6 +325,7 @@ function Shell() {
         <Topbar onOpenMenu={() => setMobileOpen(true)} />
         <PlanBanner />
         <TermsBanner />
+        <EmailPrompt />
         <main id="main" tabIndex={-1} className="flex-1 outline-none">
           <Outlet />
         </main>

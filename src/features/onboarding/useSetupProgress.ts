@@ -1,3 +1,4 @@
+import { useGmail } from '../email/useGmail'
 import { listLeads } from '../leads/api'
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -9,6 +10,7 @@ import { captureKeys, captureLive, makeCaptureApi } from '../capture/api'
 import { getFacebookStatus } from '../facebook/api'
 
 export function useSetupProgress() {
+  const gmail = useGmail(), canConnectEmail = useCan('email.connect')
   const { user } = useAuth(),
     allowed = useCan('settings.workspace.manage'),
     canInvite = useCan('members.invite'),
@@ -56,6 +58,7 @@ export function useSetupProgress() {
     Boolean(facebook.data?.connected && facebook.data.pages.some((p) => p.enabled && p.forms.some((f) => f.enabled)))
   const firstLead = useQuery({ queryKey: qk.org(orgId).leads.list({ limit: 1, counts: true }), queryFn: () => listLeads({ limit: 1, counts: true }), enabled: canCreateLead })
   const items = [
+    ...(canConnectEmail && gmail.data?.enabled && gmail.data.entitled && gmail.data.tenantEnabled !== false ? [{ key: 'gmail', title: 'Connect your Gmail', description: 'Use your work address to email leads from TechSync.', done: Boolean(gmail.data.account && ['connected', 'syncing', 'delayed'].includes(gmail.data.account.status)), href: '/app/settings/gmail' }] : []),
     {
       key: 'workspace',
       title: 'Make this workspace yours',

@@ -15,12 +15,15 @@ export function gmailConnectionError(code?: string) {
   const messages: Record<string, string> = {
     GMAIL_OAUTH_CANCELLED: 'Google connection was cancelled. You can try connecting again.',
     GMAIL_OAUTH_EXPIRED: 'The connection request expired. Return to TechSync and start again.',
-    GMAIL_SCOPES_MISSING: 'Allow both sending and reading Gmail messages on the Google permissions screen.',
-    GMAIL_ACCOUNT_UNAVAILABLE: 'This Google account cannot be connected here. Disconnect your current mailbox before choosing another account.',
+    GMAIL_SCOPES_MISSING: 'Please allow sending email to continue.',
+    GMAIL_ACCOUNT_UNAVAILABLE: 'This Google account is already connected by a teammate, or you need to disconnect your current mailbox first.',
     GMAIL_NOT_CONFIGURED: 'Gmail server setup is incomplete. Ask your administrator to check Gmail settings.',
     GMAIL_ENCRYPTION_UNAVAILABLE: 'Secure Gmail credential storage is unavailable. Ask your administrator to check its configuration.',
+    GMAIL_ACCOUNT_CHANGED: 'Your mailbox connection changed. Start connecting again.',
+    EMAIL_DISABLED: 'Email connections are turned off for this workspace.',
+    GMAIL_REVOCATION_PENDING: 'A previous disconnect is still completing. Try connecting again shortly.',
     GMAIL_DELETION_PENDING: 'Wait for imported history deletion to finish before reconnecting.',
-    GMAIL_RECONNECT_REQUIRED: 'Reconnect Gmail and allow offline access so TechSync can keep the connection working.',
+    GMAIL_RECONNECT_REQUIRED: 'Google did not return offline access. Try connecting again. If needed, remove TechSync from your Google Account connections and retry.',
   }
   return messages[code ?? ''] ?? 'Gmail was not connected. Return to TechSync, check the Google permissions and try again.'
 }

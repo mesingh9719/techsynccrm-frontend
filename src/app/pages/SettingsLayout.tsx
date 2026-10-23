@@ -1,3 +1,5 @@
+import { useAuth } from '../../lib/useAuth'
+import { hasPermission } from '../../lib/permissions'
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { ChevronDown, Search, X } from 'lucide-react'
@@ -25,6 +27,8 @@ function NavItem({ item, showDescription }: { item: SettingsNavItem; showDescrip
  */
 export default function SettingsLayout() {
   const { pathname } = useLocation()
+  const { user } = useAuth()
+  const visibleNav = settingsNav.filter((item) => !item.permission || hasPermission(user?.organization?.permissions, item.permission))
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   // Picking a search result navigates; start the next visit with the full list again.
@@ -33,10 +37,10 @@ export default function SettingsLayout() {
     setLastPath(pathname)
     setQuery('')
   }
-  const current = settingsNav.find((item) => pathname.startsWith(item.to))
+  const current = visibleNav.find((item) => pathname.startsWith(item.to))
   const term = query.trim().toLowerCase()
   const matches = term
-    ? settingsNav.filter((item) => `${item.label} ${item.description} ${item.group}`.toLowerCase().includes(term))
+    ? visibleNav.filter((item) => `${item.label} ${item.description} ${item.group}`.toLowerCase().includes(term))
     : []
 
   return (
@@ -82,7 +86,7 @@ export default function SettingsLayout() {
               <div key={group} className="settings-group">
                 <p className="settings-group-label">{group}</p>
                 <ul className="space-y-0.5">
-                  {settingsNav
+                  {visibleNav
                     .filter((item) => item.group === group)
                     .map((item) => (
                       <li key={item.key}>
@@ -115,7 +119,7 @@ export default function SettingsLayout() {
           >
             {settingsGroups.map((group) => (
               <optgroup key={group} label={group}>
-                {settingsNav
+                {visibleNav
                   .filter((item) => item.group === group)
                   .map((item) => (
                     <option key={item.key} value={item.to}>

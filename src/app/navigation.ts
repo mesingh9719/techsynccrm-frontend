@@ -116,11 +116,12 @@ export const settingsGroups: SettingsGroup[] = ['Account', 'Workspace', 'Sales s
 
 export const settingsNav: SettingsNavItem[] = [
   { key: 'profile', label: 'Profile', to: '/app/settings/profile', ready: true, group: 'Account', icon: UserRound, description: 'Name, photo, email and phone' },
-  { key: 'gmail', label: 'Gmail', to: '/app/settings/gmail', ready: true, group: 'Account', icon: Inbox, description: 'Work email, signatures and templates' },
+  { key: 'gmail', label: 'Email settings', to: '/app/settings/gmail', ready: true, group: 'Account', icon: Inbox, description: 'Connect and manage your work Gmail' },
   { key: 'security', label: 'Security', to: '/app/settings/security', ready: true, group: 'Account', icon: ShieldCheck, description: 'Password, two-factor and sessions' },
   { key: 'notifications', label: 'Notifications', to: '/app/settings/notifications', ready: true, group: 'Account', icon: Bell, description: 'What you hear about, and where' },
   { key: 'availability', label: 'Availability', to: '/app/settings/availability', ready: true, group: 'Account', icon: CalendarOff, description: 'Out-of-office for new enquiries' },
   { key: 'workspace', label: 'General', to: '/app/settings/workspace', ready: true, group: 'Workspace', icon: Building2, description: 'Company identity, region and business details' },
+  { key: 'team-email', label: 'Team & Email', to: '/app/settings/team-email', ready: true, group: 'Workspace', icon: Inbox, permission: 'email.connections.manage', description: 'Team Gmail connections and email preferences' },
   { key: 'team', label: 'Team & roles', to: '/app/settings/team', ready: true, group: 'Workspace', icon: UsersRound, description: 'Invite people, roles and sales teams' },
   { key: 'plan', label: 'Plan & usage', to: '/app/settings/plan', ready: true, group: 'Workspace', icon: Gauge, description: 'Your plan, limits and seats' },
   { key: 'billing', label: 'Billing', to: '/app/settings/billing', ready: false, module: 'M16', group: 'Workspace', icon: CreditCard, description: 'Invoices and payment method' },
