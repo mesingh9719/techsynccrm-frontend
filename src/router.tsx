@@ -37,6 +37,7 @@ const marketingRoutes: RouteObject = {
     { path: 'gmail/callback', lazy: page(() => import('./features/email/OAuthReturnPage')) },
     { path: 'privacy', lazy: page(() => import('./pages/Privacy')) },
     { path: 'terms', lazy: page(() => import('./pages/Terms')) },
+    { path: 'auth/google/complete', lazy: page(() => import('./pages/GoogleAuthComplete')) },
     { path: 'login', lazy: page(() => import('./pages/Login')) },
     { path: 'signup', lazy: page(() => import('./pages/Signup')) },
     { path: 'reset-password', lazy: page(() => import('./pages/ResetPassword')) },

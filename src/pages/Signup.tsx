@@ -4,6 +4,7 @@ import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check } from 'lucide-react'
 import { pricing } from '../services/content'
+import { startGoogleSignIn } from '../services/googleAuth'
 import { signup } from '../services/auth'
 import { passwordStrength, signupSchema, type SignupValues } from '../lib/schemas'
 import { applyServerErrors } from '../lib/forms'
@@ -46,6 +47,7 @@ function SignupForm() {
   const [params] = useSearchParams()
   const planParam = params.get('plan')
   const initialPlan: SignupPlan = selectablePlans.some((p) => p.id === planParam) ? (planParam as SignupPlan) : 'growth'
+  const [googleBusy, setGoogleBusy] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
@@ -61,6 +63,7 @@ function SignupForm() {
   })
 
   const plan = useWatch({ control, name: 'plan' })
+  const terms = useWatch({ control, name: 'terms' })
   const password = useWatch({ control, name: 'password' })
 
   // On success the session is set and <GuestOnly> moves the user on to /verify-email.
@@ -89,6 +92,8 @@ function SignupForm() {
       <div className="mt-8">
         <SocialAuthButtons
           label="Sign up"
+          googleBusy={googleBusy}
+          onGoogle={async () => { if (!terms) { setError('terms', { message: 'Accept the Terms and Privacy Policy to sign up with Google.' }); setServerError('Choose your plan and accept the Terms and Privacy Policy below, then continue with Google.'); return } setServerError(null); setGoogleBusy(true); try { await startGoogleSignIn({ intent: 'signup', plan, acceptTerms: true, remember: true }) } catch (err) { setServerError(err instanceof Error ? err.message : 'Couldn’t start Google sign-up.'); setGoogleBusy(false) } }}
           onSelect={(p) => notify({ title: `${p} sign-up isn’t available yet`, description: 'Please sign up with your email for now.' })}
         />
       </div>

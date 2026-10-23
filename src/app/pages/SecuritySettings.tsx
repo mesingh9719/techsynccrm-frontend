@@ -16,7 +16,7 @@ import {
   revokeSession,
   type Reauth,
 } from '../../services/account'
-import { fetchMe } from '../../services/auth'
+import { forgotPassword, fetchMe } from '../../services/auth'
 import { ApiError } from '../../services/http'
 import { changePasswordSchema, type ChangePasswordValues } from '../../lib/schemas'
 import { applyServerErrors } from '../../lib/forms'
@@ -44,6 +44,12 @@ function timeAgo(iso: string) {
 }
 
 const firstError = (err: unknown, fallback: string) => (err instanceof ApiError ? (Object.values(err.fields)[0] ?? err.message) : fallback)
+
+function SetPasswordPrompt() {
+  const { user } = useAuth()
+  const [busy, setBusy] = useState(false), [sent, setSent] = useState(false), [error, setError] = useState('')
+  return <div className="max-w-md space-y-3"><p className="text-sm leading-6 text-muted">You signed up with Google and have no TechSync password yet. Set one through your verified email before using password-protected security, email-change or account-deletion actions.</p>{sent ? <p role="status" className="text-sm text-brand-700">Check your email for the password setup link. It signs out existing sessions after you set a password.</p> : <Button variant="secondary" loading={busy} onClick={async () => { if (!user) return; setBusy(true); setError(''); try { await forgotPassword(user.email); setSent(true) } catch (err) { setError(err instanceof Error ? err.message : 'Couldn’t send the link.') } finally { setBusy(false) } }}>Email me a password setup link</Button>}{error && <FormAlert>{error}</FormAlert>}</div>
+}
 
 // ---------- Password ----------
 
@@ -423,12 +429,13 @@ function DeleteAccountSection() {
 }
 
 export default function SecuritySettings() {
+  const { user } = useAuth()
   useSeo({ title: 'Security settings', noindex: true })
   return (
     <div className="space-y-6">
       <PageHeader title="Security" description="Protect your account and manage active sessions." />
       <SettingsSection title="Password">
-        <PasswordForm />
+        {user?.hasPassword === false ? <SetPasswordPrompt /> : <PasswordForm />}
       </SettingsSection>
       <SettingsSection title="Two-factor authentication" description="A second step at sign-in, using an authenticator app on your phone.">
         <TwoFactorSection />

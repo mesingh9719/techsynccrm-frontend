@@ -243,6 +243,7 @@ export interface Organization {
 
 /** The signed-in user as returned by the API. */
 export interface AuthUser {
+  hasPassword?: boolean
   id: string
   fullName: string
   email: string

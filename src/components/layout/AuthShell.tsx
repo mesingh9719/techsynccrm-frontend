@@ -54,12 +54,14 @@ export function AuthShell({ children, quoteIndex = 0 }: { children: ReactNode; q
   )
 }
 
-export function SocialAuthButtons({ onSelect, label }: { onSelect: (provider: string) => void; label: 'Continue' | 'Sign up' }) {
+export function SocialAuthButtons({ onSelect, onGoogle, googleBusy = false, label }: { onSelect: (provider: string) => void; onGoogle?: () => void; googleBusy?: boolean; label: 'Continue' | 'Sign up' }) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <button
         type="button"
-        onClick={() => onSelect('Google')}
+        onClick={onGoogle ?? (() => onSelect('Google'))}
+        disabled={googleBusy}
+        aria-busy={googleBusy || undefined}
         className="inline-flex h-11 items-center justify-center gap-3 rounded-lg bg-white text-sm font-medium text-zinc-800 shadow-card ring-1 ring-zinc-200 transition-colors hover:bg-zinc-50"
       >
         <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
@@ -69,7 +71,7 @@ export function SocialAuthButtons({ onSelect, label }: { onSelect: (provider: st
           <path fill="var(--color-google-red)" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A10.9 10.9 0 0 0 12 1 11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" />
         </svg>
         <span>
-          <span className="sr-only">{label} with </span>Google
+          <span className="sr-only">{label} with </span>{googleBusy ? 'Connecting…' : 'Google'}
         </span>
       </button>
       <button
