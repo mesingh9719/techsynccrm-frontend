@@ -1,7 +1,7 @@
 [
   { "id": "whatsapp", "name": "WhatsApp Business", "category": "Communication", "description": "Shared team inbox, templates and broadcasts on the official API.", "status": "Available", "popular": true, "color": "#1f9d55" },
-  { "id": "gmail", "name": "Gmail", "category": "Communication", "description": "Two-way email sync with open tracking and templates.", "status": "Available", "popular": true, "color": "#d0463b" },
-  { "id": "outlook", "name": "Outlook", "category": "Communication", "description": "Sync email, calendar and contacts from Microsoft 365.", "status": "Available", "color": "#1f6fd1" },
+  { "id": "gmail", "name": "Gmail", "category": "Communication", "description": "Personal Gmail sending, matching replies and templates on Growth+. Pilot setup required.", "status": "Beta", "popular": true, "color": "#d0463b" },
+  { "id": "outlook", "name": "Outlook", "category": "Communication", "description": "Planned Microsoft 365 email support.", "status": "Coming soon", "color": "#1f6fd1" },
   { "id": "exotel", "name": "Exotel", "category": "Communication", "description": "Click-to-call, call recording and IVR lead capture.", "status": "Available", "color": "#2f3b8f" },
   { "id": "knowlarity", "name": "Knowlarity", "category": "Communication", "description": "Cloud telephony with automatic call logging.", "status": "Available", "color": "#5b3fb6" },
   { "id": "slack", "name": "Slack", "category": "Communication", "description": "Deal-won alerts and lead notifications in your channels.", "status": "Beta", "color": "#5b2a5e" },

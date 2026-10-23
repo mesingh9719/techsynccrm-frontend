@@ -21,6 +21,15 @@
         ]
       },
       {
+        "id": "gmail-data",
+        "title": "Connected Gmail data",
+        "body": [
+          { "type": "p", "text": "Connecting Gmail authorises Google mailbox read and send access. TechSync uses address searches and opaque change identifiers to discover matching CRM conversations; it does not import your entire inbox. Matched message content is shared with people who can access the CRM record, including viewers. Use a work mailbox and exclude private addresses and domains before connecting. Unmatched or ambiguous messages are ignored. Incoming attachment names are shown; their files stay in Gmail." },
+          { "type": "p", "text": "Refresh credentials and imported message content are encrypted. Message content is retained for up to 365 days, or a shorter operator-configured period. Disconnecting stops future access; imported history is deleted separately in Gmail settings. Administrators may disconnect employee mailboxes and request deletion of their imported history. Minimal identifiers remain to prevent duplicate imports. Team members leaving the workspace lose mailbox access; permitted record readers retain existing history until expiry or deletion." },
+          { "type": "p", "text": "TechSync's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including its Limited Use requirements. Gmail data is used to provide the email features you request, not for advertising or general AI model training. The Google policy is available at https://developers.google.com/terms/api-services-user-data-policy." }
+        ]
+      },
+      {
         "id": "data-storage",
         "title": "Data storage and security",
         "body": [

@@ -91,3 +91,7 @@ The shared HTTP client handles access tokens, refresh, API envelopes and errors;
 Further automated tests, type checks, lint, builds and browser checks were stopped at the user's request. The final edits have not been verified. Use the [manual checklist](../docs/08-frontend-redesign.md) to review the workflows.
 
 No backend, database, dependency or deployment changes are included in this frontend redesign. `public/embed.js` is copied as a static asset by Vite. Production hosting must serve `index.html` for SPA routes while continuing to serve real static assets such as `/embed.js` directly.
+
+## Gmail
+
+Lead/contact Email opens a Gmail composer with inline connection guidance. Settings live at `/app/settings/gmail`; existing manual timeline logging is labelled “Log email”. Gmail is disabled until the backend is configured. See [backend setup](../backend/docs/gmail-integration/setup.md) and [verification evidence](../backend/docs/gmail-integration/implementation.md). Gmail browser QA uses local synthetic API fixtures through `test/gmail.browser.mjs`; no real messages are sent.

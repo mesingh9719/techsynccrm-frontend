@@ -90,7 +90,7 @@
         { "label": "Web forms & Excel import", "values": { "starter": true, "growth": true, "business": true, "enterprise": true } },
         { "label": "IndiaMART, JustDial & marketplace sync", "values": { "starter": false, "growth": true, "business": true, "enterprise": true } },
         { "label": "WhatsApp team inbox", "values": { "starter": false, "growth": true, "business": true, "enterprise": true } },
-        { "label": "Gmail & Outlook sync", "values": { "starter": false, "growth": true, "business": true, "enterprise": true } },
+        { "label": "Gmail send & reply history (pilot)", "values": { "starter": false, "growth": true, "business": true, "enterprise": true } },
         { "label": "Click-to-call & call recording", "values": { "starter": false, "growth": "Add-on", "business": true, "enterprise": true } }
       ]
     },
