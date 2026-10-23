@@ -1,4 +1,5 @@
 import { api, setSession, type SessionPayload } from './http'
+import { initAuth } from './auth'
 
 export interface GoogleStart { intent: 'signin' | 'signup'; plan?: 'starter' | 'growth' | 'business'; acceptTerms?: boolean; remember?: boolean; returnTo?: string }
 export type GoogleResult = { twoFactorRequired: true; challengeToken: string; returnTo: string | null } | (SessionPayload & { twoFactorRequired?: false; returnTo: string | null })
@@ -9,6 +10,8 @@ export async function startGoogleSignIn(input: GoogleStart) {
   window.location.assign(target.toString())
 }
 export async function completeGoogleSignIn() {
+  // Wait for startup cookie restoration, so a late anonymous refresh cannot clear this session.
+  await initAuth()
   const data = await api<GoogleResult>('/auth/google/complete', { method: 'POST', retryOnExpiry: false })
   if (!data.twoFactorRequired) setSession(data)
   return data
