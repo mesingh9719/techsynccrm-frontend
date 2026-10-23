@@ -1,3 +1,4 @@
+import { EmailComposer } from '../email/EmailComposer'
 import { RecordWorkspace } from '../crm/components/RecordWorkspace'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -38,6 +39,8 @@ export default function ContactDetailPage() {
   const defs = useCustomFieldDefs('contact')
   const canUpdateAny = useCan('contacts.update')
   const canDeleteAny = useCan('contacts.delete')
+  const canSendEmail = useCan('email.send')
+  const [emailOpen, setEmailOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const contact = query.data
@@ -151,7 +154,7 @@ export default function ContactDetailPage() {
             </Button>
           )}
           {primaryEmail && (
-            <Button href={`mailto:${primaryEmail}`} variant="secondary" size="sm">
+            <Button {...(canSendEmail ? { onClick: () => setEmailOpen(true), disabled: Boolean(contact.deletedAt || contact.optOutAt) } : { href: `mailto:${primaryEmail}` })} variant="secondary" size="sm">
               <Mail className="size-4" aria-hidden="true" />
               Email
             </Button>
@@ -290,6 +293,7 @@ export default function ContactDetailPage() {
       </div>
 
       {editing && <ContactFormDrawer open contact={contact} onClose={() => setEditing(false)} />}
+      {emailOpen && <EmailComposer key={contact.id} record={{ entityType: 'contact', entityId: contact.id, name: contact.displayName, emails: contact.emails, firstName: contact.firstName, lastName: contact.lastName }} onClose={() => setEmailOpen(false)} />}
       <ConfirmDialog
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}

@@ -9,6 +9,11 @@ import type { MemberRole } from '../types'
  * matches any scope (all / team / own).
  */
 export type Permission =
+  | 'email.connect'
+  | 'email.send'
+  | 'email.connections.manage'
+  | 'email.templates.write.own'
+  | 'email.templates.manage'
   | 'reports.read'
   | 'settings.forms.manage'
   | 'settings.assignment.manage'

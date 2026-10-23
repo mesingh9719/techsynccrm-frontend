@@ -463,3 +463,19 @@ test('unavailable task data never asserts that follow-ups are missing, and delet
   assert(!insight.recommendations.some((text) => text.includes('No follow-up scheduled')))
   assert.equal(computeInsights({ ...leadFixture, deletedAt: '2026-10-22T10:30:00Z' }, qualification, [], insightNow).next, null)
 })
+
+const emailContent = await import(moduleUrl('src/features/email/content.ts'))
+test('email previews escape values, preserve exact exclusions and block missing merge fields', () => {
+  assert.equal(emailContent.previewMerge('<p>{{name}}</p>', { name: '<Asha>' }, true).value, '<p>&lt;Asha&gt;</p>')
+  assert.deepEqual(emailContent.previewMerge('{{company}} {{private.token}}', {}).missing, ['company', 'private.token'])
+  assert.deepEqual(emailContent.splitExclusions('A@EXAMPLE.TEST, a@example.test\nprivate.test'), ['a@example.test', 'private.test'])
+  assert.equal(emailContent.textEmailHtml('<script>bad()</script>'), '<p>&lt;script&gt;bad()&lt;/script&gt;</p>')
+})
+test('email retries retain an explicit idempotency key in the actual HTTP client', async (t) => {
+  const original = globalThis.fetch, keys = []
+  t.after(() => { globalThis.fetch = original; http.clearSession() })
+  globalThis.fetch = async (_url, options) => { keys.push(new Headers(options.headers).get('Idempotency-Key')); return respond({ queued: true }) }
+  const options = { method: 'POST', body: { subject: 'Fixture' }, idempotencyKey: 'one-stable-fixture-request' }
+  await http.api('/emails/send', options); await http.api('/emails/send', options)
+  assert.deepEqual(keys, ['one-stable-fixture-request', 'one-stable-fixture-request'])
+})

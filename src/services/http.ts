@@ -89,6 +89,8 @@ export interface RequestOptions {
   query?: Record<string, QueryValue>
   /** Optimistic concurrency: the `updatedAt` the client last saw. A mismatch returns 409 STALE_UPDATE. */
   ifMatch?: string
+  /** Stable key for a single email send composition, including network retries. */
+  idempotencyKey?: string
   /** Set false for endpoints that must not trigger a token refresh (login, refresh itself). */
   retryOnExpiry?: boolean
   /** Cancels the request; the promise then rejects with the browser's AbortError (not an ApiError). */
@@ -110,13 +112,14 @@ export function buildUrl(path: string, query?: Record<string, QueryValue>) {
 
 async function send(
   path: string,
-  { method = 'GET', body, query, ifMatch, signal, anonymous }: RequestOptions,
+  { method = 'GET', body, query, ifMatch, idempotencyKey, signal, anonymous }: RequestOptions,
 ): Promise<Response> {
   const isForm = body instanceof FormData
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
   if (accessToken && !anonymous) headers.Authorization = `Bearer ${accessToken}`
   if (ifMatch) headers['If-Match'] = ifMatch
+  if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey
   try {
     return await fetch(buildUrl(path, query), {
       method,

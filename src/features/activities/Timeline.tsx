@@ -21,6 +21,7 @@ import { useOrgId } from '../crm/hooks'
 import type { Activity, ActivityType, CallOutcome, RecordType } from '../crm/types'
 import { TaskFormDialog } from '../tasks/TaskFormDialog'
 import { deleteActivity, getTimeline, logActivity, outcomeLabels, pinActivity, updateActivity } from './api'
+import { EmailActivity } from '../email/EmailActivity'
 import { Markdown } from './Markdown'
 
 type Composer = 'note' | 'call' | 'meeting' | 'site_visit' | 'whatsapp' | 'email' | 'sms' | 'task'
@@ -226,7 +227,7 @@ function ComposerForm({ kind, entityType, entityId, onDone, initialBody = '' }: 
   )
 }
 
-function ActivityEntry({ activity, canPin, onChanged }: { activity: Activity; canPin: boolean; onChanged: () => void }) {
+function ActivityEntry({ activity, canPin, onChanged, entityType, entityId }: { activity: Activity; canPin: boolean; onChanged: () => void; entityType: string; entityId: string }) {
   const { user } = useAuth()
   const canLog = useCan('tasks.create')
   const canManage = useCan('settings.workspace.manage')
@@ -237,7 +238,7 @@ function ActivityEntry({ activity, canPin, onChanged }: { activity: Activity; ca
   const system = activity.type === 'system'
   const isAuthor = Boolean(user?.id) && activity.actorId === user?.id
   const isMine = canLog && isAuthor && activity.canEditNow
-  const canDelete = canLog && (isAuthor || canManage)
+  const canDelete = activity.meta?.provider !== 'gmail' && canLog && (isAuthor || canManage)
 
   async function run(fn: () => Promise<unknown>, title?: string) {
     try {
@@ -355,6 +356,7 @@ function ActivityEntry({ activity, canPin, onChanged }: { activity: Activity; ca
         ) : (
           activity.body && <Markdown text={activity.body} className="mt-2 space-y-1 text-sm text-ink" />
         )}
+        {activity.meta?.provider === 'gmail' && typeof activity.meta.threadId === 'string' && <EmailActivity threadId={activity.meta.threadId} entityType={entityType} entityId={entityId} />}
         {activity.editedAt && !editing && <p className="mt-1 text-xs text-muted">Edited</p>}
       </div>
     </li>
@@ -408,6 +410,7 @@ export function Timeline({ entityType, entityId, recordName, canPin = false, not
     queryFn: ({ pageParam }) => getTimeline({ entityType, entityId, types: types?.join(','), cursor: pageParam, limit: 30 }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
+    refetchInterval: entityType === 'lead' || entityType === 'contact' ? 60000 : false,
   })
   const pinned = timeline.data?.pages[0]?.pinned ?? []
   const items = useMemo(() => timeline.data?.pages.flatMap((p) => p.items) ?? [], [timeline.data])
@@ -432,7 +435,7 @@ export function Timeline({ entityType, entityId, recordName, canPin = false, not
     { key: 'meeting', label: 'Meeting', icon: Users },
     { key: 'site_visit', label: 'Site visit', icon: MapPin },
     { key: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
-    { key: 'email', label: 'Email', icon: Mail },
+    { key: 'email', label: 'Log email', icon: Mail },
     { key: 'sms', label: 'SMS', icon: MessageCircle },
     { key: 'task', label: 'Task', icon: CalendarClock },
   ]
@@ -500,7 +503,7 @@ export function Timeline({ entityType, entityId, recordName, canPin = false, not
             {pinned.length > 0 && (
               <ul className="mb-2 space-y-0">
                 {pinned.map((a) => (
-                  <ActivityEntry key={`p${a.id}`} activity={a} canPin={canPin} onChanged={refresh} />
+                  <ActivityEntry key={`p${a.id}`} activity={a} canPin={canPin} onChanged={refresh} entityType={entityType} entityId={entityId} />
                 ))}
               </ul>
             )}
@@ -509,7 +512,7 @@ export function Timeline({ entityType, entityId, recordName, canPin = false, not
                 <p className="mb-2 text-xs font-medium text-muted">{g.label}</p>
                 <ul className="relative before:absolute before:top-2 before:bottom-4 before:left-[17px] before:w-px before:bg-line">
                   {g.items.map((a) => (
-                    <ActivityEntry key={a.id} activity={a} canPin={canPin} onChanged={refresh} />
+                    <ActivityEntry key={a.id} activity={a} canPin={canPin} onChanged={refresh} entityType={entityType} entityId={entityId} />
                   ))}
                 </ul>
               </div>

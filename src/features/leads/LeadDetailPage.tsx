@@ -4,6 +4,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Activity, CalendarPlus, FileText, ListChecks, MessageCircle, NotebookPen, Phone, UserRound } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { qk } from '../../lib/queryKeys'
+import { EmailComposer } from '../email/EmailComposer'
+import type { EmailDraft } from '../email/api'
+import { useCan } from '../../lib/useOrg'
 import { useSeo } from '../../lib/useSeo'
 import { useToast } from '../../components/ui/Toast'
 import { ConfirmDialog } from '../../components/app/Dialog'
@@ -66,6 +69,8 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
   const reveal = useFieldFocus<Tab>(setTab)
   const [dialog, setDialog] = useState<DialogState>(null)
   const [draft, setDraft] = useState<TimelineDraft | null>(null)
+  const [emailDraft, setEmailDraft] = useState<EmailDraft | null>(null)
+  const canSendEmail = useCan('email.send')
   const [now] = useState(() => Date.now())
 
   const comm = useCommunication({
@@ -73,6 +78,7 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
     ownerName: lead.owner?.fullName ?? user?.fullName,
     workspaceName: user?.organization?.name,
     canLog: can.createTasks,
+    onEmail: canSendEmail ? setEmailDraft : undefined,
   })
   const openTasks = detail.tasks.data
   const tasksLoaded = detail.tasks.isSuccess
@@ -280,6 +286,7 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
         </nav>
       )}
 
+      {emailDraft && <EmailComposer record={{ entityType: 'lead', entityId: lead.id, name: lead.displayName, emails: lead.emails, firstName: lead.firstName, lastName: lead.lastName, company: lead.companyName }} draft={emailDraft} onClose={() => setEmailDraft(null)} />}
       {dialog === 'edit' && <LeadFormDrawer open lead={lead} onClose={() => setDialog(null)} />}
       {dialog === 'convert' && <ConvertDialog lead={lead} onClose={() => setDialog(null)} />}
       <ConfirmDialog open={dialog === 'qualify' || dialog === 'reopen'} onClose={() => setDialog(null)} title={dialog === 'qualify' ? 'Move to Qualified?' : 'Re-open this lead?'} description="This changes the lead stage and records it in the timeline." confirmLabel="Confirm stage change" onConfirm={async () => {

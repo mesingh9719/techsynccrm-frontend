@@ -23,7 +23,7 @@ export const channelLabel: Record<Channel, string> = { call: 'call', whatsapp: '
  * Communication hub state for one lead: open the right app (optionally pre-filled from a template),
  * then ask how it went so the conversation is logged in one tap.
  */
-export function useCommunication({ lead, ownerName, workspaceName, canLog = false }: { lead: LeadRecord; ownerName?: string | null; workspaceName?: string | null; canLog?: boolean }) {
+export function useCommunication({ lead, ownerName, workspaceName, canLog = false, onEmail }: { lead: LeadRecord; ownerName?: string | null; workspaceName?: string | null; canLog?: boolean; onEmail?: (draft: { subject?: string; body?: string }) => void }) {
   const orgId = useOrgId()
   const client = useQueryClient()
   const notify = useToast()
@@ -31,7 +31,7 @@ export function useCommunication({ lead, ownerName, workspaceName, canLog = fals
   const [saving, setSaving] = useState(false)
   const phone = lead.phones.find((p) => p.primary) ?? lead.phones[0]
   const dial = phone?.e164 ?? phone?.raw ?? null
-  const email = lead.primaryEmail
+  const email = lead.primaryEmail ?? lead.emails[0]?.value
 
   const fill = (text: string) =>
     fillTemplate(text, { firstName: lead.firstName ?? lead.displayName.split(' ')[0], ownerName, workspaceName, requirement: lead.requirement })
@@ -42,6 +42,7 @@ export function useCommunication({ lead, ownerName, workspaceName, canLog = fals
     if (!available[channel] || lead.deletedAt || saving) return
     const body = template ? fill(template.body) : undefined
     const subject = template?.subject ? fill(template.subject) : undefined
+    if (channel === 'email' && onEmail) { onEmail({ subject, body }); return }
     const q = (v: string) => encodeURIComponent(v)
     const url =
       channel === 'call'
