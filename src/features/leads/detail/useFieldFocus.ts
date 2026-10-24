@@ -14,6 +14,10 @@ export function useFieldFocus<Tab extends string>(showTab: (tab: Tab) => void) {
       element.classList.remove('is-flash')
       void element.offsetWidth
       element.classList.add('is-flash')
+      // The emphasis is temporary. Reduced motion has no animationend, so a timer clears it too.
+      const clear = () => element.classList.remove('is-flash')
+      element.addEventListener('animationend', clear, { once: true })
+      window.setTimeout(clear, 1800)
       const control = activate ? element.querySelector<HTMLElement>('button:not(:disabled), select:not(:disabled), input:not(:disabled), textarea:not(:disabled)') : null
       focusElement(control ?? element)
       if (control instanceof HTMLButtonElement) control.click()

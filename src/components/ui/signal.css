@@ -1,0 +1,11 @@
+.status-chip, .notice-panel { --signal: #526078; --signal-fill: #f1f5f9; --signal-line: #dce3ed; }
+:is(.status-chip, .notice-panel)[data-tone='success'] { --signal: #047857; --signal-fill: #ecfdf5; --signal-line: #b8ead8; }
+:is(.status-chip, .notice-panel)[data-tone='warning'] { --signal: #a16207; --signal-fill: #fffbeb; --signal-line: #f4dda0; }
+:is(.status-chip, .notice-panel)[data-tone='danger'] { --signal: #be123c; --signal-fill: #fff1f2; --signal-line: #fecdd3; }
+:is(.status-chip, .notice-panel)[data-tone='info'] { --signal: #0369a1; --signal-fill: #f0f9ff; --signal-line: #bae6fd; }
+:is(.status-chip, .notice-panel)[data-tone='violet'] { --signal: #6d28d9; --signal-fill: #f5f3ff; --signal-line: #ddd6fe; }
+.status-chip { display: inline-flex; max-width: 100%; align-items: center; gap: .375rem; border: 1px solid var(--signal-line); border-radius: 999px; padding: .3rem .65rem; background: var(--signal-fill); color: var(--signal); font-size: 11px; line-height: 1.3; font-weight: 600; white-space: nowrap; }
+.status-chip-dot { width: .375rem; height: .375rem; flex-shrink: 0; border-radius: 50%; background: currentColor; }
+.notice-panel { display: flex; align-items: flex-start; gap: .7rem; border: 1px solid var(--signal-line); border-radius: .85rem; padding: .9rem 1rem; background: var(--signal-fill); color: var(--signal); }
+.notice-description { color: color-mix(in srgb, var(--signal) 80%, var(--color-ink)); }
+.notice-description button { text-underline-offset: 3px; }

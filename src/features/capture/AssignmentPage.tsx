@@ -26,7 +26,7 @@ import { PreviewNotice } from '../../components/app/PreviewNotice'
 import { useToast } from '../../components/ui/Toast'
 import { useCustomFieldDefs } from '../crm/hooks'
 import { useLeadSources } from '../leads/api'
-import { captureKeys, captureLive, makeCaptureApi } from './api'
+import { assignmentLive, captureKeys, errorText, makeCaptureApi } from './api'
 import type { AssignmentRule, AssignmentTest, RuleCondition, WorkingHours } from './types'
 import type { MemberOption } from '../../types'
 
@@ -87,7 +87,7 @@ function RuleEditor({
       await onSave({ ...draft, name: draft.name.trim() })
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Couldn’t save this rule.')
+      setError(errorText(err, 'Couldn’t save this rule.'))
     } finally {
       setBusy(false)
     }
@@ -189,10 +189,10 @@ function RuleEditor({
                   >
                     <option value="">Choose source</option>
                     {sources.data
-                      ?.filter((s) => !s.archived)
+                      ?.filter((s) => !s.archived || s.id === c.value)
                       .map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.name}
+                          {s.archived ? `${s.name} (turned off)` : s.name}
                         </option>
                       ))}
                   </Select>
@@ -464,9 +464,9 @@ function HoursEditor({
           try {
             await onSave(draft)
             guard.markSaved(draft)
-            notify({ title: captureLive ? 'Working hours saved' : 'Working-hours preview saved' })
+            notify({ title: assignmentLive ? 'Working hours saved' : 'Working-hours preview saved' })
           } catch (err) {
-            setError(err instanceof Error ? err.message : 'Couldn’t save.')
+            setError(errorText(err, 'Couldn’t save.'))
           } finally {
             setBusy(false)
           }
@@ -509,7 +509,7 @@ export default function AssignmentPage() {
       await fn()
       await refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Couldn’t update rules.')
+      setError(errorText(err, 'Couldn’t update rules.'))
     } finally {
       setBusy(false)
     }
@@ -555,7 +555,7 @@ export default function AssignmentPage() {
           </Button>
         }
       />
-      {!captureLive && (
+      {!assignmentLive && (
         <PreviewNotice>
           Rules and working hours are saved in this browser for planning. They do not assign live leads or send
           reminders until live routing is connected.
@@ -741,7 +741,7 @@ export default function AssignmentPage() {
               try {
                 setResult(await service.test(leadSample))
               } catch (err) {
-                setError(err instanceof Error ? err.message : 'Test failed.')
+                setError(errorText(err, 'Test failed.'))
               } finally {
                 setTesting(false)
               }
@@ -771,7 +771,7 @@ export default function AssignmentPage() {
           onSave={async (rule) => {
             await service.saveRule(rule, !rules.data?.some((r) => r.id === rule.id))
             await refresh()
-            notify({ title: captureLive ? 'Assignment rule saved' : 'Rule preview saved' })
+            notify({ title: assignmentLive ? 'Assignment rule saved' : 'Rule preview saved' })
           }}
         />
       )}
@@ -790,7 +790,7 @@ export default function AssignmentPage() {
             await refresh()
             setRemoving(null)
           } catch (err) {
-            setError(err instanceof Error ? err.message : 'Couldn’t delete rule.')
+            setError(errorText(err, 'Couldn’t delete rule.'))
           }
         }}
       />

@@ -811,10 +811,12 @@ html[data-crm-theme] .crm-shell {
 .stage-step:not(:disabled):hover .stage-bar { background: var(--color-brand-200); }
 @media (max-width: 479px) { .stage-hint { display: none; } .stage-step { font-size: 12px; } }
 
-/* Key facts under the lead name: score · priority · owner · last activity. */
-.lead-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0; font-size: 13px; }
-.lead-facts > li { display: inline-flex; align-items: center; gap: 0.375rem; }
-.lead-facts > li + li::before { content: ''; width: 1px; height: 0.875rem; margin: 0 0.75rem; background: var(--color-line); }
+/* Key facts under the lead name: score · priority · owner · activity · age.
+   Each item draws its divider on its left; the list is shifted left and its left gutter clipped,
+   so the divider of whichever item starts a wrapped line is hidden instead of dangling. */
+.lead-facts { display: flex; flex-wrap: wrap; align-items: center; row-gap: 0.375rem; margin-left: -1.5rem; clip-path: inset(-0.5rem -0.5rem -0.5rem 1.5rem); font-size: 13px; }
+.lead-facts > li { position: relative; display: inline-flex; align-items: center; gap: 0.375rem; padding-left: 1.5rem; white-space: nowrap; }
+.lead-facts > li::before { content: ''; position: absolute; left: 0.75rem; top: 50%; width: 1px; height: 0.875rem; background: var(--color-line); transform: translateY(-50%); }
 
 /* Profile fields: label above value, so values get the column's full width. */
 .lead-fields { display: grid; gap: 0.125rem; }
@@ -887,11 +889,15 @@ html[data-crm-theme] .crm-shell {
 .outcome-chip.is-positive { background: var(--color-emerald-50); color: var(--color-emerald-700); box-shadow: inset 0 0 0 1px var(--color-emerald-100); }
 .outcome-chip.is-negative { color: var(--color-red-700); }
 .next-action {
-  padding: 0.875rem;
+  position: relative;
+  overflow: hidden;
+  padding: 0.875rem 0.875rem 0.875rem 1.125rem;
   border-radius: var(--radius-card);
-  background: linear-gradient(135deg, var(--color-brand-50), var(--color-surface));
+  background: linear-gradient(135deg, var(--color-brand-50), var(--color-surface) 75%);
   box-shadow: inset 0 0 0 1px var(--color-brand-100);
 }
+/* Accent rail marks the one recommendation on the page. */
+.next-action::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--color-action); }
 .alert-chip {
   display: inline-flex;
   align-items: center;
@@ -1246,11 +1252,12 @@ button:hover > .lead-card { box-shadow: inset 0 0 0 1px var(--color-brand-300), 
 
 /* Keep the reference emphasis without motion when the user requests it. */
 @media (prefers-reduced-motion: reduce) {
-  .is-flash { animation: none; outline: 2px solid var(--color-brand-400); outline-offset: 3px; }
+  .is-flash { animation: none; background: var(--color-brand-50); box-shadow: 0 0 0 6px var(--color-brand-50); }
   .log-prompt { animation: none; }
   .next-action, [aria-label="Lead health"] > div { transition: none; }
 }
-.lead-row:focus-within { outline: 2px solid var(--color-brand-400); outline-offset: 3px; }
+/* Keyboard focus on the row's display controls. Open editors (input/textarea) show their own ring. */
+.lead-row:has(:is(button, select, a):focus-visible) { outline: 2px solid var(--color-brand-400); outline-offset: 3px; }
 
 /* Restricted email markup keeps basic formatting after Tailwind's element reset. */
 .email-body { overflow-wrap: anywhere; }

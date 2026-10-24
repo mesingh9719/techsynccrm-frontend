@@ -14,6 +14,7 @@ import { relativeTime } from '../crm/format'
 import { captureKeys, captureLive, makeCaptureApi } from './api'
 import { EmbedPanel } from './EmbedPanel'
 import type { WebForm } from './types'
+import { isQuestion } from './formConfig'
 
 type Status = 'live' | 'draft' | 'preview'
 const STATUS: Record<Status, { label: string; pill: string; dot: string }> = {
@@ -37,7 +38,7 @@ function FormCard({
   onDelete: () => void
 }) {
   const status = statusOf(form)
-  const fields = form.fields.filter((field) => !field.hidden).length
+  const fields = form.fields.filter(isQuestion).length
   const editUrl = `/app/settings/forms/${form.id}`
   const stats = [
     { label: 'Views', value: form.views.toLocaleString('en-IN') },

@@ -27,11 +27,26 @@ export function formatMinor(minor: number | null | undefined, currency = 'INR') 
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(minor / 100)
 }
 
-/** Rupees as typed ("1,85,000" / "185000.50") → paise, or null when empty/invalid. */
+const SHORTHAND: Record<string, number> = { k: 1e3, l: 1e5, lac: 1e5, lakh: 1e5, lakhs: 1e5, cr: 1e7, crore: 1e7, crores: 1e7 }
+
+/** Rupees as typed ("1,85,000", "185000.50", "1.5 L", "2 Cr", "50k") → paise, or null when empty/invalid. */
 export function rupeesToMinor(text: string): number | null {
-  const n = Number(text.replace(/[,₹\s]/g, ''))
-  if (!text.trim() || !Number.isFinite(n) || n < 0) return null
-  return Math.round(n * 100)
+  const m = /^([\d.]+)\s*([a-z]*)$/i.exec(text.replace(/[,₹\s]|rs\.?/gi, ''))
+  if (!m || !/^\d*\.?\d+$|^\d+\.$/.test(m[1])) return null
+  const unit = m[2].toLowerCase()
+  if (unit && !(unit in SHORTHAND)) return null
+  const minor = Math.round(Number(m[1]) * (unit ? SHORTHAND[unit] : 1) * 100)
+  return Number.isSafeInteger(minor) ? minor : null
+}
+
+/** Paise → "1.55 Cr" / "15.45 L" / "45K" for amounts where the full figure is hard to read; else null. */
+export function compactInr(minor: number | null | undefined) {
+  if (minor === null || minor === undefined) return null
+  const rupees = minor / 100
+  const short = (n: number, unit: string) => `${Number(n.toFixed(2)).toLocaleString('en-IN')} ${unit}`
+  if (rupees >= 1e7) return short(rupees / 1e7, 'Cr')
+  if (rupees >= 1e5) return short(rupees / 1e5, 'L')
+  return null
 }
 
 export const minorToRupeesText = (minor: number | null | undefined) => (minor === null || minor === undefined ? '' : String(minor / 100))

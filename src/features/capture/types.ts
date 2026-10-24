@@ -1,19 +1,64 @@
-export type FormFieldType = 'text' | 'email' | 'tel' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox'
+export type FormFieldType =
+  | 'text'
+  | 'textarea'
+  | 'email'
+  | 'tel'
+  | 'number'
+  | 'currency'
+  | 'date'
+  | 'select'
+  | 'radio'
+  | 'checkboxes'
+  | 'checkbox'
+  | 'hidden'
+  | 'heading'
+  | 'paragraph'
 export interface FormField {
+  /** Where the answer is saved: a lead field, `cf.<key>` custom field, `q_<id>` enquiry note, or `block_<id>` (not submitted). */
   key: string
   label: string
   type: FormFieldType
   required: boolean
   placeholder: string
+  helpText?: string
+  width?: 'full' | 'half'
+  /** Legacy flag from before the redesign; normalised to `type: 'hidden'`. */
   hidden?: boolean
   defaultValue?: string
+  /** Hidden fields: fill from this page address parameter (e.g. utm_campaign) when present. */
+  urlParam?: string
   options?: { label: string; value: string }[]
+}
+export type LogoPosition = 'left' | 'center' | 'right'
+export type LogoPlacement = 'card-top' | 'above-title' | 'header-band'
+export interface FormLogo {
+  mode: 'none' | 'workspace' | 'custom'
+  fileId: string | null
+  url: string
+  position: LogoPosition
+  placement: LogoPlacement
+  size: 'sm' | 'md' | 'lg'
+}
+export interface FormTheme {
+  pageBackground: string
+  cardBackground: string
+  textColor: string
+  corners: 'sharp' | 'soft' | 'round'
+  cardStyle: 'shadow' | 'border' | 'flat'
+  buttonWidth: 'full' | 'auto'
+  font: 'system' | 'serif' | 'rounded'
+  titleAlign: 'left' | 'center'
 }
 export interface FormSettings {
   title: string
   description: string
+  headerBand: boolean
+  footerText: string
+  showPoweredBy: boolean
   submitLabel: string
+  consentEnabled: boolean
   consentText: string
+  successTitle: string
   thankYouMessage: string
   redirectUrl: string
   autoReply: boolean
@@ -23,6 +68,8 @@ export interface FormSettings {
   brandColor: string
   language: string
   sourceId: string | null
+  logo: FormLogo
+  theme: FormTheme
 }
 export interface WebForm {
   id: string
@@ -35,6 +82,8 @@ export interface WebForm {
   submissions: number
   createdAt: string
   updatedAt: string
+  /** Public payload only: the workspace logo, used when `settings.logo.mode` is 'workspace'. */
+  workspaceLogoUrl?: string | null
 }
 export interface Submission {
   id: string
@@ -87,8 +136,8 @@ export interface OutOfOffice {
 
 export const defaultFields: FormField[] = [
   { key: 'firstName', label: 'Your name', type: 'text', required: true, placeholder: 'Alex Morgan' },
-  { key: 'email', label: 'Email address', type: 'email', required: true, placeholder: 'alex@company.com' },
-  { key: 'phone', label: 'Phone number', type: 'tel', required: false, placeholder: '+91 98765 43210' },
+  { key: 'email', label: 'Email address', type: 'email', required: true, placeholder: 'alex@company.com', width: 'half' },
+  { key: 'phone', label: 'Phone number', type: 'tel', required: false, placeholder: '+91 98765 43210', width: 'half' },
   {
     key: 'requirement',
     label: 'How can we help?',
@@ -100,8 +149,13 @@ export const defaultFields: FormField[] = [
 export const defaultSettings: FormSettings = {
   title: 'Let’s talk about your business',
   description: 'Leave your details and our team will be in touch.',
+  headerBand: false,
+  footerText: '',
+  showPoweredBy: true,
   submitLabel: 'Send enquiry',
+  consentEnabled: true,
   consentText: 'I agree to be contacted about my enquiry and understand how my information will be used.',
+  successTitle: 'You’re all set!',
   thankYouMessage: 'Thank you! We’ve received your enquiry and will be in touch soon.',
   redirectUrl: '',
   autoReply: false,
@@ -111,4 +165,15 @@ export const defaultSettings: FormSettings = {
   brandColor: '#3349df',
   language: 'en',
   sourceId: null,
+  logo: { mode: 'none', fileId: null, url: '', position: 'left', placement: 'card-top', size: 'md' },
+  theme: {
+    pageBackground: '#f4f5f7',
+    cardBackground: '#ffffff',
+    textColor: '#18181b',
+    corners: 'soft',
+    cardStyle: 'shadow',
+    buttonWidth: 'full',
+    font: 'system',
+    titleAlign: 'left',
+  },
 }

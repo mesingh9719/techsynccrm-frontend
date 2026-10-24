@@ -65,6 +65,7 @@ export function StageTracker({
                 aria-current={current ? 'step' : undefined}
                 title={reachable ? `Move to ${label}` : hints[stage]}
                 onClick={() => (stage === 'converted' ? onConvert() : setConfirming(stage as Exclude<LeadStatus, 'converted'>))}
+                data-stage={stage}
                 data-state={current ? 'current' : done ? 'done' : closed ? 'closed' : 'todo'}
                 className="stage-step compact-control"
               >

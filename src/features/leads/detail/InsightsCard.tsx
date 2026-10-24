@@ -1,4 +1,5 @@
-import { ArrowRight, CircleAlert, Lightbulb, Plus, Sparkles } from 'lucide-react'
+import { StatusChip } from '../../../components/ui/Signal'
+import { ArrowRight, CircleAlert, Lightbulb, Plus, Sparkles, Target } from 'lucide-react'
 import { cn } from '../../../lib/cn'
 import { Card } from './InlineFields'
 import type { FieldTarget, LeadInsights, NextActionKind } from './insights'
@@ -15,7 +16,12 @@ const actionLabel: Record<NextActionKind, string> = {
   reopen: 'Re-open',
 }
 
-const toneBar = { success: 'bg-emerald-500', warning: 'bg-amber-400', danger: 'bg-red-500', neutral: 'bg-zinc-400' }
+const toneBar = {
+  success: 'bg-linear-to-r from-emerald-400 to-emerald-500',
+  warning: 'bg-linear-to-r from-amber-300 to-amber-500',
+  danger: 'bg-linear-to-r from-red-400 to-red-500',
+  neutral: 'bg-zinc-400',
+}
 const toneText = { success: 'text-success', warning: 'text-warning', danger: 'text-danger', neutral: 'text-muted' }
 
 /** Right column, top: what to do next and why, lead health, gaps and recommendations. */
@@ -37,17 +43,20 @@ export function InsightsCard({
     <Card title="Insights" icon={Sparkles}>
       {next && (
         <div className="next-action">
-          <p className="text-xs font-semibold tracking-wide text-brand-700 uppercase">Next best action</p>
-          <p className="mt-1 font-semibold text-ink">{next.title}</p>
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-brand-700 uppercase">
+            <Target className="size-3.5" aria-hidden="true" />
+            Next best action
+          </p>
+          <p className="mt-1.5 text-[15px] leading-6 font-semibold text-ink">{next.title}</p>
           <p className="mt-0.5 text-xs leading-5 text-muted">{next.reason}</p>
           {canAct && (
             <button
               type="button"
               onClick={() => onAction(next.kind)}
-              className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-lg bg-action px-3 text-sm font-medium text-white shadow-card hover:bg-action-hover"
+              className="group mt-3 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-action px-3 text-sm font-medium text-white shadow-card transition-colors hover:bg-action-hover sm:w-auto"
             >
               {actionLabel[next.kind]}
-              <ArrowRight className="size-4" aria-hidden="true" />
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -66,7 +75,7 @@ export function InsightsCard({
         </p>
       )}
 
-      <div className="mt-4">
+      <div className="mt-4 border-t border-line pt-4">
         <div className="flex items-baseline justify-between text-sm">
           <span className="text-muted">Lead health</span>
           <span className={cn('font-semibold', toneText[health.tone])}>
@@ -84,9 +93,9 @@ export function InsightsCard({
           <div className={cn('h-full rounded-full transition-[width] duration-500', toneBar[health.tone])} style={{ width: `${health.score}%` }} />
         </div>
         {health.factors.length > 0 && (
-          <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+          <ul className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-muted">
             {health.factors.slice(0, 4).map((f) => (
-              <li key={f}>• {f}</li>
+              <li key={f}><StatusChip tone={f === 'Recently active' || f === 'Follow-up scheduled' ? 'success' : f.includes('overdue') ? 'danger' : f.includes('unavailable') ? 'info' : 'warning'}>{f}</StatusChip></li>
             ))}
           </ul>
         )}
@@ -102,7 +111,7 @@ export function InsightsCard({
                   type="button"
                   disabled={!canEdit(m.target)}
                   onClick={() => onMissing(m.target)}
-                  className="compact-control inline-flex items-center gap-1 rounded-full border border-dashed border-line px-2.5 py-1 text-xs text-ink enabled:hover:border-brand-300 enabled:hover:bg-brand-50 disabled:cursor-default disabled:text-muted"
+                  className="compact-control inline-flex items-center gap-1 rounded-full border border-dashed border-amber-200 bg-amber-50 px-2.5 py-1 text-xs text-amber-800 enabled:hover:border-amber-400 enabled:hover:bg-amber-100 disabled:cursor-default disabled:text-muted"
                 >
                   <Plus className="size-3 text-muted" aria-hidden="true" />
                   {m.label}

@@ -5,6 +5,7 @@ import { ErrorState, Skeleton } from '../../components/app/States'
 import { PreviewNotice } from '../../components/app/PreviewNotice'
 import { captureLive, getPublicForm, recordFormView, submitPublicForm } from './api'
 import { FormRenderer } from './FormRenderer'
+import { formPageStyle } from './formConfig'
 import { useSeo } from '../../lib/useSeo'
 
 export default function PublicFormPage() {
@@ -26,8 +27,11 @@ export default function PublicFormPage() {
     }
   }, [query.data, key])
   return (
-    <main className="min-h-dvh bg-surface-subtle px-4 py-8 sm:py-12">
-      <div className="mx-auto max-w-lg">
+    <main
+      className="min-h-dvh bg-surface-subtle px-4 py-8 sm:py-12"
+      style={query.data ? formPageStyle(query.data.settings) : undefined}
+    >
+      <div className="mx-auto max-w-xl">
         {!captureLive ? (
           <PreviewNotice>
             Public forms are not accepting live enquiries yet. Contact this business directly, or ask its admin to

@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Flame, Hand, Mail, Megaphone, Pencil, Phone, Snowflake, Star, ThermometerSun, UserRound } from 'lucide-react'
+import { BriefcaseBusiness, Check, Copy, Flame, Hand, Mail, Megaphone, Pencil, Phone, Snowflake, Star, ThermometerSun, UserRound } from 'lucide-react'
 import { cn } from '../../../lib/cn'
 import { gstStates } from '../../../lib/india'
 import { useCan } from '../../../lib/useOrg'
 import { useToast } from '../../../components/ui/Toast'
 import { CampaignPicker } from '../../campaigns/CampaignPicker'
-import { OwnerCell, InlineText } from '../../crm/components/RecordParts'
+import { OwnerCell, InlineMoney, InlineText } from '../../crm/components/RecordParts'
 import { TagChips, TagPicker } from '../../crm/components/Tags'
 import { formatCustomValue } from '../../crm/customFieldFormat'
-import { formatMinor, formatPhone, minorToRupeesText, relativeTime, rupeesToMinor } from '../../crm/format'
+import { formatPhone, relativeTime } from '../../crm/format'
 import { useCustomFieldDefs } from '../../crm/hooks'
 import type { LeadRecord } from '../../crm/types'
 import { SourceBadge } from '../SourceBadge'
@@ -20,19 +20,44 @@ import type { LeadDetail } from './useLeadDetail'
 const stateName = (code: string | null) => gstStates.find(([c]) => c === code)?.[1] ?? null
 
 const priorityStyle: Record<LeadPriority, { icon: typeof Flame; className: string }> = {
-  hot: { icon: Flame, className: 'text-red-700' },
-  warm: { icon: ThermometerSun, className: 'text-amber-700' },
-  cold: { icon: Snowflake, className: 'text-brand-700' },
+  hot: { icon: Flame, className: 'bg-rose-50 text-rose-700 ring-rose-200' },
+  warm: { icon: ThermometerSun, className: 'bg-amber-50 text-amber-800 ring-amber-200' },
+  cold: { icon: Snowflake, className: 'bg-sky-50 text-sky-700 ring-sky-200' },
 }
 
 export function PriorityLabel({ priority }: { priority: LeadPriority }) {
   const { icon: Icon, className } = priorityStyle[priority]
   const label = qualificationOptions.priorities.find((p) => p.value === priority)?.label
   return (
-    <span className={cn('inline-flex items-center gap-1 font-medium', className)}>
+    <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ring-1 ring-inset', className)}>
       <Icon className="size-4" aria-hidden="true" />
       {label}
     </span>
+  )
+}
+
+/** Hover/focus-revealed copy button for a contact value. */
+function CopyValue({ value, label }: { value: string; label: string }) {
+  const notify = useToast()
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        void navigator.clipboard
+          ?.writeText(value)
+          .then(() => {
+            setCopied(true)
+            window.setTimeout(() => setCopied(false), 1500)
+            notify({ title: `Copied ${label}` })
+          })
+          .catch(() => notify({ tone: 'error', title: `Couldn’t copy the ${label}` }))
+      }}
+      className="compact-control ml-auto shrink-0 rounded p-1 text-muted opacity-0 group-hover:opacity-100 hover:bg-surface-subtle hover:text-ink focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100"
+      aria-label={`Copy ${label}`}
+    >
+      {copied ? <Check className="size-3.5 text-success" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
+    </button>
   )
 }
 
@@ -86,13 +111,14 @@ export function ProfileCard({
             {lead.phones.length ? (
               <ul className="space-y-1">
                 {lead.phones.map((p) => (
-                  <li key={p.raw} className="flex items-center gap-2 tabular-nums">
+                  <li key={p.raw} className="group flex items-center gap-2 tabular-nums">
                     <Phone className="size-3.5 shrink-0 text-muted" aria-hidden="true" />
                     <a href={`tel:${p.e164 ?? p.raw}`} className="truncate hover:text-brand-700 hover:underline">
                       {formatPhone(p.e164, p.raw)}
                     </a>
                     {p.primary && lead.phones.length > 1 && <Star className="size-3 shrink-0 fill-amber-400 text-amber-400" aria-label="Primary" />}
                     {!p.e164 && <span className="text-xs text-warning">invalid</span>}
+                    <CopyValue value={p.e164 ?? p.raw} label="phone number" />
                   </li>
                 ))}
               </ul>
@@ -104,11 +130,12 @@ export function ProfileCard({
             {lead.emails.length ? (
               <ul className="space-y-1">
                 {lead.emails.map((e) => (
-                  <li key={e.value} className="flex min-w-0 items-center gap-2">
+                  <li key={e.value} className="group flex min-w-0 items-center gap-2">
                     <Mail className="size-3.5 shrink-0 text-muted" aria-hidden="true" />
                     <a href={`mailto:${e.value}`} className="truncate hover:text-brand-700 hover:underline" title={e.value}>
                       {e.value}
                     </a>
+                    <CopyValue value={e.value} label="email" />
                   </li>
                 ))}
               </ul>
@@ -128,7 +155,7 @@ export function ProfileCard({
         </dl>
       </Card>
 
-      <Card title="Deal">
+      <Card title="Deal" icon={BriefcaseBusiness}>
         <dl className="lead-fields">
           <Row label="Owner" id="lead-field-owner">
             <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -157,17 +184,13 @@ export function ProfileCard({
             />
           </Row>
           <Row label="Deal value" id="lead-field-dealValue">
-            <InlineText
+            <InlineMoney
               label="expected deal value in rupees"
-              value={minorToRupeesText(qualification.dealValueMinor) || null}
+              value={qualification.dealValueMinor}
               placeholder="Add value…"
               disabled={!can.update}
-              format={(v) => <span className="font-medium tabular-nums">{formatMinor(rupeesToMinor(v))}</span>}
-              onSave={async (v) => {
-                const minor = v ? rupeesToMinor(v) : null
-                if (v && minor === null) throw new Error('Enter an amount in rupees, like 250000')
-                await saveQualification({ dealValueMinor: minor })
-              }}
+              strong
+              onSave={(dealValueMinor) => saveQualification({ dealValueMinor })}
             />
           </Row>
           <Row label="Close by">
@@ -208,7 +231,7 @@ export function ProfileCard({
         </dl>
       </Card>
 
-      <Card title="Source">
+      <Card title="Source" icon={Megaphone}>
         <dl className="lead-fields">
           <Row label="Source">
             <SourceBadge name={lead.source?.name} />

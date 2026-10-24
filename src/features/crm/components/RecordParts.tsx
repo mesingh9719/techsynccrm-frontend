@@ -4,7 +4,7 @@ import { CircleAlert, Pencil, Trash2, X } from 'lucide-react'
 import { cn } from '../../../lib/cn'
 import { Avatar } from '../../../components/ui/Badge'
 import { Button } from '../../../components/ui/Button'
-import { matchedOnLabels } from '../format'
+import { compactInr, formatMinor, matchedOnLabels, minorToRupeesText, rupeesToMinor } from '../format'
 import type { Duplicate, OwnerSummary } from '../types'
 
 /** Small building blocks shared by the contact, company and lead screens. */
@@ -64,6 +64,9 @@ export function InlineText({
   placeholder = 'Add…',
   disabled,
   format,
+  prefix,
+  inputMode,
+  hint,
 }: {
   value: string | null
   onSave: (value: string | null) => Promise<unknown>
@@ -72,6 +75,11 @@ export function InlineText({
   placeholder?: string
   disabled?: boolean
   format?: (value: string) => ReactNode
+  /** Fixed text shown inside the input, e.g. "₹". */
+  prefix?: string
+  inputMode?: 'text' | 'decimal' | 'numeric' | 'email' | 'tel' | 'url'
+  /** Live feedback under the input while editing, e.g. how a typed amount will be saved. */
+  hint?: (text: string) => ReactNode
 }) {
   const [editing, setEditing] = useState(false)
   const saving = useRef(false)
@@ -133,7 +141,11 @@ export function InlineText({
     value: text,
     disabled: busy,
     'aria-label': label,
-    onChange: (e: { target: { value: string } }) => setText(e.target.value),
+    'aria-invalid': error ? true : undefined,
+    onChange: (e: { target: { value: string } }) => {
+      setText(e.target.value)
+      if (error) setError(null)
+    },
     onBlur: save,
     onKeyDown: (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -146,14 +158,86 @@ export function InlineText({
         void save()
       }
     },
-    className:
-      'w-full rounded-md border border-brand-400 px-2 py-1 text-sm focus:ring-2 focus:ring-brand-100 focus:outline-none',
+    className: cn(
+      'w-full rounded-md border px-2 py-1 text-sm focus:ring-2 focus:outline-none',
+      error ? 'border-danger focus:ring-red-100' : 'border-brand-400 focus:ring-brand-100',
+      prefix && 'pl-6',
+    ),
   }
+  const feedback = !error && hint?.(text)
   return (
     <div>
-      {multiline ? <textarea rows={3} {...props} /> : <input {...props} />}
-      {error && <p className="mt-1 text-xs text-danger">{error}</p>}
+      {multiline ? (
+        <textarea rows={3} {...props} />
+      ) : (
+        <div className="relative">
+          {prefix && (
+            <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-sm text-muted" aria-hidden="true">
+              {prefix}
+            </span>
+          )}
+          <input {...props} inputMode={inputMode} />
+        </div>
+      )}
+      {error ? (
+        <p className="mt-1 text-xs text-danger" role="alert">
+          {error}
+        </p>
+      ) : feedback ? (
+        <p className="mt-1 text-xs text-muted" aria-live="polite">
+          {feedback}
+        </p>
+      ) : null}
     </div>
+  )
+}
+
+const MoneyText = ({ minor, strong }: { minor: number; strong?: boolean }) => {
+  const compact = compactInr(minor)
+  return (
+    <span className="tabular-nums">
+      <span className={cn(strong && 'font-medium')}>{formatMinor(minor)}</span>
+      {compact && <span className="text-muted"> · {compact}</span>}
+    </span>
+  )
+}
+
+/** Inline rupee amount in paise. Accepts "1,85,000", "1.5 L", "2 Cr" and previews the result while typing. */
+export function InlineMoney({
+  value,
+  onSave,
+  label,
+  placeholder = 'Add amount…',
+  disabled,
+  strong,
+}: {
+  value: number | null | undefined
+  onSave: (minor: number | null) => Promise<unknown>
+  label: string
+  placeholder?: string
+  disabled?: boolean
+  strong?: boolean
+}) {
+  return (
+    <InlineText
+      label={label}
+      value={minorToRupeesText(value) || null}
+      placeholder={placeholder}
+      disabled={disabled}
+      prefix="₹"
+      inputMode="decimal"
+      format={(v) => <MoneyText minor={rupeesToMinor(v) ?? 0} strong={strong} />}
+      hint={(text) => {
+        if (!text.trim()) return 'Leave empty to clear. Enter to save, Esc to cancel.'
+        const minor = rupeesToMinor(text)
+        return minor === null ? <span className="text-danger">Use a number like 150000, 1.5 L or 2 Cr</span> : <>Saves as <MoneyText minor={minor} /></>
+      }}
+      onSave={async (v) => {
+        const minor = v ? rupeesToMinor(v) : null
+        if (v && minor === null) throw new Error('Enter an amount in rupees, like 150000, 1.5 L or 2 Cr')
+        await onSave(minor)
+      }}
+    />
   )
 }
 

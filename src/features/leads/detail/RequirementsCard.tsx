@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { ClipboardList, Plus, UserRoundCheck, X } from 'lucide-react'
 import { Menu, MenuItem, MenuLabel } from '../../../components/app/Menu'
-import { InlineText } from '../../crm/components/RecordParts'
-import { formatMinor, minorToRupeesText, rupeesToMinor } from '../../crm/format'
+import { cn } from '../../../lib/cn'
+import { InlineMoney, InlineText } from '../../crm/components/RecordParts'
 import type { LeadRecord } from '../../crm/types'
 import { qualificationOptions, type DecisionRole, type LeadQualification } from './extrasApi'
 import { Card, InlineSelect, Row } from './InlineFields'
@@ -43,8 +43,32 @@ export function RequirementsCard({
     setPerson(null)
   }
 
+  // The facts the Qualified stage depends on; the meter shows how much of the picture is known.
+  const captured = [lead.requirement, lead.budgetMinor !== null, qualification.timeline, qualification.preferences, qualification.decisionMakers.length > 0].filter(Boolean).length
+  const total = 5
+
   return (
-    <Card title="Requirements" icon={ClipboardList} id="lead-requirements">
+    <Card
+      title="Requirements"
+      icon={ClipboardList}
+      id="lead-requirements"
+      meta={
+        <span
+          className={cn(
+            'ml-1 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums ring-1',
+            captured === total ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-surface-subtle text-muted ring-line',
+          )}
+          title={`${captured} of ${total} requirement details captured`}
+        >
+          <span className="flex gap-0.5" aria-hidden="true">
+            {Array.from({ length: total }, (_, i) => (
+              <span key={i} className={cn('h-1.5 w-2 rounded-full', i < captured ? (captured === total ? 'bg-emerald-500' : 'bg-brand-500') : 'bg-line')} />
+            ))}
+          </span>
+          {captured === total ? 'Complete' : `${captured}/${total}`}
+        </span>
+      }
+    >
       <dl className="lead-fields">
         <Row label="Needs" id="lead-field-requirement">
           <InlineText
@@ -57,17 +81,12 @@ export function RequirementsCard({
           />
         </Row>
         <Row label="Budget" id="lead-field-budget">
-          <InlineText
+          <InlineMoney
             label="budget in rupees"
-            value={minorToRupeesText(lead.budgetMinor) || null}
+            value={lead.budgetMinor}
             placeholder="Add budget…"
             disabled={!can.update}
-            format={(v) => <span className="tabular-nums">{formatMinor(rupeesToMinor(v))}</span>}
-            onSave={async (v) => {
-              const minor = v ? rupeesToMinor(v) : null
-              if (v && minor === null) throw new Error('Enter an amount in rupees, like 150000')
-              await patch({ budgetMinor: minor })
-            }}
+            onSave={(budgetMinor) => patch({ budgetMinor })}
           />
         </Row>
         <Row label="Timeline" id="lead-field-timeline">

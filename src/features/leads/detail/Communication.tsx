@@ -47,7 +47,7 @@ export function ContactActions({ comm, onMeeting, canLog }: { comm: Communicatio
   return (
     <div className="comm-actions" role="group" aria-label="Contact this lead">
       {buttons.map((b) => (
-        <div key={b.channel} className={cn('comm-button-group', b.channel === 'call' && 'is-primary')}>
+        <div key={b.channel} data-channel={b.channel} className={cn('comm-button-group', b.channel === 'call' && 'is-primary')}>
           <button
             type="button"
             onClick={() => comm.start(b.channel)}

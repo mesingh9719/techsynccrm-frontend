@@ -10,6 +10,7 @@ import { useCan } from '../../lib/useOrg'
 import { useAuth } from '../../lib/useAuth'
 import { ApiError } from '../../services/http'
 import { memberOptions } from '../../services/team'
+import { StatusChip, type SignalTone } from '../../components/ui/Signal'
 import { Avatar } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { FormAlert, Input, Select, Textarea } from '../../components/ui/Form'
@@ -47,6 +48,8 @@ const ICONS: Record<ActivityType, typeof Phone> = {
 }
 
 const typeLabel: Record<ActivityType, string> = { note: 'Note', call: 'Call', meeting: 'Meeting', site_visit: 'Site visit', whatsapp: 'WhatsApp', email: 'Email', sms: 'SMS', system: 'Update' }
+
+const activityTone: Record<ActivityType, SignalTone> = { note: 'warning', call: 'info', meeting: 'violet', site_visit: 'success', whatsapp: 'success', email: 'violet', sms: 'info', system: 'neutral' }
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const localNow = () => {
@@ -273,7 +276,7 @@ function ActivityEntry({ activity, canPin, onChanged, entityType, entityId }: { 
             ) : (
               <>
                 <span className="font-medium">{activity.actor?.fullName ?? 'Someone'}</span>
-                <span className="text-muted"> · {typeLabel[activity.type]}</span>
+                <StatusChip className="ml-2 align-middle" tone={activityTone[activity.type]}>{typeLabel[activity.type]}</StatusChip>
                 {activity.subject && <span className="text-ink"> — {activity.subject}</span>}
               </>
             )}
@@ -454,6 +457,7 @@ export function Timeline({ entityType, entityId, recordName, canPin = false, not
                 key={t.key}
                 type="button"
                 aria-pressed={composer === t.key}
+                data-composer-kind={t.key}
                 onClick={() => (t.key === 'task' ? setTaskOpen(true) : setComposer(t.key))}
                 className={cn('inline-flex h-8 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors', composer === t.key && t.key !== 'task' ? 'bg-surface text-ink shadow-card ring-1 ring-line' : 'text-muted hover:text-ink')}
               >

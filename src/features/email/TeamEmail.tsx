@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ConfirmDialog } from '../../components/app/Dialog'
 import { EmptyState, ErrorState, Skeleton } from '../../components/app/States'
 import { Button } from '../../components/ui/Button'
+import { StatusChip, type SignalTone } from '../../components/ui/Signal'
 import { FormAlert, Input } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { useCan } from '../../lib/useOrg'
@@ -24,13 +25,14 @@ function TeamEmailScreen() {
   const [q, setQ] = useState(''), [status, setStatus] = useState('all'), [page, setPage] = useState(1)
   const [confirm, setConfirm] = useState<TeamEmailMember | null>(null)
   const term = useDeferredValue(q)
+  const summaryTone: Record<string, SignalTone> = { CONNECTED: 'success', DISCONNECTED: 'neutral', NEEDS_RECONNECT: 'warning', ERROR: 'danger' }
   const team = useQuery({ queryKey: [...emailKey(orgId), 'team', term, status, page], queryFn: () => teamEmail({ q: term, status, page }), refetchInterval: 30000 })
   const settings = useQuery({ queryKey: [...emailKey(orgId), 'tenant-settings'], queryFn: tenantEmailSettings })
   const refresh = () => client.invalidateQueries({ queryKey: emailKey(orgId) })
   const remind = useMutation({ mutationFn: remindEmail, onSuccess: (result) => notify({ title: result.sent ? `Reminder sent to ${result.sent} teammate${result.sent === 1 ? '' : 's'}` : 'No reminders needed', description: result.skipped ? 'Some teammates already received a reminder in the last 24 hours.' : undefined }), onError: (error) => notify({ title: 'Couldn’t send reminders', description: error.message, tone: 'error' }) })
   return <div className="space-y-7">
     <header className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="font-display text-xl font-semibold">Team &amp; Email</h1><p className="mt-1 text-sm text-muted">Help your team connect their work Gmail.</p></div><Button variant="secondary" loading={remind.isPending} disabled={settings.data?.emailEnabled !== true} onClick={() => remind.mutate(undefined)}>Remind all unconnected</Button></header>
-    {team.data && <div className="flex flex-wrap gap-3" aria-label="Team email summary">{Object.entries(team.data.summary).map(([key, count]) => <p key={key} className="rounded-full border border-line bg-surface px-3 py-2 text-sm">{connectionLabels[key as keyof typeof connectionLabels]} <strong>{count}</strong></p>)}</div>}
+    {team.data && <div className="flex flex-wrap gap-3" aria-label="Team email summary">{Object.entries(team.data.summary).map(([key, count]) => <StatusChip key={key} tone={summaryTone[key]} className="px-3! py-2!">{connectionLabels[key as keyof typeof connectionLabels]} <strong className="ml-1 tabular-nums">{count}</strong></StatusChip>)}</div>}
     <div className="flex flex-wrap gap-3"><label className="min-w-48 flex-1 text-sm">Search team<Input type="search" value={q} onChange={(event) => { setQ(event.target.value); setPage(1) }} placeholder="Name or email" /></label><label className="text-sm">Connection status<select className="mt-1 block h-10 rounded-lg border border-line bg-surface px-3" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1) }}><option value="all">All statuses</option>{Object.entries(connectionLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label></div>
     {team.isPending ? <div aria-label="Loading team email"><Skeleton className="h-56" /></div> : team.isError ? <ErrorState error={team.error} onRetry={() => team.refetch()} /> : team.data.items.length === 0 ? <EmptyState title="No teammates found" description="Try a different name or connection status." /> : <>
       <div className="overflow-x-auto rounded-xl border border-line"><table className="w-full text-left text-sm"><caption className="sr-only">Team Gmail connections</caption><thead className="bg-surface-subtle text-muted"><tr>{['User', 'Role', 'Google address', 'Status', 'Last used', 'Actions'].map((heading) => <th scope="col" key={heading} className="whitespace-nowrap px-4 py-3 font-medium">{heading}</th>)}</tr></thead><tbody className="divide-y divide-line bg-surface">{team.data.items.map((member) => <tr key={member.userId}>

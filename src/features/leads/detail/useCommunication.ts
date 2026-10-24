@@ -36,7 +36,7 @@ export function useCommunication({ lead, ownerName, workspaceName, canLog = fals
   const fill = (text: string) =>
     fillTemplate(text, { firstName: lead.firstName ?? lead.displayName.split(' ')[0], ownerName, workspaceName, requirement: lead.requirement })
 
-  const available: Record<Channel, boolean> = { call: Boolean(dial), whatsapp: Boolean(phone?.e164), sms: Boolean(dial), email: Boolean(email) }
+  const available: Record<Channel, boolean> = { call: Boolean(dial), whatsapp: Boolean(phone?.e164), sms: Boolean(dial), email: Boolean(email) && !['converted', 'lost', 'junk'].includes(lead.status) && !lead.deletedAt }
 
   function start(channel: Channel, template?: MessageTemplate) {
     if (!available[channel] || lead.deletedAt || saving) return

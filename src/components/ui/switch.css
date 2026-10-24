@@ -1,0 +1,11 @@
+.settings-toggle { --toggle-color: #7c3aed; position: relative; display: inline-flex; width: 44px; min-height: 40px; flex-shrink: 0; align-items: center; justify-content: center; border-radius: .6rem; cursor: pointer; }
+.settings-toggle[data-tone='info'] { --toggle-color: #0284c7; }
+.settings-toggle[data-tone='success'] { --toggle-color: #059669; }
+.settings-toggle-input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
+.settings-toggle-track { pointer-events: none; display: inline-flex; width: 36px; height: 21px; align-items: center; border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px; background: #cbd5e1; transition: background-color 150ms,border-color 150ms; }
+.settings-toggle-track > span { width: 15px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px #17203324; transition: transform 150ms; }
+.settings-toggle:has(input:checked) .settings-toggle-track { border-color: var(--toggle-color); background: var(--toggle-color); }
+.settings-toggle:has(input:checked) .settings-toggle-track > span { transform: translateX(15px); }
+.settings-toggle:has(input:focus-visible) { outline: 2px solid var(--toggle-color); outline-offset: 2px; }
+.settings-toggle:has(input:disabled) { opacity: .55; cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) { .settings-toggle-track,.settings-toggle-track > span { transition: none; } }

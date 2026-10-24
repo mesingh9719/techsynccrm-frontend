@@ -22,13 +22,13 @@ export function LeadAlerts({ lead, canRestore, onRestore }: { lead: LeadRecord; 
       </span>
     ),
     lead.isExistingCustomer && lead.contactId && (
-      <Link key="customer" to={`/app/contacts/${lead.contactId}`} className="alert-chip is-brand">
+      <Link key="customer" to={`/app/contacts/${lead.contactId}`} className="alert-chip is-success">
         <UserRound className="size-3.5" aria-hidden="true" />
         Existing customer — open contact
       </Link>
     ),
     lead.previousLeadId && (
-      <Link key="previous" to={`/app/leads/${lead.previousLeadId}`} className="alert-chip">
+      <Link key="previous" to={`/app/leads/${lead.previousLeadId}`} className="alert-chip is-info">
         <History className="size-3.5" aria-hidden="true" />
         Earlier enquiry
       </Link>

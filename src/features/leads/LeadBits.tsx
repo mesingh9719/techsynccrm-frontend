@@ -1,12 +1,14 @@
 import { useFloatingPanel } from '../../components/app/useFloatingPanel'
 import { useId, useRef, useState } from 'react'
 import { cn } from '../../lib/cn'
-import { Badge } from '../../components/ui/Badge'
-import { leadStatusLabels, leadStatusTone } from '../crm/format'
+import { StatusChip, type SignalTone } from '../../components/ui/Signal'
+import { leadStatusLabels } from '../crm/format'
 import type { LeadStatus, ScoreBreakdown } from '../crm/types'
 
+const stageTone: Record<LeadStatus, SignalTone> = { new: 'info', contacted: 'violet', qualified: 'success', converted: 'success', lost: 'danger', junk: 'warning' }
+
 export function LeadStatusBadge({ status }: { status: LeadStatus }) {
-  return <Badge tone={leadStatusTone[status]}>{leadStatusLabels[status]}</Badge>
+  return <StatusChip tone={stageTone[status]}>{leadStatusLabels[status]}</StatusChip>
 }
 
 const scoreTone = (score: number) => (score >= 70 ? 'bg-emerald-500' : score >= 40 ? 'bg-amber-400' : 'bg-zinc-400')

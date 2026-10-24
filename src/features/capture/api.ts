@@ -1,8 +1,12 @@
 /** M14 contracts. Preview is explicit and never used as a fallback for a failed live request. */
-import { api } from '../../services/http'
+import { api, ApiError } from '../../services/http'
 import type { AssignmentRule, AssignmentTest, OutOfOffice, Submission, WebForm, WorkingHours } from './types'
+import { normalizeForm } from './formConfig'
 
+/** Web forms (live API at /api/forms). */
 export const captureLive = import.meta.env.VITE_CRM_CAPTURE_API === 'true'
+/** Assignment rules, working hours and out-of-office (their own switch so they can go live separately). */
+export const assignmentLive = import.meta.env.VITE_CRM_ASSIGNMENT_API === 'true'
 export const captureKeys = (scope: string) => ['org', scope.split(':')[0], 'capture', scope] as const
 interface PreviewData {
   version: 1
@@ -59,11 +63,14 @@ function write(scope: string, data: PreviewData) {
 export function makeCaptureApi(scope: string) {
   return {
     listForms: () =>
-      captureLive ? api<{ forms: WebForm[] }>('/forms').then((d) => d.forms) : Promise.resolve(read(scope).forms),
+      (captureLive ? api<{ forms: WebForm[] }>('/forms').then((d) => d.forms) : Promise.resolve(read(scope).forms)).then(
+        (forms) => forms.map(normalizeForm),
+      ),
     getForm: (id: string) =>
-      captureLive
+      (captureLive
         ? api<{ form: WebForm }>(`/forms/${id}`).then((d) => d.form)
-        : Promise.resolve(read(scope).forms.find((f) => f.id === id) ?? null),
+        : Promise.resolve(read(scope).forms.find((f) => f.id === id) ?? null)
+      ).then((form) => form && normalizeForm(form)),
     async saveForm(form: WebForm, isNew: boolean) {
       if (captureLive)
         return api<{ form: WebForm }>(isNew ? '/forms' : `/forms/${form.id}`, {
@@ -75,7 +82,7 @@ export function makeCaptureApi(scope: string) {
             sourceId: form.settings.sourceId,
             isActive: form.isActive,
           },
-        }).then((d) => d.form)
+        }).then((d) => normalizeForm(d.form))
       const data = read(scope),
         saved = { ...form, updatedAt: new Date().toISOString() }
       data.forms = [...data.forms.filter((f) => f.id !== form.id), saved]
@@ -95,11 +102,11 @@ export function makeCaptureApi(scope: string) {
         : Promise.resolve(read(scope).submissions.filter((s) => s.formId === id)),
     embedCode: (id: string) => api<{ script: string; iframe: string; hostedUrl: string }>(`/forms/${id}/embed-code`),
     listRules: () =>
-      captureLive
+      assignmentLive
         ? api<{ rules: AssignmentRule[] }>('/assignment-rules').then((d) => d.rules)
         : Promise.resolve(read(scope).rules.toSorted((a, b) => a.position - b.position)),
     async saveRule(rule: AssignmentRule, isNew: boolean) {
-      if (captureLive)
+      if (assignmentLive)
         return api<{ rule: AssignmentRule }>(isNew ? '/assignment-rules' : `/assignment-rules/${rule.id}`, {
           method: isNew ? 'POST' : 'PATCH',
           body: rule,
@@ -110,31 +117,31 @@ export function makeCaptureApi(scope: string) {
       return rule
     },
     async deleteRule(id: string) {
-      if (captureLive) return api<void>(`/assignment-rules/${id}`, { method: 'DELETE' })
+      if (assignmentLive) return api<void>(`/assignment-rules/${id}`, { method: 'DELETE' })
       const data = read(scope)
       data.rules = data.rules.filter((r) => r.id !== id)
       write(scope, data)
     },
     async orderRules(ids: string[]) {
-      if (captureLive) return api('/assignment-rules/order', { method: 'PATCH', body: { ids } })
+      if (assignmentLive) return api('/assignment-rules/order', { method: 'PATCH', body: { ids } })
       const data = read(scope)
       data.rules = data.rules.map((r) => ({ ...r, position: ids.indexOf(r.id) }))
       write(scope, data)
     },
-    getHours: () => (captureLive ? api<WorkingHours>('/working-hours') : Promise.resolve(read(scope).hours)),
+    getHours: () => (assignmentLive ? api<WorkingHours>('/working-hours') : Promise.resolve(read(scope).hours)),
     async saveHours(hours: WorkingHours) {
-      if (captureLive) return api<WorkingHours>('/working-hours', { method: 'PUT', body: hours })
+      if (assignmentLive) return api<WorkingHours>('/working-hours', { method: 'PUT', body: hours })
       const data = read(scope)
       data.hours = hours
       write(scope, data)
       return hours
     },
     listAbsences: () =>
-      captureLive
+      assignmentLive
         ? api<{ items: OutOfOffice[] }>('/users/me/out-of-office').then((d) => d.items)
         : Promise.resolve(read(scope).absences ?? []),
     async addAbsence(values: Omit<OutOfOffice, 'id'>) {
-      if (captureLive)
+      if (assignmentLive)
         return api<{ outOfOffice: OutOfOffice }>('/users/me/out-of-office', { method: 'POST', body: values }).then(
           (d) => d.outOfOffice,
         )
@@ -145,13 +152,13 @@ export function makeCaptureApi(scope: string) {
       return absence
     },
     async deleteAbsence(id: string) {
-      if (captureLive) return api<void>(`/users/me/out-of-office/${id}`, { method: 'DELETE' })
+      if (assignmentLive) return api<void>(`/users/me/out-of-office/${id}`, { method: 'DELETE' })
       const data = read(scope)
       data.absences = (data.absences ?? []).filter((a) => a.id !== id)
       write(scope, data)
     },
     async test(leadSample: Record<string, string>): Promise<AssignmentTest> {
-      if (captureLive) return api<AssignmentTest>('/assignment-rules/test', { method: 'POST', body: { leadSample } })
+      if (assignmentLive) return api<AssignmentTest>('/assignment-rules/test', { method: 'POST', body: { leadSample } })
       const data = read(scope),
         rule = data.rules
           .toSorted((a, b) => a.position - b.position)
@@ -186,8 +193,16 @@ export function makeCaptureApi(scope: string) {
   }
 }
 
+/** The most useful message for a failed save: the first field error when the server sent them. */
+export function errorText(err: unknown, fallback: string) {
+  if (err instanceof ApiError) return Object.values(err.fields)[0] ?? err.message
+  return err instanceof Error ? err.message : fallback
+}
+
 export function getPublicForm(key: string) {
-  return api<WebForm>(`/public/forms/${encodeURIComponent(key)}`, { anonymous: true, retryOnExpiry: false })
+  return api<WebForm>(`/public/forms/${encodeURIComponent(key)}`, { anonymous: true, retryOnExpiry: false }).then(
+    normalizeForm,
+  )
 }
 export function recordFormView(key: string) {
   return api(`/public/forms/${encodeURIComponent(key)}/view`, { method: 'POST', anonymous: true, retryOnExpiry: false })

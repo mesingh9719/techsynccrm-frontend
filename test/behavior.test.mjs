@@ -125,6 +125,39 @@ test('preview forms are isolated by workspace and user and never call the backen
   assert.deepEqual(await first.listForms(), [])
 })
 
+test('web form configs upgrade old forms and templates are ready to save', async () => {
+  const { normalizeForm, formProblems, formFromTemplate, TEMPLATES, hiddenValue, PALETTE } = await import(
+    moduleUrl('src/features/capture/formConfig.ts')
+  )
+  const legacy = normalizeForm({
+    id: 'a',
+    key: 'abcdefghijklmnopqrstuv',
+    name: 'Old',
+    fields: [
+      { key: 'email', label: 'Email', type: 'email', required: true, placeholder: '' },
+      { key: 'sourceDetail', label: 'Source', type: 'text', required: true, placeholder: '', hidden: true, defaultValue: 'Site' },
+    ],
+    settings: { title: 'Hi', submitLabel: 'Go', consentText: 'OK', brandColor: '#ff0000', allowedDomains: [] },
+  })
+  assert.equal(legacy.fields[1].type, 'hidden')
+  assert.equal(legacy.fields[1].required, false)
+  assert.equal(legacy.settings.logo.mode, 'none')
+  assert.equal(legacy.settings.theme.corners, 'soft')
+  assert.equal(legacy.settings.brandColor, '#ff0000')
+  assert.deepEqual(formProblems(legacy), [])
+  for (const template of TEMPLATES) assert.deepEqual(formProblems(formFromTemplate(template)), [], template.id)
+  const broken = { ...legacy, name: ' ', fields: [{ ...legacy.fields[0], required: false }, PALETTE.find((p) => p.type === 'select').make()] }
+  broken.fields[1].options = [{ label: '', value: 'x' }]
+  broken.settings = { ...broken.settings, redirectUrl: 'http://example.com' }
+  assert.deepEqual(
+    formProblems(broken).map((p) => p.tab),
+    ['settings', 'fields', 'fields', 'after'],
+  )
+  const field = { key: 'sourceDetail', type: 'hidden', defaultValue: 'Website', urlParam: 'utm_campaign' }
+  assert.equal(hiddenValue(field, new URLSearchParams('utm_campaign=diwali')), 'diwali')
+  assert.equal(hiddenValue(field, new URLSearchParams('')), 'Website')
+})
+
 test('assignment dry runs use first matching rule without advancing round robin', async (t) => {
   const originalStorage = globalThis.localStorage,
     storage = new Map()

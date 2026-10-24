@@ -49,5 +49,6 @@ export function useConnectGmail() {
       opened.location.href = url.toString(); setConnecting(true)
     } catch (err) { opened.close(); setError(err instanceof Error ? err.message : 'Gmail could not connect.') }
   }
-  return { connect, connecting, error }
+  function cancel() { try { popup.current?.close() } catch { /* Google may have isolated the popup. */ } setConnecting(false); setError(null) }
+  return { connect, connecting, error, cancel }
 }

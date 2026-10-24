@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ChevronRight, Clock, Ellipsis, Hand, Link2, Pencil, Sparkles, Trash2, UserRoundPlus } from 'lucide-react'
+import { CalendarPlus, ChevronRight, Clock, Ellipsis, Hand, Link2, Pencil, Sparkles, Trash2, UserRoundPlus } from 'lucide-react'
 import { Avatar } from '../../../components/ui/Badge'
 import { Button } from '../../../components/ui/Button'
 import { Menu, MenuItem, MenuSeparator } from '../../../components/app/Menu'
@@ -7,7 +7,7 @@ import { useToast } from '../../../components/ui/Toast'
 import { relativeTime } from '../../crm/format'
 import type { LeadRecord } from '../../crm/types'
 import { claimLead } from '../api'
-import { ScorePill } from '../LeadBits'
+import { LeadStatusBadge, ScorePill } from '../LeadBits'
 import { ContactActions, LogPrompt } from './Communication'
 import type { Communication } from './useCommunication'
 import type { LeadQualification } from './extrasApi'
@@ -63,12 +63,16 @@ export function LeadHeader({
         <div className="flex min-w-[16rem] flex-1 items-start gap-3">
           <Avatar name={lead.displayName} size="md" className="mt-0.5 size-12! text-base!" />
           <div className="min-w-0">
-            <h1 className="truncate text-xl! leading-7 font-semibold tracking-tight text-ink" title={lead.displayName}>
+            <p className="lead-eyebrow">Lead overview</p>
+            <div className="flex flex-wrap items-center gap-3">
+            <h1 className="truncate font-display text-2xl! leading-8 font-semibold tracking-tight text-ink" title={lead.displayName}>
               {lead.displayName}
             </h1>
+            <LeadStatusBadge status={lead.status} />
+            </div>
             <p className="truncate text-sm text-muted">{subtitle || 'No company or location yet'}</p>
             <ul className="lead-facts mt-2" aria-label="Key facts">
-              <li>
+              <li data-fact="score">
                 <span className="text-muted">Score</span>
                 <ScorePill score={lead.score} breakdown={lead.scoreBreakdown} frozen={FROZEN.includes(lead.status)} />
               </li>
@@ -77,7 +81,7 @@ export function LeadHeader({
                   <PriorityLabel priority={qualification.priority} />
                 </li>
               )}
-              <li>
+              <li data-fact="owner">
                 {lead.owner ? (
                   <>
                     <Avatar name={lead.owner.fullName} size="xs" className="size-5! text-[10px]!" />
@@ -87,9 +91,13 @@ export function LeadHeader({
                   <span className="font-medium text-warning">Unassigned</span>
                 )}
               </li>
-              <li className="text-muted">
+              <li data-fact="activity" className="text-muted" title={new Date(lead.lastActivityAt).toLocaleString()}>
                 <Clock className="size-3.5" aria-hidden="true" />
                 Active {relativeTime(lead.lastActivityAt)}
+              </li>
+              <li data-fact="created" className="text-muted" title={new Date(lead.createdAt).toLocaleString()}>
+                <CalendarPlus className="size-3.5" aria-hidden="true" />
+                Added {relativeTime(lead.createdAt)}
               </li>
             </ul>
           </div>

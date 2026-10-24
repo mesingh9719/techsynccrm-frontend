@@ -4,7 +4,7 @@ import { qk } from '../../lib/queryKeys'
 import { api } from '../../services/http'
 import type { EmailDraft, PhoneDraft } from '../crm/components/ContactPoints'
 import { useOrgId } from '../crm/hooks'
-import type { BulkResult, CustomFieldValues, Duplicate, JunkReason, LeadRecord, LeadSource, LeadStatus, LostReason, Page } from '../crm/types'
+import type { BulkResult, CustomFieldValues, Duplicate, JunkReason, LeadRecord, LeadSource, LeadSourceSuggestion, LeadStatus, LostReason, Page } from '../crm/types'
 
 export interface LeadInput {
   qualification?: Partial<Omit<import('./detail/qualification').LeadQualification, 'updatedAt'>>
@@ -109,12 +109,22 @@ export function listLeadSources() {
   return api<{ sources: LeadSource[] }>('/lead-sources').then((d) => d.sources)
 }
 
-export function createLeadSource(values: { name: string; scoreWeight?: number }) {
+/** A custom source (name), or a suggested one from the common-sources catalog (catalogKey). */
+export function createLeadSource(values: { name?: string; scoreWeight?: number; catalogKey?: string }) {
   return api<{ source: LeadSource }>('/lead-sources', { method: 'POST', body: values }).then((d) => d.source)
 }
 
 export function updateLeadSource(id: string, values: { name?: string; scoreWeight?: number; archived?: boolean }) {
   return api<{ source: LeadSource }>(`/lead-sources/${id}`, { method: 'PATCH', body: values }).then((d) => d.source)
+}
+
+/** ids lists every source of the workspace, in the new order. */
+export function orderLeadSources(ids: string[]) {
+  return api<{ sources: LeadSource[] }>('/lead-sources/order', { method: 'PATCH', body: { ids } }).then((d) => d.sources)
+}
+
+export function listLeadSourceSuggestions() {
+  return api<{ suggestions: LeadSourceSuggestion[] }>('/lead-sources/suggestions').then((d) => d.suggestions)
 }
 
 export function deleteLeadSource(id: string) {
@@ -136,6 +146,12 @@ export function updateLostReason(id: string, values: { name?: string; archived?:
 export function useLeadSources() {
   const orgId = useOrgId()
   return useQuery({ queryKey: qk.org(orgId).leadSources, queryFn: listLeadSources, staleTime: 60_000 })
+}
+
+/** Common sources not yet in this workspace — admins only. */
+export function useLeadSourceSuggestions(enabled = true) {
+  const orgId = useOrgId()
+  return useQuery({ queryKey: [...qk.org(orgId).leadSources, 'suggestions'], queryFn: listLeadSourceSuggestions, staleTime: 5 * 60_000, enabled })
 }
 
 export function useLostReasons() {

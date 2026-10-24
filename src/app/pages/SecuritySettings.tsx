@@ -1,10 +1,10 @@
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Laptop, ShieldCheck, ShieldOff, Smartphone } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { ArrowRight, Check, Clock3, Fingerprint, Globe2, KeyRound, Laptop, LockKeyhole, LogOut, Mail, RefreshCw, ShieldCheck, ShieldOff, Smartphone, Trash2 } from 'lucide-react'
 import {
   changePassword,
   deleteAccount,
@@ -15,6 +15,7 @@ import {
   revokeOtherSessions,
   revokeSession,
   type Reauth,
+  type TwoFactorStatus,
 } from '../../services/account'
 import { forgotPassword, fetchMe } from '../../services/auth'
 import { ApiError } from '../../services/http'
@@ -25,13 +26,14 @@ import { useAuth } from '../../lib/useAuth'
 import { useSeo } from '../../lib/useSeo'
 import { formatDate } from '../../lib/format'
 import type { UserSession } from '../../types'
-import { Badge } from '../../components/ui/Badge'
+import { Notice, StatusChip } from '../../components/ui/Signal'
 import { Button } from '../../components/ui/Button'
 import { Field, FormAlert, Input, PasswordInput } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { Dialog } from '../../components/app/Dialog'
-import { ErrorState, Skeleton, PageHeader } from '../../components/app/States'
+import { ErrorState, Skeleton } from '../../components/app/States'
 import { SettingsSection } from '../../components/app/SettingsSection'
+import './account-settings.css'
 import { RecoveryCodes, TwoFactorSetup } from '../../components/app/TwoFactorSetup'
 
 const relative = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
@@ -48,7 +50,7 @@ const firstError = (err: unknown, fallback: string) => (err instanceof ApiError 
 function SetPasswordPrompt() {
   const { user } = useAuth()
   const [busy, setBusy] = useState(false), [sent, setSent] = useState(false), [error, setError] = useState('')
-  return <div className="max-w-md space-y-3"><p className="text-sm leading-6 text-muted">You signed up with Google and have no TechSync password yet. Set one through your verified email before using password-protected security, email-change or account-deletion actions.</p>{sent ? <p role="status" className="text-sm text-brand-700">Check your email for the password setup link. It signs out existing sessions after you set a password.</p> : <Button variant="secondary" loading={busy} onClick={async () => { if (!user) return; setBusy(true); setError(''); try { await forgotPassword(user.email); setSent(true) } catch (err) { setError(err instanceof Error ? err.message : 'Couldn’t send the link.') } finally { setBusy(false) } }}>Email me a password setup link</Button>}{error && <FormAlert>{error}</FormAlert>}</div>
+  return <div className="space-y-4"><Notice tone="violet" title="You sign in with Google" icon={KeyRound}>Add a TechSync password to use password-protected account settings. We’ll send a setup link to <strong className="break-all">{user?.email}</strong>.</Notice>{sent ? <Notice tone="success" title="Check your inbox" icon={Mail}>Your password setup link is on its way. Setting a password signs out your existing sessions.</Notice> : <Button variant="secondary" loading={busy} onClick={async () => { if (!user) return; setBusy(true); setError(''); try { await forgotPassword(user.email); setSent(true) } catch (err) { setError(err instanceof Error ? err.message : 'Couldn’t send the link.') } finally { setBusy(false) } }}><Mail className="size-4" aria-hidden="true" />Email me a password setup link</Button>}{error && <Notice tone="danger" title="Setup link couldn’t be sent">{error}</Notice>}</div>
 }
 
 // ---------- Password ----------
@@ -62,9 +64,12 @@ function PasswordForm() {
     handleSubmit,
     reset,
     setError,
+    control,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ChangePasswordValues>({ resolver: zodResolver(changePasswordSchema), defaultValues: { currentPassword: '', newPassword: '', confirm: '' } })
 
+  const newPassword = useWatch({ control, name: 'newPassword' })
+  const rules = [{ label: '8–72 characters', met: newPassword.length >= 8 && newPassword.length <= 72 }, { label: 'One letter', met: /[A-Za-z]/.test(newPassword) }, { label: 'One number', met: /[0-9]/.test(newPassword) }]
   const guard = useUnsavedChanges(isDirty, () => {}, isSubmitting, isDirty)
 
   const onSubmit = async ({ currentPassword, newPassword }: ChangePasswordValues) => {
@@ -72,6 +77,7 @@ function PasswordForm() {
     try {
       await changePassword({ currentPassword, newPassword })
       reset()
+      guard.markSaved(false)
       void queryClient.invalidateQueries({ queryKey: qk.me.sessions })
       notify({ title: 'Password changed', description: 'Other devices have been signed out.' })
     } catch (err) {
@@ -80,23 +86,20 @@ function PasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid max-w-md gap-5">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="account-password-form">
       {guard.confirmation}
-      <Field label="Current password" error={errors.currentPassword?.message}>
-        {({ id, describedBy, invalid }) => <PasswordInput id={id} autoComplete="current-password" aria-describedby={describedBy} invalid={invalid} {...register('currentPassword')} />}
+      <Field label="Current password" className="account-full-width" error={errors.currentPassword?.message}>
+        {({ id, describedBy, invalid }) => <PasswordInput id={id} disabled={isSubmitting} autoComplete="current-password" aria-describedby={describedBy} invalid={invalid} {...register('currentPassword')} />}
       </Field>
-      <Field label="New password" error={errors.newPassword?.message} hint="At least 8 characters, with a letter and a number.">
-        {({ id, describedBy, invalid }) => <PasswordInput id={id} autoComplete="new-password" aria-describedby={describedBy} invalid={invalid} {...register('newPassword')} />}
+      <Field label="New password" error={errors.newPassword?.message} hint="Use a password you don’t use elsewhere.">
+        {({ id, describedBy, invalid }) => <PasswordInput id={id} disabled={isSubmitting} autoComplete="new-password" aria-describedby={describedBy} invalid={invalid} {...register('newPassword')} />}
       </Field>
       <Field label="Confirm new password" error={errors.confirm?.message}>
-        {({ id, describedBy, invalid }) => <PasswordInput id={id} autoComplete="new-password" aria-describedby={describedBy} invalid={invalid} {...register('confirm')} />}
+        {({ id, describedBy, invalid }) => <PasswordInput id={id} disabled={isSubmitting} autoComplete="new-password" aria-describedby={describedBy} invalid={invalid} {...register('confirm')} />}
       </Field>
-      {serverError && <FormAlert>{serverError}</FormAlert>}
-      <div>
-        <Button type="submit" loading={isSubmitting}>
-          Change password
-        </Button>
-      </div>
+      <ul className="account-full-width flex flex-wrap gap-2" aria-label="New password requirements">{rules.map((rule) => <li key={rule.label}><StatusChip tone={rule.met ? 'success' : 'neutral'} icon={rule.met ? Check : undefined}><span className="sr-only">{rule.met ? 'Met: ' : 'Required: '}</span>{rule.label}</StatusChip></li>)}</ul>
+      {serverError && <Notice tone="danger" title="Password not changed" className="account-full-width">{serverError}</Notice>}
+      <div className="account-form-footer account-full-width"><p className="max-w-xs text-xs leading-5 text-muted">Updating your password also signs out your other devices.</p><Button type="submit" loading={isSubmitting} disabled={!isDirty}><KeyRound className="size-3.5" aria-hidden="true" />Change password</Button></div>
     </form>
   )
 }
@@ -155,6 +158,8 @@ function ReauthDialog({
       open={open}
       onClose={close}
       title={title}
+      icon={ShieldCheck}
+      busy={busy}
       description={description}
       footer={
         <>
@@ -169,12 +174,12 @@ function ReauthDialog({
     >
       <form id="reauth-form" onSubmit={submit} noValidate className="space-y-5">
         <Field label="Password">
-          {({ id }) => <PasswordInput id={id} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
+          {({ id }) => <PasswordInput id={id} disabled={busy} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
         </Field>
         <Field
           label={useRecovery ? 'Recovery code' : 'Code from your authenticator app'}
           labelAside={
-            <button type="button" onClick={() => setUseRecovery((v) => !v)} className="text-sm font-medium text-brand-700 hover:underline">
+            <button type="button" disabled={busy} onClick={() => setUseRecovery((v) => !v)} className="text-sm font-medium text-brand-700 hover:underline">
               {useRecovery ? 'Use app code' : 'Use a recovery code'}
             </button>
           }
@@ -182,6 +187,7 @@ function ReauthDialog({
           {({ id }) => (
             <Input
               id={id}
+              disabled={busy}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               inputMode={useRecovery ? 'text' : 'numeric'}
@@ -197,11 +203,10 @@ function ReauthDialog({
   )
 }
 
-function TwoFactorSection() {
+function TwoFactorSection({ status }: { status: UseQueryResult<TwoFactorStatus> }) {
   const queryClient = useQueryClient()
   const notify = useToast()
   const { user } = useAuth()
-  const status = useQuery({ queryKey: qk.me.twoFactor, queryFn: getTwoFactorStatus })
   const [dialog, setDialog] = useState<'setup' | 'disable' | 'codes' | null>(null)
   const [newCodes, setNewCodes] = useState<string[] | null>(null)
   const refresh = () => queryClient.invalidateQueries({ queryKey: qk.me.twoFactor })
@@ -213,44 +218,12 @@ function TwoFactorSection() {
 
   return (
     <>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          {enabled ? <ShieldCheck className="mt-1 size-5 text-success" aria-hidden="true" /> : <ShieldOff className="mt-1 size-5 text-muted" aria-hidden="true" />}
-          <div>
-            <p className="font-medium text-ink">
-              {enabled ? 'On' : 'Off'}
-              {enabled && enabledAt && <span className="font-normal text-muted"> · since {formatDate(enabledAt)}</span>}
-            </p>
-            <p className="text-sm text-muted">
-              {enabled
-                ? `${recoveryCodesRemaining} recovery code${recoveryCodesRemaining === 1 ? '' : 's'} left.`
-                : 'Protect your account with a code from your phone when you sign in.'}
-            </p>
-            {enabled && recoveryCodesRemaining <= 3 && (
-              <p className="mt-1 text-sm text-amber-700">You’re running low on recovery codes — generate new ones.</p>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {enabled ? (
-            <>
-              <Button variant="secondary" size="sm" onClick={() => setDialog('codes')}>
-                New recovery codes
-              </Button>
-              {!required && (
-                <Button variant="ghost" size="sm" onClick={() => setDialog('disable')}>
-                  Turn off
-                </Button>
-              )}
-            </>
-          ) : (
-            <Button size="sm" onClick={() => setDialog('setup')}>
-              Turn on
-            </Button>
-          )}
-        </div>
+      <div className="account-factor-summary">
+        <div className="flex min-w-0 items-start gap-3"><span className={`grid size-11 shrink-0 place-items-center rounded-xl border ${enabled ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>{enabled ? <ShieldCheck className="size-5" aria-hidden="true" /> : <ShieldOff className="size-5" aria-hidden="true" />}</span><div><p className="text-sm font-semibold text-ink">{enabled ? 'An extra layer of protection' : 'Add an extra layer of protection'}</p><p className="mt-1 text-xs leading-5 text-muted">{enabled && enabledAt ? `Protecting your account since ${formatDate(enabledAt)}.` : enabled ? 'Your authenticator app helps protect each sign-in.' : 'Use a code from your authenticator app when you sign in.'}</p><div className="mt-3 flex flex-wrap gap-2"><StatusChip tone={enabled ? 'success' : 'warning'} icon={enabled ? ShieldCheck : ShieldOff}>{enabled ? 'Two-factor is on' : 'Two-factor is off'}</StatusChip>{enabled && <StatusChip tone={recoveryCodesRemaining <= 3 ? 'warning' : 'info'} icon={KeyRound}>{recoveryCodesRemaining} recovery {recoveryCodesRemaining === 1 ? 'code' : 'codes'} left</StatusChip>}{required && <StatusChip tone="violet" icon={LockKeyhole}>Required by workspace</StatusChip>}</div></div></div>
+        <div className="flex flex-wrap gap-2">{enabled ? <><Button variant="secondary" size="sm" onClick={() => setDialog('codes')}><KeyRound className="size-3.5" aria-hidden="true" />New recovery codes</Button>{!required && <Button variant="ghost" size="sm" className="text-red-700 hover:bg-red-50" onClick={() => setDialog('disable')}>Turn off</Button>}</> : <Button size="sm" onClick={() => setDialog('setup')}><ShieldCheck className="size-3.5" aria-hidden="true" />Turn on</Button>}</div>
       </div>
-      {enabled && required && <p className="mt-3 text-xs text-muted">Your workspace requires two-factor authentication, so it can’t be turned off.</p>}
+      {enabled && recoveryCodesRemaining <= 3 && <Notice tone="warning" title="Your recovery codes are running low" className="mt-4">Generate a fresh set and store it somewhere safe. Each code can be used once if you lose access to your authenticator app.</Notice>}
+      {enabled && required && <Notice title="Protection required by your workspace" className="mt-4" icon={LockKeyhole}>Your workspace requires two-factor authentication, so it can’t be turned off.</Notice>}
 
       <Dialog open={dialog === 'setup'} onClose={() => setDialog(null)} title="Turn on two-factor authentication">
         {dialog === 'setup' && (
@@ -302,32 +275,19 @@ function TwoFactorSection() {
 // ---------- Sessions ----------
 
 function SessionRow({ session, onRevoke, busy }: { session: UserSession; onRevoke: () => void; busy: boolean }) {
-  const Icon = /Android|iOS/.test(session.device.os) ? Smartphone : Laptop
+  const Icon = /Android|iOS|iPhone|iPad/i.test(session.device.os) ? Smartphone : Laptop
   return (
-    <li className="flex items-center gap-3 py-3">
-      <Icon className="size-5 shrink-0 text-muted" aria-hidden="true" />
-      <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-ink">
-          {session.device.label}
-          {session.current && <Badge tone="success">This device</Badge>}
-        </p>
-        <p className="text-xs text-muted">
-          {session.ip ?? 'Unknown IP'} · active {timeAgo(session.lastActiveAt)} · signed in {formatDate(session.startedAt)}
-        </p>
-      </div>
-      {!session.current && (
-        <Button variant="ghost" size="sm" onClick={onRevoke} loading={busy}>
-          Sign out
-        </Button>
-      )}
+    <li className="account-session" data-current={session.current}>
+      <span className="account-session-icon"><Icon className="size-5" aria-hidden="true" /></span>
+      <div className="account-session-details"><p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink"><span className="break-words">{session.device.label}</span>{session.current && <StatusChip tone="success" icon={Check}>This device</StatusChip>}</p><div className="account-session-meta"><span><Globe2 className="size-3 shrink-0" aria-hidden="true" />{session.ip ?? 'Unknown IP'}</span><span><Clock3 className="size-3 shrink-0" aria-hidden="true" /><time dateTime={session.lastActiveAt} title={formatDate(session.lastActiveAt)}>Active {timeAgo(session.lastActiveAt)}</time></span></div><p className="mt-1.5 text-[11px] text-muted">Signed in {formatDate(session.startedAt)}</p></div>
+      {!session.current && <Button variant="ghost" size="sm" aria-label={`Sign out ${session.device.label}`} onClick={onRevoke} loading={busy}><LogOut className="size-3.5" aria-hidden="true" />Sign out</Button>}
     </li>
   )
 }
 
-function SessionsSection() {
+function SessionsSection({ sessions }: { sessions: UseQueryResult<UserSession[]> }) {
   const queryClient = useQueryClient()
   const notify = useToast()
-  const sessions = useQuery({ queryKey: qk.me.sessions, queryFn: listSessions })
   const revoke = useMutation({
     mutationFn: revokeSession,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: qk.me.sessions }),
@@ -339,6 +299,7 @@ function SessionsSection() {
       void queryClient.invalidateQueries({ queryKey: qk.me.sessions })
       notify({ title: 'Signed out of all other devices' })
     },
+    onError: (err) => notify({ tone: 'error', title: 'Couldn’t sign out other devices', description: firstError(err, 'Please try again.') }),
   })
 
   if (sessions.isPending) return <Skeleton className="h-24" />
@@ -347,16 +308,13 @@ function SessionsSection() {
 
   return (
     <>
-      <ul className="divide-y divide-zinc-100">
+      <ul className="account-session-list" aria-label="Signed-in devices">
         {sessions.data.map((s) => (
           <SessionRow key={s.id} session={s} busy={revoke.isPending && revoke.variables === s.id} onRevoke={() => revoke.mutate(s.id)} />
         ))}
       </ul>
-      {others > 0 && (
-        <Button variant="secondary" size="sm" className="mt-4" loading={revokeOthers.isPending} onClick={() => revokeOthers.mutate()}>
-          Sign out of all other devices
-        </Button>
-      )}
+      {!sessions.data.length && <Notice title="No active sessions to display">Refresh your security settings to check again.</Notice>}
+      {sessions.data.length > 0 && <div className="account-session-footer"><p className="text-xs text-muted">{sessions.data.length} active {sessions.data.length === 1 ? 'session' : 'sessions'}{others ? ` · ${others} on other devices` : ' · You’re up to date'}</p>{others > 0 && <Button variant="secondary" size="sm" loading={revokeOthers.isPending} disabled={revoke.isPending} onClick={() => revokeOthers.mutate()}><LogOut className="size-3.5" aria-hidden="true" />Sign out of all other devices</Button>}</div>}
     </>
   )
 }
@@ -399,12 +357,14 @@ function DeleteAccountSection() {
         Permanently removes your personal details and signs you out everywhere. Records you own in each workspace are handed to its owner. If you own a workspace, transfer it or delete it first.
       </p>
       <Button variant="secondary" className="mt-5 text-red-700" onClick={() => setOpen(true)}>
-        Delete my account
+        <Trash2 className="size-4" aria-hidden="true" />Delete my account
       </Button>
       <Dialog
         open={open}
         onClose={close}
         title="Delete your account?"
+        icon={Trash2}
+        busy={busy}
         description="This can’t be undone."
         footer={
           <>
@@ -419,7 +379,7 @@ function DeleteAccountSection() {
       >
         <form id="delete-account-form" onSubmit={submit} noValidate className="space-y-4">
           <Field label="Enter your password to confirm">
-            {({ id }) => <PasswordInput id={id} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
+            {({ id }) => <PasswordInput id={id} disabled={busy} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
           </Field>
           {error && <FormAlert>{error}</FormAlert>}
         </form>
@@ -431,21 +391,34 @@ function DeleteAccountSection() {
 export default function SecuritySettings() {
   const { user } = useAuth()
   useSeo({ title: 'Security settings', noindex: true })
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Security" description="Protect your account and manage active sessions." />
-      <SettingsSection title="Password">
-        {user?.hasPassword === false ? <SetPasswordPrompt /> : <PasswordForm />}
-      </SettingsSection>
-      <SettingsSection title="Two-factor authentication" description="A second step at sign-in, using an authenticator app on your phone.">
-        <TwoFactorSection />
-      </SettingsSection>
-      <SettingsSection title="Where you’re signed in" description="Sign out of any device you don’t recognise, then change your password.">
-        <SessionsSection />
-      </SettingsSection>
-      <SettingsSection title="Delete account" tone="danger">
-        <DeleteAccountSection />
-      </SettingsSection>
+  const twoFactor = useQuery({ queryKey: qk.me.twoFactor, queryFn: getTwoFactorStatus })
+  const sessions = useQuery({ queryKey: qk.me.sessions, queryFn: listSessions })
+  const factorEnabled = twoFactor.data?.enabled
+  const refreshing = twoFactor.isFetching || sessions.isFetching
+  return <div className="account-settings space-y-6">
+    <header className="account-settings-header"><div><p className="account-settings-eyebrow">Your account · Protection & access</p><h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Security</h1><p className="mt-2 text-sm text-muted">Keep your account protected and your devices in view.</p></div><Button variant="secondary" size="sm" loading={refreshing} onClick={() => Promise.all([twoFactor.refetch(), sessions.refetch()])}><RefreshCw className="size-3.5" aria-hidden="true" />Refresh security</Button></header>
+    <nav className="security-overview" aria-label="Security overview">
+      <a className="security-stat" href="#password-settings" data-tone={user?.hasPassword === false ? 'violet' : 'success'}><span className="security-stat-icon"><KeyRound className="size-4" aria-hidden="true" /></span><div><p className="security-stat-title">Sign-in method</p><p className="security-stat-value">{user?.hasPassword === false ? 'Google sign-in' : 'Password set'}</p></div></a>
+      <a className="security-stat" href="#two-factor-settings" data-tone={twoFactor.isError || twoFactor.isPending ? 'neutral' : factorEnabled ? 'success' : 'warning'}><span className="security-stat-icon"><ShieldCheck className="size-4" aria-hidden="true" /></span><div><p className="security-stat-title">Two-factor authentication</p><p className="security-stat-value">{twoFactor.isPending ? 'Checking…' : twoFactor.isError ? 'Status unavailable' : factorEnabled ? 'Turned on' : 'Not turned on'}</p></div></a>
+      <a className="security-stat" href="#session-settings" data-tone="info"><span className="security-stat-icon"><Laptop className="size-4" aria-hidden="true" /></span><div><p className="security-stat-title">Active sessions</p><p className="security-stat-value">{sessions.isPending ? 'Checking…' : sessions.isError ? 'Status unavailable' : `${sessions.data.length} signed in`}</p></div></a>
+    </nav>
+    <div className="account-settings-grid">
+      <div className="account-settings-main">
+        <SettingsSection id="password-settings" icon={KeyRound} title="Password" description="Keep your sign-in details up to date." actions={<StatusChip tone={user?.hasPassword === false ? 'violet' : 'success'} icon={LockKeyhole}>{user?.hasPassword === false ? 'Google sign-in' : 'Password set'}</StatusChip>}>{user?.hasPassword === false ? <SetPasswordPrompt /> : <PasswordForm />}</SettingsSection>
+        <SettingsSection id="two-factor-settings" icon={ShieldCheck} title="Two-factor authentication" description="A second step at sign-in, using your authenticator app."><TwoFactorSection status={twoFactor} /></SettingsSection>
+        <SettingsSection id="session-settings" icon={Laptop} title="Where you’re signed in" description="Review the devices with access to your account." actions={sessions.data && <StatusChip tone="info" icon={Laptop}>{sessions.data.length} active</StatusChip>}><SessionsSection sessions={sessions} /></SettingsSection>
+        <SettingsSection icon={Trash2} title="Delete account" tone="danger" description="Permanently remove your personal account."><DeleteAccountSection /></SettingsSection>
+      </div>
+      <aside className="account-settings-aside" aria-label="Security help">
+        <SettingsSection icon={Fingerprint} title="Small habits, safer account"><ul className="account-help-list">{[
+          { icon: KeyRound, title: 'Use a unique password', text: 'A password manager can help you create and remember it.' },
+          { icon: ShieldCheck, title: 'Keep a second step', text: 'Two-factor authentication adds a code from your own device.' },
+          { icon: Laptop, title: 'Know your devices', text: 'Sign out of shared computers when you’re finished working.' },
+        ].map(({ icon: Icon, title, text }) => <li key={title}><span className="account-help-icon"><Icon className="size-4" aria-hidden="true" /></span><div><h3 className="text-xs font-semibold text-ink">{title}</h3><p className="mt-1 text-xs leading-5 text-muted">{text}</p></div></li>)}</ul></SettingsSection>
+        <Notice title="Keep recovery codes somewhere safe" tone="violet" icon={KeyRound}>Store them in a password manager so you can sign in if your authenticator app is unavailable.</Notice>
+        <Notice title="Don’t recognise a device?" icon={Laptop}>Sign out of that session, then update your password.</Notice>
+        <div className="rounded-xl border border-line bg-surface p-4"><p className="text-xs font-semibold text-ink">Your personal details</p><p className="mt-1 text-xs leading-5 text-muted">Manage your name, photo and sign-in email in Profile.</p><Button variant="secondary" size="sm" className="mt-3 w-full" to="/app/settings/profile">Open Profile<ArrowRight className="size-3.5" aria-hidden="true" /></Button></div>
+      </aside>
     </div>
-  )
+  </div>
 }

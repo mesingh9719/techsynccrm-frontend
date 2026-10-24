@@ -1,7 +1,9 @@
+import './detail/lead-detail.css'
+import { RecordEmailPanel } from '../email/RecordEmailPanel'
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Activity, CalendarPlus, FileText, ListChecks, MessageCircle, NotebookPen, Phone, UserRound } from 'lucide-react'
+import { Activity, CalendarPlus, FileText, ListChecks, Mail, MessageCircle, NotebookPen, Phone, UserRound } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { qk } from '../../lib/queryKeys'
 import { EmailComposer } from '../email/EmailComposer'
@@ -65,6 +67,7 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
   const templates = useMessageTemplates()
   const qualification = useMemo(() => qualificationFor(lead), [lead])
   const [tab, setTab] = useState<Tab>('activity')
+  const [conversationView, setConversationView] = useState<'activity' | 'email'>('activity')
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
   const reveal = useFieldFocus<Tab>(setTab)
   const [dialog, setDialog] = useState<DialogState>(null)
@@ -78,7 +81,7 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
     ownerName: lead.owner?.fullName ?? user?.fullName,
     workspaceName: user?.organization?.name,
     canLog: can.createTasks,
-    onEmail: canSendEmail ? setEmailDraft : undefined,
+    onEmail: canSendEmail ? (draft) => { setEmailDraft(draft); setConversationView('email'); setTab('activity') } : undefined,
   })
   const openTasks = detail.tasks.data
   const tasksLoaded = detail.tasks.isSuccess
@@ -95,6 +98,7 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
 
   function compose(kind: TimelineDraft['kind'], body?: string) {
     setDraft({ kind, body, nonce: Date.now() })
+    setConversationView('activity')
     setTab('activity')
     requestAnimationFrame(() => {
       const box = document.getElementById('lead-composer')
@@ -227,6 +231,18 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
           </aside>
 
           <section id="lead-col-activity" role="tabpanel" aria-labelledby="lead-tab-activity" className="lead-col lead-col-main" data-active={tab === 'activity' || undefined} aria-label="Conversation">
+            <div className="lead-conversation-tabs" role="tablist" aria-label="Conversation view">
+              {([{ key: 'activity', label: 'Activity', icon: Activity }, { key: 'email', label: 'Email', icon: Mail }] as const).map((item, index) => <button key={item.key} id={`conversation-tab-${item.key}`} type="button" role="tab" aria-selected={conversationView === item.key} aria-controls={`conversation-panel-${item.key}`} tabIndex={conversationView === item.key ? 0 : -1} onClick={() => setConversationView(item.key)} onKeyDown={(event) => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+                event.preventDefault(); const next = event.key === 'Home' ? 'activity' : event.key === 'End' ? 'email' : index === 0 ? 'email' : 'activity'
+                setConversationView(next); document.getElementById(`conversation-tab-${next}`)?.focus()
+              }}><item.icon className="size-4" aria-hidden="true" />{item.label}{item.key === 'email' && <span className="conversation-tab-hint">Gmail</span>}</button>)}
+              <span className="lead-conversation-caption">One place for every follow-up</span>
+            </div>
+            <div id="conversation-panel-email" role="tabpanel" aria-labelledby="conversation-tab-email" hidden={conversationView !== 'email'}>
+              <RecordEmailPanel record={{ entityType: 'lead', entityId: lead.id, name: lead.displayName, emails: lead.emails }} enabled={conversationView === 'email' && !lead.deletedAt} onCompose={setEmailDraft} blockedReason={lead.deletedAt ? 'Restore this lead before sending an email.' : !detail.isOpen ? 'This lead is closed. Reopen it or continue from the linked contact.' : undefined} />
+            </div>
+            <div id="conversation-panel-activity" role="tabpanel" aria-labelledby="conversation-tab-activity" hidden={conversationView !== 'activity'}>
             <div id="lead-composer" className="scroll-mt-24">
               <Timeline
                 entityType="lead"
@@ -260,6 +276,7 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
                   )
                 }
               />
+            </div>
             </div>
           </section>
 

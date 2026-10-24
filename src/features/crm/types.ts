@@ -191,8 +191,18 @@ export interface LeadSource {
   isSystem: boolean
   scoreWeight: number
   position: number
+  /** Disabled: kept on existing leads and in reports, hidden from pickers for new records. */
   archived: boolean
   leadCount?: number
+}
+
+/** A common source from the global catalog that the workspace can add in one click. */
+export interface LeadSourceSuggestion {
+  key: string
+  name: string
+  category: string
+  description: string
+  scoreWeight: number
 }
 
 export interface LostReason {

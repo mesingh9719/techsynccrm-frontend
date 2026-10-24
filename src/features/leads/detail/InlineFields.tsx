@@ -122,6 +122,7 @@ export function Card({
   children,
   className,
   id,
+  meta,
 }: {
   title: string
   icon?: React.ComponentType<{ className?: string }>
@@ -129,13 +130,20 @@ export function Card({
   children: ReactNode
   className?: string
   id?: string
+  /** Small status beside the title, e.g. a completeness meter. */
+  meta?: ReactNode
 }) {
   return (
-    <section id={id} className={cn('surface p-4', className)} aria-label={title}>
-      <header className="flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
-          {Icon && <Icon className="size-4 text-muted" />}
-          {title}
+    <section id={id} className={cn('lead-card-section surface p-4', className)} aria-label={title}>
+      <header className="flex min-h-7 items-center justify-between gap-2">
+        <h2 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-ink">
+          {Icon && (
+            <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700 ring-1 ring-brand-100" aria-hidden="true">
+              <Icon className="size-4" />
+            </span>
+          )}
+          <span className="truncate">{title}</span>
+          {meta}
         </h2>
         {actions}
       </header>
