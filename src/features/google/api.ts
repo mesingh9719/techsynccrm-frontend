@@ -9,7 +9,7 @@ export interface GoogleConnection {
 export interface GoogleState {
   connection: GoogleConnection | null
   gmail: { emailAddress: string; status: string; sendEnabled: boolean; historyEnabled: boolean } | null
-  setup: { ready: boolean; missing: string[] }; consentVersion: string; canConnect: boolean
+  setup: { ready: boolean; missing: string[]; sharedProject: boolean }; consentVersion: string; canConnect: boolean
   services: { service: GoogleService; connectionOnly: true; available: boolean; tenantEnabled: boolean; permissionGranted: boolean; enabled: boolean }[]
 }
 export interface GoogleTenantSettings { calendarEnabled: boolean; driveEnabled: boolean; sheetsEnabled: boolean; exportsEnabled: boolean }

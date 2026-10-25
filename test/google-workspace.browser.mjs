@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 const origin = process.env.QA_ORIGIN || 'http://127.0.0.1:5182'
+const sharedProject = process.env.QA_SHARED_GOOGLE_PROJECT === 'true'
 assert(['127.0.0.1', 'localhost'].includes(new URL(origin).hostname))
 const fixtures = JSON.parse(await fs.readFile('/tmp/techsync-product-review-fixture.json', 'utf8'))
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || '/home/butcher/.cache/ms-playwright-go/1.57.0/package/index.mjs')
@@ -58,6 +59,7 @@ try {
   assert.equal(googleRequests[0].searchParams.get('scope'), 'openid email profile https://www.googleapis.com/auth/calendar.app.created')
   assert.equal(googleRequests[0].searchParams.get('code_challenge_method'), 'S256')
   const state = await api('/google/connections/me')
+  assert.equal(state.setup.sharedProject, sharedProject)
   assert.equal(state.connection.email, 'google-browser@example.test')
   assert.deepEqual(state.services.map((s) => s.enabled), [true, false, false])
   done('Reviewed Calendar consent → PKCE OAuth callback → encrypted persisted binding')
@@ -71,15 +73,31 @@ try {
   await page.setViewportSize({ width: 390, height: 844 }); await screenshot('personal-mobile')
   await page.getByRole('button', { name: 'Turn off Google Calendar', exact: true }).click()
   await page.getByRole('button', { name: 'Enable Google Calendar', exact: true }).waitFor()
-  await page.getByRole('button', { name: 'Remove Google access everywhere', exact: true }).click()
-  await page.getByRole('dialog').getByText(/across every TechSync workspace/).waitFor()
-  await screenshot('project-revocation-mobile')
-  await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click()
+  if (sharedProject) {
+    assert.equal(await page.getByRole('button', { name: 'Remove Google access everywhere', exact: true }).count(), 0)
+    assert.equal(await page.getByRole('link', { name: 'Manage Google Account access', exact: true }).getAttribute('href'), 'https://myaccount.google.com/connections')
+    await page.getByText(/also remove Gmail and sign-in permissions/).waitFor()
+    await screenshot('shared-project-mobile')
+    done('Shared project shows Google Account access management and no in-app project revoke')
+  } else {
+    await page.getByRole('button', { name: 'Remove Google access everywhere', exact: true }).click()
+    await page.getByRole('dialog').getByText(/across every TechSync workspace/).waitFor()
+    await screenshot('project-revocation-mobile')
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click()
+  }
   await page.getByRole('button', { name: 'Disconnect from this workspace', exact: true }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Disconnect', exact: true }).click()
   await page.getByText('Disconnected from this workspace.', { exact: true }).waitFor()
   assert.equal((await api('/google/connections/me')).connection.status, 'disconnected')
-  done('Mobile service-off, project-wide warning and persisted workspace disconnect')
+  done('Mobile service-off and persisted workspace disconnect')
+  if (sharedProject) {
+    await page.getByRole('button', { name: 'Connect Google Drive', exact: true }).click()
+    await page.getByRole('dialog').getByRole('checkbox').check()
+    await page.getByRole('dialog').getByRole('button', { name: 'Continue', exact: true }).click()
+    await page.getByRole('button', { name: 'Turn off Google Drive', exact: true }).waitFor()
+    assert.equal(googleRequests.length, 2)
+    done('Shared-project local disconnect allows reconnect without a provider revocation')
+  }
   await page.goto(origin + '/app/settings/google-team')
   await page.getByText('Connection activity', { exact: true }).waitFor()
   await screenshot('team-mobile')
