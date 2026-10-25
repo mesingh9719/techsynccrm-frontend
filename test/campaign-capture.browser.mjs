@@ -32,7 +32,14 @@ try {
  token=(await api('/auth/login','POST',{email:f.users[0].email,password:'FixturePassword123!'})).accessToken
  await api('/forms/'+form.id,'PATCH',{isActive:false})
  const closed=await visitor.request.post(base+'/api/public/forms/'+form.key+'/submit',{data:repeat});assert.equal(closed.status(),410)
- console.log(JSON.stringify({publicBrowserSubmit:true,utmAttribution:true,configuredAssignment:true,repeatDedupe:true,firstTouchPreserved:true,noImplicitDeal:true,invalidInput:400,foreignTenant:404,closedForm:410,submissions:2}))
+ const deletedCampaign=(await api('/campaigns','POST',{name:'Deleted attribution '+tag,code:'deleted-attribution-'+tag,type:'website',objective:'lead_generation',status:'active',startDate:'2026-10-01'})).campaign
+ const retained=(await api('/leads','POST',{firstName:'Deleted attribution lead '+tag,campaignId:deletedCampaign.id})).lead
+ await api('/campaigns/'+deletedCampaign.id,'DELETE')
+ const detail=await admin.newPage();await detail.goto(base+'/app/leads/'+retained.id)
+ await detail.getByText('Deleted campaign',{exact:true}).waitFor()
+ assert.equal(await detail.getByRole('link',{name:deletedCampaign.name,exact:true}).count(),0)
+ await detail.getByText(deletedCampaign.name,{exact:true}).waitFor()
+ console.log(JSON.stringify({deletedAttributionWithoutDeadLink:true,publicBrowserSubmit:true,utmAttribution:true,configuredAssignment:true,repeatDedupe:true,firstTouchPreserved:true,noImplicitDeal:true,invalidInput:400,foreignTenant:404,closedForm:410,submissions:2}))
 } finally {
  if(token&&rule)await api('/assignment-rules/'+rule.id,'DELETE')
  if(token&&form)await api('/forms/'+form.id,'DELETE')

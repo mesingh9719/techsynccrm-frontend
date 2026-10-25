@@ -270,13 +270,14 @@ export function ProfileCard({
           <Row label="Campaign">
             <span className="flex flex-wrap items-center gap-2">
               <Megaphone className="size-3.5 shrink-0 text-muted" aria-hidden="true" />
-              {campaign?.id && canReadCampaigns ? (
+              {campaign?.id && canReadCampaigns && !('deleted' in campaign && campaign.deleted) ? (
                 <Link to={`/app/campaigns/${campaign.id}`} title={campaign.code} className="min-w-0 truncate hover:text-brand-700 hover:underline">
                   {campaign.name}
                 </Link>
               ) : (
                 <span className={cn('min-w-0 truncate', !campaign && 'text-muted')}>{campaign?.name ?? 'Not attributed'}</span>
               )}
+              {campaign && 'deleted' in campaign && campaign.deleted && <span className="text-xs text-muted">Deleted campaign</span>}
               {can.update && canReadCampaigns && (
                 <button type="button" onClick={() => setPickingCampaign(true)} className="text-xs font-medium text-brand-700 hover:underline">
                   {campaign ? 'Change' : 'Link'}
