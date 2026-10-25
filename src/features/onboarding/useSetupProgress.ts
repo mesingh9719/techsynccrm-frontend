@@ -1,6 +1,6 @@
+import { getChecklist } from '../../services/organizations'
 import { useGmail } from '../email/useGmail'
 import { listLeads } from '../leads/api'
-import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../lib/useAuth'
 import { useCan } from '../../lib/useOrg'
@@ -15,27 +15,9 @@ export function useSetupProgress() {
     allowed = useCan('settings.workspace.manage'),
     canInvite = useCan('members.invite'),
     canCreateLead = useCan('leads.create')
-  const orgId = user?.organization?.id ?? 'none',
-    key = `techsync:setup:v1:${orgId}:${user?.id}`
-  const [sampleViewed, setSampleViewed] = useState(() => {
-    try {
-      return localStorage.getItem(key) === 'sample-viewed'
-    } catch {
-      return false
-    }
-  })
-  useEffect(() => {
-    const update = () => {
-      try {
-        setSampleViewed(localStorage.getItem(key) === 'sample-viewed')
-      } catch {
-        /* Remains local to this tab. */
-      }
-    }
-    update()
-    window.addEventListener('techsync:setup', update)
-    return () => window.removeEventListener('techsync:setup', update)
-  }, [key])
+  const orgId = user?.organization?.id ?? 'none'
+  const canImport = useCan('records.import'), canConfigurePipeline = useCan('settings.pipelines.manage')
+  const checklist = useQuery({ queryKey: qk.org(orgId).checklist, queryFn: getChecklist })
   const facebook = useQuery({
     queryKey: ['org', orgId, 'facebook', 'status'],
     queryFn: getFacebookStatus,
@@ -89,28 +71,17 @@ export function useSetupProgress() {
         ]
       : []),
     ...(canCreateLead ? [{ key: 'first-lead', title: 'Add your first lead', description: 'Start with a real enquiry and assign the next step.', done: (firstLead.data?.counts?.all ?? firstLead.data?.items.length ?? 0) > 0, href: '/app/leads?create=true' }] : []),
-    {
-      key: 'sample',
-      title: 'Explore a sample lead',
-      description: 'See how a simple follow-up works.',
-      done: sampleViewed,
-      href: '/app/setup?step=3',
-    },
+    ...(canConfigurePipeline ? [{ key: 'pipeline', title: 'Set up your pipeline', description: 'Use the default stages or adapt them to your business.', done: Boolean(checklist.data?.items.find(i => i.key === 'first_pipeline')?.done), href: '/app/settings/pipelines' }] : []),
+    ...(canImport ? [{ key: 'import', title: 'Import your existing enquiries', description: 'Map your spreadsheet and review duplicates before importing.', done: Boolean(checklist.data?.items.find(i => i.key === 'import_leads')?.done), href: '/app/import?entity=lead' }] : []),
   ]
   return {
     items,
     sourceConnected,
     canInvite,
+    canImport,
+    canCreateLead,
+    canConfigurePipeline,
     allowed,
-    markSample: () => {
-      setSampleViewed(true)
-      try {
-        localStorage.setItem(key, 'sample-viewed')
-      } catch {
-        /* Session state still works. */
-      }
-      window.dispatchEvent(new Event('techsync:setup'))
-    },
-    sourceError: facebook.isError,
+    sourceError: facebook.isError || forms.isError,
   }
 }

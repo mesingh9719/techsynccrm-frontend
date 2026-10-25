@@ -10,9 +10,8 @@ import { updateCurrentOrganization } from '../../services/organizations'
 import { fetchMe } from '../../services/auth'
 import { createInvitations } from '../../services/team'
 import { Button } from '../../components/ui/Button'
-import { Badge, Avatar } from '../../components/ui/Badge'
+import { Badge } from '../../components/ui/Badge'
 import { Field, FormAlert, Input, Select } from '../../components/ui/Form'
-import { PreviewNotice } from '../../components/app/PreviewNotice'
 import { sourceIcon } from '../leads/sourceIcons'
 import { useSetupProgress } from './useSetupProgress'
 
@@ -182,37 +181,17 @@ export default function SetupPage() {
             )
           ) : (
             <>
-              <PreviewNotice>
-                This is a sample lead. Exploring it will not create CRM records or send messages.
-              </PreviewNotice>
-              <div className="mt-5 rounded-xl border border-line p-5">
-                <div className="flex items-center gap-3">
-                  <Avatar name="Asha Sharma" />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-ink">Asha Sharma</h3>
-                    <p className="mt-1 text-xs text-muted">Saffron Retail · Website enquiry · Just now</p>
-                  </div>
-                  <Badge tone="brand">New</Badge>
-                </div>
-                <p className="mt-5 rounded-lg bg-surface-subtle p-4 text-sm leading-6 text-muted">
-                  “We’re looking for help managing enquiries from our website. Could we schedule a quick call this
-                  week?”
-                </p>
-                <ol className="mt-5 space-y-3 text-sm text-muted">
-                  <li className="flex gap-2">
-                    <Check className="size-4 text-brand-700" />
-                    Call or email from the lead header.
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="size-4 text-brand-700" />
-                    Add a note and schedule the next follow-up.
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="size-4 text-brand-700" />
-                    When ready, convert the lead into a contact and deal.
-                  </li>
-                </ol>
+              <p className="text-sm leading-6 text-muted">Start with a real enquiry. Add one now or bring in your spreadsheet, then give each lead an owner and a next follow-up.</p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {progress.canCreateLead ? <Button to="/app/leads?create=true">Add a lead</Button> : <Button to="/app/leads">Review leads</Button>}
+                {progress.canImport && <Button variant="secondary" to="/app/import?entity=lead">Import enquiries</Button>}
+                {progress.canConfigurePipeline && <Button variant="secondary" to="/app/settings/pipelines">Review pipeline stages</Button>}
               </div>
+              <ol className="mt-6 space-y-3 text-sm text-muted">
+                <li className="flex gap-2"><Check className="size-4 text-brand-700" />Call or WhatsApp from the lead header.</li>
+                <li className="flex gap-2"><Check className="size-4 text-brand-700" />Log the conversation and schedule the next follow-up.</li>
+                <li className="flex gap-2"><Check className="size-4 text-brand-700" />Convert a qualified enquiry into a contact and deal.</li>
+              </ol>
             </>
           )}
           {error && (
@@ -320,7 +299,7 @@ export default function SetupPage() {
               </Button>
             </div>
           ) : (
-            <Button to="/app" onClick={progress.markSample}>
+            <Button to="/app">
               Go to my dashboard
               <ArrowRight className="size-4" />
             </Button>
