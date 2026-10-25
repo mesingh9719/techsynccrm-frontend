@@ -9,6 +9,7 @@ import { useCan } from '../../lib/useOrg'
 import { useSeo } from '../../lib/useSeo'
 import { useOrgId } from '../crm/hooks'
 import { detachGoogle, googleKey, googleMe, revokeGoogleProject, serviceLabels, setGoogleService, startGoogle, statusLabel, type GoogleService } from './api'
+import { GoogleSetupDetails } from './GoogleServiceGate'
 
 const permissionText: Record<GoogleService, string> = {
   calendar: 'Allow TechSync to create secondary Google calendars and manage events on calendars it creates. This does not allow reading all events on your primary calendar.',
@@ -55,6 +56,7 @@ function Connections() {
     {query.isError && <FormAlert>Couldn’t load Google connections. <button className="underline" onClick={() => query.refetch()}>Try again</button></FormAlert>}
     {state && <>
       {!state.setup.ready && <p className="rounded-xl border border-line p-4 text-sm leading-6">Google Workspace connections are awaiting administrator setup. {canManage && <Link className="underline" to="/app/settings/google-team">Open team settings</Link>}</p>}
+      {!state.setup.ready && canManage && <GoogleSetupDetails missing={state.setup.missing} />}
       {state.setup.sharedProject && <p className="rounded-xl border border-line p-4 text-sm leading-6">Your services use the same Google project. Disconnecting here removes saved Workspace credentials only. Removing this app from your Google Account can also remove Gmail and sign-in permissions, so those services may need reconnecting. <a className="underline" href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">Manage Google Account access</a></p>}
       {!state.canConnect && <p className="text-sm text-muted">Your role can view and remove an existing connection. Ask an administrator about connecting services.</p>}
       <section className="space-y-4 rounded-xl border border-line bg-surface p-5" aria-label="Workspace Google account">
