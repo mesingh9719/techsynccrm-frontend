@@ -15,7 +15,7 @@ export interface EmailDraft { subject?: string; body?: string; bodyHtml?: string
 export interface SendEmail { entityType: 'lead' | 'contact'; entityId: string; to: string; subject: string; bodyHtml: string; replyToMessageId?: string; attachmentFileIds: string[] }
 export const emailKey = (orgId: string) => ['org', orgId, 'gmail'] as const
 export const gmailMe = () => api<GmailState>('/integrations/gmail/me')
-export const startGmail = (input: { consentVersion: string; returnTo: string; backfillDays: number; excludedAddresses: string[]; excludedDomains: string[] }) => api<{ url: string }>('/integrations/gmail/oauth/start', { method: 'POST', body: { ...input, shareWithTeam: true } })
+export const startGmail = (input: { consentVersion: string; returnTo: string; backfillDays: number; excludedAddresses: string[]; excludedDomains: string[]; popupId?: string }) => api<{ url: string }>('/integrations/gmail/oauth/start', { method: 'POST', body: { ...input, shareWithTeam: true } })
 export const disconnectGmail = (id: string) => api<{ disconnected: boolean }>(`/integrations/gmail/accounts/${id}`, { method: 'DELETE' })
 export const deleteGmailHistory = (id: string) => api<{ queued: boolean }>(`/integrations/gmail/accounts/${id}/delete-history`, { method: 'POST' })
 export const syncGmail = () => api<{ queued: boolean }>('/integrations/gmail/me/sync', { method: 'POST' })
