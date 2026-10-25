@@ -91,7 +91,7 @@ export function ProfileCard({
   const [editingTags, setEditingTags] = useState(false)
   const [pickingCampaign, setPickingCampaign] = useState(false)
   const activeDefs = (defs.data ?? []).filter((d) => !d.archived || lead.customFields[d.key] !== undefined)
-  const campaign = lead.campaign ?? (lead.utm?.utm_campaign ? { id: lead.utm.campaign_id ?? '', code: lead.utm.utm_campaign, name: lead.sourceDetail ?? lead.utm.utm_campaign } : null)
+  const campaign = lead.campaign ?? (lead.campaignId === undefined && lead.utm?.utm_campaign ? { id: lead.utm.campaign_id ?? '', code: lead.utm.utm_campaign, name: lead.sourceDetail ?? lead.utm.utm_campaign } : null)
 
   return (
     <>
@@ -310,12 +310,12 @@ export function ProfileCard({
       {pickingCampaign && (
         <CampaignPicker
           open
-          currentCampaignCode={lead.utm?.utm_campaign}
+          currentCampaignId={lead.campaignId ?? undefined}
+          currentCampaignCode={lead.campaign?.code ?? (lead.campaignId === undefined ? lead.utm?.utm_campaign : undefined)}
           currentCampaignName={lead.sourceDetail ?? undefined}
           onClose={() => setPickingCampaign(false)}
           onSelect={async (camp) => {
-            const utm = lead.utm ? Object.fromEntries(Object.entries(lead.utm).filter(([key]) => !['utm_campaign', 'campaign_id', 'campaign'].includes(key))) : {}
-            await patch({ sourceDetail: camp?.name ?? null, utm: camp ? { ...utm, utm_campaign: camp.code, campaign_id: camp.id, ...(camp.utm.utm_source && { utm_source: camp.utm.utm_source }), ...(camp.utm.utm_medium && { utm_medium: camp.utm.utm_medium }) } : Object.keys(utm).length ? utm : null })
+            await patch({ campaignId: camp?.id ?? null })
             notify({ title: camp ? `Attributed to ${camp.name}` : 'Campaign attribution removed' })
           }}
         />

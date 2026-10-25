@@ -91,3 +91,6 @@ export async function syncMetaCampaigns(_orgId: string, adAccountId: string): Pr
   } while (after)
   return { synced }
 }
+
+export interface CampaignOptions { statuses: CampaignStatus[]; transitions: Record<CampaignStatus, CampaignStatus[]> }
+export const getCampaignOptions = () => api<CampaignOptions>('/campaigns/options')

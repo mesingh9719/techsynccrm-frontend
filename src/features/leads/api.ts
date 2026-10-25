@@ -19,6 +19,7 @@ export interface LeadInput {
   stateCode?: string | null
   pincode?: string | null
   sourceId?: string | null
+  campaignId?: string | null
   sourceDetail?: string | null
   utm?: Record<string, string> | null
   ownerId?: string | null

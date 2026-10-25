@@ -1,3 +1,4 @@
+import { invalidateSales } from '../crm/invalidateSales'
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -39,6 +40,7 @@ interface Draft {
   pincode: string
   sourceId: string
   sourceDetail: string
+  campaignId: string
   utm: Record<string, string> | null
   ownerId: string | null
   tagIds: string[]
@@ -58,6 +60,7 @@ const fromLead = (l: LeadRecord | null, userId: string | null): Draft => ({
   pincode: l?.pincode ?? '',
   sourceId: l?.sourceId ?? '',
   sourceDetail: l?.sourceDetail ?? '',
+  campaignId: l?.campaignId ?? '',
   utm: l?.utm ?? null,
   ownerId: l ? l.ownerId : userId,
   tagIds: l?.tags.map((t) => t.id) ?? [],
@@ -121,6 +124,7 @@ export function LeadFormDrawer({
       sourceId: draft.sourceId || null,
       sourceDetail: draft.sourceDetail.trim() || null,
       utm: draft.utm,
+      ...((lead || draft.campaignId) && { campaignId: draft.campaignId || null }),
       tagIds: draft.tagIds,
       customFields: draft.customFields,
       ...(!lead && { ownerId: draft.ownerId }),
@@ -141,7 +145,7 @@ export function LeadFormDrawer({
         : await createLead(input, { allowDuplicate })
       await queryClient.invalidateQueries({ queryKey: qk.org(orgId).leads.all })
       await queryClient.invalidateQueries({ queryKey: qk.org(orgId).current })
-      await Promise.all(['campaigns', 'campaign', 'campaign-leads'].map((key) => queryClient.invalidateQueries({ queryKey: ['org', orgId, key] })))
+      await invalidateSales(queryClient, orgId)
       notify({ title: lead ? 'Lead saved' : `${saved.displayName} added` })
       close()
       if (!lead) navigate(`/app/leads/${saved.id}`)
@@ -161,7 +165,7 @@ export function LeadFormDrawer({
 
   const activeSources = (sources.data ?? []).filter((s) => !s.archived || s.id === draft.sourceId)
   // The lead's own campaign stays selectable even if it was archived or deleted since.
-  const campaign = campaigns.find((c) => c.id === draft.utm?.campaign_id || c.code === draft.utm?.utm_campaign || c.name === draft.sourceDetail)
+  const campaign = campaigns.find(c => c.id === draft.campaignId) ?? (lead?.campaign?.id === draft.campaignId ? lead.campaign : null)
   const has = (...keys: string[]) => keys.some((k) => Object.keys(errors).some((e) => e === k || e.startsWith(`${k}.`)))
   const stateName = gstStates.find(([code]) => code === draft.stateCode)?.[1]
   const sourceSummary = [activeSources.find((s) => s.id === draft.sourceId)?.name, campaign?.name, draft.sourceDetail && draft.sourceDetail !== campaign?.name ? draft.sourceDetail : null].filter(Boolean).join(' · ')
@@ -249,19 +253,8 @@ export function LeadFormDrawer({
                 <Select
                   id={id}
                   invalid={invalid}
-                  value={campaign?.id ?? ''}
-                  onChange={(e) => {
-                    const found = campaigns.find((c) => c.id === e.target.value)
-                    setDraft((d) => {
-                      const nextUtm = Object.fromEntries(Object.entries(d.utm ?? {}).filter(([key]) => !['utm_campaign', 'campaign_id', 'campaign'].includes(key)))
-                      return {
-                        ...d,
-                        sourceDetail: found ? found.name : d.sourceDetail === campaign?.name ? '' : d.sourceDetail,
-                        sourceId: d.sourceId || found?.sourceId || '',
-                        utm: found ? { ...nextUtm, utm_campaign: found.code, campaign_id: found.id, ...(found.utm.utm_source ? { utm_source: found.utm.utm_source } : {}), ...(found.utm.utm_medium ? { utm_medium: found.utm.utm_medium } : {}) } : Object.keys(nextUtm).length ? nextUtm : null,
-                      }
-                    })
-                  }}
+                  value={draft.campaignId}
+                  onChange={e => set('campaignId', e.target.value)}
                 >
                   <option value="">No campaign</option>
                   {campaign && !campaigns.some((c) => c.id === campaign.id && c.status !== 'archived') && (

@@ -10,12 +10,14 @@ import type { Campaign } from './types'
 
 export function CampaignPicker({
   open,
+  currentCampaignId,
   currentCampaignCode,
   currentCampaignName,
   onClose,
   onSelect,
 }: {
   open: boolean
+  currentCampaignId?: string
   currentCampaignCode?: string
   currentCampaignName?: string
   onClose: () => void
@@ -27,7 +29,7 @@ export function CampaignPicker({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const activeCampaigns = campaigns.filter((c) => c.status !== 'archived')
+  const activeCampaigns = campaigns.filter(c => c.status !== 'archived' || c.id === currentCampaignId)
 
   async function handleConfirm() {
     setBusy(true)
@@ -51,6 +53,7 @@ export function CampaignPicker({
     <Dialog
       open={open}
       onClose={onClose}
+      busy={busy}
       title="Associate with Campaign"
       description="Link this lead to a tracked marketing campaign for accurate channel attribution and ROI reporting."
       footer={
@@ -88,8 +91,7 @@ export function CampaignPicker({
 
             {activeCampaigns.map((camp) => {
               const isCurrent =
-                (currentCampaignCode && camp.code === currentCampaignCode) ||
-                (currentCampaignName && camp.name === currentCampaignName)
+                currentCampaignId ? camp.id === currentCampaignId : (currentCampaignCode && camp.code === currentCampaignCode) || (currentCampaignName && camp.name === currentCampaignName)
               const isSelected = selectedId === camp.id || (!selectedId && isCurrent)
 
               return (

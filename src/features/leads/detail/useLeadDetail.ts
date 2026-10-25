@@ -1,3 +1,4 @@
+import { invalidateSales } from '../../crm/invalidateSales'
 import { useMemo } from 'react'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { handleGlobalApiError } from '../../../lib/apiErrors'
@@ -72,11 +73,7 @@ export function useLeadDetail(id: string) {
       setLead(await updateLead(lead.id, values, { ifMatch: previous.updatedAt }))
       notify({ title: 'Lead details saved' })
       await refreshLists()
-      // Campaign attribution lives in utm/sourceDetail; campaign pages count leads from it.
-      if ('utm' in values || 'sourceDetail' in values)
-        await Promise.all(
-          ['campaigns', 'campaign', 'campaign-leads'].map((k) => client.invalidateQueries({ queryKey: ['org', orgId, k] })),
-        )
+      await invalidateSales(client, orgId)
     } catch (err) {
       setLead(previous)
       if (err instanceof ApiError && err.code === 'STALE_UPDATE') {
@@ -93,7 +90,7 @@ export function useLeadDetail(id: string) {
   async function act(fn: () => Promise<LeadRecord>, success: string) {
     try {
       setLead(await fn())
-      await Promise.all([refreshLists(), client.invalidateQueries({ queryKey: qk.org(orgId).timelineAll })])
+      await Promise.all([refreshLists(), invalidateSales(client, orgId, { timeline: true })])
       notify({ title: success })
       return true
     } catch (err) {

@@ -1,6 +1,6 @@
 import { useAuth } from '../../lib/useAuth'
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import {
   ArrowLeft,
@@ -16,6 +16,7 @@ import {
   DollarSign,
   TrendingUp,
 } from 'lucide-react'
+import { Select } from '../../components/ui/Form'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/app/Dialog'
 import { Badge } from '../../components/ui/Badge'
@@ -29,24 +30,32 @@ import { LeadStatusBadge, ScorePill } from '../leads/LeadBits'
 import { OwnerCell } from '../crm/components/RecordParts'
 import { buildUtmUrl, getCampaign, getCampaignLeads, getMetaCampaignState, metaAdsManagerUrl } from './api'
 import { CampaignFormDrawer } from './CampaignFormDrawer'
-import { useCampaignMutations } from './useCampaigns'
-import { CAMPAIGN_OBJECTIVE_LABELS, CAMPAIGN_STATUS_LABELS, CAMPAIGN_TYPE_LABELS, isMetaCampaign } from './types'
+import { useCampaignMutations, useCampaignOptions } from './useCampaigns'
+import { CAMPAIGN_OBJECTIVE_LABELS, CAMPAIGN_STATUS_LABELS, CAMPAIGN_TYPE_LABELS, isMetaCampaign, type CampaignStatus } from './types'
 
 export default function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { organization } = useOrg()
   const orgId = organization?.id ?? 'none'
   const notify = useToast()
+  const navigate = useNavigate()
+  const options = useCampaignOptions()
+  const canCreate = useCan('campaigns.create')
+  const canDelete = useCan('campaigns.delete')
+  const canReadLeads = useCan('leads.read')
+  const canReadDeals = useCan('deals.read')
   const { user } = useAuth()
   const canRead = useCan('campaigns.read')
   const canEdit = useCan('campaigns.update')
   const canManageMeta = useCan('settings.workspace.manage')
 
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [duplicating, setDuplicating] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [copied, setCopied] = useState(false)
   const [metaConfirmation, setMetaConfirmation] = useState<{ status: 'active' | 'paused'; ifMatch: string } | null>(null)
 
-  const { save, setStatus } = useCampaignMutations()
+  const { save, remove, setStatus } = useCampaignMutations()
 
   const campaignQuery = useQuery({
     queryKey: ['org', orgId, 'campaign', id],
@@ -75,7 +84,7 @@ export default function CampaignDetailPage() {
     queryFn: ({ pageParam }) => getCampaignLeads(id!, pageParam),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
-    enabled: Boolean(campaign),
+    enabled: Boolean(campaign) && canReadLeads,
   })
 
   if (!canRead)
@@ -133,12 +142,11 @@ export default function CampaignDetailPage() {
     try { await navigator.clipboard.writeText(trackingUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); notify({ title: 'Tracking URL copied' }) } catch { notify({ tone: 'error', title: 'Couldn’t copy the tracking URL', description: 'Check clipboard permission and try again.' }) }
   }
 
-  async function toggleStatus() {
-    const nextStatus = campaign?.status === 'active' ? 'paused' : 'active'
+  async function changeStatus(nextStatus: CampaignStatus) {
     if (!campaign) return
     try {
       await setStatus.mutateAsync({ id: campaign.id, status: nextStatus, ifMatch: campaign.updatedAt })
-      notify({ title: `Campaign ${nextStatus === 'active' ? 'activated' : 'paused'}` })
+      notify({ title: `Campaign ${CAMPAIGN_STATUS_LABELS[nextStatus].toLowerCase()}` })
     } catch (error) {
       notify({
         tone: 'error',
@@ -191,7 +199,7 @@ export default function CampaignDetailPage() {
           <div className="flex flex-wrap items-center gap-2">
             {editable && (
               <>
-                {(!linkedMeta || canManageMeta) && <Button variant="secondary" size="sm" onClick={() => linkedMeta ? setMetaConfirmation({ status: metaEnabled ? 'paused' : 'active', ifMatch: campaign.updatedAt }) : void toggleStatus()} loading={setStatus.isPending} disabled={linkedMeta && (!metaQuery.data || metaQuery.isError || metaArchived || (!metaEnabled && metaEnded))}>
+                {linkedMeta && canManageMeta && <Button variant="secondary" size="sm" onClick={() => linkedMeta ? setMetaConfirmation({ status: metaEnabled ? 'paused' : 'active', ifMatch: campaign.updatedAt }) : undefined} loading={setStatus.isPending} disabled={linkedMeta && (!metaQuery.data || metaQuery.isError || metaArchived || (!metaEnabled && metaEnded))}>
                   {(linkedMeta ? metaEnabled : campaign.status === 'active') ? (
                     <>
                       <Pause className="size-4" />
@@ -204,12 +212,18 @@ export default function CampaignDetailPage() {
                     </>
                   )}
                 </Button>}
-                <Button variant="secondary" size="sm" onClick={() => setDrawerOpen(true)}>
+                {!linkedMeta && <Select aria-label="Campaign lifecycle" value={campaign.status} disabled={!options.data || setStatus.isPending} onChange={event => void changeStatus(event.target.value as CampaignStatus)} className="w-auto">
+                  {[campaign.status, ...(options.data?.transitions[campaign.status] ?? [])].map(status => <option key={status} value={status}>{CAMPAIGN_STATUS_LABELS[status]}</option>)}
+                </Select>}
+                <Button variant="secondary" size="sm" onClick={() => { setDuplicating(false); setDrawerOpen(true) }}>
                   <Pencil className="size-4" />
                   Edit
                 </Button>
               </>
             )}
+            {canCreate && <Button variant="secondary" size="sm" onClick={() => { setDuplicating(true); setDrawerOpen(true) }}><Copy className="size-4" />Duplicate</Button>}
+            {canDelete && <Button variant="secondary" size="sm" onClick={() => setDeleting(true)}>Delete</Button>}
+            {canReadDeals && <Button variant="secondary" size="sm" to={`/app/deals?campaignId=${campaign.id}`}>View in pipeline</Button>}
           </div>
         </div>
       </div>
@@ -272,7 +286,7 @@ export default function CampaignDetailPage() {
             {cpl != null ? formatMinor(cpl, campaign.currency) : '—'}
           </p>
           <p className="mt-1 text-xs text-muted">
-            {campaign.metrics.roas ? `ROAS: ${campaign.metrics.roas}x` : 'Across captured leads'}
+            {campaign.metrics.roas != null ? `ROAS: ${campaign.metrics.roas}x` : 'Across captured leads'}
           </p>
         </div>
       </div>
@@ -290,7 +304,7 @@ export default function CampaignDetailPage() {
             </Button>
           </div>
 
-          {leadsQuery.isPending ? (
+          {!canReadLeads ? <p className="text-sm text-muted">Lead access is required to view attributed leads.</p> : leadsQuery.isPending ? (
             <div className="space-y-3">
               {[0, 1, 2].map((i) => (
                 <Skeleton key={i} className="h-12" />
@@ -373,10 +387,11 @@ export default function CampaignDetailPage() {
               <div className="flex items-center gap-2">
                 <input
                   readOnly
+                  aria-label="Campaign tracking URL"
                   value={trackingUrl || 'No landing page URL configured'}
                   className="min-w-0 flex-1 rounded-control border border-line bg-surface px-3 py-2 font-mono text-xs text-ink"
                 />
-                <Button size="sm" variant="secondary" onClick={copyLink} disabled={!trackingUrl}>
+                <Button size="sm" variant="secondary" aria-label="Copy campaign tracking URL" onClick={copyLink} disabled={!trackingUrl}>
                   {copied ? <Check className="size-4 text-success" /> : <Copy className="size-4" />}
                 </Button>
               </div>
@@ -461,12 +476,14 @@ export default function CampaignDetailPage() {
         confirmLabel={metaConfirmation?.status === 'active' ? 'Enable on Meta' : 'Pause on Meta'}
         onConfirm={confirmMetaStatus}
       />
+      <ConfirmDialog open={deleting} onClose={() => setDeleting(false)} title={`Delete “${campaign.name}”?`} description="The tracking record will be removed. Existing leads and their attribution history are preserved." confirmLabel="Delete campaign" tone="danger" onConfirm={async () => { await remove.mutateAsync({ id: campaign.id, ifMatch: campaign.updatedAt }); navigate('/app/campaigns') }} />
       <CampaignFormDrawer
         open={drawerOpen}
-        campaign={campaign}
+        campaign={duplicating ? null : campaign}
+        duplicate={duplicating ? campaign : null}
         onClose={() => setDrawerOpen(false)}
         onSave={async (input, editId) => {
-          await save.mutateAsync({ input, id: editId, ifMatch: campaign.updatedAt })
+          await save.mutateAsync({ input, id: editId, ifMatch: editId ? campaign.updatedAt : undefined })
           void campaignQuery.refetch()
         }}
       />

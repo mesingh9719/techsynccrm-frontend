@@ -1,3 +1,6 @@
+import { UserPicker } from '../../components/app/UserPicker'
+import { useLeadSources } from '../leads/api'
+import { useCampaignOptions } from './useCampaigns'
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useId, useState } from 'react'
 import { CalendarRange, Check, Copy, Globe, Link2, Megaphone, NotebookPen, Target } from 'lucide-react'
@@ -5,7 +8,7 @@ import { FieldRow, FormDrawer, FormSection } from '../../components/app/FormDraw
 import { Button } from '../../components/ui/Button'
 import { Field, Input, MoneyInput, Select, Textarea } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
-import { useOrg } from '../../lib/useOrg'
+import { useCan, useOrg } from '../../lib/useOrg'
 import { ApiError } from '../../services/http'
 import { buildUtmUrl, generateCampaignCode } from './api'
 import {
@@ -38,6 +41,8 @@ interface CampaignDraft {
   utmContent: string
   utmTerm: string
   externalCampaignId: string
+  ownerId: string | null
+  sourceId: string
 }
 
 function initDraft(c?: Campaign | null): CampaignDraft {
@@ -61,6 +66,8 @@ function initDraft(c?: Campaign | null): CampaignDraft {
       utmContent: c.utm.utm_content ?? '',
       utmTerm: c.utm.utm_term ?? '',
       externalCampaignId: c.externalCampaignId ?? '',
+      ownerId: c.ownerId ?? null,
+      sourceId: c.sourceId ?? '',
     }
   }
   return {
@@ -81,23 +88,33 @@ function initDraft(c?: Campaign | null): CampaignDraft {
     utmContent: '',
     utmTerm: '',
     externalCampaignId: '',
+    ownerId: null,
+    sourceId: '',
   }
 }
 
 function CampaignFormContent({
   campaign,
+  duplicate,
   onClose,
   onSave,
 }: {
   campaign?: Campaign | null
+  duplicate?: Campaign | null
   onClose: () => void
   onSave: (input: CampaignInput, id?: string) => Promise<unknown>
 }) {
   const { organization } = useOrg()
   const notify = useToast()
+  const options = useCampaignOptions()
+  const sources = useLeadSources()
+  const canAssign = useCan('records.assign')
   const linkedMeta = isMetaCampaign(campaign)
 
-  const [draft, setDraft] = useState<CampaignDraft>(() => initDraft(campaign))
+  const [draft, setDraft] = useState<CampaignDraft>(() => {
+    const initial = initDraft(campaign ?? duplicate)
+    return duplicate ? { ...initial, name: `${duplicate.name} (copy)`, code: `${generateCampaignCode(duplicate.name)}-copy-${Date.now().toString(36)}`, status: 'draft', actualSpend: '', externalCampaignId: '', ownerId: null } : initial
+  })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -192,6 +209,8 @@ function CampaignFormContent({
           utm_content: draft.utmContent.trim() || undefined,
           utm_term: draft.utmTerm.trim() || undefined,
         },
+        sourceId: draft.sourceId || null,
+        ...(canAssign && (campaign || draft.ownerId) ? { ownerId: draft.ownerId } : {}),
         externalCampaignId: draft.externalCampaignId.trim() || null,
       }
 
@@ -264,8 +283,8 @@ function CampaignFormContent({
             </Field>
             <Field label="Status" hint={linkedMeta ? 'Use Enable on Meta / Pause on Meta on the campaign page.' : 'Status of this CRM tracking record.'}>
               {({ id }) => (
-                <Select id={id} disabled={linkedMeta} value={draft.status} onChange={(e) => setField('status', e.target.value as CampaignStatus)}>
-                  {Object.entries(CAMPAIGN_STATUS_LABELS).map(([k, label]) => (
+                <Select id={id} disabled={linkedMeta || options.isPending || options.isError} value={draft.status} onChange={(e) => setField('status', e.target.value as CampaignStatus)}>
+                  {Object.entries(CAMPAIGN_STATUS_LABELS).filter(([status]) => !campaign || status === campaign.status || options.data?.transitions[campaign.status]?.includes(status as CampaignStatus)).map(([k, label]) => (
                     <option key={k} value={k}>
                       {label}
                     </option>
@@ -274,6 +293,14 @@ function CampaignFormContent({
               )}
             </Field>
           </FieldRow>
+          <FieldRow>
+            <Field label="Lead source" optional error={fieldErrors.sourceId}>
+              {({ id }) => <Select id={id} disabled={sources.isPending || sources.isError} value={draft.sourceId} onChange={(event) => setField('sourceId', event.target.value)}><option value="">No source</option>{(sources.data ?? []).filter(source => !source.archived || source.id === draft.sourceId).map(source => <option key={source.id} value={source.id}>{source.name}</option>)}</Select>}
+            </Field>
+            {canAssign && <Field label="Owner" optional error={fieldErrors.ownerId}>{({ id }) => <UserPicker id={id} value={draft.ownerId} onChange={value => setField('ownerId', value)} placeholder={campaign ? 'Unassigned' : 'Me (default)'} />}</Field>}
+          </FieldRow>
+          {options.isError && <p role="alert" className="text-sm text-danger">Couldn’t load status rules. <button type="button" onClick={() => void options.refetch()}>Retry</button></p>}
+          {sources.isError && <p role="alert" className="text-sm text-danger">Couldn’t load sources. <button type="button" onClick={() => void sources.refetch()}>Retry</button></p>}
         </FormSection>
 
         <FormSection title="Schedule & budget" icon={CalendarRange}>
@@ -362,13 +389,15 @@ function CampaignFormContent({
 export function CampaignFormDrawer({
   open,
   campaign,
+  duplicate,
   onClose,
   onSave,
 }: {
   open: boolean
   campaign?: Campaign | null
+  duplicate?: Campaign | null
   onClose: () => void
   onSave: (input: CampaignInput, id?: string) => Promise<unknown>
 }) {
-  return open ? <CampaignFormContent key={campaign?.id ?? 'create'} campaign={campaign} onClose={onClose} onSave={onSave} /> : null
+  return open ? <CampaignFormContent key={campaign?.id ?? duplicate?.id ?? 'create'} campaign={campaign} duplicate={duplicate} onClose={onClose} onSave={onSave} /> : null
 }

@@ -1,3 +1,5 @@
+import { useLeadSources } from '../leads/api'
+import { FilterSelect } from '../crm/components/ListTools'
 import { useAuth } from '../../lib/useAuth'
 import { DataTable } from '../../components/app/DataTable'
 import { FilterBar, FilterChips } from '../../components/app/FilterBar'
@@ -17,7 +19,7 @@ import {
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
-import { Select } from '../../components/ui/Form'
+import { Input, Select } from '../../components/ui/Form'
 import { EmptyState, ErrorState, PageHeader, Skeleton } from '../../components/app/States'
 import { useToast } from '../../components/ui/Toast'
 import { useCan, useOrg } from '../../lib/useOrg'
@@ -25,9 +27,9 @@ import { useSeo } from '../../lib/useSeo'
 import { formatCampaignMoney as formatMinor } from './format'
 import * as fb from '../facebook/api'
 import { buildUtmUrl } from './api'
-import { Dialog } from '../../components/app/Dialog'
+import { ConfirmDialog, Dialog } from '../../components/app/Dialog'
 import { CampaignFormDrawer } from './CampaignFormDrawer'
-import { useCampaignMutations, useCampaigns } from './useCampaigns'
+import { useCampaignMutations, useCampaigns, useCampaignOptions } from './useCampaigns'
 import { CAMPAIGN_STATUS_LABELS, CAMPAIGN_TYPE_LABELS, isMetaCampaign, type Campaign } from './types'
 
 export default function CampaignsPage() {
@@ -43,16 +45,19 @@ export default function CampaignsPage() {
   const canSync = useCan('settings.workspace.manage')
   const permissions = user?.organization?.permissions ?? []
   const canEditCampaign = (campaign: Campaign) => canEdit && (!permissions.includes('campaigns.update.own') || permissions.some((permission) => ['campaigns.update.all', 'campaigns.update.team'].includes(permission)) || campaign.ownerId === user?.id)
-  const canPauseCampaign = (campaign: Campaign) => canEditCampaign(campaign) && (!isMetaCampaign(campaign) || (canSync && campaign.status !== 'archived'))
+  const options = useCampaignOptions()
+  const sources = useLeadSources()
+  const canPauseCampaign = (campaign: Campaign) => canEditCampaign(campaign) && (isMetaCampaign(campaign) ? canSync && campaign.status !== 'archived' : campaign.status === 'paused' || Boolean(options.data?.transitions[campaign.status]?.includes('paused')))
 
   const navigate = useNavigate()
-  const { filters, setFilter, clearFilters, replaceFilters } = useUrlFilters(['q', 'status', 'type'] as const)
+  const { filters, setFilter, clearFilters, replaceFilters } = useUrlFilters(['q', 'status', 'type', 'ownerId', 'sourceId', 'createdFrom', 'createdTo', 'sort'] as const)
   const search = filters.q ?? '', statusFilter = filters.status ?? 'all', typeFilter = filters.type ?? 'all'
   const setSearch = (value: string) => setFilter('q', value)
   const setStatusFilter = (value: string) => setFilter('status', value === 'all' ? undefined : value)
   const setTypeFilter = (value: string) => setFilter('type', value === 'all' ? undefined : value)
   const [page, setPage] = useState(0)
   const [selection, setSelection] = useState<Set<string>>(() => new Set())
+  const [confirmBulkMeta, setConfirmBulkMeta] = useState(false)
   const [bulkBusy, setBulkBusy] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null)
@@ -76,6 +81,10 @@ export default function CampaignsPage() {
 
   // Filter campaigns
   const filtered = campaigns.filter((c) => {
+    if (filters.ownerId && c.ownerId !== (filters.ownerId === 'me' ? user?.id : filters.ownerId === 'none' ? null : filters.ownerId)) return false
+    if (filters.sourceId && c.sourceId !== filters.sourceId) return false
+    if (filters.createdFrom && c.createdAt.slice(0, 10) < filters.createdFrom) return false
+    if (filters.createdTo && c.createdAt.slice(0, 10) > filters.createdTo) return false
     if (statusFilter !== 'all' && c.status !== statusFilter) return false
     if (typeFilter !== 'all' && c.type !== typeFilter) return false
     if (search.trim()) {
@@ -87,6 +96,28 @@ export default function CampaignsPage() {
     }
     return true
   })
+
+  const sort = filters.sort ?? '-createdAt'
+  const sortKey = sort.replace(/^-/, '') as keyof Campaign
+  filtered.sort((a, b) => {
+    const left = a[sortKey], right = b[sortKey]
+    const order = typeof left === 'number' || typeof right === 'number' ? Number(left ?? 0) - Number(right ?? 0) : String(left ?? '').localeCompare(String(right ?? ''), undefined, { numeric: true })
+    return (sort.startsWith('-') ? -order : order) || a.id.localeCompare(b.id)
+  })
+  const currentPage = Math.min(page, Math.max(0, Math.ceil(filtered.length / 25) - 1))
+
+  async function pauseSelected() {
+    if (bulkBusy) return
+    setBulkBusy(true)
+    try {
+      const picked = filtered.filter(campaign => selection.has(campaign.id) && canPauseCampaign(campaign))
+      const results = await Promise.allSettled(picked.map(campaign => setStatus.mutateAsync({ id: campaign.id, status: 'paused', ifMatch: campaign.updatedAt })))
+      const failed = picked.filter((_, index) => results[index].status === 'rejected')
+      setSelection(new Set(failed.map(campaign => campaign.id)))
+      notify({ tone: failed.length ? 'error' : 'success', title: `${picked.length - failed.length} campaigns paused${failed.length ? ` · ${failed.length} could not be updated` : ''}`, description: failed.length ? 'Failed campaigns remain selected. Reload before retrying.' : undefined })
+      setConfirmBulkMeta(false)
+    } finally { setBulkBusy(false) }
+  }
 
   // Executive summary stats
   const activeCount = campaigns.filter((c) => c.status === 'active').length
@@ -185,18 +216,17 @@ export default function CampaignsPage() {
       <FilterBar search={{ value: search, onChange: (value) => { setPage(0); setSearch(value) }, placeholder: 'Search campaigns or tracking codes', label: 'Search campaigns' }}>
         <Select aria-label="Campaign status" value={statusFilter} onChange={(event) => { setPage(0); setStatusFilter(event.target.value) }}><option value="all">All statuses</option>{Object.entries(CAMPAIGN_STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>
         <Select aria-label="Campaign channel" value={typeFilter} onChange={(event) => { setPage(0); setTypeFilter(event.target.value) }}><option value="all">All channels</option>{Object.entries(CAMPAIGN_TYPE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>
+        <FilterSelect label="Owner" value={filters.ownerId} onChange={value => { setFilter('ownerId', value); setPage(0) }} options={[{ value: 'me', label: 'Me' }, { value: 'none', label: 'Unassigned' }]} />
+        <FilterSelect label="Source" value={filters.sourceId} onChange={value => { setFilter('sourceId', value); setPage(0) }} options={(sources.data ?? []).map(source => ({ value: source.id, label: source.name }))} />
+        <Input type="date" aria-label="Campaigns created from" value={filters.createdFrom ?? ''} onChange={event => { setFilter('createdFrom', event.target.value); setPage(0) }} className="w-auto" />
+        <Input type="date" aria-label="Campaigns created to" value={filters.createdTo ?? ''} min={filters.createdFrom} onChange={event => { setFilter('createdTo', event.target.value); setPage(0) }} className="w-auto" />
         <LocalViews module="campaigns" filters={filters} onApply={(value) => { replaceFilters(value); setPage(0); setSelection(new Set()) }} />
       </FilterBar>
       <FilterChips filters={filters} onRemove={(key) => { setFilter(key, undefined); setPage(0) }} onClear={() => { clearFilters(); setPage(0) }} />
       {canEdit && <BulkBar count={filtered.filter((campaign) => selection.has(campaign.id) && canPauseCampaign(campaign)).length} onClear={() => setSelection(new Set())}>
-        <BulkButton onClick={async () => {
-          if (bulkBusy) return
-          setBulkBusy(true)
-          const picked = filtered.filter((campaign) => selection.has(campaign.id) && canPauseCampaign(campaign))
-          const results = await Promise.allSettled(picked.map((campaign) => setStatus.mutateAsync({ id: campaign.id, status: 'paused', ifMatch: campaign.updatedAt })))
-          const failed = picked.filter((_, index) => results[index].status === 'rejected')
-          setSelection(new Set(failed.map((campaign) => campaign.id))); setBulkBusy(false)
-          notify({ tone: failed.length ? 'error' : 'success', title: `${picked.length - failed.length} campaigns paused${failed.length ? ` · ${failed.length} could not be updated` : ''}`, description: failed.length ? 'Failed campaigns remain selected. Review your permissions or reload before retrying.' : undefined })
+        <BulkButton onClick={() => {
+          if (filtered.some(campaign => selection.has(campaign.id) && canPauseCampaign(campaign) && isMetaCampaign(campaign))) setConfirmBulkMeta(true)
+          else void pauseSelected()
         }}>{bulkBusy ? 'Pausing…' : 'Pause selected'}</BulkButton>
         <span className="text-xs text-muted">Linked Meta campaigns are paused on Meta.</span>
       </BulkBar>}
@@ -237,7 +267,7 @@ export default function CampaignsPage() {
           </div>
         ) : (
           <div className="p-4">
-            <DataTable caption="Campaigns" rows={filtered.slice(Math.min(page, Math.max(0, Math.ceil(filtered.length / 25) - 1)) * 25, (Math.min(page, Math.max(0, Math.ceil(filtered.length / 25) - 1)) + 1) * 25)} getRowId={(campaign) => campaign.id} canSelectRow={canPauseCampaign} onRowClick={(campaign) => navigate(`/app/campaigns/${campaign.id}`)} selectedIds={canEdit ? selection : undefined} onSelectionChange={canEdit ? setSelection : undefined}
+            <DataTable sort={sort} onSortChange={value => { setFilter('sort', value); setPage(0) }} caption="Campaigns" rows={filtered.slice(currentPage * 25, (currentPage + 1) * 25)} getRowId={(campaign) => campaign.id} canSelectRow={canPauseCampaign} onRowClick={(campaign) => navigate(`/app/campaigns/${campaign.id}`)} selectedIds={canEdit ? selection : undefined} onSelectionChange={canEdit ? setSelection : undefined}
               columns={[
                 { key: 'name', header: 'Campaign', sortKey: 'name', cell: (campaign) => <div className="min-w-48"><Link title={campaign.name} to={`/app/campaigns/${campaign.id}`} className="block max-w-64 truncate font-medium hover:text-brand-700">{campaign.name}</Link><span className="mt-1 block text-xs text-muted">{campaign.startDate}{campaign.endDate ? ` → ${campaign.endDate}` : ' · Ongoing'}</span></div> },
                 { key: 'status', header: 'Status / channel', sortKey: 'status', cell: (campaign) => <div className="space-y-2"><Badge tone={campaign.status === 'active' ? 'success' : campaign.status === 'paused' ? 'warning' : 'neutral'}>{CAMPAIGN_STATUS_LABELS[campaign.status]}</Badge><p className="whitespace-nowrap text-xs text-muted">{CAMPAIGN_TYPE_LABELS[campaign.type]}</p></div> },
@@ -248,7 +278,7 @@ export default function CampaignsPage() {
                 { key: 'conversion', header: 'Conversion', align: 'right', cell: (campaign) => `${campaign.metrics.conversionRate}%` },
                 { key: 'actions', header: 'Quick actions', align: 'right', cell: (campaign) => <div className="flex justify-end gap-1"><Button variant="ghost" size="sm" aria-label={`Copy tracking link for ${campaign.name}`} title="Copy tracking link" onClick={() => void copyTrackingLink(campaign)}><Copy className="size-4" /></Button>{canEditCampaign(campaign) && <Button variant="ghost" size="sm" aria-label={`Edit ${campaign.name}`} title="Edit campaign" onClick={() => { setEditingCampaign(campaign); setDrawerOpen(true) }}><Pencil className="size-4" /></Button>}<Button variant="ghost" size="sm" aria-label={`Open ${campaign.name}`} title="Open campaign" to={`/app/campaigns/${campaign.id}`}><ExternalLink className="size-4" /></Button></div> },
               ]} />
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted"><span>{filtered.length} matching campaigns · 25 per page</span><div className="flex gap-2"><Button variant="secondary" disabled={page <= 0} onClick={() => setPage((value) => Math.max(0, value - 1))}>Previous</Button><Button variant="secondary" disabled={(page + 1) * 25 >= filtered.length} onClick={() => setPage((value) => value + 1)}>Next</Button></div></div>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted"><span>{filtered.length} matching campaigns · 25 per page</span><div className="flex gap-2"><Button variant="secondary" disabled={currentPage <= 0} onClick={() => setPage(() => Math.max(0, currentPage - 1))}>Previous</Button><Button variant="secondary" disabled={(currentPage + 1) * 25 >= filtered.length} onClick={() => setPage(() => currentPage + 1)}>Next</Button></div></div>
           </div>
         )}
       </section>
@@ -282,6 +312,7 @@ export default function CampaignsPage() {
           </Select>
         </label>
       </Dialog>
+      <ConfirmDialog open={confirmBulkMeta} onClose={() => setConfirmBulkMeta(false)} title="Pause selected campaigns?" description="This includes linked Meta campaigns and will pause their real ad delivery." confirmLabel="Pause campaigns" onConfirm={pauseSelected} />
       {/* Drawer */}
       <CampaignFormDrawer
         open={drawerOpen}
