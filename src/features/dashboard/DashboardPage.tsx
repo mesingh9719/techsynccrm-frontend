@@ -297,7 +297,7 @@ function DashboardWorkspace({ storageKey }: { storageKey: string }) {
                   {stages.map((stage) => (
                     <Link
                       key={stage.id}
-                      to={`/app/deals?pipelineId=${board.data?.pipeline.id}`}
+                      to={`/app/deals?pipelineId=${board.data?.pipeline.id}&stageId=${stage.id}`}
                       className="group block"
                     >
                       <div className="flex items-center justify-between gap-2 text-xs">

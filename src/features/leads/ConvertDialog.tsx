@@ -1,3 +1,4 @@
+import { invalidateSales } from '../crm/invalidateSales'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -97,10 +98,9 @@ export function ConvertDialog({ lead, onClose }: { lead: LeadRecord; onClose: ()
       }
       const result = await convertLead(lead.id, input)
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: qk.org(orgId).leads.all }),
+        invalidateSales(queryClient, orgId, { leads: true, timeline: true }),
         queryClient.invalidateQueries({ queryKey: qk.org(orgId).contacts.all }),
         queryClient.invalidateQueries({ queryKey: qk.org(orgId).companies.all }),
-        queryClient.invalidateQueries({ queryKey: qk.org(orgId).deals.all }),
       ])
       notify({ title: 'Lead converted', description: result.dealId ? 'Contact and deal created — the history moved with them.' : 'The contact now holds this lead’s details and history.' })
       onClose()

@@ -1,20 +1,24 @@
+import { useCampaigns } from '../campaigns/useCampaigns'
+import { useLeadSources } from '../leads/api'
+import { invalidateSales } from '../crm/invalidateSales'
+import { projectDealMove } from './projectDealMove'
 import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
 import { DataTools } from '../transfer/DataTools'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChartColumn, Columns3, List, Lock, Plus, SquareKanban, Trash2, UserRound } from 'lucide-react'
-import { formatINRCompact } from '../../lib/format'
+import { formatCompactMoney } from '../../lib/format'
 import { cn } from '../../lib/cn'
 import { qk } from '../../lib/queryKeys'
-import { useCan } from '../../lib/useOrg'
+import { useCan, useOrg } from '../../lib/useOrg'
 import { useSeo } from '../../lib/useSeo'
 import { useUrlFilters } from '../../lib/useUrlFilters'
 import { handleGlobalApiError } from '../../lib/apiErrors'
 import { ApiError } from '../../services/http'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { Select } from '../../components/ui/Form'
+import { Input, Select } from '../../components/ui/Form'
 import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import { useToast } from '../../components/ui/Toast'
 import { DataTable, type Column } from '../../components/app/DataTable'
@@ -34,7 +38,7 @@ import { bulkDeals, getBoard, getForecast, listDeals, usePipelines } from './api
 import { DealFormDrawer } from './DealFormDrawer'
 import { useDealMover } from './useDealMover'
 
-const KEYS = ['view', 'pipelineId', 'ownerId', 'q', 'status', 'sort', 'rotting'] as const
+const KEYS = ['view', 'pipelineId', 'ownerId', 'q', 'status', 'sort', 'rotting', 'stageId', 'campaignId', 'sourceId', 'createdFrom', 'createdTo'] as const
 const statusTone = { open: 'brand', won: 'success', lost: 'danger' } as const
 
 function toBoardDeal(d: DealRecord): BoardDeal {
@@ -44,6 +48,7 @@ function toBoardDeal(d: DealRecord): BoardDeal {
     company: d.company?.name ?? d.contacts[0]?.displayName ?? d.title,
     title: d.title,
     value: d.valueMinor / 100,
+    currency: d.currency,
     owner: d.owner?.fullName ?? 'Unassigned',
     days: d.daysInStage,
     rotting: d.isRotting,
@@ -53,6 +58,8 @@ function toBoardDeal(d: DealRecord): BoardDeal {
 /** Board for one pipeline: optimistic moves, rollback on error, per-column "Load more". */
 function BoardView({ params, canMove }: { params: Record<string, string | undefined>; canMove: boolean }) {
   const orgId = useOrgId()
+  const { organization } = useOrg()
+  const currency = organization?.currency ?? 'INR'
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const notify = useToast()
@@ -70,37 +77,12 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
   }
 
   const mover = useDealMover({
-    onOptimistic: (deal, stage) => {
+    onOptimistic: async (deal, stage) => {
+      await queryClient.cancelQueries({ queryKey: key })
       const before = queryClient.getQueryData<Board>(key)
-      queryClient.setQueryData<Board>(key, (b) => {
-        if (!b) return b
-        return {
-          ...b,
-          stages: b.stages.map((col) => {
-            if (col.id === deal.stageId)
-              return {
-                ...col,
-                count: col.count - 1,
-                totalMinor: col.totalMinor - deal.valueMinor,
-                deals: col.deals.filter((d) => d.id !== deal.id),
-              }
-            if (col.id === stage.id)
-              return {
-                ...col,
-                count: col.count + 1,
-                totalMinor: col.totalMinor + deal.valueMinor,
-                deals: [
-                  { ...deal, stageId: stage.id, stage: { ...deal.stage, ...stage }, daysInStage: 0, isRotting: false },
-                  ...col.deals,
-                ],
-              }
-            return col
-          }),
-        }
-      })
+      queryClient.setQueryData<Board>(key, board => board ? projectDealMove(board, deal, stage) : board)
       return () => queryClient.setQueryData(key, before)
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: qk.org(orgId).deals.all }),
   })
 
   if (board.isPending) return <Skeleton className="h-[420px] rounded-card" />
@@ -114,15 +96,17 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
     name: c.name,
     kind: c.type,
     count: c.count,
-    totalLabel: formatINRCompact(c.totalMinor / 100),
+    totalLabel: formatCompactMoney(c.totalMinor / 100, currency),
     subtitle:
       c.type === 'open'
-        ? `${formatINRCompact(c.weightedMinor / 100)} weighted · ${c.probability}%`
+        ? `${formatCompactMoney(c.weightedMinor / 100, currency)} weighted · ${c.probability}%`
         : `last ${board.data.closedWithinDays} days`,
   }))
 
   async function loadMore(col: BoardColumn) {
+    const requestBoard = queryClient.getQueryData<Board>(key)
     const state = more[col.id]
+    if (state?.loading) return
     setMore((m) => ({ ...m, [col.id]: { deals: state?.deals ?? [], cursor: state?.cursor ?? null, loading: true } }))
     // The list uses the board's order; the first request also covers the 50 already shown.
     try {
@@ -137,6 +121,7 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
           closedFrom: new Date(now - board.data!.closedWithinDays * 86_400_000).toISOString(),
         }),
       })
+      if (requestBoard !== queryClient.getQueryData<Board>(key)) return
       const shown = new Set(allDeals.map((d) => d.id))
       setMore((m) => ({
         ...m,
@@ -147,6 +132,7 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
         },
       }))
     } catch (err) {
+      if (requestBoard !== queryClient.getQueryData<Board>(key)) return
       setMore((m) => ({ ...m, [col.id]: { deals: state?.deals ?? [], cursor: state?.cursor ?? null, loading: false } }))
       if (!handleGlobalApiError(err))
         notify({
@@ -164,13 +150,13 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
         <span>
           Open:{' '}
           <strong className="text-ink tabular-nums">
-            {formatMinor(totalOpen.reduce((n, c) => n + c.totalMinor, 0))}
+            {formatMinor(totalOpen.reduce((n, c) => n + c.totalMinor, 0), currency)}
           </strong>
         </span>
         <span>
           Weighted:{' '}
           <strong className="text-ink tabular-nums">
-            {formatMinor(totalOpen.reduce((n, c) => n + c.weightedMinor, 0))}
+            {formatMinor(totalOpen.reduce((n, c) => n + c.weightedMinor, 0), currency)}
           </strong>
         </span>
         <span className="tabular-nums">{totalOpen.reduce((n, c) => n + c.count, 0)} open deals</span>
@@ -184,7 +170,7 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
       <PipelineBoard
         stages={stages}
         deals={allDeals.map(toBoardDeal)}
-        canMove={canMove}
+        canMove={canMove && !mover.busy}
         onOpen={(id) => navigate(`/app/deals/${id}`)}
         onMove={(dealId, stageId) => {
           const deal = byId.get(dealId)
@@ -194,7 +180,7 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
         renderColumnFooter={(s) => {
           const col = columns.find((c) => c.id === s.id)!
           const extra = more[col.id]
-          const hasMore = extra ? Boolean(extra.cursor) || (extra.deals.length === 0 && col.hasMore) : col.hasMore
+          const hasMore = extra ? Boolean(extra.cursor) : col.hasMore
           return (
             <>
               {canCreate && !board.data.pipeline.readOnly && s.kind === 'open' && (
@@ -253,7 +239,7 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
     const result = await bulkDeals({ ids: [...selected], action, payload })
     notify(bulkSummary(result, action === 'assign' ? 'reassigned' : 'deleted'))
     setSelected(new Set())
-    await queryClient.invalidateQueries({ queryKey: qk.org(orgId).deals.all })
+    await invalidateSales(queryClient, orgId, { timeline: true })
   }
 
   const columns: Column<DealRecord>[] = [
@@ -275,7 +261,7 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
       header: 'Value',
       sortKey: 'valueMinor',
       align: 'right',
-      cell: (d) => <span className="font-medium tabular-nums">{formatMinor(d.valueMinor)}</span>,
+      cell: (d) => <span className="font-medium tabular-nums">{formatMinor(d.valueMinor, d.currency)}</span>,
     },
     {
       key: 'stage',
@@ -353,7 +339,7 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
                     {[d.stage.name, d.company?.name].filter(Boolean).join(' · ')}
                   </p>
                 </div>
-                <span className="text-sm font-semibold tabular-nums">{formatINRCompact(d.valueMinor / 100)}</span>
+                <span className="text-sm font-semibold tabular-nums">{formatCompactMoney(d.valueMinor / 100, d.currency)}</span>
               </div>
             )}
           />
@@ -387,12 +373,12 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
 }
 
 /** Open deals by expected close month/quarter: total, weighted, count, by owner. */
-function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: string }) {
+function ForecastView({ params }: { params: Record<string, string | undefined> }) {
   const orgId = useOrgId()
   const [period, setPeriod] = useState<'month' | 'quarter'>('month')
   const forecast = useQuery({
-    queryKey: [...qk.org(orgId).deals.all, 'forecast', pipelineId, ownerId, period],
-    queryFn: () => getForecast({ pipelineId, period, ownerId }),
+    queryKey: [...qk.org(orgId).deals.all, 'forecast', params, period],
+    queryFn: () => getForecast({ ...params, period }),
   })
   if (forecast.isPending) return <Skeleton className="h-64 rounded-card" />
   if (forecast.isError) return <ErrorState error={forecast.error} onRetry={() => forecast.refetch()} />
@@ -403,8 +389,8 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted">
           Weighted forecast{' '}
-          <strong className="text-ink tabular-nums">{formatMinor(f.totals.weightedMinor)}</strong> of{' '}
-          {formatMinor(f.totals.totalMinor)} across {f.totals.count} open deals
+          <strong className="text-ink tabular-nums">{formatMinor(f.totals.weightedMinor, f.currency)}</strong> of{' '}
+          {formatMinor(f.totals.totalMinor, f.currency)} across {f.totals.count} open deals
         </p>
         <SegmentedControl
           label="Group by"
@@ -441,7 +427,7 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
           </thead>
           <tbody className="divide-y divide-line">
             {f.periods.map((p) => (
-              <tr key={p.period} title={p.byOwner.map((o) => `${o.name}: ${formatMinor(o.weightedMinor)}`).join('\n')}>
+              <tr key={p.period} title={p.byOwner.map((o) => `${o.name}: ${formatMinor(o.weightedMinor, f.currency)}`).join('\n')}>
                 <th scope="row" className="py-3 font-medium text-ink">
                   {p.label}
                 </th>
@@ -457,8 +443,8 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
                     />
                   </div>
                 </td>
-                <td className="py-3 text-right font-medium tabular-nums">{formatMinor(p.weightedMinor)}</td>
-                <td className="py-3 text-right text-muted tabular-nums">{formatMinor(p.totalMinor)}</td>
+                <td className="py-3 text-right font-medium tabular-nums">{formatMinor(p.weightedMinor, f.currency)}</td>
+                <td className="py-3 text-right text-muted tabular-nums">{formatMinor(p.totalMinor, f.currency)}</td>
                 <td className="py-3 text-right text-muted tabular-nums">{p.count}</td>
               </tr>
             ))}
@@ -469,7 +455,7 @@ function ForecastView({ pipelineId, ownerId }: { pipelineId?: string; ownerId?: 
       )}
       {f.noCloseDate.count > 0 && (
         <p className="mt-4 text-xs text-muted">
-          {f.noCloseDate.count} open deal{f.noCloseDate.count === 1 ? '' : 's'} ({formatMinor(f.noCloseDate.totalMinor)}
+          {f.noCloseDate.count} open deal{f.noCloseDate.count === 1 ? '' : 's'} ({formatMinor(f.noCloseDate.totalMinor, f.currency)}
           ) have no expected close date and aren’t in the forecast.
         </p>
       )}
@@ -483,20 +469,18 @@ export default function DealsPage() {
   const canCreate = useCan('deals.create')
   const canUpdate = useCan('deals.update')
   const pipelines = usePipelines()
+  const campaigns = useCampaigns()
+  const sources = useLeadSources()
   const { filters, setFilter, activeCount, clearFilters } = useUrlFilters(KEYS)
   const [creating, setCreating] = useCreateFromUrl()
   const view = (filters.view as 'board' | 'list' | 'forecast' | undefined) ?? 'board'
   const live = (pipelines.data ?? []).filter((p) => !p.archived)
   const pipeline = live.find((p) => p.id === filters.pipelineId) ?? live.find((p) => p.isDefault) ?? live[0]
-  const boardParams = { pipelineId: pipeline?.id, ownerId: filters.ownerId, q: filters.q }
+  const boardParams = { pipelineId: pipeline?.id, ownerId: filters.ownerId, q: filters.q, status: filters.status, rotting: filters.rotting, stageId: filters.stageId, campaignId: filters.campaignId, sourceId: filters.sourceId, createdFrom: filters.createdFrom, createdTo: filters.createdTo }
   const listParams = Object.fromEntries(
     Object.entries({
-      pipelineId: pipeline?.id,
-      ownerId: filters.ownerId,
-      q: filters.q,
-      status: filters.status,
+      ...boardParams,
       sort: filters.sort,
-      rotting: filters.rotting,
     }).filter(([, v]) => v),
   ) as Record<string, string>
 
@@ -558,7 +542,12 @@ export default function DealsPage() {
               { value: 'none', label: 'Unassigned' },
             ]}
           />
-          {view === 'list' && (
+          <FilterSelect label="Campaign" value={filters.campaignId} onChange={value => setFilter('campaignId', value)} options={(campaigns.data ?? []).map(campaign => ({ value: campaign.id, label: campaign.name }))} />
+          <FilterSelect label="Source" value={filters.sourceId} onChange={value => setFilter('sourceId', value)} options={(sources.data ?? []).map(source => ({ value: source.id, label: source.name }))} />
+          <FilterSelect label="Stage" value={filters.stageId} onChange={value => setFilter('stageId', value)} options={(pipeline?.stages ?? []).map(stage => ({ value: stage.id, label: stage.name }))} />
+          <Input type="date" aria-label="Deals created from" value={filters.createdFrom ?? ''} onChange={event => setFilter('createdFrom', event.target.value)} className="w-auto" />
+          <Input type="date" aria-label="Deals created to" value={filters.createdTo ?? ''} min={filters.createdFrom} onChange={event => setFilter('createdTo', event.target.value)} className="w-auto" />
+          {view !== 'forecast' && (
             <>
               <FilterSelect
                 label="Status"
@@ -627,7 +616,7 @@ export default function DealsPage() {
       <div className="mt-5">
         {pipelines.isPending ? (
           <Skeleton className="h-[420px] rounded-card" />
-        ) : !pipeline ? (
+        ) : pipelines.isError ? <ErrorState error={pipelines.error} onRetry={() => pipelines.refetch()} /> : !pipeline ? (
           <EmptyState
             icon={SquareKanban}
             title="No pipeline yet"
@@ -641,9 +630,9 @@ export default function DealsPage() {
         ) : view === 'list' ? (
           <ListView params={listParams} canUpdate={canUpdate} />
         ) : view === 'forecast' ? (
-          <ForecastView pipelineId={pipeline.id} ownerId={filters.ownerId} />
+          <ForecastView params={boardParams} />
         ) : (
-          <BoardView params={boardParams} canMove={canUpdate} />
+          <BoardView key={JSON.stringify(boardParams)} params={boardParams} canMove={canUpdate} />
         )}
       </div>
       {creating && <DealFormDrawer open onClose={() => setCreating(false)} defaults={{ pipelineId: pipeline?.id }} />}

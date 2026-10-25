@@ -264,6 +264,7 @@ export interface PipelineStage {
   /** Core keys (valueMinor, expectedCloseDate, companyId, contacts, ownerId) or "cf.<key>" */
   requiredFields: string[]
   dealCount?: number
+  totalDealCount?: number
 }
 
 export interface Pipeline {
@@ -276,6 +277,7 @@ export interface Pipeline {
   /** Over the plan's pipeline limit after a downgrade: deals can only be marked won/lost. */
   readOnly?: boolean
   dealCount?: number
+  totalDealCount?: number
   stages: PipelineStage[]
 }
 

@@ -5,6 +5,7 @@ import { ApiError } from '../../services/http'
 import { Button } from '../../components/ui/Button'
 import { Field, FormAlert, Input, Select, Textarea } from '../../components/ui/Form'
 import { Dialog } from '../../components/app/Dialog'
+import { ErrorState } from '../../components/app/States'
 import { UserPicker } from '../../components/app/UserPicker'
 import { listCompanies } from '../companies/api'
 import { listContacts } from '../contacts/api'
@@ -65,8 +66,8 @@ export function MoveDealDialog({
     setBusy(true)
     setError(null)
     try {
-      await onSubmit({ stageId: stage.id, ...(Object.keys(fields).length && { fields }), ...(stage.type === 'lost' && { lostReasonId, lostNote: lostNote.trim() || null }) })
-      onClose()
+      const result = await onSubmit({ stageId: stage.id, ...(Object.keys(fields).length && { fields }), ...(stage.type === 'lost' && { lostReasonId, lostNote: lostNote.trim() || null }) })
+      if (result !== false) onClose()
     } catch (err) {
       setError(err instanceof ApiError ? (Object.values(err.fields)[0] ?? err.message) : 'Couldn’t move the deal')
     } finally {
@@ -79,6 +80,7 @@ export function MoveDealDialog({
     <Dialog
       open
       onClose={onClose}
+      busy={busy}
       title={title}
       description={missing.length ? `${stage.name} needs ${missing.length === 1 ? 'this' : 'these'} first.` : undefined}
       footer={
@@ -134,6 +136,7 @@ export function MoveDealDialog({
           ))}
         {stage.type === 'lost' && (
           <>
+            {reasons.isError && <ErrorState error={reasons.error} onRetry={() => reasons.refetch()} />}
             <Field label="Why was it lost?">
               {({ id }) => (
                 <Select id={id} value={lostReasonId} onChange={(e) => setLostReasonId(e.target.value)}>

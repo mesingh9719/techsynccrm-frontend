@@ -1,3 +1,4 @@
+import { invalidateSales } from '../crm/invalidateSales'
 import { RecordWorkspace } from '../crm/components/RecordWorkspace'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -97,7 +98,7 @@ function StageStepper({
             onClick={() => onMove(won)}
           >
             <Trophy className="size-4" aria-hidden="true" />
-            {deal.status === 'won' ? 'Won' : `Mark ${won.name.toLowerCase()}`}
+            {deal.status === 'won' ? won.name : `Mark ${won.name.toLowerCase()}`}
           </Button>
         )}
         {lost && (
@@ -109,7 +110,7 @@ function StageStepper({
             onClick={() => onMove(lost)}
           >
             <X className="size-4" aria-hidden="true" />
-            {deal.status === 'lost' ? 'Lost' : `Mark ${lost.name.toLowerCase()}`}
+            {deal.status === 'lost' ? lost.name : `Mark ${lost.name.toLowerCase()}`}
           </Button>
         )}
       </div>
@@ -138,8 +139,8 @@ export default function DealDetailPage() {
   const [addingContact, setAddingContact] = useState(false)
   const [now] = useState(() => Date.now())
   const deal = query.data
-  const refresh = () => queryClient.invalidateQueries({ queryKey: qk.org(orgId).deals.all })
-  const mover = useDealMover({ onSettled: refresh })
+  const refresh = () => invalidateSales(queryClient, orgId, { timeline: true })
+  const mover = useDealMover()
   useSeo({ title: deal?.title ?? 'Deal', noindex: true })
 
   if (query.isPending) return <Skeleton className="mx-auto mt-10 h-96 max-w-6xl rounded-card" />
@@ -161,7 +162,7 @@ export default function DealDetailPage() {
   async function patch(values: DealInput) {
     try {
       setDeal(await updateDeal(deal!.id, values, deal!.updatedAt))
-      await queryClient.invalidateQueries({ queryKey: qk.org(orgId).deals.lists })
+      await refresh()
     } catch (err) {
       if (err instanceof ApiError && err.code === 'STALE_UPDATE') await refresh()
       if (handleGlobalApiError(err)) throw new Error('Not saved')
@@ -172,6 +173,7 @@ export default function DealDetailPage() {
   async function contactAction(fn: () => Promise<DealRecord>) {
     try {
       setDeal(await fn())
+      await refresh()
     } catch (err) {
       if (!handleGlobalApiError(err))
         notify({
@@ -236,7 +238,7 @@ export default function DealDetailPage() {
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Badge tone={deal.status === 'won' ? 'success' : deal.status === 'lost' ? 'danger' : 'brand'}>
-              {deal.status === 'open' ? deal.stage.name : deal.status === 'won' ? 'Won' : 'Lost'}
+              {deal.stage.name}
             </Badge>
             {deal.status === 'lost' && deal.lostReason && (
               <span className="text-xs text-muted">{deal.lostReason.name}</span>
@@ -266,7 +268,7 @@ export default function DealDetailPage() {
       </header>
 
       <div className="mt-6">
-        <StageStepper deal={deal} stages={stages} disabled={!canUpdate} onMove={(s) => void mover.move(deal, s)} />
+        <StageStepper deal={deal} stages={stages} disabled={!canUpdate || mover.busy} onMove={(s) => void mover.move(deal, s)} />
         {pipeline?.readOnly && (
           <p className="mt-2 text-xs text-amber-700">
             This pipeline is read-only on your plan — the deal can only be marked won or lost.
@@ -282,7 +284,7 @@ export default function DealDetailPage() {
                 <InlineText
                   label="title"
                   value={deal.title}
-                  disabled={!canUpdate}
+                  disabled={!canUpdate || mover.busy}
                   onSave={(v) => (v ? patch({ title: v }) : Promise.reject(new Error('A deal needs a title')))}
                 />
               </FieldRow>
@@ -434,7 +436,7 @@ export default function DealDetailPage() {
         onClose={() => setDialog(null)}
         onConfirm={async () => {
           await deleteDeal(deal.id)
-          await refresh()
+          await invalidateSales(queryClient, orgId, { timeline: true, refetchType: 'none' })
           notify({ title: 'Deal deleted', description: 'You can restore it from the bin for 30 days.' })
           navigate('/app/deals')
         }}

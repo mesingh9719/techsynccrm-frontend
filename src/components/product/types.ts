@@ -23,6 +23,7 @@ export interface BoardDeal {
   title: string
   /** Major units (rupees); formatted compactly (₹1.8L). */
   value: number
+  currency?: string
   owner: string
   /** Days without activity in the current stage. */
   days: number

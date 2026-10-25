@@ -99,7 +99,7 @@ export function getDealHistory(id: string) {
   return api<{ history: StageHistoryEntry[] }>(`/deals/${id}/history`).then((d) => d.history)
 }
 
-export function getForecast(params: { pipelineId?: string; period: 'month' | 'quarter'; ownerId?: string }) {
+export function getForecast(params: Record<string, string | undefined> & { period: 'month' | 'quarter' }) {
   return api<Forecast>('/deals/forecast', { query: params })
 }
 

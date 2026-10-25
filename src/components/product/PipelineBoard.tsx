@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { Clock, GripVertical, Trophy } from 'lucide-react'
-import { formatINRCompact } from '../../lib/format'
+import { formatCompactMoney, formatINRCompact } from '../../lib/format'
 import { cn } from '../../lib/cn'
 import { Avatar } from '../ui/Badge'
 import type { BoardDeal, BoardStage } from './types'
@@ -160,7 +160,7 @@ export function PipelineBoard({
                       tabIndex={0}
                       onClick={onOpen ? () => onOpen(deal.id) : undefined}
                       aria-describedby="pipeline-help"
-                      aria-label={`${deal.company}, ${deal.title}, ${formatINRCompact(deal.value)}, owner ${deal.owner}`}
+                      aria-label={`${deal.company}, ${deal.title}, ${formatCompactMoney(deal.value, deal.currency)}, owner ${deal.owner}`}
                       onDragStart={(e) => {
                         e.dataTransfer.setData('text/plain', deal.id)
                         e.dataTransfer.effectAllowed = 'move'
@@ -190,7 +190,7 @@ export function PipelineBoard({
                       <p title={deal.title} className="mt-1 truncate text-xs text-muted">{deal.title}</p>
                       <div className="mt-3 flex items-center justify-between">
                         <span className="text-sm font-semibold text-ink tabular-nums">
-                          {formatINRCompact(deal.value)}
+                          {formatCompactMoney(deal.value, deal.currency)}
                         </span>
                         <div className="flex items-center gap-2">
                           {stale && !isWon && !isLost && (

@@ -40,3 +40,8 @@ export function initials(name: string) {
     .join('')
     .toUpperCase()
 }
+
+/** Compact money in the record/workspace currency. */
+export function formatCompactMoney(value: number, currency = 'INR') {
+  return currency === 'INR' ? formatINRCompact(value) : new Intl.NumberFormat('en-US', { style: 'currency', currency, notation: 'compact', maximumFractionDigits: 2 }).format(value)
+}

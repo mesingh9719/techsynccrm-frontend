@@ -1,3 +1,4 @@
+import { invalidateSales } from '../crm/invalidateSales'
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -112,12 +113,12 @@ export function DealFormDrawer({
     }
     try {
       const saved = deal ? await updateDeal(deal.id, input, deal.updatedAt) : await createDeal({ ...input, title: input.title!, pipelineId: pipeline?.id, stageId: stageId! })
-      await queryClient.invalidateQueries({ queryKey: qk.org(orgId).deals.all })
+      await invalidateSales(queryClient, orgId, { timeline: true })
       notify({ title: deal ? 'Deal saved' : `${saved.title} added` })
       close()
       if (!deal) navigate(`/app/deals/${saved.id}`)
     } catch (err) {
-      if (err instanceof ApiError && err.code === 'STALE_UPDATE') await queryClient.invalidateQueries({ queryKey: qk.org(orgId).deals.all })
+      if (err instanceof ApiError && err.code === 'STALE_UPDATE') await invalidateSales(queryClient, orgId, { timeline: true })
       if (err instanceof ApiError && err.code === 'STAGE_REQUIREMENTS') setServerError(`${err.message} (${((err.details?.missing as string[]) ?? []).join(', ')})`)
       else if (err instanceof ApiError && Object.keys(err.fields).length) setErrors(err.fields)
       else if (!handleGlobalApiError(err)) setServerError(err instanceof ApiError ? err.message : 'Couldn’t save. Please try again.')

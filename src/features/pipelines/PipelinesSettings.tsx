@@ -1,5 +1,6 @@
+import { invalidateSales } from '../crm/invalidateSales'
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, Lock, Plus, Star, Trash2, Trophy, X } from 'lucide-react'
 import { emitAppEvent } from '../../lib/appEvents'
@@ -37,7 +38,7 @@ function NewPipelineDialog({ onClose }: { onClose: () => void }) {
     setError(null)
     try {
       await createPipeline({ name: name.trim(), templateKey })
-      await queryClient.invalidateQueries({ queryKey: qk.org(orgId).pipelines })
+      await invalidateSales(queryClient, orgId, { timeline: true })
       onClose()
     } catch (err) {
       if (!handleGlobalApiError(err)) setError(errorText(err))
@@ -58,7 +59,7 @@ function NewPipelineDialog({ onClose }: { onClose: () => void }) {
           <Button variant="secondary" onClick={guard.requestClose}>
             Cancel
           </Button>
-          <Button onClick={save} loading={busy} disabled={!name.trim()}>
+          <Button onClick={save} loading={busy} disabled={!name.trim() || templates.isPending || templates.isError}>
             Create pipeline
           </Button>
         </>
@@ -77,6 +78,8 @@ function NewPipelineDialog({ onClose }: { onClose: () => void }) {
             </Select>
           )}
         </Field>
+        {templates.isError && <ErrorState error={templates.error} onRetry={() => templates.refetch()} />}
+        {templates.isPending && <p role="status">Loading templates…</p>}
         {template && (
           <ol className="flex flex-wrap items-center gap-2 text-xs">
             {template.stages.map((s) => (
@@ -103,10 +106,15 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
   const [name, setName] = useState(stage.name)
   const [probability, setProbability] = useState(String(stage.probability))
   const [rotting, setRotting] = useState(stage.rottingDays === null ? '' : String(stage.rottingDays))
+  const saving = useRef(false)
+  const [busy, setBusy] = useState(false)
   const system = stage.type !== 'open'
   const options = [...Object.entries(requirableFieldLabels).map(([value, label]) => ({ value, label })), ...(defs.data ?? []).filter((d) => !d.archived).map((d) => ({ value: `cf.${d.key}`, label: d.label }))]
 
   async function save(values: Parameters<typeof updateStage>[2]) {
+    if (saving.current) return
+    saving.current = true
+    setBusy(true)
     try {
       await updateStage(pipeline.id, stage.id, values)
       await onChanged()
@@ -115,7 +123,7 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
       setName(stage.name)
       setProbability(String(stage.probability))
       setRotting(stage.rottingDays === null ? '' : String(stage.rottingDays))
-    }
+    } finally { saving.current = false; setBusy(false) }
   }
 
   return (
@@ -124,7 +132,7 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
         {system ? stage.type === 'won' ? <Trophy className="size-4 text-success" aria-hidden="true" /> : <X className="size-4 text-danger" aria-hidden="true" /> : <span className="w-4 text-center text-xs text-muted tabular-nums">{index + 1}</span>}
         <input
           value={name}
-          disabled={!canManage}
+          disabled={!canManage || busy}
           aria-label={`Name of stage ${stage.name}`}
           onChange={(e) => setName(e.target.value)}
           onBlur={() => name.trim() && name.trim() !== stage.name && save({ name: name.trim() })}
@@ -138,7 +146,7 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
                 min={0}
                 max={100}
                 value={probability}
-                disabled={!canManage}
+                disabled={!canManage || busy}
                 onChange={(e) => setProbability(e.target.value)}
                 onBlur={() => Number(probability) !== stage.probability && save({ probability: Math.max(0, Math.min(100, Number(probability) || 0)) })}
                 className="h-8 w-16 rounded-md border border-line px-2 text-sm tabular-nums"
@@ -153,7 +161,7 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
                 min={1}
                 max={365}
                 value={rotting}
-                disabled={!canManage}
+                disabled={!canManage || busy}
                 placeholder="off"
                 onChange={(e) => setRotting(e.target.value)}
                 onBlur={() => {
@@ -171,13 +179,13 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
         <span className="text-xs text-muted tabular-nums">{stage.dealCount ?? 0} deals</span>
         {canManage && !system && (
           <span className="flex">
-            <button type="button" disabled={index === 0} onClick={() => onMove(-1)} className="rounded-control p-2 text-muted hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} up`}>
+            <button type="button" disabled={busy || index === 0} onClick={() => onMove(-1)} className="rounded-control p-2 text-muted hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} up`}>
               <ArrowUp className="size-4" aria-hidden="true" />
             </button>
-            <button type="button" disabled={index === openCount - 1} onClick={() => onMove(1)} className="rounded-control p-2 text-muted hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} down`}>
+            <button type="button" disabled={busy || index === openCount - 1} onClick={() => onMove(1)} className="rounded-control p-2 text-muted hover:bg-zinc-100 disabled:opacity-30" aria-label={`Move ${stage.name} down`}>
               <ArrowDown className="size-4" aria-hidden="true" />
             </button>
-            <button type="button" disabled={openCount <= 1} onClick={onDelete} className="rounded-control p-2 text-muted hover:bg-red-50 hover:text-danger disabled:opacity-30" aria-label={`Delete ${stage.name}`}>
+            <button type="button" disabled={busy || openCount <= 1} onClick={onDelete} className="rounded-control p-2 text-muted hover:bg-red-50 hover:text-danger disabled:opacity-30" aria-label={`Delete ${stage.name}`}>
               <Trash2 className="size-4" aria-hidden="true" />
             </button>
           </span>
@@ -192,7 +200,7 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
               <button
                 key={o.value}
                 type="button"
-                disabled={!canManage}
+                disabled={!canManage || busy}
                 aria-pressed={on}
                 onClick={() => save({ requiredFields: on ? stage.requiredFields.filter((f) => f !== o.value) : [...stage.requiredFields, o.value] })}
                 className={cn('rounded-full px-2 py-1 text-xs ring-1', on ? 'bg-brand-50 text-brand-800 ring-brand-200' : 'text-muted ring-line hover:bg-surface')}
@@ -216,25 +224,30 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
   const [deleting, setDeleting] = useState<PipelineStage | 'pipeline' | null>(null)
   const [moveTo, setMoveTo] = useState('')
   const [name, setName] = useState(pipeline.name)
-  const refresh = () => queryClient.invalidateQueries({ queryKey: qk.org(orgId).pipelines })
+  const refresh = () => invalidateSales(queryClient, orgId, { timeline: true })
+  const saving = useRef(false)
+  const [busy, setBusy] = useState(false)
   const open = pipeline.stages.filter((s) => s.type === 'open')
   const system = pipeline.stages.filter((s) => s.type !== 'open')
 
   async function run(fn: () => Promise<unknown>, success?: string) {
+    if (saving.current) return false
+    saving.current = true
+    setBusy(true)
     try {
       await fn()
       await refresh()
-      await queryClient.invalidateQueries({ queryKey: qk.org(orgId).deals.all })
       if (success) notify({ title: success })
       return true
     } catch (err) {
       if (!handleGlobalApiError(err)) notify({ tone: 'error', title: 'Couldn’t save', description: errorText(err) })
+      setName(pipeline.name)
       return false
-    }
+    } finally { saving.current = false; setBusy(false) }
   }
 
   const otherOpenStages = deleting === 'pipeline' ? pipelines.filter((p) => p.id !== pipeline.id).flatMap((p) => p.stages.filter((s) => s.type === 'open').map((s) => ({ ...s, label: `${p.name} → ${s.name}` }))) : open.filter((s) => s !== deleting).map((s) => ({ ...s, label: s.name }))
-  const needsMove = deleting === 'pipeline' ? (pipeline.dealCount ?? 0) > 0 : deleting ? (deleting.dealCount ?? 0) > 0 : false
+  const needsMove = deleting === 'pipeline' ? (pipeline.totalDealCount ?? pipeline.dealCount ?? 0) > 0 : deleting ? (deleting.totalDealCount ?? deleting.dealCount ?? 0) > 0 : false
 
   return (
     <SettingsSection
@@ -244,13 +257,13 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
         canManage && (
           <>
             {!pipeline.isDefault && (
-              <Button size="sm" variant="secondary" onClick={() => run(() => updatePipeline(pipeline.id, { isDefault: true }), `${pipeline.name} is now the default`)}>
+              <Button size="sm" variant="secondary" disabled={busy} onClick={() => run(() => updatePipeline(pipeline.id, { isDefault: true }), `${pipeline.name} is now the default`)}>
                 <Star className="size-4" aria-hidden="true" />
                 Make default
               </Button>
             )}
             {!pipeline.isDefault && (
-              <Button size="sm" variant="ghost" onClick={() => setDeleting('pipeline')} aria-label={`Delete ${pipeline.name}`}>
+              <Button size="sm" variant="ghost" disabled={busy} onClick={() => setDeleting('pipeline')} aria-label={`Delete ${pipeline.name}`}>
                 <Trash2 className="size-4" aria-hidden="true" />
               </Button>
             )}
@@ -269,6 +282,7 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
         {canManage && (
           <input
             value={name}
+            disabled={busy}
             aria-label="Pipeline name"
             onChange={(e) => setName(e.target.value)}
             onBlur={() => name.trim() && name.trim() !== pipeline.name && run(() => updatePipeline(pipeline.id, { name: name.trim() }))}
@@ -284,7 +298,7 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
             stage={s}
             index={i}
             openCount={open.length}
-            canManage={canManage}
+            canManage={canManage && !busy}
             onChanged={refresh}
             onDelete={() => setDeleting(s)}
             onMove={(dir) => {
@@ -295,7 +309,7 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
           />
         ))}
         {system.map((s, i) => (
-          <StageRow key={`${s.id}:${s.name}`} pipeline={pipeline} stage={s} index={i} openCount={open.length} canManage={canManage} onChanged={refresh} onDelete={() => {}} onMove={() => {}} />
+          <StageRow key={`${s.id}:${s.name}`} pipeline={pipeline} stage={s} index={i} openCount={open.length} canManage={canManage && !busy} onChanged={refresh} onDelete={() => {}} onMove={() => {}} />
         ))}
       </ul>
       {canManage && (
@@ -307,7 +321,7 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
           }}
         >
           <Input value={newStage} onChange={(e) => setNewStage(e.target.value)} placeholder="New stage, e.g. Demo done" aria-label="New stage name" maxLength={60} />
-          <Button type="submit" variant="secondary" disabled={!newStage.trim()}>
+          <Button type="submit" variant="secondary" disabled={busy || !newStage.trim()}>
             <Plus className="size-4" aria-hidden="true" />
             Add stage
           </Button>
@@ -320,6 +334,7 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
           setMoveTo('')
         }}
         onConfirm={async () => {
+          if (needsMove && !moveTo) throw new Error('Choose a destination for the deals first.')
           const ok =
             deleting === 'pipeline'
               ? await run(() => deletePipeline(pipeline.id, moveTo || undefined), 'Pipeline deleted')
@@ -332,7 +347,7 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
         title={deleting === 'pipeline' ? `Delete ${pipeline.name}?` : `Delete stage “${deleting?.name ?? ''}”?`}
         description={
           <span className="block space-y-3">
-            <span className="block">{needsMove ? 'Its deals need a new home first. Won and lost deals keep their outcome.' : 'There are no deals in it.'}</span>
+            <span className="block">{needsMove ? 'Its deals, including any in the bin, need a new home first. Won and lost deals keep their outcome.' : 'There are no deals in it.'}</span>
             {needsMove && (
               <Select aria-label="Move deals to" value={moveTo} onChange={(e) => setMoveTo(e.target.value)}>
                 <option value="">Move deals to…</option>
