@@ -1,3 +1,4 @@
+import { SalesFilterField, SalesFilters } from '../crm/components/SalesFilters'
 import { useCampaigns } from '../campaigns/useCampaigns'
 import { useLeadSources } from '../leads/api'
 import { invalidateSales } from '../crm/invalidateSales'
@@ -7,7 +8,7 @@ import { DataTools } from '../transfer/DataTools'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChartColumn, Columns3, List, Lock, Plus, SquareKanban, Trash2, UserRound } from 'lucide-react'
+import { ChartColumn, Columns3, List, Lock, Plus, SquareKanban, Trash2, UserRound, Settings2, Wallet, Target } from 'lucide-react'
 import { formatCompactMoney } from '../../lib/format'
 import { cn } from '../../lib/cn'
 import { qk } from '../../lib/queryKeys'
@@ -23,7 +24,7 @@ import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import { useToast } from '../../components/ui/Toast'
 import { DataTable, type Column } from '../../components/app/DataTable'
 import { ConfirmDialog } from '../../components/app/Dialog'
-import { FilterChips, FilterBar } from '../../components/app/FilterBar'
+import { FilterChips } from '../../components/app/FilterBar'
 import { EmptyState, ErrorState, ListSkeleton, LoadMore, PageHeader, Skeleton } from '../../components/app/States'
 import { PipelineBoard } from '../../components/product/PipelineBoard'
 import type { BoardDeal, BoardStage } from '../../components/product/types'
@@ -56,7 +57,7 @@ function toBoardDeal(d: DealRecord): BoardDeal {
 }
 
 /** Board for one pipeline: optimistic moves, rollback on error, per-column "Load more". */
-function BoardView({ params, canMove }: { params: Record<string, string | undefined>; canMove: boolean }) {
+function BoardView({ params, canMove, onClear }: { params: Record<string, string | undefined>; canMove: boolean; onClear: () => void }) {
   const orgId = useOrgId()
   const { organization } = useOrg()
   const currency = organization?.currency ?? 'INR'
@@ -89,6 +90,8 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
   if (board.isError) return <ErrorState error={board.error} onRetry={() => board.refetch()} />
 
   const columns = board.data.stages
+  const isFiltered = Object.entries(params).some(([key, value]) => key !== 'pipelineId' && Boolean(value))
+  if (isFiltered && columns.every(column => column.count === 0)) return <><EmptyState icon={SquareKanban} title="No deals match these filters" description="Try another search or broaden the filters to see more opportunities." action={<Button variant="secondary" onClick={onClear}>Clear filters</Button>} />{mover.dialog}</>
   const allDeals = columns.flatMap((c) => [...c.deals, ...(more[c.id]?.deals ?? [])])
   const byId = new Map(allDeals.map((d) => [d.id, d]))
   const stages: BoardStage[] = columns.map((c) => ({
@@ -146,28 +149,17 @@ function BoardView({ params, canMove }: { params: Record<string, string | undefi
   const totalOpen = columns.filter((c) => c.type === 'open')
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted">
-        <span>
-          Open:{' '}
-          <strong className="text-ink tabular-nums">
-            {formatMinor(totalOpen.reduce((n, c) => n + c.totalMinor, 0), currency)}
-          </strong>
-        </span>
-        <span>
-          Weighted:{' '}
-          <strong className="text-ink tabular-nums">
-            {formatMinor(totalOpen.reduce((n, c) => n + c.weightedMinor, 0), currency)}
-          </strong>
-        </span>
-        <span className="tabular-nums">{totalOpen.reduce((n, c) => n + c.count, 0)} open deals</span>
-        {board.data.pipeline.readOnly && (
-          <Badge tone="warning">
-            <Lock className="size-3" aria-hidden="true" />
-            Read-only on your plan — deals can only be marked won or lost
-          </Badge>
-        )}
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-3" aria-label="Pipeline overview">
+        {[
+          { label: 'Open pipeline', value: formatMinor(totalOpen.reduce((n, c) => n + c.totalMinor, 0), currency), hint: `${totalOpen.reduce((n, c) => n + c.count, 0).toLocaleString()} open opportunities`, icon: Wallet },
+          { label: 'Weighted value', value: formatMinor(totalOpen.reduce((n, c) => n + c.weightedMinor, 0), currency), hint: 'Based on win probability', icon: Target },
+          { label: 'Pipeline stages', value: totalOpen.length, hint: `${board.data.pipeline.name} · ${columns.length - totalOpen.length} outcomes`, icon: Columns3 },
+        ].map(({ label, value, hint, icon: Icon }, index) => <div key={label} className={cn('sales-metric surface', index === 2 && 'hidden lg:block')}><div className="flex items-center justify-between gap-2"><span className="text-xs font-medium text-muted">{label}</span><Icon className="size-4 text-brand-600" aria-hidden="true" /></div><p className="sales-metric-value mt-3">{value}</p><p className="mt-2 hidden truncate text-xs text-muted sm:block">{hint}</p></div>)}
       </div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted"><p>{canMove ? 'Drag a card to move it, or use its stage selector.' : 'Explore your team’s deals by stage.'}</p><span className="hidden sm:inline">Closed deals · last {board.data.closedWithinDays} days</span></div>
+      {board.data.pipeline.readOnly && <div className="mb-3"><Badge tone="warning"><Lock className="size-3" aria-hidden="true" />Read-only on your plan — deals can only be marked won or lost</Badge></div>}
       <PipelineBoard
+        contained
         stages={stages}
         deals={allDeals.map(toBoardDeal)}
         canMove={canMove && !mover.busy}
@@ -411,7 +403,7 @@ function ForecastView({ params }: { params: Record<string, string | undefined> }
               <th scope="col" className="py-2 font-medium">
                 Period
               </th>
-              <th scope="col" className="w-1/2 py-2 font-medium">
+              <th scope="col" className="hidden w-1/2 py-2 font-medium md:table-cell">
                 <span className="sr-only">Chart</span>
               </th>
               <th scope="col" className="py-2 text-right font-medium">
@@ -431,7 +423,7 @@ function ForecastView({ params }: { params: Record<string, string | undefined> }
                 <th scope="row" className="py-3 font-medium text-ink">
                   {p.label}
                 </th>
-                <td className="py-3 pr-4">
+                <td className="hidden py-3 pr-4 md:table-cell">
                   <div className="relative h-2 rounded-full bg-surface-subtle" aria-hidden="true">
                     <div
                       className="absolute inset-y-0 left-0 rounded-full bg-brand-200"
@@ -468,10 +460,13 @@ export default function DealsPage() {
   useSeo({ title: 'Pipeline', noindex: true })
   const canCreate = useCan('deals.create')
   const canUpdate = useCan('deals.update')
+  const canManage = useCan('settings.pipelines.manage')
   const pipelines = usePipelines()
   const campaigns = useCampaigns()
   const sources = useLeadSources()
-  const { filters, setFilter, activeCount, clearFilters } = useUrlFilters(KEYS)
+  const { filters, setFilter, replaceFilters } = useUrlFilters(KEYS)
+  const clearFilters = () => replaceFilters({ pipelineId: filters.pipelineId, view: filters.view, sort: filters.sort })
+  const advancedCount = ['campaignId', 'sourceId', 'stageId', 'createdFrom', 'createdTo', 'status', 'rotting'].filter(key => filters[key as keyof typeof filters]).length
   const [creating, setCreating] = useCreateFromUrl()
   const view = (filters.view as 'board' | 'list' | 'forecast' | undefined) ?? 'board'
   const live = (pipelines.data ?? []).filter((p) => !p.archived)
@@ -491,6 +486,7 @@ export default function DealsPage() {
         description="A clear path from first conversation to closed deal."
         actions={
           <>
+            {canManage && <Button variant="secondary" className="px-3!" aria-label="Manage stages" to="/app/settings/pipelines"><Settings2 className="size-4" aria-hidden="true" /><span className="hidden sm:inline">Manage stages</span></Button>}
             <DataTools
               entityType="deal"
               filters={listParams}
@@ -505,76 +501,14 @@ export default function DealsPage() {
           </>
         }
       />
-      <div className="mt-6 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <FilterBar
-          search={{
-            value: filters.q,
-            onChange: (v) => setFilter('q', v),
-            placeholder: 'Search deals or companies…',
-            label: 'Search deals',
-          }}
-          activeCount={activeCount - (filters.view ? 1 : 0) - (filters.pipelineId ? 1 : 0)}
-          onClear={clearFilters}
-        >
-          {live.length > 1 && (
-            <div className="sm:w-52">
-              <Select
-                aria-label="Pipeline"
-                value={pipeline?.id ?? ''}
-                onChange={(e) => setFilter('pipelineId', e.target.value)}
-                className="h-10! text-sm"
-              >
-                {live.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                    {p.readOnly ? ' (read-only)' : ''}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          )}
-          <FilterSelect
-            label="Owner"
-            value={filters.ownerId}
-            onChange={(v) => setFilter('ownerId', v)}
-            options={[
-              { value: 'me', label: 'Me' },
-              { value: 'none', label: 'Unassigned' },
-            ]}
-          />
-          <FilterSelect label="Campaign" value={filters.campaignId} onChange={value => setFilter('campaignId', value)} options={(campaigns.data ?? []).map(campaign => ({ value: campaign.id, label: campaign.name }))} />
-          <FilterSelect label="Source" value={filters.sourceId} onChange={value => setFilter('sourceId', value)} options={(sources.data ?? []).map(source => ({ value: source.id, label: source.name }))} />
-          <FilterSelect label="Stage" value={filters.stageId} onChange={value => setFilter('stageId', value)} options={(pipeline?.stages ?? []).map(stage => ({ value: stage.id, label: stage.name }))} />
-          <Input type="date" aria-label="Deals created from" value={filters.createdFrom ?? ''} onChange={event => setFilter('createdFrom', event.target.value)} className="w-auto" />
-          <Input type="date" aria-label="Deals created to" value={filters.createdTo ?? ''} min={filters.createdFrom} onChange={event => setFilter('createdTo', event.target.value)} className="w-auto" />
-          {view !== 'forecast' && (
-            <>
-              <FilterSelect
-                label="Status"
-                value={filters.status}
-                onChange={(v) => setFilter('status', v)}
-                options={[
-                  { value: 'open', label: 'Open' },
-                  { value: 'won', label: 'Won' },
-                  { value: 'lost', label: 'Lost' },
-                ]}
-              />
-              <button
-                type="button"
-                aria-pressed={filters.rotting === 'true'}
-                onClick={() => setFilter('rotting', filters.rotting ? undefined : 'true')}
-                className={cn(
-                  'inline-flex h-10 items-center rounded-lg border px-3 text-sm transition-colors',
-                  filters.rotting
-                    ? 'border-amber-300 bg-amber-50 text-amber-800'
-                    : 'border-line bg-surface text-ink hover:bg-surface-subtle',
-                )}
-              >
-                Rotting only
-              </button>
-            </>
-          )}
-        </FilterBar>
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="hidden size-9 shrink-0 items-center justify-center rounded-lg border border-line bg-surface text-brand-700 sm:inline-flex"><SquareKanban className="size-4" aria-hidden="true" /></span>
+          <div className="min-w-0">
+            {live.length > 1 ? <Select aria-label="Pipeline" value={pipeline?.id ?? ''} onChange={event => setFilter('pipelineId', event.target.value)} className="max-w-64 border-0! bg-transparent! pl-0! font-semibold!">{live.map(item => <option key={item.id} value={item.id}>{item.name}{item.readOnly ? ' (read-only)' : ''}</option>)}</Select> : <h2 className="truncate text-base font-semibold text-ink">{pipeline?.name ?? 'Your pipeline'}</h2>}
+            <p className="hidden text-xs text-muted sm:block">{pipeline?.stages.filter(stage => stage.type === 'open').length ?? 0} open stages · {pipeline?.dealCount?.toLocaleString() ?? '—'} deals in total</p>
+          </div>
+        </div>
         <SegmentedControl
           label="View"
           size="sm"
@@ -612,7 +546,20 @@ export default function DealsPage() {
         />
       </div>
 
-      <div className="mt-4"><FilterChips filters={filters} onRemove={(key) => setFilter(key, undefined)} onClear={clearFilters} /></div>
+      <div className="mt-4 space-y-3">
+        <SalesFilters label="Pipeline filters" search={{ value: filters.q, onChange: value => setFilter('q', value), placeholder: 'Find a deal or company…', label: 'Search deals' }} count={advancedCount}
+          quickFilters={<FilterSelect label="Owner" value={filters.ownerId} onChange={value => setFilter('ownerId', value)} options={[{ value: 'me', label: 'Me' }, { value: 'none', label: 'Unassigned' }]} />}
+        >
+          <SalesFilterField label="Campaign"><FilterSelect label="Campaign" value={filters.campaignId} onChange={value => setFilter('campaignId', value)} options={(campaigns.data ?? []).map(campaign => ({ value: campaign.id, label: campaign.name }))} /></SalesFilterField>
+          <SalesFilterField label="Lead source"><FilterSelect label="Source" value={filters.sourceId} onChange={value => setFilter('sourceId', value)} options={(sources.data ?? []).map(source => ({ value: source.id, label: source.name }))} /></SalesFilterField>
+          <SalesFilterField label="Stage"><FilterSelect label="Stage" value={filters.stageId} onChange={value => setFilter('stageId', value)} options={(pipeline?.stages ?? []).map(stage => ({ value: stage.id, label: stage.name }))} /></SalesFilterField>
+          {view !== 'forecast' && <SalesFilterField label="Deal status"><FilterSelect label="Status" value={filters.status} onChange={value => setFilter('status', value)} options={[{ value: 'open', label: 'Open' }, { value: 'won', label: 'Won' }, { value: 'lost', label: 'Lost' }]} /></SalesFilterField>}
+          <SalesFilterField label="Created from"><Input type="date" aria-label="Deals created from" value={filters.createdFrom ?? ''} onChange={event => setFilter('createdFrom', event.target.value)} /></SalesFilterField>
+          <SalesFilterField label="Created until"><Input type="date" aria-label="Deals created to" value={filters.createdTo ?? ''} min={filters.createdFrom} onChange={event => setFilter('createdTo', event.target.value)} /></SalesFilterField>
+          {view !== 'forecast' && <SalesFilterField label="Activity"><button type="button" aria-pressed={filters.rotting === 'true'} onClick={() => setFilter('rotting', filters.rotting ? undefined : 'true')} className={cn('inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-3 text-sm transition-colors', filters.rotting ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-line bg-surface text-ink hover:bg-surface-subtle')}>Rotting only</button></SalesFilterField>}
+        </SalesFilters>
+        <FilterChips labels={Object.fromEntries([...(campaigns.data ?? []).map(campaign => [`campaignId:${campaign.id}`, campaign.name]), ...(sources.data ?? []).map(source => [`sourceId:${source.id}`, source.name]), ...(pipeline?.stages ?? []).map(stage => [`stageId:${stage.id}`, stage.name])])} filters={filters} exclude={['sort', 'view', 'pipelineId']} onRemove={key => setFilter(key, undefined)} onClear={clearFilters} />
+      </div>
       <div className="mt-5">
         {pipelines.isPending ? (
           <Skeleton className="h-[420px] rounded-card" />
@@ -632,7 +579,7 @@ export default function DealsPage() {
         ) : view === 'forecast' ? (
           <ForecastView params={boardParams} />
         ) : (
-          <BoardView key={JSON.stringify(boardParams)} params={boardParams} canMove={canUpdate} />
+          <BoardView key={JSON.stringify(boardParams)} params={boardParams} canMove={canUpdate} onClear={clearFilters} />
         )}
       </div>
       {creating && <DealFormDrawer open onClose={() => setCreating(false)} defaults={{ pipelineId: pipeline?.id }} />}

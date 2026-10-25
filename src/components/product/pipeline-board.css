@@ -1,0 +1,12 @@
+.sales-board .sales-board-columns { flex: none; height: clamp(27rem, calc(100dvh - 26rem), 46rem); min-height: 0; align-items: stretch; gap: .875rem; padding: 0 .125rem .75rem; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.sales-board .sales-board-column { width: 19rem; max-width: calc(100vw - 3rem); height: 100%; min-height: 0; overflow: hidden; border-top: 3px solid var(--color-brand-400); border-radius: .875rem; padding: 0; scroll-snap-align: start; background: var(--color-surface-subtle); }
+.sales-board .sales-board-column[data-stage-kind='won'] { border-top-color: var(--color-success); }
+.sales-board .sales-board-column[data-stage-kind='lost'] { border-top-color: var(--color-danger); }
+.sales-board .sales-stage-header { flex-shrink: 0; min-height: 6rem; padding: 1rem .875rem .875rem; border-bottom: 1px solid var(--color-line); }
+.sales-board .sales-stage-body { min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; padding: .75rem; scrollbar-width: thin; scrollbar-color: var(--color-line) transparent; }
+.sales-board .sales-stage-body > [draggable] { flex-shrink: 0; }
+@media (max-width: 767px) {
+  .sales-board .sales-board-columns { height: max(30rem, calc(100dvh - 22rem)); }
+  .sales-board .sales-board-column { width: calc(100vw - 4.25rem); max-width: 20rem; }
+  .sales-board select { min-height: 2.75rem; }
+}

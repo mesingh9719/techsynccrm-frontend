@@ -1,3 +1,5 @@
+import { BudgetProgress, CampaignChannelIcon, CampaignStatusBadge } from './CampaignVisuals'
+import '../crm/sales-ui.css'
 import { useAuth } from '../../lib/useAuth'
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
@@ -15,11 +17,14 @@ import {
   Target,
   DollarSign,
   TrendingUp,
+  ArrowRight,
+  CalendarRange,
+  UserRound,
+  Radio,
 } from 'lucide-react'
 import { Select } from '../../components/ui/Form'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/app/Dialog'
-import { Badge } from '../../components/ui/Badge'
 import { EmptyState, ErrorState, Skeleton } from '../../components/app/States'
 import { useToast } from '../../components/ui/Toast'
 import { useCan, useOrg } from '../../lib/useOrg'
@@ -31,7 +36,7 @@ import { OwnerCell } from '../crm/components/RecordParts'
 import { buildUtmUrl, getCampaign, getCampaignLeads, getMetaCampaignState, metaAdsManagerUrl } from './api'
 import { CampaignFormDrawer } from './CampaignFormDrawer'
 import { useCampaignMutations, useCampaignOptions } from './useCampaigns'
-import { CAMPAIGN_OBJECTIVE_LABELS, CAMPAIGN_STATUS_LABELS, CAMPAIGN_TYPE_LABELS, isMetaCampaign, type CampaignStatus } from './types'
+import { CAMPAIGN_OBJECTIVE_LABELS, CAMPAIGN_STATUS_LABELS, isMetaCampaign, type CampaignStatus } from './types'
 
 export default function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -174,23 +179,16 @@ export default function CampaignDetailPage() {
           <ArrowLeft className="size-4" />
           Back to campaigns
         </Link>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700  ">
-              <Megaphone className="size-5" />
-            </span>
-            <div>
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <CampaignChannelIcon type={campaign.type} large />
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight text-ink sm:text-2xl">{campaign.name}</h1>
-                <Badge
-                  tone={campaign.status === 'active' ? 'success' : campaign.status === 'paused' ? 'warning' : 'neutral'}
-                >
-                  {CAMPAIGN_STATUS_LABELS[campaign.status]}
-                </Badge>
-                <Badge tone="brand">{CAMPAIGN_TYPE_LABELS[campaign.type]}</Badge>
+                <h1 className="font-display text-2xl font-semibold tracking-tight break-words text-ink sm:text-3xl">{campaign.name}</h1>
+                <CampaignStatusBadge status={campaign.status} />
               </div>
-              <p className="mt-1 font-mono text-xs text-muted">
-                Tracking code: <span className="text-ink font-semibold">{campaign.code}</span> · Created{' '}
+              <p className="mt-2 text-xs leading-5 break-all text-muted">
+                Tracking code: <span className="font-mono text-ink">{campaign.code}</span> · Created{' '}
                 {relativeTime(campaign.createdAt)}
               </p>
             </div>
@@ -215,15 +213,15 @@ export default function CampaignDetailPage() {
                 {!linkedMeta && <Select aria-label="Campaign lifecycle" value={campaign.status} disabled={!options.data || setStatus.isPending} onChange={event => void changeStatus(event.target.value as CampaignStatus)} className="w-auto">
                   {[campaign.status, ...(options.data?.transitions[campaign.status] ?? [])].map(status => <option key={status} value={status}>{CAMPAIGN_STATUS_LABELS[status]}</option>)}
                 </Select>}
-                <Button variant="secondary" size="sm" onClick={() => { setDuplicating(false); setDrawerOpen(true) }}>
+                <Button size="sm" onClick={() => { setDuplicating(false); setDrawerOpen(true) }}>
                   <Pencil className="size-4" />
                   Edit
                 </Button>
               </>
             )}
-            {canCreate && <Button variant="secondary" size="sm" onClick={() => { setDuplicating(true); setDrawerOpen(true) }}><Copy className="size-4" />Duplicate</Button>}
-            {canDelete && <Button variant="secondary" size="sm" onClick={() => setDeleting(true)}>Delete</Button>}
-            {canReadDeals && <Button variant="secondary" size="sm" to={`/app/deals?campaignId=${campaign.id}`}>View in pipeline</Button>}
+            {canCreate && <Button variant="ghost" size="sm" onClick={() => { setDuplicating(true); setDrawerOpen(true) }}><Copy className="size-4" />Duplicate</Button>}
+            {canDelete && <Button variant="ghost" size="sm" className="text-danger" onClick={() => setDeleting(true)}>Delete</Button>}
+            {canReadDeals && <Button variant="secondary" size="sm" to={`/app/deals?campaignId=${campaign.id}`}><span>View in pipeline</span><ArrowRight className="size-4" aria-hidden="true" /></Button>}
           </div>
         </div>
       </div>
@@ -238,38 +236,46 @@ export default function CampaignDetailPage() {
       </section>}
       {!linkedMeta && <p className="text-xs text-muted">Campaign status tracks this CRM record. Advertising delivery is managed in the channel’s advertising platform.</p>}
 
+      <div className="surface grid gap-4 p-4 text-sm sm:grid-cols-3 sm:p-5" aria-label="Campaign summary">
+        {[
+          { label: 'Schedule', value: `${campaign.startDate}${campaign.endDate ? ` → ${campaign.endDate}` : ' · Ongoing'}`, icon: CalendarRange },
+          { label: 'Lead source', value: campaign.sourceName ?? 'No source set', icon: Radio },
+          { label: 'Campaign owner', value: campaign.ownerName ?? 'Unassigned', icon: UserRound },
+        ].map(({ label, value, icon: Icon }) => <div key={label} className="flex min-w-0 items-center gap-3"><Icon className="size-4 shrink-0 text-muted" aria-hidden="true" /><div className="min-w-0"><p className="text-xs text-muted">{label}</p><p className="mt-1 truncate font-medium text-ink" title={value}>{value}</p></div></div>)}
+      </div>
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="surface p-4">
+      <div className="sales-metric-grid rounded-xl focus-visible:outline-2 focus-visible:outline-brand-500" role="group" aria-label="Campaign performance metrics" tabIndex={0}>
+        <div className="sales-metric surface">
           <div className="flex items-center justify-between text-xs text-muted">
             <span>Attributed leads</span>
             <Users className="size-4" />
           </div>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-ink tabular-nums">{totalLeads}</p>
+          <p className="sales-metric-value mt-3">{totalLeads}</p>
           <p className="mt-1 text-xs text-muted">
             {qualifiedLeads} qualified · {convertedLeads} converted
           </p>
         </div>
 
-        <div className="surface p-4">
+        <div className="sales-metric surface">
           <div className="flex items-center justify-between text-xs text-muted">
             <span>Lead conversion rate</span>
             <Target className="size-4" />
           </div>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-ink tabular-nums">{conversionRate}%</p>
+          <p className="sales-metric-value mt-3">{conversionRate}%</p>
           <div className="mt-2 h-1.5 w-full rounded-full bg-surface-subtle overflow-hidden">
             <div className="h-full rounded-full bg-brand-500" style={{ width: `${Math.min(100, conversionRate)}%` }} />
           </div>
         </div>
 
-        <div className="surface p-4">
+        <div className="sales-metric surface">
           <div className="flex items-center justify-between text-xs text-muted">
             <span>Spend / Budget</span>
             <DollarSign className="size-4" />
           </div>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-ink tabular-nums">
+          <p className="sales-metric-value mt-3">
             {campaign.actualSpendMinor != null ? formatMinor(campaign.actualSpendMinor, campaign.currency) : '—'}
           </p>
+          <div className="my-3"><BudgetProgress spend={campaign.actualSpendMinor} budget={campaign.budgetMinor} /></div>
           <p className="mt-1 text-xs text-muted">
             {campaign.budgetMinor != null
               ? `Budget: ${formatMinor(campaign.budgetMinor, campaign.currency)}`
@@ -277,12 +283,12 @@ export default function CampaignDetailPage() {
           </p>
         </div>
 
-        <div className="surface p-4">
+        <div className="sales-metric surface">
           <div className="flex items-center justify-between text-xs text-muted">
             <span>Cost per Lead (CPL)</span>
             <TrendingUp className="size-4" />
           </div>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-ink tabular-nums">
+          <p className="sales-metric-value mt-3">
             {cpl != null ? formatMinor(cpl, campaign.currency) : '—'}
           </p>
           <p className="mt-1 text-xs text-muted">
@@ -291,6 +297,12 @@ export default function CampaignDetailPage() {
         </div>
       </div>
 
+      <section className="surface p-5" aria-label="Lead journey">
+        <div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="section-title">Lead journey</h2><p className="mt-1 text-xs text-muted">Progress across leads attributed to this campaign.</p></div><span className="text-xs text-muted">{campaign.metrics.dealsWonCount.toLocaleString()} won deals · {formatMinor(campaign.metrics.revenueWonMinor, campaign.currency)} revenue</span></div>
+        <dl className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[{ label: 'Attributed', value: totalLeads }, { label: 'Contacted', value: campaign.metrics.contactedCount }, { label: 'Qualified', value: qualifiedLeads }, { label: 'Converted', value: convertedLeads }].map(({ label, value }, index) => <div key={label}><dt className="flex items-center justify-between text-xs text-muted">{label}{index < 3 && <ArrowRight className="size-3" aria-hidden="true" />}</dt><dd className="mt-2 text-xl font-semibold tabular-nums tracking-tight text-ink">{value.toLocaleString()}</dd><div className="mt-3 h-1 overflow-hidden rounded-full bg-surface-subtle" aria-hidden="true"><div className="h-full rounded-full bg-brand-500" style={{ width: `${totalLeads ? Math.min(100, value / totalLeads * 100) : 0}%`, opacity: 1 - index * .15 }} /></div></div>)}
+        </dl>
+      </section>
       <div className="grid gap-6 [&>*]:min-w-0 lg:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)]">
         {/* Attributed Leads Table */}
         <section className="surface p-5 space-y-4">
@@ -381,7 +393,7 @@ export default function CampaignDetailPage() {
         {/* Campaign Info & Tracking Details */}
         <div className="space-y-5">
           <section className="surface p-5 space-y-4">
-            <h2 className="section-title">Attribution & Tracking</h2>
+            <h2 className="section-title">Attribution & tracking</h2>
             <div className="rounded-xl border border-line bg-surface-subtle p-3 space-y-2">
               <span className="text-xs font-semibold text-ink">Campaign Tracking Link</span>
               <div className="flex items-center gap-2">
