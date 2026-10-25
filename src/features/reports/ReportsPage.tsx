@@ -78,7 +78,7 @@ export default function ReportsPage() {
   const funnelStages = data?.funnel ?? []
   const biggestDrop = funnelStages.slice(1).map((stage, index) => ({ from: funnelStages[index].stage, to: stage.stage, lost: Math.max(0, funnelStages[index].count - stage.count), rate: funnelStages[index].count ? Math.max(0, (funnelStages[index].count - stage.count) / funnelStages[index].count * 100) : 0 })).sort((a, b) => b.lost - a.lost)[0]
   const ownerOptions = members.data?.map((m) => ({ id: m.userId, name: m.fullName })) ?? []
-  const sourceOptions = sources.data ?? []
+  const sourceOptions = [{ id: 'none', name: 'No source' }, ...(sources.data ?? [])]
   return (
     <div className="app-page space-y-6">
       <PageHeader

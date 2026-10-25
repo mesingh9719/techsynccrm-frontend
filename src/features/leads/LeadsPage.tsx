@@ -471,6 +471,7 @@ export default function LeadsPage() {
           onRemove={(key) => setFilter(key, undefined)}
           onClear={() => replaceFilters(filters.status ? { status: filters.status } : {})}
           labels={Object.fromEntries([
+            ['sourceId:none', 'No source'],
             ...(sources.data ?? []).map((s) => [`sourceId:${s.id}`, s.name]),
             ...(campaigns.data ?? []).map((c) => [`campaignId:${c.id}`, c.name]),
           ])}
@@ -637,7 +638,7 @@ export default function LeadsPage() {
             label="Source"
             value={filters.sourceId}
             onChange={(v) => setFilter('sourceId', v)}
-            options={(sources.data ?? []).map((s) => ({ value: s.id, label: s.name }))}
+            options={[{ value: 'none', label: 'No source' }, ...(sources.data ?? []).map((s) => ({ value: s.id, label: s.name }))]}
           />
           {canReadCampaigns && <FilterSelect
             label="Campaign"
