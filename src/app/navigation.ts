@@ -4,6 +4,8 @@ import {
   Bell,
   Building2,
   CalendarOff,
+  CalendarDays,
+  Table2,
   ChartColumn,
   CreditCard,
   FileInput,
@@ -72,6 +74,8 @@ export const mainNav: NavItem[] = [
     shortcut: 'c',
     permission: 'contacts.read',
   },
+  { key: 'calendar', label: 'Calendar & Meet', to: '/app/calendar', icon: CalendarDays, ready: true, permission: 'google.connect.own' },
+  { key: 'sheets', label: 'Google Sheets', to: '/app/sheets', icon: Table2, ready: true, permission: 'google.connect.own' },
   { key: 'integrations', label: 'Integrations', to: '/app/integrations', icon: PlugZap, ready: true },
   {
     key: 'reports',

@@ -83,6 +83,8 @@ const appRoutes: RouteObject = {
     { path: 'companies/:id', lazy: page(() => import('./features/companies/CompanyDetailPage')) },
     { path: 'deals', lazy: page(() => import('./features/deals/DealsPage')) },
     { path: 'deals/:id', lazy: page(() => import('./features/deals/DealDetailPage')) },
+    { path: 'calendar', lazy: page(() => import('./features/google/CalendarPage')) },
+    { path: 'sheets', lazy: page(() => import('./features/google/SheetsPage')) },
     { path: 'tasks', lazy: page(() => import('./features/tasks/TasksPage')) },
     { path: 'import', lazy: page(() => import('./features/transfer/ImportPage')) },
     soon('inbox', { title: 'Inbox', module: 'M19', description: 'A shared WhatsApp and email inbox for your team.' }),

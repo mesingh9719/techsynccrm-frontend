@@ -49,7 +49,7 @@ function Connections() {
   }
   return <div className="max-w-3xl space-y-6">
     <header><h1 className="font-display text-xl font-semibold text-ink">Google connections</h1><p className="mt-1 text-sm leading-6 text-muted">Manage the Google account and permissions you use in this workspace.</p></header>
-    <p className="rounded-xl border border-line bg-surface-subtle p-4 text-sm leading-6">Connection preparation is available. Calendar event sync, Drive attachments and Sheets exports will arrive in later releases. Saving a connection does not start them.</p>
+    <p className="rounded-xl border border-line bg-surface-subtle p-4 text-sm leading-6">Use Calendar & Meet to schedule CRM meetings and Google Sheets to create spreadsheets or copy lead data. Drive attachment browsing is still pending.</p>
     {callback && <p role="status" className="text-sm leading-6">{callbackMessages[callback] || 'The Google connection could not be completed or the request expired. Start again from this page.'}</p>}
     {query.isPending && <p role="status" className="text-sm text-muted">Loading Google connections…</p>}
     {query.isError && <FormAlert>Couldn’t load Google connections. <button className="underline" onClick={() => query.refetch()}>Try again</button></FormAlert>}
@@ -62,7 +62,7 @@ function Connections() {
         {row?.lastSuccessAt && <p className="text-xs text-muted">Access last checked {new Date(row.lastSuccessAt).toLocaleString()}</p>}
         {row?.lastError && <p className="text-sm text-muted">This account needs attention. Reconnect a service to review access.</p>}
         {state.services.map((entry) => <div key={entry.service} className="flex flex-col items-start justify-between gap-3 border-t border-line pt-4 sm:flex-row">
-          <div className="min-w-0 flex-1"><h3 className="text-sm font-medium">{serviceLabels[entry.service]}</h3><p className="mt-1 text-sm text-muted">{entry.enabled ? 'Connection preference enabled' : 'Connection preference off'} · {entry.available && entry.tenantEnabled ? 'Permission setup available' : 'Awaiting administrator enablement'}</p></div>
+          <div className="min-w-0 flex-1"><h3 className="text-sm font-medium">{serviceLabels[entry.service]}</h3><p className="mt-1 text-sm text-muted">{entry.enabled ? 'Service enabled' : 'Service off'} · {entry.available && entry.tenantEnabled ? 'Permission setup available' : 'Awaiting administrator enablement'}</p></div>
           <div className="flex flex-wrap gap-2">{entry.enabled && <Button size="sm" variant="secondary" disabled={busy} onClick={() => disable(entry.service)}>Turn off {serviceLabels[entry.service]}</Button>}{state.canConnect && entry.available && entry.tenantEnabled && !entry.enabled && <Button size="sm" disabled={busy} onClick={() => { setAccepted(false); setReview(entry.service) }}>{entry.permissionGranted && row?.status === 'connected' ? 'Enable' : row?.status === 'reconnect_required' ? 'Reconnect' : 'Connect'} {serviceLabels[entry.service]}</Button>}</div>
         </div>)}
         {row && row.status !== 'disconnected' && <div className="flex flex-wrap gap-3 border-t border-line pt-4"><Button variant="secondary" disabled={busy} onClick={() => setRemoving('detach')}>Disconnect from this workspace</Button>{!state.setup.sharedProject && <Button variant="ghost" disabled={busy} onClick={() => setRemoving('revoke')}>Remove Google access everywhere</Button>}</div>}
@@ -72,7 +72,7 @@ function Connections() {
       {canManage && <Link className="inline-block text-sm text-brand-700 underline" to="/app/settings/google-team">Manage team Google connections</Link>}
     </>}
     {notice && <p role="status" className="text-sm text-brand-700">{notice}</p>}{error && <FormAlert>{error}</FormAlert>}
-    {review && state && <ConfirmDialog open title={`Connect ${serviceLabels[review]}?`} description={<>{permissionText[review]} TechSync stores an encrypted offline credential so it can work after you close your browser. You can turn this service off or disconnect later. No content sync or export starts in this release.</>} confirmLabel="Continue" confirmDisabled={!accepted} onClose={() => setReview(null)} onConfirm={async () => {
+    {review && state && <ConfirmDialog open title={`Connect ${serviceLabels[review]}?`} description={<>{permissionText[review]} TechSync stores an encrypted offline credential so it can work after you close your browser. You can turn this service off or disconnect later. Meetings and spreadsheet copies are created only when you request them.</>} confirmLabel="Continue" confirmDisabled={!accepted} onClose={() => setReview(null)} onConfirm={async () => {
       if (!accepted) return
       const entry = state.services.find((s) => s.service === review)
       if (entry?.permissionGranted && row?.status === 'connected') { await setGoogleService(row.id, review, true, state.consentVersion); setReview(null); await refresh() }

@@ -1,0 +1,18 @@
+.google-month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.google-weekday { padding: .7rem .25rem; text-align: center; color: var(--color-muted); font-size: .75rem; border-bottom: 1px solid var(--color-line); }
+.google-day, .google-day-empty { min-height: 5.5rem; border-bottom: 1px solid var(--color-line); border-right: 1px solid var(--color-line); }
+.google-day { padding: .65rem; text-align: left; font-size: .875rem; transition: background .15s; }
+.google-day:hover, .google-day[aria-pressed=true] { background: var(--color-brand-50); }
+.google-day:focus-visible { outline: 2px solid var(--color-brand-600); outline-offset: -2px; }
+.google-day-dot { display: inline-block; width: .4rem; height: .4rem; margin-left: .35rem; border-radius: 100%; background: var(--color-brand-600); }
+.google-day-preview { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .7rem; color: var(--color-brand-700); margin-top: .4rem; }
+.google-sheet-scroll { overflow: auto; max-height: 65vh; border: 1px solid var(--color-line); border-radius: .7rem; }
+.google-sheet-grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; min-width: 90rem; width: 100%; font-size: .8rem; }
+.google-sheet-grid th { background: var(--color-surface-subtle); padding: .4rem; text-align: center; position: sticky; top: 0; z-index: 1; }
+.google-sheet-grid th:first-child { width: 3rem; }
+.google-sheet-grid td { padding: 0; }
+.google-sheet-grid th, .google-sheet-grid td { border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
+.google-sheet-grid input { width: 100%; min-width: 0; padding: .45rem .5rem; background: var(--color-surface); color: var(--color-ink); }
+.google-sheet-grid input:focus { outline: 2px solid var(--color-brand-500); outline-offset: -2px; }
+.google-sheet-grid input[data-changed] { background: var(--color-brand-50); }
+@media (max-width: 640px) { .google-day, .google-day-empty { min-height: 3.25rem; padding: .4rem; } .google-day-preview { display: none; } }

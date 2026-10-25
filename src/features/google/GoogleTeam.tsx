@@ -31,12 +31,12 @@ function TeamSettings() {
   }
   return <div className="max-w-4xl space-y-6">
     <header><h1 className="font-display text-xl font-semibold">Team Google connections</h1><p className="mt-1 text-sm leading-6 text-muted">Manage workspace preferences and connection status. Each teammate connects their own Google account.</p></header>
-    <p className="rounded-xl border border-line p-4 text-sm leading-6">This release prepares connections only. Calendar sync, Drive attachments and Sheets exports are pending. Server configuration must also enable a service before members can connect it.</p>
+    <p className="rounded-xl border border-line p-4 text-sm leading-6">Members can schedule meetings with Google Meet and create or edit Google Sheets. Enable each service here and in server configuration, then members connect their own accounts. Drive attachment browsing is still pending.</p>
     <section className="space-y-4 rounded-xl border border-line bg-surface p-5"><h2 className="font-medium">Workspace preferences</h2>
       {tenant.isPending && <p role="status">Loading preferences…</p>}
       {tenant.isError && <FormAlert>Couldn’t load preferences. <button className="underline" onClick={() => tenant.refetch()}>Try again</button></FormAlert>}
-      {tenant.data && (['calendarEnabled', 'driveEnabled', 'sheetsEnabled', 'exportsEnabled'] as const).map((key) => <label key={key} className="flex items-start gap-3 text-sm"><input type="checkbox" checked={pending?.key === key ? pending.enabled : tenant.data[key]} disabled={busy} onChange={(event) => toggle(key, event.target.checked)} /><span>{({ calendarEnabled: 'Allow Calendar permission setup', driveEnabled: 'Allow Drive permission setup', sheetsEnabled: 'Allow Sheets permission setup', exportsEnabled: 'Allow future Google exports' })[key]}</span></label>)}
-      <p className="text-xs leading-5 text-muted">Turning a service off also turns off members’ saved preferences. Turning it back on requires each member to enable it again. The Google exports preference applies to future Google exports; local CSV and Excel exports use their existing controls.</p>
+      {tenant.data && (['calendarEnabled', 'driveEnabled', 'sheetsEnabled', 'exportsEnabled'] as const).map((key) => <label key={key} className="flex items-start gap-3 text-sm"><input type="checkbox" checked={pending?.key === key ? pending.enabled : tenant.data[key]} disabled={busy} onChange={(event) => toggle(key, event.target.checked)} /><span>{({ calendarEnabled: 'Allow Calendar & Meet', driveEnabled: 'Allow Drive permission setup', sheetsEnabled: 'Allow Google Sheets', exportsEnabled: 'Allow lead exports to Google Sheets' })[key]}</span></label>)}
+      <p className="text-xs leading-5 text-muted">Turning a service off also turns off members’ saved preferences. Turning it back on requires each member to enable it again. The Google exports preference controls lead copies to Google Sheets; local CSV and Excel exports use their existing controls.</p>
     </section>
     {error && <FormAlert>{error}</FormAlert>}{notice && <p role="status" className="text-sm text-brand-700">{notice}</p>}
     <section className="space-y-4"><h2 className="font-medium">Team status</h2>
@@ -48,7 +48,7 @@ function TeamSettings() {
       {team.data && <Pagination page={page} total={team.data.total} onChange={setPage} label="Team" />}
       <Link className="inline-block text-sm text-brand-700 underline" to="/app/settings/team-email">Manage team Gmail connections</Link>
     </section>
-    <section className="space-y-3"><h2 className="font-medium">Connection activity</h2><p className="text-xs text-muted">Permission and access checks from the last 30 days. No content sync runs in this release.</p>
+    <section className="space-y-3"><h2 className="font-medium">Connection activity</h2><p className="text-xs text-muted">Google connection and operation activity from the last 30 days.</p>
       {logs.isPending && <p role="status">Loading connection activity…</p>}
       {logs.isError && <FormAlert>Couldn’t load connection activity. <button className="underline" onClick={() => logs.refetch()}>Try again</button></FormAlert>}
       {logs.data?.items.map((log) => <div key={log.id} className="rounded-lg border border-line p-3 text-sm"><p>{log.action.replaceAll('_', ' ')}{log.service ? ` · ${serviceLabels[log.service]}` : ''} · {log.status}</p><p className="mt-1 text-xs text-muted">{new Date(log.createdAt).toLocaleString()}{log.reason === 'GOOGLE_RECONNECT_REQUIRED' ? ' · Reconnect required' : log.reason === 'MEMBERSHIP_INACTIVE' ? ' · Workspace access ended' : ''}</p></div>)}

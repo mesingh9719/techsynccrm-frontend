@@ -39,7 +39,7 @@ try {
   assert.equal(await page.getByRole('button', { name: 'Connect Google Calendar', exact: true }).count(), 0)
   done('New workspace starts with service preferences off')
   await page.goto(origin + '/app/settings/google-team')
-  for (const label of ['Allow Calendar permission setup', 'Allow Drive permission setup', 'Allow Sheets permission setup']) {
+  for (const label of ['Allow Calendar & Meet', 'Allow Drive permission setup', 'Allow Google Sheets']) {
     const [saved] = await Promise.all([
       page.waitForResponse((res) => res.url().endsWith('/api/google/admin/settings') && res.request().method() === 'PATCH'),
       page.getByLabel(label, { exact: true }).check(),

@@ -1,3 +1,4 @@
+import { CreateSheetDialog } from '../google/SheetsPage'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -23,6 +24,7 @@ export function DataTools({
     notify = useToast(),
     { user } = useAuth(),
     navigate = useNavigate()
+  const [googleExport, setGoogleExport] = useState(false)
   const [busy, setBusy] = useState(false),
     [result, setResult] = useState<ExportJob | null>(null)
   const pending =
@@ -96,6 +98,7 @@ export function DataTools({
                 >
                   Export current view as CSV
                 </MenuItem>
+                {entityType === 'lead' && <MenuItem onSelect={() => { close(); setGoogleExport(true) }}>Export current view to Google Sheets</MenuItem>}
                 <MenuItem
                   onSelect={() => {
                     close()
@@ -109,6 +112,7 @@ export function DataTools({
           </>
         )}
       </Menu>
+      {googleExport && <CreateSheetDialog kind="leads" filters={filters} onClose={() => setGoogleExport(false)} onCreated={(sheet) => navigate(`/app/sheets?sheet=${sheet.id}`)} />}
       {current?.file?.url && (
         <a href={current.file.url} target="_blank" rel="noreferrer" className="text-sm font-medium text-brand-700">
           Download export

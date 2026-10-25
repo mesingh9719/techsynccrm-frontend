@@ -1,3 +1,4 @@
+import { LeadGooglePanel } from '../google/LeadGooglePanel'
 import './detail/lead-detail.css'
 import { RecordEmailPanel } from '../email/RecordEmailPanel'
 import { useMemo, useRef, useState } from 'react'
@@ -190,6 +191,8 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
           onAddNotes={() => compose('note')}
         />
       </div>
+
+      <LeadGooglePanel lead={lead} />
 
       <div className="lead-layout">
         <div role="tablist" aria-label="Lead sections" className="lead-tabs">
