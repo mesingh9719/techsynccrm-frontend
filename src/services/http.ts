@@ -42,6 +42,13 @@ export interface AuthState {
 let accessToken: string | null = null
 let state: AuthState = { status: 'loading', user: null }
 const listeners = new Set<() => void>()
+const writeListeners = new Set<(path: string, orgId: string) => void>()
+
+/** Cross-module derived data can invalidate after any committed CRM write, including plain forms. */
+export function subscribeToApiWrites(listener: (path: string, orgId: string) => void) {
+  writeListeners.add(listener)
+  return () => { writeListeners.delete(listener) }
+}
 
 function emit(next: AuthState) {
   state = next
@@ -144,17 +151,25 @@ async function parse<T>(res: Response): Promise<T> {
 }
 
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const res = await send(path, options)
+  const orgId = state.user?.organization?.id
+  let res = await send(path, options)
   if (res.status === 401 && !options.anonymous && options.retryOnExpiry !== false && accessToken) {
     const body = await res
       .clone()
       .json()
       .catch(() => null)
     if (body?.error?.code === 'TOKEN_EXPIRED' && (await refreshSession())) {
-      return parse<T>(await send(path, options))
+      res = await send(path, options)
     }
   }
-  return parse<T>(res)
+  const data = await parse<T>(res)
+  if (orgId && !options.anonymous && options.method && options.method !== 'GET') {
+    for (const listener of writeListeners) {
+      // Cache maintenance must not turn a successful server save into a failed user action.
+      try { listener(path, orgId) } catch { /* The next query can still refetch on focus. */ }
+    }
+  }
+  return data
 }
 
 // ---------- Refresh (single-flight) ----------

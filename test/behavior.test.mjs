@@ -112,7 +112,7 @@ test('preview forms are isolated by workspace and user and never call the backen
   globalThis.fetch = async () => {
     throw new Error('Preview must not perform network requests')
   }
-  const { makeCaptureApi, captureLive } = await import(moduleUrl('src/features/capture/api.ts'))
+  const { makeCaptureApi, captureLive } = await import(moduleUrl('test/fixtures/capturePreview.ts'))
   assert.equal(captureLive, false)
   const first = makeCaptureApi('workspace-a:user-a'),
     second = makeCaptureApi('workspace-b:user-a'),
@@ -168,7 +168,7 @@ test('assignment dry runs use first matching rule without advancing round robin'
     getItem: (key) => storage.get(key) ?? null,
     setItem: (key, value) => storage.set(key, value),
   }
-  const { makeCaptureApi } = await import(moduleUrl('src/features/capture/api.ts'))
+  const { makeCaptureApi } = await import(moduleUrl('test/fixtures/capturePreview.ts'))
   const service = makeCaptureApi('assignment-fixture:user')
   const rule = {
     id: 'priority',
@@ -202,7 +202,7 @@ test('fiscal periods handle January, March and the April year boundary', async (
 })
 
 test('sample-report filters partition the cohort and never produce invalid funnel rates', async () => {
-  const { sampleReport, sampleOwners } = await import(moduleUrl('src/features/reports/api.ts'))
+  const { sampleReport, sampleOwners } = await import(moduleUrl('test/fixtures/reportPreview.ts'))
   const range = { from: '2026-10-01', to: '2026-10-20' },
     today = '2026-10-20'
   const all = sampleReport(range, today),
@@ -518,4 +518,64 @@ test('Gmail callback failures use safe actionable messages rather than raw provi
   assert.match(emailContent.gmailConnectionError('GMAIL_OAUTH_CANCELLED'), /cancelled/)
   assert.match(emailContent.gmailConnectionError('GMAIL_ENCRYPTION_UNAVAILABLE'), /credential storage/)
   assert(!emailContent.gmailConnectionError('<script>provider-secret</script>').includes('provider-secret'))
+})
+
+test('live reports forward all filters, propagate API errors, and keep source drilldowns exact', async (t) => {
+  const original = globalThis.fetch, calls = []
+  t.after(() => { globalThis.fetch = original; http.clearSession() })
+  http.setSession({ user: { id: 'fixture' }, accessToken: 'private-token' })
+  const { getReports, sourceLeadUrl, exportReport, reportsLive } = await import(moduleUrl('src/features/reports/api.ts'))
+  assert.equal(reportsLive, true)
+  const filters = { from: '2026-10-01', to: '2026-10-02', ownerId: 'me', sourceId: 'none', compare: 'previous' }
+  globalThis.fetch = async (url, options) => { calls.push({ url, options }); return respond([]) }
+  const data = await getReports(filters)
+  assert.equal(calls.length, 5)
+  assert.deepEqual(data, { kpis: [], revenue: [], sources: [], funnel: [], team: [] })
+  for (const call of calls) {
+    const url = new URL(call.url, 'https://fixture.test')
+    for (const [key, value] of Object.entries(filters)) assert.equal(url.searchParams.get(key), value)
+    assert.equal(call.options.headers.Authorization, 'Bearer private-token')
+  }
+  const url = new URL(sourceLeadUrl('none', filters), 'https://fixture.test')
+  assert.equal(url.pathname, '/app/leads'); assert.equal(url.searchParams.get('ownerId'), 'me')
+  assert.equal(url.searchParams.get('sourceId'), 'none'); assert(!url.searchParams.get('status').includes('junk'))
+  await exportReport('funnel', filters)
+  assert(calls.at(-1).url.startsWith('/api/reports/funnel/export?'))
+  globalThis.fetch = async () => respond({ code: 'FORBIDDEN', message: 'Denied' }, 403)
+  await assert.rejects(getReports(filters), { status: 403, code: 'FORBIDDEN' })
+})
+
+test('capture settings always persist through the authenticated API and never save on errors', async (t) => {
+  const original = globalThis.fetch, storage = globalThis.localStorage, calls = []
+  t.after(() => { globalThis.fetch = original; globalThis.localStorage = storage; http.clearSession() })
+  globalThis.localStorage = { getItem() { throw new Error('No preview reads') }, setItem() { throw new Error('No preview saves') } }
+  http.setSession({ user: { id: 'fixture' }, accessToken: 'capture-token' })
+  const { makeCaptureApi, captureLive, assignmentLive } = await import(moduleUrl('src/features/capture/api.ts'))
+  assert.equal(captureLive, true); assert.equal(assignmentLive, true)
+  const service = makeCaptureApi('workspace:user')
+  globalThis.fetch = async (url, options) => { calls.push({ url, options }); return respond({ forms: [] }) }
+  assert.deepEqual(await service.listForms(), [])
+  globalThis.fetch = async (url, options) => { calls.push({ url, options }); return respond({ timezone: 'Asia/Kolkata' }) }
+  assert.equal((await service.saveHours({ timezone: 'Asia/Kolkata' })).timezone, 'Asia/Kolkata')
+  assert.equal(calls.at(-1).options.method, 'PUT'); assert.equal(calls.at(-1).options.headers.Authorization, 'Bearer capture-token')
+  assert.equal(calls.at(-1).url, '/api/working-hours')
+  globalThis.fetch = async () => respond({ code: 'FORBIDDEN', message: 'Denied' }, 403)
+  await assert.rejects(service.saveRule({ id: 'rule' }, false), { status: 403 })
+  await assert.rejects(service.saveHours({ timezone: 'Asia/Kolkata' }), { status: 403 })
+})
+
+test('committed API writes notify derived caches once with the originating workspace; failures and reads do not', async (t) => {
+  const original = globalThis.fetch, writes = [], unsubscribe = http.subscribeToApiWrites((path, orgId) => writes.push({ path, orgId }))
+  t.after(() => { globalThis.fetch = original; http.clearSession(); unsubscribe() })
+  http.setSession({ user: { id: 'fixture', organization: { id: 'original-org' } }, accessToken: 'token' })
+  globalThis.fetch = async () => respond({ saved: true })
+  await http.api('/leads'); assert.deepEqual(writes, [])
+  await http.api('/leads/fixture', { method: 'PATCH', body: { firstName: 'Updated' } })
+  assert.deepEqual(writes, [{ path: '/leads/fixture', orgId: 'original-org' }])
+  globalThis.fetch = async () => respond({ code: 'VALIDATION_ERROR', message: 'Invalid' }, 400)
+  await assert.rejects(http.api('/tasks', { method: 'POST', body: {} }))
+  assert.equal(writes.length, 1)
+  globalThis.fetch = async () => { http.setSession({ user: { id: 'fixture', organization: { id: 'different-org' } }, accessToken: 'other' }); return respond({ saved: true }) }
+  await http.api('/activities', { method: 'POST', body: {} })
+  assert.deepEqual(writes.at(-1), { path: '/activities', orgId: 'original-org' })
 })

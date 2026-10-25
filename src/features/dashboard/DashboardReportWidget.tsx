@@ -6,7 +6,7 @@ import { useOrgId } from '../crm/hooks'
 import { AreaChart } from '../../components/product/Charts'
 import { Button } from '../../components/ui/Button'
 import { EmptyState, ErrorState, Skeleton } from '../../components/app/States'
-import type { ReportData, SourceReport } from '../reports/api'
+import { sourceLeadUrl, type ReportData, type SourceReport } from '../reports/api'
 import { sharePercent } from './funnel'
 
 /** Rounds an axis maximum up to 1, 2, 2.5 or 5 × 10ⁿ so ticks read as clean numbers. */
@@ -95,11 +95,10 @@ export function DashboardReportWidget({ kind, from, to, ownerId, sourceId, curre
       ) : (
         <ul className="space-y-3.5">
           {topSources.map((source) => {
-            const params = new URLSearchParams({ sourceId: source.sourceId, createdFrom: from, createdTo: to, ...(ownerId && { ownerId }) })
             const none = source.sourceId === 'none'
             return (
               <li key={source.sourceId}>
-                <Link to={none ? `/app/reports?${reportParams}` : `/app/leads?${params}`} className="group block rounded-control" title={`${source.source}: ${source.leads} leads`}>
+                <Link to={sourceLeadUrl(source.sourceId, { from, to, ownerId })} className="group block rounded-control" title={`${source.source}: ${source.leads} leads`}>
                   <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
                     <span className={`truncate group-hover:text-brand-700 ${none ? 'text-muted italic' : 'text-ink'}`}>{source.source}</span>
                     <span className="shrink-0">

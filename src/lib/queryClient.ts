@@ -1,5 +1,5 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
-import { ApiError, authStore } from '../services/http'
+import { ApiError, authStore, subscribeToApiWrites } from '../services/http'
 import { handleGlobalApiError } from './apiErrors'
 
 /** 4xx responses won't succeed by retrying; network errors and 5xx get one retry. */
@@ -29,6 +29,13 @@ export const queryClient = new QueryClient({
       if (!mutation.meta?.skipGlobalErrorHandler) handleGlobalApiError(error)
     },
   }),
+})
+
+subscribeToApiWrites((path, orgId) => {
+  if (/\/check-duplicates(?:\?|$)/.test(path)) return
+  if (!/^\/(?:leads|deals|contacts|companies|tasks|activities|campaigns|pipelines|lead-sources|imports)(?:\/|\?|$)/.test(path)) return
+  void queryClient.invalidateQueries({ queryKey: ['org', orgId, 'reports'] })
+  void queryClient.invalidateQueries({ queryKey: ['org', orgId, 'dashboard'] })
 })
 
 // Never keep one user's data around after they sign out.

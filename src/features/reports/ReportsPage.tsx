@@ -1,10 +1,11 @@
 import { LocalViews } from '../../components/app/LocalViews'
+import { FollowUpReport } from './FollowUpReport'
 import { FilterChips } from '../../components/app/FilterBar'
 import { useState } from 'react'
 import { z } from 'zod'
 import { reportPeriods } from './periods'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { ArrowDownRight, ArrowUpRight, Download, Filter, Info, TrendingUp } from 'lucide-react'
 import { useCan, useOrg } from '../../lib/useOrg'
 import { useAuth } from '../../lib/useAuth'
@@ -18,13 +19,12 @@ import { Input, Select } from '../../components/ui/Form'
 import { Tabs } from '../../components/ui/Tabs'
 import { DataTable } from '../../components/app/DataTable'
 import { EmptyState, ErrorState, ListSkeleton, PageHeader } from '../../components/app/States'
-import { PreviewNotice } from '../../components/app/PreviewNotice'
 import { AreaChart } from '../../components/product/Charts'
 import { useLeadSources } from '../leads/api'
 import { SourceBadge } from '../leads/SourceBadge'
 import { formatMinor } from '../crm/format'
 import { workspaceDates } from '../dashboard/dates'
-import { getReports, reportsLive, sampleOwners, sampleSources } from './api'
+import { exportReport, getReports, sourceLeadUrl } from './api'
 
 export default function ReportsPage() {
   useSeo({ title: 'Reports', noindex: true })
@@ -41,11 +41,11 @@ export default function ReportsPage() {
     to = filters.to ?? today,
     valid = z.iso.date().safeParse(from).success && z.iso.date().safeParse(to).success && from <= to
   const periods = reportPeriods(today, organization?.fiscalYearStartMonth ?? 4)
-  const [tab, setTab] = useState<'overview' | 'sources' | 'funnel' | 'team'>('overview')
+  const [tab, setTab] = useState<'overview' | 'sources' | 'funnel' | 'team' | 'follow-ups'>('overview')
   const members = useQuery({
     queryKey: ['org', orgId, 'memberOptions', ''],
     queryFn: () => memberOptions(),
-    enabled: reportsLive && canRead,
+    enabled: canRead,
   })
   const query = useQuery({
     queryKey: ['org', orgId, 'reports', from, to, filters.ownerId, filters.sourceId, currency],
@@ -56,7 +56,11 @@ export default function ReportsPage() {
         currency,
       ),
     enabled: valid && canRead,
-    staleTime: 300_000,
+    staleTime: 30_000,
+  })
+  const exportMutation = useMutation({
+    mutationFn: () => exportReport(tab === 'overview' || tab === 'follow-ups' ? 'kpis' : tab, { from, to, ownerId: filters.ownerId, sourceId: filters.sourceId }),
+    onSuccess: (file) => downloadCsv(file.filename, file.headers, file.rows),
   })
   if (!canRead)
     return (
@@ -73,51 +77,24 @@ export default function ReportsPage() {
     upper = Math.ceil(maxRevenue / step) * step
   const funnelStages = data?.funnel ?? []
   const biggestDrop = funnelStages.slice(1).map((stage, index) => ({ from: funnelStages[index].stage, to: stage.stage, lost: Math.max(0, funnelStages[index].count - stage.count), rate: funnelStages[index].count ? Math.max(0, (funnelStages[index].count - stage.count) / funnelStages[index].count * 100) : 0 })).sort((a, b) => b.lost - a.lost)[0]
-  const ownerOptions = reportsLive
-    ? (members.data?.map((m) => ({ id: m.userId, name: m.fullName })) ?? [])
-    : sampleOwners
-  const sourceOptions = reportsLive ? (sources.data ?? []) : sampleSources
-  function exportReport() {
-    if (!data) return
-    if (tab === 'team')
-      downloadCsv(
-        `${reportsLive ? '' : 'sample-'}team-report.csv`,
-        ['Team member', 'Revenue (minor units)', 'Currency', 'Deals won', 'Win rate (%)', 'Activities'],
-        data.team.map((r) => [r.name, r.revenueMinor, currency, r.dealsWon, r.winRate, r.activities]),
-      )
-    else if (tab === 'funnel')
-      downloadCsv(
-        `${reportsLive ? '' : 'sample-'}conversion-funnel.csv`,
-        ['Stage', 'Leads'],
-        data.funnel.map((r) => [r.stage, r.count]),
-      )
-    else
-      downloadCsv(
-        `${reportsLive ? '' : 'sample-'}lead-sources.csv`,
-        ['Source', 'New leads', 'Converted', 'Revenue (minor units)', 'Currency', 'From', 'To'],
-        data.sources.map((r) => [r.source, r.leads, r.converted, r.revenueMinor, currency, from, to]),
-      )
-  }
+  const ownerOptions = members.data?.map((m) => ({ id: m.userId, name: m.fullName })) ?? []
+  const sourceOptions = sources.data ?? []
   return (
     <div className="app-page space-y-6">
       <PageHeader
         title="Reports & analytics"
         description="Understand what brings leads in, what moves them forward, and where to focus next."
         actions={
-          canExport && (
-            <Button variant="secondary" disabled={!data || !valid || query.isFetching} onClick={exportReport}>
+          canExport && tab !== 'follow-ups' && (
+            <Button variant="secondary" disabled={!data || !valid || query.isFetching || exportMutation.isPending} onClick={() => exportMutation.mutate()}>
               <Download className="size-4" />
-              Export {reportsLive ? 'CSV' : 'sample CSV'}
+              {exportMutation.isPending ? 'Exporting…' : 'Export CSV'}
             </Button>
           )
         }
       />
-      {!reportsLive && (
-        <PreviewNotice>
-          These reports use a separate sample dataset. Filters and exports work, but these numbers do not describe your
-          workspace. Connect the reporting service to see your workspace’s results.
-        </PreviewNotice>
-      )}
+      {exportMutation.isError && <ErrorState error={exportMutation.error} onRetry={() => exportMutation.mutate()} />}
+      <p className="text-xs text-muted">Your workspace data · {currency} · {organization?.timezone ?? 'Asia/Kolkata'}. Revenue uses won deals in this currency; lead metrics exclude junk.</p>
       <div className="surface flex flex-wrap items-end gap-3 p-4">
         <label className="min-w-36 flex-1 text-xs text-muted">
           Period
@@ -162,7 +139,7 @@ export default function ReportsPage() {
           />
         </label>
         <label className="min-w-40 flex-1 text-xs text-muted">
-          {reportsLive ? 'Owner' : 'Sample teammate'}
+          Owner
           <Select
             aria-label="Report owner"
             value={filters.ownerId ?? ''}
@@ -238,8 +215,10 @@ export default function ReportsPage() {
                 { value: 'sources', label: 'Lead sources' },
                 { value: 'funnel', label: 'Conversion funnel' },
                 { value: 'team', label: 'Team performance' },
+                { value: 'follow-ups', label: 'Response & follow-ups' },
               ]}
             />
+            {tab === 'follow-ups' && <FollowUpReport filters={{ from, to, ownerId: filters.ownerId, sourceId: filters.sourceId }} />}
             {tab === 'overview' && (
               <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
                 <section className="surface min-w-0 p-5">
@@ -339,16 +318,12 @@ export default function ReportsPage() {
                       key: 'view',
                       header: '',
                       cell: (r) =>
-                        reportsLive ? (
-                          <Link
-                            to={`/app/leads?sourceId=${r.sourceId}&createdFrom=${from}&createdTo=${to}`}
-                            className="text-xs font-medium text-brand-700"
-                          >
-                            View leads ↗
-                          </Link>
-                        ) : (
-                          <span className="text-xs text-muted">Sample</span>
-                        ),
+                        <Link
+                          to={sourceLeadUrl(r.sourceId, { from, to, ownerId: filters.ownerId })}
+                          className="text-xs font-medium text-brand-700"
+                        >
+                          View leads ↗
+                        </Link>,
                     },
                   ]}
                 />
@@ -428,10 +403,9 @@ export default function ReportsPage() {
               />
             )}
             <p className="text-xs leading-5 text-muted">
-              {reportsLive
-                ? `Dates use ${organization?.timezone ?? 'workspace time'}. Only records your role can access are included.`
-                : 'Sample report · separate from live CRM data.'}{' '}
+              {`Dates use ${organization?.timezone ?? 'workspace time'}. Only records your role can access are included.`}{' '}
               Revenue uses won date; lead conversion uses creation cohort. Current-month results are partial.
+              {canExport && ' Exports follow your export permissions and can exclude unassigned records.'}
             </p>
           </>
         )
