@@ -9,6 +9,9 @@ import type { MemberRole } from '../types'
  * matches any scope (all / team / own).
  */
 export type Permission =
+  | 'google.connect.own'
+  | 'google.connections.manage'
+  | 'google.settings.manage'
   | 'email.connect'
   | 'email.send'
   | 'email.connections.manage'

@@ -193,6 +193,7 @@ export default function IntegrationsPage() {
           Assignment rules
         </Button>
       </header>
+      <section className="surface flex flex-wrap items-center justify-between gap-4 p-5"><div><h2 className="font-medium text-ink">Google Workspace</h2><p className="mt-1 text-sm text-muted">Prepare Calendar, Drive and Sheets permissions. Content sync and Google exports are coming in later releases.</p></div><Button to="/app/settings/google" variant="secondary">Google connections</Button></section>
       <div className="grid gap-3 sm:grid-cols-3">
         {[
           { label: 'Connected sources', value: (connected ? 1 : 0) + (liveForms ? 1 : 0), icon: CircleCheck },

@@ -168,6 +168,7 @@ interface ConfirmDialogProps {
   title: string
   description: ReactNode
   confirmLabel: string
+  confirmDisabled?: boolean
   tone?: 'danger' | 'default'
   /** When set, the user must type this text (e.g. the workspace name) to enable the button. */
   requireText?: string
@@ -177,7 +178,7 @@ interface ConfirmDialogProps {
 }
 
 /** "Are you sure?" with an optional type-to-confirm for destructive actions. */
-export function ConfirmDialog({ open, onClose, onConfirm, title, description, confirmLabel, tone = 'default', requireText, error, children }: ConfirmDialogProps) {
+export function ConfirmDialog({ open, onClose, onConfirm, title, description, confirmLabel, confirmDisabled = false, tone = 'default', requireText, error, children }: ConfirmDialogProps) {
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
@@ -217,7 +218,7 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, description, co
           <Button
             onClick={confirm}
             loading={busy}
-            disabled={!matches}
+            disabled={!matches || confirmDisabled}
             variant={tone === 'danger' ? 'danger' : 'primary'}
           >
             {confirmLabel}
