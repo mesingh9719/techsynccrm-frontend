@@ -1,5 +1,5 @@
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
-import { downloadCsv } from '../../lib/downloadCsv'
+import { downloadCsv, downloadBlob } from '../../lib/downloadCsv'
 import { EmptyState, ErrorState, PageHeader, ListSkeleton } from '../../components/app/States'
 import { useImportDraft } from './useImportDraft'
 import { ConfirmDialog } from '../../components/app/Dialog'
@@ -22,7 +22,7 @@ import { Input, Select } from '../../components/ui/Form'
 import { uploadFile } from '../files/api'
 import { createCustomField } from '../crm/api'
 import { useCustomFieldDefs } from '../crm/hooks'
-import { createImport, updateImport, previewImport, startImport, getImport, cancelImport, undoImport, importErrors, type ImportJob, type Preview, type TransferEntity } from './api'
+import { createImport, updateImport, previewImport, startImport, getImport, cancelImport, undoImport, importErrors, getImportTemplate, type ImportJob, type Preview, type TransferEntity } from './api'
 
 const ImportSpreadsheetStep = lazy(() => import('./ImportSpreadsheetStep'))
 const ImportReviewStep = lazy(() => import('./ImportReviewStep'))
@@ -151,6 +151,9 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
     const customColumns = (defs.data ?? []).filter((field) => !field.archived).map((field) => field.label)
     downloadCsv(`${entity}-import-template.csv`, [...columns, ...customColumns], [])
   }
+  async function excelSample() {
+    await run(async () => downloadBlob(`${entity}-import-template.xlsx`, await getImportTemplate(entity)))
+  }
   const headers = job?.headers ?? []
   const ignored = headers.length - mapped
   const fieldLabel = (f: string) => FIELD_LABELS[f] ?? f.charAt(0).toUpperCase() + f.slice(1)
@@ -205,13 +208,16 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
                 <div className="rounded-xl border border-line bg-surface-subtle/60 p-4">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-ink">{recordLabel} CSV template</p>
+                      <p className="text-sm font-medium text-ink">{recordLabel} spreadsheet template</p>
                       <p className="mt-0.5 text-xs text-muted">Start with these column headings and add your records. Active custom fields are included. Review the mapping before importing.</p>
                       <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Columns in the sample">
                         {columns.map((c) => <li key={c} className="rounded-md bg-surface px-2 py-0.5 text-xs text-muted ring-1 ring-line">{c}</li>)}
                       </ul>
                     </div>
-                    <div className="flex shrink-0 gap-2 sm:flex-row">
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      <Button variant="secondary" onClick={() => void excelSample()} className="flex-1 lg:flex-none">
+                        <Download className="size-4 text-brand-700" aria-hidden="true" />Download Excel template
+                      </Button>
                       <Button variant="secondary" onClick={sample} className="flex-1 lg:flex-none">
                         <FileText className="size-4 text-brand-700" aria-hidden="true" />Download CSV template
                       </Button>
@@ -221,7 +227,7 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
               </Part>
 
               <Part number={3} title="Upload your file">
-                <FileUpload key={entity} accept=".csv,.xlsx" maxSize={25 * 1024 ** 2} disabled={busy} onFileSelect={(file) => void upload(file)} description={`Your ${recordLabel.toLowerCase()} spreadsheet — the first sheet is read automatically.`} footer="CSV or Excel (.xlsx) · up to 25 MB · 50,000 rows" />
+                <FileUpload key={entity} accept=".csv,.xlsx" maxSize={25 * 1024 ** 2} disabled={busy} onFileSelect={(file) => void upload(file)} description={`Your ${recordLabel.toLowerCase()} spreadsheet — we find the data sheet automatically. You can choose another sheet next.`} footer="CSV or Excel (.xlsx) · up to 25 MB · 50,000 rows" />
                 {selectedFile && <UploadProgress title={selectedFile.name} progress={progress} status={uploadStatus} description={uploadStatus === 'complete' ? 'Your spreadsheet is ready. Upload a replacement to start again.' : uploadStatus === 'error' ? 'We couldn’t prepare your file. Try uploading it again.' : uploadStatus === 'processing' ? 'Upload received. Reading your spreadsheet…' : 'Uploading your spreadsheet…'} detail={`${(selectedFile.size / 1024 ** 2).toLocaleString(undefined, { maximumFractionDigits: 2 })} MB · ${recordLabel}`} action={uploadStatus === 'error' && <button type="button" className="font-medium text-brand-700 hover:underline" onClick={() => void upload(selectedFile)}>Retry upload</button>} />}
               </Part>
             </>}

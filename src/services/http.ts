@@ -150,8 +150,7 @@ async function parse<T>(res: Response): Promise<T> {
   return json?.data as T
 }
 
-export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const orgId = state.user?.organization?.id
+async function authenticatedResponse(path: string, options: RequestOptions): Promise<Response> {
   let res = await send(path, options)
   if (res.status === 401 && !options.anonymous && options.retryOnExpiry !== false && accessToken) {
     const body = await res
@@ -162,6 +161,22 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
       res = await send(path, options)
     }
   }
+  return res
+}
+
+/** Downloads use the same session refresh and structured errors as JSON requests. */
+export async function apiBlob(path: string, options: RequestOptions = {}): Promise<Blob> {
+  const res = await authenticatedResponse(path, options)
+  if (!res.ok || res.headers.get('Content-Type')?.includes('application/json')) {
+    await parse<never>(res)
+    throw new ApiError('The download could not be prepared. Please try again.', res.status, 'INVALID_DOWNLOAD')
+  }
+  return res.blob()
+}
+
+export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const orgId = state.user?.organization?.id
+  const res = await authenticatedResponse(path, options)
   const data = await parse<T>(res)
   if (orgId && !options.anonymous && options.method && options.method !== 'GET') {
     for (const listener of writeListeners) {

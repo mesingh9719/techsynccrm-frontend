@@ -8,6 +8,10 @@ export function downloadCsv(filename: string, headers: string[], rows: unknown[]
   const blob = new Blob(['\uFEFF', [headers, ...rows].map((row) => row.map(cell).join(',')).join('\r\n')], {
     type: 'text/csv;charset=utf-8',
   })
+  downloadBlob(filename, blob)
+}
+
+export function downloadBlob(filename: string, blob: Blob) {
   const url = URL.createObjectURL(blob),
     anchor = document.createElement('a')
   anchor.href = url

@@ -42,6 +42,26 @@ const respond = (data, status = 200) =>
     headers: { 'Content-Type': 'application/json' },
   })
 
+test('Excel downloads authenticate, refresh expired sessions and surface structured permission errors', async (t) => {
+  const original = globalThis.fetch, calls = []
+  t.after(() => { globalThis.fetch = original; http.clearSession() })
+  http.setSession({ user: { id: 'fixture' }, accessToken: 'old-token' })
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, options })
+    if (url === '/api/auth/refresh') return respond({ user: { id: 'fixture' }, accessToken: 'new-token' })
+    if (options.headers.Authorization === 'Bearer old-token') return respond({ code: 'TOKEN_EXPIRED', message: 'Expired' }, 401)
+    return new Response(new Uint8Array([80, 75, 3, 4]), { headers: { 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' } })
+  }
+  const { getImportTemplate } = await import(moduleUrl('src/features/transfer/api.ts'))
+  const blob = await getImportTemplate('lead')
+  assert.deepEqual([...new Uint8Array(await blob.arrayBuffer())], [80, 75, 3, 4])
+  assert.equal(calls.length, 3)
+  assert.equal(calls.at(-1).url, '/api/imports/template?entityType=lead')
+  assert.equal(calls.at(-1).options.headers.Authorization, 'Bearer new-token')
+  globalThis.fetch = async () => respond({ code: 'FORBIDDEN', message: 'Import access required' }, 403)
+  await assert.rejects(getImportTemplate('lead'), { status: 403, code: 'FORBIDDEN' })
+})
+
 test('anonymous public submissions omit session credentials while private requests keep them', async (t) => {
   const original = globalThis.fetch,
     calls = []

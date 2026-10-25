@@ -1,7 +1,8 @@
 import type { Overlay, SourceRow, ImportIssue } from '../../lib/importCore'
-import { api } from '../../services/http'
+import { api, apiBlob } from '../../services/http'
 import type { FileRecord } from '../files/api'
 export type TransferEntity = 'lead' | 'contact' | 'company' | 'deal'
+export const getImportTemplate = (entityType: TransferEntity) => apiBlob('/imports/template', { query: { entityType } })
 export interface ImportOptions { duplicateStrategy: 'skip' | 'update' | 'create'; updateMode: 'empty' | 'overwrite'; dateFormat: 'DMY' | 'MDY'; defaultOwnerId?: string | null; createMissingSources?: boolean; maxRows?: number }
 export interface ImportJob { id: string; entityType: TransferEntity; status: string; mapping: Record<string, string>; options: ImportOptions; totalRows: number; processed: number; created: number; updated: number; skipped: number; failed: number; createdAt: string; finishedAt: string | null; lastError?: string | null; revision: number; edits: Overlay; hasHeader: boolean; headerRow: number; sheetName?: string | null; headers?: string[]; sheets?: string[]; sampleRows?: string[][] }
 export interface ReviewRow { id: string; row: number | null; index: number; input: Record<string, unknown>; values: Record<string, string | number>; raw: string[]; originalValues: Record<string, string>; issues: ImportIssue[]; warnings: string[]; errors: string[]; duplicate: boolean; edited: boolean; editedFields: string[]; status: 'ready' | 'warning' | 'error' | 'duplicate'; action: 'create' | 'update' | 'skip'; reason?: string }
