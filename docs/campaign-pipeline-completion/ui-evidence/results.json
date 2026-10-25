@@ -1,0 +1,14 @@
+{
+  "results": [
+    "Campaign advanced filters collapse and restore from URL after reload",
+    "Status shortcuts and whole-collection sorting preserve campaign discovery",
+    "Contained board retains accessible stage moves and persists the new stage",
+    "Actual drag persists; a large stage scrolls and loads more inside the contained board",
+    "Expandable stage entry rules save through the real settings API",
+    "390px mobile campaign cards, detail, horizontal board and filter panel fit the viewport",
+    "Desktop and dark-mode screenshots captured without uncaught browser errors",
+    "Viewer can read both redesigned modules without create, move or settings controls"
+  ],
+  "errors": [],
+  "requests": []
+}
