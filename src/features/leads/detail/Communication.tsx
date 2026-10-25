@@ -1,3 +1,5 @@
+import { PrepareMessageDialog } from '../../templates/PrepareMessageDialog'
+import { Link } from 'react-router-dom'
 import { CalendarPlus, ChevronDown, FileText, Mail, MessageCircle, MessageSquareText, Phone, X } from 'lucide-react'
 import { cn } from '../../../lib/cn'
 import { Menu, MenuItem, MenuLabel } from '../../../components/app/Menu'
@@ -23,11 +25,13 @@ function TemplateMenu({ channel, comm, label }: { channel: Exclude<TemplateChann
       {(close) => (
         <>
           <MenuLabel>{label} templates</MenuLabel>
+          {templates.isError && <p className="px-3 py-2 text-xs text-muted">Saved quick replies couldn’t load. <button type="button" className="underline" onClick={() => templates.refetch()}>Retry</button></p>}
           {templates.isPending && <p className="px-3 py-2 text-sm text-muted">Loading…</p>}
+          <Link className="block px-3 py-2 text-xs font-medium text-brand-700" to="/app/templates" onClick={close}>Manage template library</Link>
           {items.map((t) => (
             <MenuItem key={t.id} icon={<FileText className="size-4" />} onSelect={() => (close(), comm.start(channel, t))}>
               <span className="block font-medium">{t.name}</span>
-              <span className="line-clamp-2 block text-xs text-muted">{comm.fill(t.body)}</span>
+              <span className="line-clamp-2 block text-xs text-muted">{t.managed ? comm.preview(t.body) : comm.fill(t.body)}</span>
             </MenuItem>
           ))}
         </>
@@ -45,7 +49,7 @@ export function ContactActions({ comm, onMeeting, canLog }: { comm: Communicatio
     { channel: 'email', label: 'Email', icon: Mail, templates: 'email', missing: 'Add an email address' },
   ]
   return (
-    <div className="comm-actions" role="group" aria-label="Contact this lead">
+    <><div className="comm-actions" role="group" aria-label="Contact this lead">
       {buttons.map((b) => (
         <div key={b.channel} data-channel={b.channel} className={cn('comm-button-group', b.channel === 'call' && 'is-primary')}>
           <button
@@ -69,7 +73,7 @@ export function ContactActions({ comm, onMeeting, canLog }: { comm: Communicatio
           </button>
         </div>
       )}
-    </div>
+    </div>{comm.managedDraft && <PrepareMessageDialog key={comm.managedDraft.template.id} templateId={comm.managedDraft.template.id} version={comm.managedDraft.template.version} name={comm.managedDraft.template.name} channel={comm.managedDraft.channel} entityId={comm.managedRecordId} onClose={comm.cancelManaged} onReady={comm.confirmManaged} />}</>
   )
 }
 

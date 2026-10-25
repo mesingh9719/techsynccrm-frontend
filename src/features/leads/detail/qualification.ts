@@ -31,6 +31,9 @@ export interface MessageTemplate {
   name: string
   subject?: string
   body: string
+  dynamic?: boolean
+  version?: number
+  managed?: boolean
 }
 
 export const qualificationOptions = qualificationJson as {

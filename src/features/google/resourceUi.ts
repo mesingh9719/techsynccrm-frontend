@@ -9,6 +9,9 @@ export function useGoogleResourceKey() {
 export function operationMessage(code: string | null) {
   const messages: Record<string, string> = {
     GOOGLE_API_DISABLED: 'Enable the required Google API in the same Google Cloud project, then retry.',
+    GOOGLE_DRIVE_API_DISABLED: 'Enable Google Drive API in the existing Google Cloud project, then retry.',
+    GOOGLE_SHEETS_API_DISABLED: 'Enable Google Sheets API in the existing Google Cloud project, then retry.',
+    GOOGLE_CALENDAR_API_DISABLED: 'Enable Google Calendar API in the existing Google Cloud project, then retry.',
     GOOGLE_ACCOUNT_CHANGED: 'Your Google account or permissions changed. Review the connection before retrying.',
     GOOGLE_REMOTE_CONFLICT: 'This meeting changed in Google Calendar. Review it there before replacing it.',
     GOOGLE_REMOTE_NOT_FOUND: 'The Google event was removed. Create a new meeting if needed.',

@@ -1,0 +1,10 @@
+import { Field, Input, Select, Textarea } from '../../components/ui/Form'
+import type { VariableField, VariableValues } from './variables'
+
+export function VariableInputs({ fields, values, onChange, disabled = false }: { fields: VariableField[]; values: VariableValues; onChange: (values: VariableValues) => void; disabled?: boolean }) {
+  return <div className="grid gap-4 sm:grid-cols-2">{fields.map((field) => {
+    const value = Object.hasOwn(values, field.key) ? values[field.key] : field.value ?? field.defaultValue ?? ''
+    const change = (next: string | boolean) => onChange({ ...values, [field.key]: next })
+    return <Field key={field.key} label={field.label} required={field.required} optional={!field.required} error={field.error || undefined} className={field.type === 'textarea' ? 'sm:col-span-2' : ''} hint={<>{field.helpText || (field.source === 'template' ? 'Used for this message only.' : 'Missing on this record. This value is used for this message only.')} {field.defaultValue !== undefined && field.defaultValue !== '' ? 'A saved default is available.' : ''}</>}>{({ id, invalid, describedBy }) => field.type === 'checkbox' ? <Select id={id} aria-describedby={describedBy} invalid={invalid} disabled={disabled} value={value === '' || value === null ? '' : String(value)} onChange={(e) => change(e.target.value === '' ? '' : e.target.value === 'true')}><option value="">Choose…</option><option value="true">Yes</option><option value="false">No</option></Select> : field.type === 'textarea' ? <Textarea id={id} aria-describedby={describedBy} invalid={invalid} disabled={disabled} value={String(value ?? '')} placeholder={field.placeholder} maxLength={field.rules?.maxLength ?? 10000} onChange={(e) => change(e.target.value)} /> : <Input id={id} aria-describedby={describedBy} invalid={invalid} disabled={disabled} value={String(value ?? '')} placeholder={field.placeholder} type={['date', 'url', 'email'].includes(field.type) ? field.type : 'text'} inputMode={field.type === 'number' ? 'decimal' : undefined} maxLength={field.rules?.maxLength ?? 10000} onChange={(e) => change(e.target.value)} />}</Field>
+  })}</div>
+}

@@ -72,6 +72,12 @@ await context.route('**/*', async (route) => {
     }
     return reply(state())
   }
+  if (path === '/api/templates/template-1/render') {
+    const input = request.postDataJSON()
+    const fill = (text) => text.replace(/\{\{firstName\}\}/g, 'Asha')
+    return reply({ subject: fill(input.subject || ''), bodyHtml: fill(input.bodyHtml || ''), fields: [], errors: {}, valid: true, channel: 'email', templateId: 'template-1', templateVersion: 1 })
+  }
+  if (path === '/api/templates') return reply({ items: url.searchParams.get('channel') === 'whatsapp' ? [{ id: 'managed-reply', name: 'Managed WhatsApp reply', channel: 'whatsapp', bodyHtml: '<p>Hi {{name}}, {{owner}} from {{workspace}} here about {{company}}.</p>', shared: true }, { id: 'missing-reply', name: 'Missing field reply', channel: 'whatsapp', bodyHtml: '<p>Hello {{missing}}</p>', shared: true }] : [], nextCursor: null })
   if (path === '/api/email-templates') return reply({ items: [{ id: 'template-1', name: 'Consultation intro', subject: 'Hello {{firstName}}', bodyHtml: '<p>Hi {{firstName}}, let’s talk.</p>', shared: true, version: 1 }] })
   if (path === '/api/emails/threads') {
     if (failThreads) return reply({ code: 'UNAVAILABLE', message: 'Try again' }, 503)
@@ -124,6 +130,15 @@ try {
   await page.goto(`${base}/app/leads/${lead.id}`)
   await page.getByRole('heading', { name: 'Asha Shah', exact: true }).waitFor()
   await page.getByRole('heading', { name: 'Insights', exact: true }).waitFor()
+  await page.getByRole('button', { name: 'WhatsApp templates', exact: true }).click()
+  await page.getByRole('menuitem').filter({ hasText: 'Managed WhatsApp reply' }).click()
+  const opened = await page.evaluate(() => window.__openedUrls)
+  assert.match(decodeURIComponent(opened.at(-1)), /Hi Asha Shah, QA Representative from QA Workspace here about Consultation enquiry/)
+  await page.getByRole('button', { name: 'Not sent', exact: true }).click()
+  await page.getByRole('button', { name: 'WhatsApp templates', exact: true }).click()
+  await page.getByRole('menuitem').filter({ hasText: 'Missing field reply' }).click()
+  await page.getByText('Complete the template fields first', { exact: true }).waitFor()
+  assert.equal((await page.evaluate(() => window.__openedUrls)).length, opened.length, 'Missing merge fields must not open a message app')
   assert.equal(requests.filter((request) => request.endsWith('/api/emails/threads')).length, 0, 'Email history loads only when its tab opens')
   await page.screenshot({ path: '/tmp/email-ui-lead-desktop.png', fullPage: true })
   await page.locator('#conversation-tab-activity').focus()
@@ -145,6 +160,9 @@ try {
   await templates.selectOption('template-1')
   assert.equal(await templates.inputValue(), 'template-1', 'The chosen template must remain selected')
   assert.equal(await composer.getByRole('textbox', { name: 'Subject', exact: true }).inputValue(), 'Hello {{firstName}}')
+  await composer.getByRole('button', { name: 'Undo template replacement', exact: true }).click()
+  assert.equal(await composer.getByRole('textbox', { name: 'Subject', exact: true }).inputValue(), 'Re: Your consultation')
+  await templates.selectOption('template-1')
   // Reply fixtures use the recipient as the display name; edit merge values explicitly for this reply.
   await composer.getByRole('textbox', { name: 'Subject', exact: true }).fill('Hello Asha')
   await composer.getByRole('textbox', { name: 'Message', exact: true }).fill('Hi Asha, let’s talk.')
@@ -193,7 +211,7 @@ try {
   await page.getByRole('heading', { name: 'Your next conversation starts here', exact: true }).waitFor()
   assert.deepEqual(unexpected, [])
   assert.deepEqual(errors, [])
-  console.log('Email UI: signature save/reset/error/policy, setup diagnostics, lazy conversations, pagination, keyboard tabs, reply/send/attachments, template selection, delivery polling, mobile layout, closed/missing-email states and recovery passed.')
+  console.log('Email UI: signature save/reset/error/policy, setup diagnostics, lazy conversations, pagination, keyboard tabs, reply/send/attachments, template selection/undo, managed WhatsApp personalization/missing-field guard, delivery polling, mobile layout, closed/missing-email states and recovery passed.')
 } catch (error) {
   await page.screenshot({ path: '/tmp/email-ui-failure.png', fullPage: true }).catch(() => {})
   console.error(JSON.stringify({ error: error.stack, unexpected, errors, requests }, null, 2)); process.exitCode = 1

@@ -1,0 +1,152 @@
+import assert from 'node:assert/strict'
+import { pathToFileURL } from 'node:url'
+
+/** Template preview/render/send requests use the real Express/Prisma test server. */
+export async function verifyTemplateVariables({ base, user, accessToken, organization, lead }) {
+  const { chromium } = await import(pathToFileURL(process.env.PLAYWRIGHT_MODULE).href)
+  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] })
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' }), page = await context.newPage()
+  const errors = [], unexpected = [], sends = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  const now = new Date().toISOString()
+  const record = { ...lead, city: null, stateCode: null, pincode: null, companyName: 'Acme', requirement: null, budgetMinor: null, ownerId: user.id, owner: { id: user.id, fullName: user.fullName, email: user.email }, source: null, sourceId: null, sourceDetail: null, status: 'contacted', score: 0, tags: [], qualification: {}, customFields: {}, firstRespondedAt: null, firstResponseSeconds: null, lastActivityAt: now, enquiryCount: 1, isExistingCustomer: false, contactId: null, convertedAt: null, convertedContactId: null, convertedCompanyId: null, convertedDealId: null, phones: [], createdAt: now, updatedAt: now, deletedAt: null }
+  await context.route('**/*', async (route) => {
+    const req = route.request(), url = new URL(req.url()), path = url.pathname, method = req.method()
+    if (!path.startsWith('/api/')) return ['localhost', '127.0.0.1'].includes(url.hostname) ? route.continue() : route.abort()
+    const reply = (data) => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ success: true, data }) })
+    if (path.startsWith('/api/templates') || path.startsWith('/api/email-templates') || path.startsWith('/api/emails') || path === '/api/integrations/gmail/me') {
+      const response = await route.fetch({ url: `${base}${path.slice(4)}${url.search}` })
+      if (path === '/api/emails/send' && method === 'POST') sends.push({ input: req.postDataJSON(), result: await response.json() })
+      return route.fulfill({ response })
+    }
+    if (path === '/api/auth/refresh') return reply({ user, accessToken })
+    if (path === '/api/organizations/current') return reply({ organization, membership: { role: 'owner', permissions: user.organization.permissions } })
+    if (path === '/api/organizations') return reply({ organizations: [user.organization] })
+    if (path === '/api/organizations/current/checklist') return reply({ items: [], dismissed: true })
+    if (path === '/api/notifications/count' || path === '/api/notifications/unread-count') return reply({ unreadCount: 0 })
+    if (path === '/api/notifications/stream-ticket') return reply({ ticket: 'fixture' })
+    if (path === '/api/notifications/stream') return route.fulfill({ status: 204, body: '' })
+    if (path === '/api/notifications') return reply({ items: [], nextCursor: null })
+    if (path === `/api/leads/${lead.id}`) return reply({ lead: record })
+    if (path === `/api/leads/${lead.id}/conversion`) return reply({ contacts: [], companies: [], dealsAvailable: false })
+    if (path === '/api/leads/check-duplicates') return reply({ duplicates: [] })
+    if (path === '/api/leads') return reply({ items: [], nextCursor: null, counts: { all: 1, new: 0 } })
+    if (path === '/api/tasks/summary') return reply({ today: 0, overdue: 0, tasks: [] })
+    if (path === '/api/tasks') return reply({ items: [], nextCursor: null })
+    if (path === '/api/timeline') return reply({ items: [], pinned: [], nextCursor: null })
+    if (path === '/api/custom-fields') return reply({ fields: [] })
+    if (path === '/api/lead-sources') return reply({ sources: [] })
+    if (path === '/api/lost-reasons') return reply({ reasons: [] })
+    if (path === '/api/tags') return reply({ tags: [] })
+    if (path === '/api/files') return reply({ files: [] })
+    if (path === '/api/members/options') return reply({ members: [{ userId: user.id, fullName: user.fullName, role: 'owner' }] })
+    unexpected.push(`${method} ${path}`)
+    return route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ success: false, error: { code: 'FIXTURE', message: 'Unexpected route' } }) })
+  })
+  const origin = process.env.TEMPLATE_QA_URL || 'http://127.0.0.1:5184'
+  const editor = () => page.getByRole('dialog', { name: 'Create template', exact: true })
+  const define = async ({ label, key, type = 'text', required = true, fallback = '' }) => {
+    await editor().getByRole('button', { name: 'Add variable', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: 'Define variable', exact: true })
+    await dialog.getByLabel(/^Variable label/).fill(label)
+    await dialog.getByLabel(/^Variable key/).fill(key)
+    await dialog.getByLabel('Data type', { exact: true }).selectOption(type)
+    await dialog.getByLabel('Required before sending').setChecked(required)
+    if (fallback) await dialog.getByLabel('Default value', { exact: false }).fill(fallback)
+    await dialog.getByRole('button', { name: 'Apply variable', exact: true }).click()
+    await dialog.waitFor({ state: 'hidden' })
+  }
+  try {
+    await page.goto(`${origin}/app/templates`)
+    await page.getByRole('button', { name: 'New template', exact: true }).click()
+    await editor().getByLabel(/^Template name/).fill('Browser variable proposal')
+    await editor().getByLabel('Recipient context', { exact: true }).selectOption('lead')
+    await editor().getByLabel(/^Subject/).fill('Hello ')
+    await editor().getByLabel('Insert subject field', { exact: true }).selectOption('lead.first_name')
+    await define({ label: 'Project name', key: 'Project Name', fallback: 'CRM rollout' })
+    await define({ label: 'Meeting link', key: 'meeting_link', type: 'url' })
+    await define({ label: 'Discount offer', key: 'discount_offer', required: false })
+    await define({ label: 'Unused note', key: 'unused_note', required: false })
+    await editor().getByRole('button', { name: 'Remove variable Unused note', exact: true }).click()
+    assert.equal(await editor().getByRole('button', { name: 'Remove variable Unused note', exact: true }).count(), 0)
+    await editor().getByRole('textbox', { name: 'Template message', exact: true }).fill('Hello ')
+    await editor().getByLabel('Insert message field', { exact: true }).selectOption('project_name')
+    await page.waitForFunction(() => document.querySelector('[aria-label="Template message"]').innerText.includes('{{project_name}}'))
+    await editor().getByRole('textbox', { name: 'Template message', exact: true }).fill('Hello {{lead.first_name}}, {{project_name}} / {{lead.custom.favourite_plan}} / {{discount_offer}}. Booking: {{meeting_link}}')
+    await editor().getByRole('textbox', { name: 'Template message', exact: true }).evaluate((element) => {
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+      let node
+      while ((node = walker.nextNode())) {
+        const start = node.textContent.indexOf('Booking')
+        if (start < 0) continue
+        const range = document.createRange(); range.setStart(node, start); range.setEnd(node, start + 7)
+        const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range)
+        element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); break
+      }
+    })
+    await editor().getByRole('button', { name: 'Insert link', exact: true }).click()
+    await editor().getByLabel('Link URL', { exact: true }).fill('{{meeting_link}}')
+    await editor().getByRole('button', { name: 'Add link', exact: true }).click()
+    assert.equal(await editor().getByRole('textbox', { name: 'Template message', exact: true }).locator('a').getAttribute('href'), '{{meeting_link}}')
+    assert.equal(await editor().getByRole('button', { name: 'Remove variable Project name' }).isDisabled(), true)
+    await editor().getByRole('button', { name: 'Edit variable Project name' }).click()
+    const variable = page.getByRole('dialog', { name: 'Define variable', exact: true })
+    await variable.getByLabel(/^Variable key/).fill('project_title')
+    await variable.getByRole('button', { name: 'Apply variable', exact: true }).click()
+    await page.getByRole('button', { name: 'Rename and update references', exact: true }).click()
+    assert.match(await editor().getByRole('textbox', { name: 'Template message', exact: true }).innerText(), /\{\{project_title\}\}/)
+    await editor().getByLabel('Variable source', { exact: true }).selectOption('crm')
+    await editor().getByLabel('Search variables', { exact: true }).fill('Favourite plan')
+    await editor().getByRole('region', { name: 'Template variables', exact: true }).getByText('Lead · Favourite plan', { exact: true }).waitFor()
+    await editor().getByLabel('Search variables', { exact: true }).fill('')
+    await editor().getByLabel('Variable source', { exact: true }).selectOption('all')
+    await editor().getByLabel('Visibility', { exact: true }).selectOption('team')
+    await editor().getByRole('button', { name: 'Mobile preview', exact: true }).click()
+    await editor().frameLocator('iframe').getByText(/CRM rollout/).waitFor()
+    await page.screenshot({ path: '/tmp/template-variables-editor.png', fullPage: false })
+    await editor().getByRole('button', { name: 'Save template', exact: true }).click()
+    await editor().waitFor({ state: 'hidden' })
+    await page.getByRole('article', { name: 'Browser variable proposal', exact: true }).waitFor()
+
+    await page.goto(`${origin}/app/leads/${lead.id}`)
+    await page.getByRole('heading', { name: lead.displayName, exact: true }).waitFor()
+    const open = async () => {
+      await page.getByRole('group', { name: 'Contact this lead' }).getByRole('button', { name: 'Email', exact: true }).click()
+      const composer = page.getByRole('dialog', { name: `Email ${lead.displayName}`, exact: true })
+      const options = composer.getByRole('combobox', { name: 'Email template', exact: true })
+      await options.selectOption({ label: 'Browser variable proposal · Team' })
+      await composer.getByLabel(/^Meeting link/).waitFor()
+      return composer
+    }
+    const composer = await open()
+    assert.equal(await composer.getByLabel(/^Project name/).inputValue(), 'CRM rollout')
+    assert.equal(await composer.getByRole('button', { name: 'Send with Gmail', exact: true }).isDisabled(), true)
+    await composer.getByLabel(/^Meeting link/).fill('javascript:alert(1)')
+    await composer.getByText('Use an http:// or https:// link without credentials.', { exact: true }).first().waitFor()
+    assert.equal(await composer.getByRole('button', { name: 'Send with Gmail', exact: true }).isDisabled(), true)
+    await composer.getByLabel(/^Meeting link/).fill('https://example.com/recipient')
+    await composer.getByLabel(/^Project name/).fill('Private project A')
+    await composer.frameLocator('iframe').getByText(new RegExp(`Hello ${lead.firstName}, Private project A / Growth`)).waitFor()
+    await page.setViewportSize({ width: 390, height: 844 })
+    await composer.getByRole('button', { name: 'Mobile preview', exact: true }).click()
+    await page.screenshot({ path: '/tmp/template-variables-completion-mobile.png', fullPage: false })
+    assert.ok(await composer.evaluate((el) => el.scrollWidth <= el.clientWidth + 1))
+    await composer.getByRole('button', { name: 'Send with Gmail', exact: true }).click()
+    await composer.getByText('Queued', { exact: true }).waitFor()
+    assert.equal(sends.length, 1)
+    assert.equal(sends[0].input.variableValues.project_title, 'Private project A')
+    assert.ok(sends[0].input.templateId && sends[0].input.templateVersion)
+    assert.match(sends[0].input.templateRenderHash, /^[a-f0-9]{64}$/)
+    await composer.getByRole('button', { name: 'Close', exact: true }).click()
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    const again = await open()
+    assert.equal(await again.getByLabel(/^Project name/).inputValue(), 'CRM rollout')
+    assert.equal(await again.getByLabel(/^Meeting link/).inputValue(), '')
+    assert.equal(await again.getByRole('button', { name: 'Send with Gmail', exact: true }).isDisabled(), true)
+    assert.deepEqual(errors, []); assert.deepEqual(unexpected, [])
+    return sends[0]
+  } catch (error) {
+    await page.screenshot({ path: '/tmp/template-variables-failure.png', fullPage: true }).catch(() => {})
+    console.error({ errors, unexpected }); throw error
+  } finally { await browser.close() }
+}

@@ -7,6 +7,7 @@ import { logActivity, outcomeLabels } from '../../activities/api'
 import { useOrgId } from '../../crm/hooks'
 import type { CallOutcome, LeadRecord } from '../../crm/types'
 import { whatsappLink } from '../../crm/format'
+import { previewMerge } from '../../email/content'
 import { fillTemplate, type MessageTemplate } from './extrasApi'
 
 export type Channel = 'call' | 'whatsapp' | 'sms' | 'email'
@@ -27,6 +28,7 @@ export function useCommunication({ lead, ownerName, workspaceName, canLog = fals
   const orgId = useOrgId()
   const client = useQueryClient()
   const notify = useToast()
+  const [managedDraft, setManagedDraft] = useState<{ template: MessageTemplate; channel: 'whatsapp' | 'sms' } | null>(null)
   const [pending, setPending] = useState<Pending | null>(null)
   const [saving, setSaving] = useState(false)
   const phone = lead.phones.find((p) => p.primary) ?? lead.phones[0]
@@ -36,11 +38,23 @@ export function useCommunication({ lead, ownerName, workspaceName, canLog = fals
   const fill = (text: string) =>
     fillTemplate(text, { firstName: lead.firstName ?? lead.displayName.split(' ')[0], ownerName, workspaceName, requirement: lead.requirement })
 
+  const managedFields = { firstName: lead.firstName, lastName: lead.lastName, name: lead.displayName, company: lead.companyName, owner: ownerName, workspace: workspaceName }
+  const preview = (text: string) => previewMerge(text, managedFields).value
+
   const available: Record<Channel, boolean> = { call: Boolean(dial), whatsapp: Boolean(phone?.e164), sms: Boolean(dial), email: Boolean(email) && !['converted', 'lost', 'junk'].includes(lead.status) && !lead.deletedAt }
 
   function start(channel: Channel, template?: MessageTemplate) {
     if (!available[channel] || lead.deletedAt || saving) return
-    const body = template ? fill(template.body) : undefined
+    if (template?.dynamic && (channel === 'whatsapp' || channel === 'sms')) { setManagedDraft({ template, channel }); return }
+    let body = template ? fill(template.body) : undefined
+    if (template?.managed) {
+      const rendered = previewMerge(template.body, managedFields)
+      if (rendered.missing.length) {
+        notify({ tone: 'error', title: 'Complete the template fields first', description: `Missing: ${rendered.missing.join(', ')}. Update the lead or edit the template before sending.` })
+        return
+      }
+      body = rendered.value
+    }
     const subject = template?.subject ? fill(template.subject) : undefined
     if (channel === 'email' && onEmail) { onEmail({ subject, body }); return }
     const q = (v: string) => encodeURIComponent(v)
@@ -85,7 +99,7 @@ export function useCommunication({ lead, ownerName, workspaceName, canLog = fals
     }
   }
 
-  return { pending, saving, available, start, log, dismiss: () => setPending(null), fill }
+  return { pending, saving, available, start, log, managedDraft, managedRecordId: lead.id, cancelManaged: () => setManagedDraft(null), confirmManaged: (body: string) => { if (!managedDraft) return; const draft = managedDraft; setManagedDraft(null); start(draft.channel, { ...draft.template, body, managed: false, dynamic: false }) }, dismiss: () => setPending(null), fill, preview }
 }
 
 export type Communication = ReturnType<typeof useCommunication>

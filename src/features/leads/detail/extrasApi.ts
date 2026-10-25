@@ -1,9 +1,11 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { qk } from '../../../lib/queryKeys'
 import { useOrgId } from '../../crm/hooks'
 import type { LeadRecord } from '../../crm/types'
 import { updateLead } from '../api'
 import { emptyQualification, type LeadQualification, type MessageTemplate } from './qualification'
+import { quickReplyTemplates, templateKey } from '../../templates/api'
+import { htmlText } from '../../templates/content'
 import templateConfig from './config/message-templates.json'
 
 export * from './qualification'
@@ -11,7 +13,12 @@ export { fillTemplate } from './fillTemplate'
 
 /** Built-in writing aids; interpolation always uses the real lead and signed-in workspace. */
 const templates: MessageTemplate[] = templateConfig.templates as MessageTemplate[]
-export function useMessageTemplates() { return { data: templates, isPending: false } }
+export function useMessageTemplates() {
+  const orgId = useOrgId()
+  const query = useQuery({ queryKey: [...templateKey(orgId), 'quick-replies'], queryFn: ({ signal }) => quickReplyTemplates(signal) })
+  const managed: MessageTemplate[] = (query.data || []).map((t) => ({ id: t.id, channel: t.channel, name: t.name, body: htmlText(t.bodyHtml), managed: true, version: t.version, dynamic: Boolean(t.variables?.length || /\{\{\s*[\w]+\./.test(t.bodyHtml)) }))
+  return { ...query, data: [...managed, ...templates] }
+}
 export function qualificationFor(lead: Pick<LeadRecord, 'qualification'>): LeadQualification {
   return { ...emptyQualification, ...lead.qualification }
 }

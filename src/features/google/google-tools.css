@@ -16,3 +16,27 @@
 .google-sheet-grid input:focus { outline: 2px solid var(--color-brand-500); outline-offset: -2px; }
 .google-sheet-grid input[data-changed] { background: var(--color-brand-50); }
 @media (max-width: 640px) { .google-day, .google-day-empty { min-height: 3.25rem; padding: .4rem; } .google-day-preview { display: none; } }
+.google-meeting-dialog .crm-dialog-body { padding: 1.25rem 1.5rem; }
+.google-meeting-form { display: flex; flex-direction: column; gap: 1.35rem; }
+.google-meeting-summary { display: flex; align-items: center; gap: .8rem; border: 1px solid var(--color-brand-100); border-radius: .75rem; padding: .9rem 1rem; background: var(--color-brand-50); color: var(--color-brand-800); font-size: .875rem; }
+.google-meeting-lead { display: flex; align-items: center; gap: .5rem; color: var(--color-muted); font-size: .8rem; }
+.google-meeting-section { display: flex; flex-direction: column; gap: .9rem; border-top: 1px solid var(--color-line); padding-top: 1.2rem; }
+.google-meeting-section-title { display: flex; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 600; color: var(--color-ink); }
+.google-meet-option { display: flex; align-items: flex-start; gap: .8rem; padding: 1rem; border: 1px solid var(--color-line); border-radius: .75rem; background: var(--color-surface-subtle); }
+.google-meet-option[data-enabled] { border-color: var(--color-brand-200); background: var(--color-brand-50); }
+.google-meet-icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 2.25rem; height: 2.25rem; background: var(--color-surface); color: var(--color-brand-700); border: 1px solid var(--color-line); border-radius: .65rem; }
+.google-meeting-invites { padding: .9rem; background: var(--color-surface-subtle); border: 1px solid var(--color-line); border-radius: .65rem; }
+.google-meeting-footer-hint { display: flex; align-items: center; gap: .35rem; margin-right: auto; font-size: .7rem; color: var(--color-muted); }
+.google-api-notice { display: flex; align-items: flex-start; gap: .75rem; padding: 1rem; border: 1px solid var(--color-brand-200); background: var(--color-brand-50); color: var(--color-ink); border-radius: .75rem; }
+.google-sheet-state { padding: 2rem; border: 1px solid var(--color-line); border-radius: 1rem; background: var(--color-surface); }
+.google-sheet-state-heading { display: flex; align-items: flex-start; gap: .9rem; margin-bottom: 1.25rem; }
+.google-sheet-status { display: inline-flex; align-items: center; gap: .4rem; border-radius: 999px; padding: .3rem .65rem; background: var(--color-surface-subtle); color: var(--color-muted); font-size: .75rem; }
+@media (max-width: 640px) { .google-meeting-dialog .crm-dialog-body { padding: 1rem; } .google-meeting-footer-hint { width: 100%; margin-bottom: .25rem; } .google-sheet-state { padding: 1rem; } }
+
+.google-meeting-details { display: grid; gap: 1rem; align-items: start; }
+@media (min-width: 900px) {
+  .google-meeting-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.25rem 1.5rem; align-items: start; }
+  .google-meeting-summary, .google-meeting-details, .google-meeting-form > [aria-label="Guests and invitations"], .google-meeting-form > [role="alert"] { grid-column: 1 / -1; }
+  .google-meeting-details { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .google-meeting-lead { padding-top: 2rem; }
+}

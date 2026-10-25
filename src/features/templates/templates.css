@@ -1,0 +1,14 @@
+.template-library { container-type: inline-size; }
+.template-filters { display: grid; gap: .75rem; grid-template-columns: minmax(0, 1fr); }
+.template-card-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+.template-channel { display: inline-flex; width: 2rem; height: 2rem; align-items: center; justify-content: center; border-radius: .65rem; }
+.template-channel-email { background: var(--color-brand-50); color: var(--color-brand-700); }
+.template-channel-whatsapp { background: #ecfdf5; color: #047857; }
+.template-channel-sms { background: #eff6ff; color: #1d4ed8; }
+.template-editor-grid { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.template-preview { min-width: 0; border-radius: 1rem; background: var(--color-surface-subtle); padding: 1rem; }
+.template-message { transition: max-width .2s ease; }
+@container (min-width: 580px) { .template-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .template-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); } .template-filters > :first-child { grid-column: 1 / -1; } }
+@container (min-width: 960px) { .template-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .template-filters { grid-template-columns: minmax(15rem, 1fr) 9rem 10rem 11rem; } .template-filters > :first-child { grid-column: auto; } }
+@media (min-width: 900px) { .template-editor-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2rem; } .template-editor-grid > .template-preview { position: sticky; top: 0; } }
+@media (prefers-reduced-motion: reduce) { .template-message { transition: none; } }

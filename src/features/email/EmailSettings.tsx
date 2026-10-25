@@ -30,6 +30,7 @@ export default function EmailSettings() {
     <header className="email-page-header">
       <div><p className="email-eyebrow">Your workspace · Communication</p><h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Email settings</h1><p className="mt-2 text-sm text-muted">A familiar address. More personal conversations.</p></div>
       <Button variant="secondary" size="sm" loading={query.isFetching} onClick={() => query.refetch()}><RefreshCw className="size-3.5" aria-hidden="true" />Refresh status</Button>
+      <Button variant="secondary" to="/app/templates">Manage templates</Button>
     </header>
     {query.isPending ? <div className="email-settings-grid" aria-label="Loading email settings"><Skeleton className="h-80 rounded-2xl" /><Skeleton className="h-72 rounded-2xl" /></div> : query.isError ? <ErrorState error={query.error} onRetry={() => query.refetch()} /> : <div className="email-settings-grid">
       <div className="email-settings-main">
