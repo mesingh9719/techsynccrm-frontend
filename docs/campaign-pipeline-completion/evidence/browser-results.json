@@ -1,0 +1,159 @@
+{
+  "results": [
+    {
+      "name": "create campaign through UI saves precise money, source and tracking"
+    },
+    {
+      "name": "local lifecycle follows M22 including complete, archive and restore"
+    },
+    {
+      "name": "edit and duplicate produce independent campaign identity without copied spend/provider IDs"
+    },
+    {
+      "name": "lead detail clears campaign ID, shows unlinked state and preserves capture metadata"
+    },
+    {
+      "name": "campaign deletion confirms and returns to the list"
+    },
+    {
+      "name": "campaign sorting covers all pages and resets the displayed page"
+    },
+    {
+      "name": "board lazy-loads 75 deals in one stage without duplicate cards"
+    },
+    {
+      "name": "failed move and real stale conflict retain fields; retry saves once with fresh version"
+    },
+    {
+      "name": "HTML5 drag and accessible move selector persist the same deal transition"
+    },
+    {
+      "name": "campaign deep link filters board and list consistently"
+    },
+    {
+      "name": "pipeline and stage create, rename, reorder and delete work through settings"
+    },
+    {
+      "name": "lead conversion creates linked deal; Won asks for value; detail stepper reopens; delete confirms"
+    },
+    {
+      "name": "desktop 1440px and mobile 390px screenshots: campaigns, detail, board, settings, lead and dashboard; no document overflow"
+    },
+    {
+      "name": "real role screen permissions: admin"
+    },
+    {
+      "name": "real role screen permissions: manager"
+    },
+    {
+      "name": "real role screen permissions: sales_rep"
+    },
+    {
+      "name": "real role screen permissions: viewer"
+    },
+    {
+      "name": "no uncaught browser errors",
+      "expectedErrors": [
+        {
+          "path": "/api/deals/d9a2a1a8-e0bd-49b3-b4a8-4b8e16426413/move",
+          "status": 503
+        },
+        {
+          "path": "/api/deals/d9a2a1a8-e0bd-49b3-b4a8-4b8e16426413/move",
+          "status": 409
+        },
+        {
+          "path": "/api/notifications/stream-ticket",
+          "status": 429
+        },
+        {
+          "path": "/api/notifications/stream-ticket",
+          "status": 429
+        },
+        {
+          "path": "/api/notifications/stream-ticket",
+          "status": 429
+        },
+        {
+          "path": "/api/notifications/stream-ticket",
+          "status": 429
+        },
+        {
+          "path": "/api/notifications/stream-ticket",
+          "status": 429
+        },
+        {
+          "path": "/api/notifications/stream-ticket",
+          "status": 429
+        },
+        {
+          "path": "/api/notifications/stream-ticket",
+          "status": 429
+        },
+        {
+          "path": "/api/notifications/stream-ticket",
+          "status": 429
+        },
+        {
+          "path": "/api/notifications/stream-ticket",
+          "status": 429
+        },
+        {
+          "path": "/api/notifications/stream-ticket",
+          "status": 429
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "failedRequests": [
+    {
+      "path": "/api/deals/d9a2a1a8-e0bd-49b3-b4a8-4b8e16426413/move",
+      "status": 503
+    },
+    {
+      "path": "/api/deals/d9a2a1a8-e0bd-49b3-b4a8-4b8e16426413/move",
+      "status": 409
+    },
+    {
+      "path": "/api/notifications/stream-ticket",
+      "status": 429
+    },
+    {
+      "path": "/api/notifications/stream-ticket",
+      "status": 429
+    },
+    {
+      "path": "/api/notifications/stream-ticket",
+      "status": 429
+    },
+    {
+      "path": "/api/notifications/stream-ticket",
+      "status": 429
+    },
+    {
+      "path": "/api/notifications/stream-ticket",
+      "status": 429
+    },
+    {
+      "path": "/api/notifications/stream-ticket",
+      "status": 429
+    },
+    {
+      "path": "/api/notifications/stream-ticket",
+      "status": 429
+    },
+    {
+      "path": "/api/notifications/stream-ticket",
+      "status": 429
+    },
+    {
+      "path": "/api/notifications/stream-ticket",
+      "status": 429
+    },
+    {
+      "path": "/api/notifications/stream-ticket",
+      "status": 429
+    }
+  ]
+}
