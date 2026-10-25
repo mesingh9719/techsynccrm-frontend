@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'/home/butcher/.cache/ms-playwright-go/1.57.0/package/index.mjs')
 const base=process.env.QA_ORIGIN||'http://127.0.0.1:5177';assert(['localhost','127.0.0.1'].includes(new URL(base).hostname))
-const [f,other]=JSON.parse(await fs.readFile('/tmp/techsync-campaign-pipeline-fixture.json','utf8'))
+const [f,other]=JSON.parse(await fs.readFile(process.env.QA_FIXTURE || '/tmp/techsync-campaign-pipeline-fixture.json','utf8'))
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',args:['--no-sandbox','--disable-dev-shm-usage']})
 const admin=await browser.newContext(),visitor=await browser.newContext(),page=await visitor.newPage(),tag=Date.now().toString(36)
 let token,form,rule
