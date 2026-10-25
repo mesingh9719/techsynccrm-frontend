@@ -2,7 +2,7 @@
 export function downloadCsv(filename: string, headers: string[], rows: unknown[][]) {
   const cell = (value: unknown) => {
     let text = value == null ? '' : String(value)
-    if (/^[=+@-]/.test(text.trimStart()) || text.startsWith('\t') || text.startsWith('\r')) text = `'${text}`
+    if (/^[\s\u0000-\u001f]*[=+@-]/.test(text) || text.startsWith('\t') || text.startsWith('\r')) text = `'${text}`
     return `"${text.replaceAll('"', '""')}"`
   }
   const blob = new Blob(['\uFEFF', [headers, ...rows].map((row) => row.map(cell).join(',')).join('\r\n')], {

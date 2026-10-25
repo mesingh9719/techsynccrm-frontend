@@ -250,12 +250,15 @@ test('CSV export escapes formulas, quotes and newlines', async (t) => {
     [
       ['=HYPERLINK("https://invalid.test")', 'Line 1\nLine 2'],
       ['  +SUM(1,2)', '+919876543210'],
+      ['\u0000=SUM(1,2)', '\u000b@SUM(1,2)'],
     ],
   )
   const text = await blob.text()
   assert.ok(text.includes('"\'=HYPERLINK(""https://invalid.test"")"'))
   assert.ok(text.includes('"\'  +SUM(1,2)"'))
   assert.ok(text.includes('"\'+919876543210"'))
+  assert.ok(text.includes('"\'\u0000=SUM(1,2)"'))
+  assert.ok(text.includes('"\'\u000b@SUM(1,2)"'))
   assert.ok(text.includes('"Line 1\nLine 2"'))
 })
 
