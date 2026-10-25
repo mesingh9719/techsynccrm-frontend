@@ -104,7 +104,7 @@ export function computeInsights(lead: LeadRecord, q: LeadQualification, openTask
   else if (!lead.ownerId) next = { kind: 'claim', title: 'Claim this lead', reason: 'It has no owner, so nobody will follow up.' }
   else if (lead.status === 'new' && !lead.firstRespondedAt)
     next = hasPhone
-      ? { kind: 'call', title: `Call ${firstName} now`, reason: 'First contact within an hour converts several times better.' }
+      ? { kind: 'call', title: `Call ${firstName} now`, reason: 'Make the first contact and agree on the next follow-up.' }
       : hasEmail ? { kind: 'email', title: `Email ${firstName}`, reason: 'Start the conversation using their email address.' }
       : { kind: 'qualify', title: 'Add a phone number or email', reason: 'A contact method is needed before the first conversation.' }
   else if (overdue.length) next = { kind: 'overdue', title: `Overdue: ${overdue[0].title}`, reason: 'Clear overdue follow-ups before they cost the deal.' }
