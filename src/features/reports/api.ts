@@ -1,7 +1,7 @@
-import { api } from '../../services/http'
+import { api, ApiError } from '../../services/http'
 
 /** Reports always describe the authenticated workspace. */
-export const reportsLive = true
+export const reportsLive = import.meta.env.VITE_CRM_REPORTS_API !== 'false'
 export interface ReportFilters {
   from: string
   to: string
@@ -41,6 +41,7 @@ export interface ReportData {
   team: TeamReport[]
 }
 export async function getReports(filters: ReportFilters, _today?: string, _currency?: string): Promise<ReportData> {
+  if (!reportsLive) throw new ApiError('Workspace reports are temporarily unavailable. Please try again later.', 503, 'FEATURE_DISABLED')
   const query = { ...filters }
   const [kpis, revenue, sources, funnel, team] = await Promise.all([
     api<ReportKpi[]>('/reports/kpis', { query }),

@@ -3,32 +3,41 @@ import { api, ApiError } from '../../services/http'
 import type { AssignmentRule, AssignmentTest, OutOfOffice, Submission, WebForm, WorkingHours } from './types'
 import { normalizeForm } from './formConfig'
 
-// Retained for UI capability checks. Browser-only preview persistence is retired.
+// Retained for UI capability checks. Rollout switches return errors; they never enable previews.
 export const captureLive = true
 export const assignmentLive = true
+const captureEnabled = import.meta.env.VITE_CRM_CAPTURE_API !== 'false'
+const assignmentEnabled = import.meta.env.VITE_CRM_ASSIGNMENT_API !== 'false'
 export const captureKeys = (scope: string) => ['org', scope.split(':')[0], 'capture', scope] as const
+
+const captureApi = <T>(path: string, options?: Parameters<typeof api>[1]) => captureEnabled
+  ? api<T>(path, options)
+  : Promise.reject(new ApiError('Lead source settings are temporarily unavailable.', 503, 'FEATURE_DISABLED'))
+const assignmentApi = <T>(path: string, options?: Parameters<typeof api>[1]) => assignmentEnabled
+  ? api<T>(path, options)
+  : Promise.reject(new ApiError('Assignment settings are temporarily unavailable.', 503, 'FEATURE_DISABLED'))
 
 export function makeCaptureApi(_scope: string) {
   return {
-    listForms: () => api<{ forms: WebForm[] }>('/forms').then((d) => d.forms.map(normalizeForm)),
-    getForm: (id: string) => api<{ form: WebForm }>(`/forms/${id}`).then((d) => normalizeForm(d.form)),
-    saveForm: (form: WebForm, isNew: boolean) => api<{ form: WebForm }>(isNew ? '/forms' : `/forms/${form.id}`, {
+    listForms: () => captureApi<{ forms: WebForm[] }>('/forms').then((d) => d.forms.map(normalizeForm)),
+    getForm: (id: string) => captureApi<{ form: WebForm }>(`/forms/${id}`).then((d) => normalizeForm(d.form)),
+    saveForm: (form: WebForm, isNew: boolean) => captureApi<{ form: WebForm }>(isNew ? '/forms' : `/forms/${form.id}`, {
       method: isNew ? 'POST' : 'PATCH',
       body: { name: form.name, fields: form.fields, settings: form.settings, sourceId: form.settings.sourceId, isActive: form.isActive },
     }).then((d) => normalizeForm(d.form)),
-    deleteForm: (id: string) => api<void>(`/forms/${id}`, { method: 'DELETE' }),
-    submissions: (id: string) => api<{ items: Submission[] }>(`/forms/${id}/submissions`).then((d) => d.items),
-    embedCode: (id: string) => api<{ script: string; iframe: string; hostedUrl: string }>(`/forms/${id}/embed-code`),
-    listRules: () => api<{ rules: AssignmentRule[] }>('/assignment-rules').then((d) => d.rules),
-    saveRule: (rule: AssignmentRule, isNew: boolean) => api<{ rule: AssignmentRule }>(isNew ? '/assignment-rules' : `/assignment-rules/${rule.id}`, { method: isNew ? 'POST' : 'PATCH', body: rule }).then((d) => d.rule),
-    deleteRule: (id: string) => api<void>(`/assignment-rules/${id}`, { method: 'DELETE' }),
-    orderRules: (ids: string[]) => api('/assignment-rules/order', { method: 'PATCH', body: { ids } }),
-    getHours: () => api<WorkingHours>('/working-hours'),
-    saveHours: (hours: WorkingHours) => api<WorkingHours>('/working-hours', { method: 'PUT', body: hours }),
-    listAbsences: () => api<{ items: OutOfOffice[] }>('/users/me/out-of-office').then((d) => d.items),
-    addAbsence: (values: Omit<OutOfOffice, 'id'>) => api<{ outOfOffice: OutOfOffice }>('/users/me/out-of-office', { method: 'POST', body: values }).then((d) => d.outOfOffice),
-    deleteAbsence: (id: string) => api<void>(`/users/me/out-of-office/${id}`, { method: 'DELETE' }),
-    test: (leadSample: Record<string, string>) => api<AssignmentTest>('/assignment-rules/test', { method: 'POST', body: { leadSample } }),
+    deleteForm: (id: string) => captureApi<void>(`/forms/${id}`, { method: 'DELETE' }),
+    submissions: (id: string) => captureApi<{ items: Submission[] }>(`/forms/${id}/submissions`).then((d) => d.items),
+    embedCode: (id: string) => captureApi<{ script: string; iframe: string; hostedUrl: string }>(`/forms/${id}/embed-code`),
+    listRules: () => assignmentApi<{ rules: AssignmentRule[] }>('/assignment-rules').then((d) => d.rules),
+    saveRule: (rule: AssignmentRule, isNew: boolean) => assignmentApi<{ rule: AssignmentRule }>(isNew ? '/assignment-rules' : `/assignment-rules/${rule.id}`, { method: isNew ? 'POST' : 'PATCH', body: rule }).then((d) => d.rule),
+    deleteRule: (id: string) => assignmentApi<void>(`/assignment-rules/${id}`, { method: 'DELETE' }),
+    orderRules: (ids: string[]) => assignmentApi('/assignment-rules/order', { method: 'PATCH', body: { ids } }),
+    getHours: () => assignmentApi<WorkingHours>('/working-hours'),
+    saveHours: (hours: WorkingHours) => assignmentApi<WorkingHours>('/working-hours', { method: 'PUT', body: hours }),
+    listAbsences: () => assignmentApi<{ items: OutOfOffice[] }>('/users/me/out-of-office').then((d) => d.items),
+    addAbsence: (values: Omit<OutOfOffice, 'id'>) => assignmentApi<{ outOfOffice: OutOfOffice }>('/users/me/out-of-office', { method: 'POST', body: values }).then((d) => d.outOfOffice),
+    deleteAbsence: (id: string) => assignmentApi<void>(`/users/me/out-of-office/${id}`, { method: 'DELETE' }),
+    test: (leadSample: Record<string, string>) => assignmentApi<AssignmentTest>('/assignment-rules/test', { method: 'POST', body: { leadSample } }),
   }
 }
 

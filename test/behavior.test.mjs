@@ -9,14 +9,15 @@ import ts from 'typescript'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const urls = new Map()
 // Load the actual TS helpers using the existing compiler. No extra test framework or network.
-function moduleUrl(filename) {
+function moduleUrl(filename, environment = {}) {
   filename = path.resolve(root, filename)
-  if (urls.has(filename)) return urls.get(filename)
+  const cacheKey = filename + JSON.stringify(environment)
+  if (urls.has(cacheKey)) return urls.get(cacheKey)
   let code = ts
     .transpileModule(fs.readFileSync(filename, 'utf8'), {
       compilerOptions: { target: ts.ScriptTarget.ES2023, module: ts.ModuleKind.ESNext },
     })
-    .outputText.replaceAll('import.meta.env', '({})')
+    .outputText.replaceAll('import.meta.env', '(' + JSON.stringify(environment) + ')')
   const source = ts.createSourceFile(filename, code, ts.ScriptTarget.Latest, true)
   const replacements = []
   for (const statement of source.statements) {
@@ -25,13 +26,13 @@ function moduleUrl(filename) {
     replacements.push({
       start: statement.moduleSpecifier.getStart(source),
       end: statement.moduleSpecifier.end,
-      value: JSON.stringify(moduleUrl(target)),
+      value: JSON.stringify(moduleUrl(target, environment)),
     })
   }
   for (const replacement of replacements.reverse())
     code = code.slice(0, replacement.start) + replacement.value + code.slice(replacement.end)
   const url = `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`
-  urls.set(filename, url)
+  urls.set(cacheKey, url)
   return url
 }
 const http = await import(moduleUrl('src/services/http.ts'))
@@ -578,4 +579,18 @@ test('committed API writes notify derived caches once with the originating works
   globalThis.fetch = async () => { http.setSession({ user: { id: 'fixture', organization: { id: 'different-org' } }, accessToken: 'other' }); return respond({ saved: true }) }
   await http.api('/activities', { method: 'POST', body: {} })
   assert.deepEqual(writes.at(-1), { path: '/activities', orgId: 'original-org' })
+})
+
+test('rollout switches disable reports and settings without fabricating numbers or browser saves', async (t) => {
+  const original = globalThis.fetch
+  t.after(() => { globalThis.fetch = original })
+  globalThis.fetch = async () => { throw new Error('Disabled service must not be called') }
+  const disabled = { VITE_CRM_REPORTS_API: 'false', VITE_CRM_CAPTURE_API: 'false', VITE_CRM_ASSIGNMENT_API: 'false' }
+  const reports = await import(moduleUrl('src/features/reports/api.ts', disabled))
+  assert.equal(reports.reportsLive, false)
+  await assert.rejects(reports.getReports({ from: '2026-10-01', to: '2026-10-02' }), { code: 'FEATURE_DISABLED' })
+  const { makeCaptureApi } = await import(moduleUrl('src/features/capture/api.ts', disabled))
+  const service = makeCaptureApi('workspace:user')
+  await assert.rejects(service.listForms(), { code: 'FEATURE_DISABLED' })
+  await assert.rejects(service.saveHours({ timezone: 'Asia/Kolkata' }), { code: 'FEATURE_DISABLED' })
 })
