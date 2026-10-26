@@ -11,10 +11,10 @@ import { localMeetingInput, meetingDuration, meetingGuests, shiftedMeetingEnd } 
 import './google-tools.css'
 import { Dialog } from '../../components/app/Dialog'
 import { Button } from '../../components/ui/Button'
-import { Checkbox, Field, FormAlert, Input, Select } from '../../components/ui/Form'
+import { Checkbox, Field, FormAlert, Input, Select, Textarea } from '../../components/ui/Form'
 import { useCan } from '../../lib/useOrg'
-import { RecordPicker, type PickerOption } from '../crm/components/RecordPicker'
-import { listLeads } from '../leads/api'
+import { type PickerOption } from '../crm/components/RecordPicker'
+import { RecordLinkPicker, type LinkedRecord } from '../crm/components/RecordLinkPicker'
 import { GoogleServiceGate } from './GoogleServiceGate'
 import { createMeeting, getCalendar, setupCalendar, updateMeeting, type CrmCalendar, type GoogleMeeting } from './api'
 
@@ -37,7 +37,7 @@ export function CalendarSetup({ calendar, onReady }: { calendar: CrmCalendar | n
 function InputField({ id, describedBy, value, onChange }: { id?: string; describedBy?: string; value: string; onChange: (value: string) => void }) {
   return <Input id={id} aria-describedby={describedBy} value={value} onChange={(event) => onChange(event.target.value)} />
 }
-type MeetingDialogProps = { onClose: () => void; onSaved?: () => void; lead?: PickerOption; meeting?: GoogleMeeting; withMeet?: boolean; date?: Date }
+type MeetingDialogProps = { onClose: () => void; onSaved?: (meeting: GoogleMeeting) => void; lead?: PickerOption; record?: LinkedRecord; initialTitle?: string; initialNotes?: string; meeting?: GoogleMeeting; withMeet?: boolean; date?: Date }
 export function MeetingDialog(props: MeetingDialogProps) {
   const key = useGoogleResourceKey(), allowed = useCan('google.connect.own')
   const calendar = useQuery({ queryKey: [...key, 'calendar'], queryFn: getCalendar, enabled: allowed })
@@ -48,25 +48,26 @@ export function MeetingDialog(props: MeetingDialogProps) {
     </GoogleServiceGate>
   </Dialog>
 }
-function MeetingForm({ lead, meeting, withMeet = false, date, calendar, onSaved, onClose }: MeetingDialogProps & { calendar: CrmCalendar }) {
+function MeetingForm({ lead, record, initialTitle, initialNotes, meeting, withMeet = false, date, calendar, onSaved, onClose }: MeetingDialogProps & { calendar: CrmCalendar }) {
   const key = useGoogleResourceKey(), orgId = useOrgId(), client = useQueryClient(), notify = useToast(), formId = useId()
   const [openedAt] = useState(() => Date.now())
   const [initial] = useState(() => date || new Date(Math.ceil((Date.now() + 30 * 60000) / 900000) * 900000))
-  const [title, setTitle] = useState(() => meeting?.title || (lead ? `Meeting with ${lead.label}`.slice(0, 160) : ''))
+  const [title, setTitle] = useState(() => meeting?.title || initialTitle || (lead || record ? `Meeting with ${lead?.label || record?.name || ''}`.slice(0, 160) : ''))
   const [start, setStart] = useState(() => localMeetingInput(meeting?.startAt || initial)), [end, setEnd] = useState(() => localMeetingInput(meeting?.endAt || new Date(+initial + 30 * 60000)))
   const [location, setLocation] = useState(meeting?.location || ''), [includeMeet, setIncludeMeet] = useState(meeting?.includeMeet ?? (withMeet && calendar.meetSupported))
-  const [selectedLead, setLead] = useState<PickerOption | null>(lead || null), [guests, setGuests] = useState(meeting?.attendees.join(', ') || ''), [sendInvites, setSendInvites] = useState(false)
+  const [selectedRecord, setRecord] = useState<LinkedRecord | null>(record || meeting?.record || (lead ? { entityType: 'lead', entityId: lead.id, name: lead.label } : null)), [guests, setGuests] = useState(meeting?.attendees.join(', ') || ''), [sendInvites, setSendInvites] = useState(false)
+  const [notes, setNotes] = useState(meeting?.notes || initialNotes || '')
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [fields, setFields] = useState<Record<string, string>>({})
-  const request = useRef({ payload: '', id: crypto.randomUUID() }), automaticTitle = useRef(title)
-  const guard = useUnsavedChanges({ title, start, end, location, includeMeet, leadId: selectedLead?.id, guests, sendInvites }, onClose, busy)
+  const request = useRef({ payload: '', id: crypto.randomUUID() }), automaticTitle = useRef(initialTitle ? '' : title)
+  const guard = useUnsavedChanges({ title, start, end, location, includeMeet, record: selectedRecord, guests, sendInvites, notes }, onClose, busy)
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone.replace('Asia/Calcutta', 'Asia/Kolkata')
   const duration = meetingDuration(start, end), attendees = meetingGuests(guests)
   const validTime = Number.isFinite(+new Date(start)) && Number.isFinite(+new Date(end))
-  const summary = validTime ? `${new Date(start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} · ${new Date(start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} – ${new Date(start).toDateString() === new Date(end).toDateString() ? new Date(end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : new Date(end).toLocaleString()}` : 'Choose a date and time'
-  function selectLead(value: PickerOption | null) {
-    const next = value ? `Meeting with ${value.label}`.slice(0, 160) : ''
+  const summary = validTime ? `${new Date(start).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} · ${new Date(start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} – ${new Date(start).toDateString() === new Date(end).toDateString() ? new Date(end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : new Date(end).toLocaleString()}` : 'Choose a date and time'
+  function selectRecord(value: LinkedRecord | null) {
+    const next = value ? `Meeting with ${value.name || ''}`.slice(0, 160) : ''
     if (!title.trim() || title === automaticTitle.current) setTitle(next)
-    automaticTitle.current = next; setLead(value)
+    automaticTitle.current = next; setRecord(value)
   }
   function changeStart(value: string) { setEnd(shiftedMeetingEnd(start, end, value)); setStart(value); setFields({}) }
   async function submit(event: React.FormEvent) {
@@ -83,17 +84,16 @@ function MeetingForm({ lead, meeting, withMeet = false, date, calendar, onSaved,
     if (attendees.length && !sendInvites) issues.invites = 'Confirm sending invitations to these guests.'
     setFields(issues)
     if (Object.keys(issues).length) return
-    const input = { title: title.trim(), startAt: new Date(start).toISOString(), endAt: new Date(end).toISOString(), timeZone, location, includeMeet, attendees, sendInvites }
-    const payload = JSON.stringify({ ...input, leadId: selectedLead?.id })
+    const input = { title: title.trim(), startAt: new Date(start).toISOString(), endAt: new Date(end).toISOString(), timeZone, location, notes, includeMeet, attendees, sendInvites }
+    const payload = JSON.stringify({ ...input, record: selectedRecord })
     if (request.current.payload && request.current.payload !== payload) request.current.id = crypto.randomUUID()
     request.current.payload = payload; setBusy(true)
     try {
-      if (meeting) await updateMeeting(meeting.id, { ...input, revision: meeting.revision })
-      else await createMeeting({ ...input, requestId: request.current.id, ...(selectedLead && { leadId: selectedLead.id }) })
+      const saved = meeting ? await updateMeeting(meeting.id, { ...input, revision: meeting.revision }) : await createMeeting({ ...input, requestId: request.current.id, ...(selectedRecord && { entityType: selectedRecord.entityType, entityId: selectedRecord.entityId }) })
       guard.markSaved()
       void Promise.allSettled([client.invalidateQueries({ queryKey: key }), client.invalidateQueries({ queryKey: qk.org(orgId).tasks }), client.invalidateQueries({ queryKey: qk.org(orgId).timelineAll }), client.invalidateQueries({ queryKey: ['org', orgId, 'dashboard'] })])
-      notify({ title: meeting ? 'Meeting update queued' : 'Meeting scheduled', description: 'Google Calendar will update in the background.' })
-      onSaved?.(); onClose()
+      notify({ title: meeting ? 'Meeting update queued' : 'Meeting saved · syncing to Google', description: `${summary}. ${attendees.length ? `Invitations requested for ${attendees.length} guests.` : 'No guests invited.'} ${includeMeet ? 'The joining link appears once Google confirms.' : 'Track confirmation in Calendar.'}` })
+      onSaved?.(saved); onClose()
     } catch (err) { setError(err instanceof Error ? err.message : 'Couldn’t save this meeting.') }
     finally { setBusy(false) }
   }
@@ -102,7 +102,7 @@ function MeetingForm({ lead, meeting, withMeet = false, date, calendar, onSaved,
       <div className="google-meeting-summary"><CalendarDays className="size-5 shrink-0" /><div className="min-w-0"><p className="font-medium">{summary}</p><p className="mt-1 text-xs">{duration > 0 ? `${duration} minutes · ` : ''}{timeZone}{includeMeet ? ' · Google Meet' : ''}</p></div></div>
       <section className="google-meeting-details" aria-label="Meeting details">
         <Field label="Meeting title" required error={fields.title}>{({ id, describedBy, invalid }) => <Input id={id} aria-describedby={describedBy} invalid={invalid} required maxLength={160} placeholder="e.g. Discovery call with Acme" value={title} onChange={(event) => { setTitle(event.target.value); setFields((current) => ({ ...current, title: '' })) }} />}</Field>
-        {!lead && !meeting ? <Field label="Link a lead" optional hint="The meeting and follow-up task will appear on this lead.">{({ id, describedBy }) => <RecordPicker id={id} describedBy={describedBy} queryKey={[...key, 'meeting-leads']} search={async (q) => (await listLeads({ q, limit: 10 })).items.map((item) => ({ id: item.id, label: item.displayName }))} selected={selectedLead} onChange={selectLead} placeholder="Search by lead name" />}</Field> : lead && <div className="google-meeting-lead"><Link2 className="size-4 shrink-0" /><span>Linked to <strong>{lead.label}</strong></span></div>}
+        {!lead && !record && !meeting ? <div><RecordLinkPicker value={selectedRecord} onChange={selectRecord} /><p className="mt-2 text-xs text-muted">Optional. The event and task appear on this record.</p></div> : selectedRecord && <div className="google-meeting-lead"><Link2 className="size-4 shrink-0" /><span>Linked to {selectedRecord.entityType} · <strong>{selectedRecord.name}</strong></span></div>}
       </section>
       <section className="google-meeting-section" aria-label="Date and time"><h3 className="google-meeting-section-title"><Clock3 className="size-4" />Date & time</h3>
         <div className="grid gap-4 sm:grid-cols-2"><Field label="Starts" required error={fields.start}>{({ id, invalid, describedBy }) => <Input id={id} type="datetime-local" aria-describedby={describedBy} invalid={invalid} required value={start} onChange={(event) => changeStart(event.target.value)} />}</Field><Field label="Ends" required error={fields.end}>{({ id, invalid, describedBy }) => <Input id={id} type="datetime-local" aria-describedby={describedBy} invalid={invalid} required value={end} onChange={(event) => { setEnd(event.target.value); setFields({}) }} />}</Field></div>
@@ -117,6 +117,7 @@ function MeetingForm({ lead, meeting, withMeet = false, date, calendar, onSaved,
         <Field label="Guest email addresses" optional error={fields.guests} hint="Separate addresses with commas. No one is invited automatically.">{({ id, describedBy, invalid }) => <Input id={id} aria-describedby={describedBy} invalid={invalid} placeholder="name@company.com" value={guests} onChange={(event) => { setGuests(event.target.value); setSendInvites(false); setFields((current) => ({ ...current, guests: '', invites: '' })) }} />}</Field>
         {attendees.length > 0 && <div className="google-meeting-invites"><Checkbox label="Send Google Calendar invitations and updates to these guests" checked={sendInvites} onChange={(event) => { setSendInvites(event.target.checked); setFields((current) => ({ ...current, invites: '' })) }} description={`${attendees.length} ${attendees.length === 1 ? 'guest' : 'guests'} will receive an email invitation.`} />{fields.invites && <p role="alert" className="mt-2 text-sm text-danger">{fields.invites}</p>}</div>}
       </section>
+      <section className="google-meeting-section google-meeting-notes" aria-label="CRM meeting notes"><Field label="CRM notes" optional hint="Saved on the linked CRM task. Visible in the CRM meeting details.">{({ id, describedBy }) => <Textarea id={id} aria-describedby={describedBy} rows={2} maxLength={5000} placeholder="What should you cover in this conversation?" value={notes} onChange={(event) => setNotes(event.target.value)} />}</Field></section>
       {error && <FormAlert>{error}</FormAlert>}
     </form></GoogleServiceGate>
   </Dialog>{guard.confirmation}</>

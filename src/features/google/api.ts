@@ -1,3 +1,4 @@
+import type { LinkedRecord } from '../crm/components/RecordLinkPicker'
 import { api } from '../../services/http'
 
 export type GoogleService = 'calendar' | 'drive' | 'sheets'
@@ -30,13 +31,13 @@ export const serviceLabels: Record<GoogleService, string> = { calendar: 'Google 
 export const statusLabel = (status?: string) => ({ connected: 'Connected', reconnect_required: 'Reconnect required', disconnected: 'Disconnected' })[status || 'disconnected'] || 'Needs attention'
 
 export interface CrmCalendar { id: string; status: string; meetSupported: boolean; lastError: string | null; googleUrl: string | null }
-export interface MeetingInput { title: string; startAt: string; endAt: string; timeZone: string; location: string; includeMeet: boolean; attendees: string[]; sendInvites: boolean }
-export interface GoogleMeeting extends Omit<MeetingInput, 'sendInvites'> { id: string; taskId: string; leadId: string | null; revision: number; status: string; meetStatus: string; meetUrl: string | null; lastError: string | null; cancelRequested: boolean }
+export interface MeetingInput { title: string; startAt: string; endAt: string; timeZone: string; location: string; notes?: string; includeMeet: boolean; attendees: string[]; sendInvites: boolean }
+export interface GoogleMeeting extends Omit<MeetingInput, 'sendInvites'> { record: LinkedRecord | null; reminderOffsetMinutes: number | null; id: string; taskId: string; leadId: string | null; revision: number; status: string; meetStatus: string; meetUrl: string | null; lastError: string | null; cancelRequested: boolean }
 export interface MeetingPage { calendar: CrmCalendar | null; items: GoogleMeeting[]; limited: boolean }
 export const getCalendar = () => api<CrmCalendar | null>('/google/calendar')
 export const setupCalendar = (body: { calendarId?: string; refresh?: boolean } = {}) => api<CrmCalendar>('/google/calendar/setup', { method: 'POST', body })
 export const listMeetings = (from: string, to: string, leadId?: string) => api<MeetingPage>('/google/calendar/events', { query: { from, to, leadId } })
-export const createMeeting = (body: MeetingInput & { requestId: string; leadId?: string }) => api<GoogleMeeting>('/google/calendar/events', { method: 'POST', body })
+export const createMeeting = (body: MeetingInput & { requestId: string; leadId?: string; entityType?: LinkedRecord['entityType']; entityId?: string }) => api<GoogleMeeting>('/google/calendar/events', { method: 'POST', body })
 export const updateMeeting = (id: string, body: MeetingInput & { revision: number }) => api<GoogleMeeting>(`/google/calendar/events/${id}`, { method: 'PATCH', body })
 export const cancelMeeting = (id: string) => api<GoogleMeeting>(`/google/calendar/events/${id}/cancel`, { method: 'POST' })
 export const retryMeeting = (id: string) => api<GoogleMeeting>(`/google/calendar/events/${id}/retry`, { method: 'POST' })
@@ -44,7 +45,7 @@ export interface CrmSheet { id: string; title: string; kind: 'blank' | 'leads'; 
 export interface SheetPage { sheet: CrmSheet; values: string[][]; offset: number; editable: boolean; tabTitle?: string }
 export interface CellChange { row: number; column: number; previous: string; value: string }
 export interface SheetInput { requestId: string; title: string; kind: 'blank' | 'leads'; leadId?: string; filters?: Record<string, string | number | boolean>; columns?: string[] }
-export const listSheets = (page = 1, leadId?: string) => api<GooglePage<CrmSheet>>('/google/sheets', { query: { page, leadId } })
+export const listSheets = (page = 1, leadId?: string, filters: { q?: string; kind?: string; status?: string } = {}) => api<GooglePage<CrmSheet>>('/google/sheets', { query: { page, leadId, ...filters } })
 export const createSheet = (body: SheetInput) => api<CrmSheet>('/google/sheets', { method: 'POST', body })
 export const readSheet = (id: string, offset: number) => api<SheetPage>(`/google/sheets/${id}`, { query: { offset } })
 export const saveSheet = (id: string, changes: CellChange[]) => api<{ saved: number }>(`/google/sheets/${id}/cells`, { method: 'PATCH', body: { changes } })

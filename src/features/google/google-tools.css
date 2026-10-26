@@ -40,3 +40,73 @@
   .google-meeting-details { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .google-meeting-lead { padding-top: 2rem; }
 }
+
+.google-page-heading { display: flex; gap: 1rem; align-items: center; }
+.google-page-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 3rem; height: 3rem; border: 1px solid var(--color-brand-100); border-radius: .85rem; background: var(--color-brand-50); color: var(--color-brand-700); }
+.google-eyebrow, .google-sheet-kicker { font-size: .65rem; font-weight: 600; letter-spacing: .08em; color: var(--color-muted); }
+.google-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.google-overview-item { padding: 1rem 1.25rem; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: .8rem; }
+.google-calendar-toolbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; }
+.google-calendar-toolbar label { font-size: .7rem; }
+.google-calendar-layout { display: grid; gap: 1.5rem; align-items: start; }
+.google-day-cell { position: relative; min-width: 0; border-bottom: 1px solid var(--color-line); border-right: 1px solid var(--color-line); }
+.google-day-cell .google-day { width: 100%; height: 100%; border: 0; display: block; padding-right: 1.25rem; }
+.google-day-cell[data-selected] { background: var(--color-brand-50); box-shadow: inset 0 0 0 2px var(--color-brand-400); }
+.google-day-number { display: inline-flex; align-items: center; justify-content: center; width: 1.65rem; height: 1.65rem; border-radius: 50%; }
+.google-day-cell[data-today] .google-day-number { background: var(--color-action); color: white; font-weight: 600; }
+.google-day-add { position: absolute; top: .35rem; right: .2rem; display: flex; align-items: center; justify-content: center; width: 1.3rem; height: 1.3rem; color: var(--color-brand-700); border-radius: .35rem; }
+.google-day-add:hover, .google-day-add:focus-visible { background: var(--color-brand-100); outline: 2px solid var(--color-brand-400); }
+.google-calendar-footer { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.5rem; }
+.google-calendar-footer > p { max-width: 35rem; }
+.google-saved-notice { display: flex; align-items: start; gap: .75rem; padding: 1rem; border: 1px solid var(--color-brand-200); background: var(--color-brand-50); border-radius: .75rem; color: var(--color-brand-800); }
+.google-event-card { display: flex; flex-direction: column; gap: 1rem; padding: 1.1rem; }
+.google-event-date { display: flex; flex-direction: column; align-items: center; width: 2.8rem; flex-shrink: 0; border: 1px solid var(--color-brand-100); border-radius: .65rem; padding: .4rem; background: var(--color-brand-50); color: var(--color-brand-800); }
+.google-event-date strong { font-size: 1.1rem; line-height: 1.3; }
+.google-event-date span { font-size: .65rem; text-transform: uppercase; }
+.google-status { display: inline-flex; align-items: center; border-radius: 999px; padding: .25rem .65rem; font-size: .65rem; line-height: 1.5; font-weight: 600; background: var(--color-surface-subtle); color: var(--color-muted); }
+.google-status[data-state=ready] { color: #166534; background: #dcfce7; }
+.google-status[data-state=queued] { color: var(--color-brand-700); background: var(--color-brand-50); }
+.google-status[data-state=failed], .google-status[data-state=conflict], .google-status[data-state=paused] { color: #9a3412; background: #ffedd5; }
+.google-event-details { display: grid; gap: .75rem; font-size: .8rem; color: var(--color-muted); }
+.google-event-details > div { display: flex; align-items: start; gap: .6rem; }
+.google-event-details > div > svg { flex-shrink: 0; margin-top: .15rem; }
+.google-event-actions { display: flex; flex-wrap: wrap; gap: .5rem; padding-top: .8rem; border-top: 1px solid var(--color-line); }
+.google-meet-pending { display: flex; align-items: start; gap: .5rem; font-size: .75rem; color: var(--color-muted); padding: .65rem; background: var(--color-surface-subtle); border-radius: .5rem; }
+.google-agenda-empty, .google-sheets-empty { padding: 2rem; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.google-sheets-icon { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
+.google-sheets-start { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.5rem; }
+.google-sheet-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem; }
+.google-sheet-filters > div:first-child { flex: 1; min-width: 13rem; }
+.google-sheet-filters > div { min-width: 9rem; }
+.google-sheet-list { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); }
+.google-sheet-card { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+.google-sheet-card-actions { display: flex; flex-wrap: wrap; gap: .5rem; border-top: 1px solid var(--color-line); padding-top: 1rem; margin-top: auto; }
+.google-sheet-editor-heading { display: flex; flex-wrap: wrap; gap: .85rem; align-items: center; padding: 1rem; }
+.google-sheet-editor-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; padding: .75rem; }
+.google-formula-bar { display: flex; gap: .8rem; align-items: center; border: 1px solid var(--color-line); border-radius: .55rem; background: var(--color-surface); padding: .5rem .75rem; }
+.google-formula-bar input { min-width: 0; width: 100%; font-size: .8rem; color: var(--color-ink); background: transparent; outline: none; }
+.google-cell-address { min-width: 3rem; border-right: 1px solid var(--color-line); font-size: .75rem; font-weight: 600; color: var(--color-brand-700); }
+.google-sheet-save-notice { display: flex; align-items: center; gap: .5rem; color: var(--color-brand-700); font-size: .8rem; }
+.google-sheet-grid tbody th { top: auto; left: 0; z-index: 2; }
+.google-sheet-grid thead th:first-child { left: 0; z-index: 3; }
+.google-sheet-grid td:focus-within { background: var(--color-brand-50); }
+@media (min-width: 1200px) { .google-calendar-layout { grid-template-columns: minmax(0, 1.4fr) minmax(21rem, 1fr); } }
+@media (max-width: 640px) {
+  .google-overview { gap: .5rem; }
+  .google-overview-item { padding: .75rem; }
+  .google-overview-item p:first-child { min-height: 2rem; font-size: .65rem; }
+  .google-page-heading { align-items: start; gap: .7rem; }
+  .google-page-heading .google-page-icon { width: 2.5rem; height: 2.5rem; }
+  .google-day-cell .google-day { padding: .35rem .1rem 2.6rem; min-height: 5rem; }
+  .google-day-add { top: auto; bottom: .1rem; right: calc(50% - 1.25rem); width: 2.5rem; height: 2.5rem; }
+  .google-day-dot { margin-left: .1rem; width: .25rem; height: .25rem; }
+  .google-day-number { width: 1.4rem; height: 1.4rem; font-size: .75rem; }
+  .google-sheets-start { padding: 1rem; }
+  .google-sheet-filters > div:first-child { flex-basis: 100%; }
+  .google-sheet-filters > div { flex: 1; }
+}
+
+.google-meeting-notes { grid-column: 1 / -1; }
+.google-meeting-notes textarea { min-height: 4rem; }
+.google-event-notes { padding: .75rem; border-radius: .5rem; background: var(--color-surface-subtle); font-size: .75rem; }
+.google-event-notes summary { cursor: pointer; font-weight: 500; }
