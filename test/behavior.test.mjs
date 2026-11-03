@@ -548,25 +548,32 @@ test('live reports forward all filters, propagate API errors, and keep source dr
   const original = globalThis.fetch, calls = []
   t.after(() => { globalThis.fetch = original; http.clearSession() })
   http.setSession({ user: { id: 'fixture' }, accessToken: 'private-token' })
-  const { getReports, sourceLeadUrl, exportReport, reportsLive } = await import(moduleUrl('src/features/reports/api.ts'))
+  const reports = await import(moduleUrl('src/features/reports/api.ts'))
+  const { sourceLeadUrl, stageDealsUrl, exportReport, reportsLive } = reports
   assert.equal(reportsLive, true)
-  const filters = { from: '2026-10-01', to: '2026-10-02', ownerId: 'me', sourceId: 'none', compare: 'previous' }
+  const filters = { from: '2026-10-01', to: '2026-10-02', ownerId: 'me', sourceId: 'none' }
   globalThis.fetch = async (url, options) => { calls.push({ url, options }); return respond([]) }
-  const data = await getReports(filters)
-  assert.equal(calls.length, 5)
-  assert.deepEqual(data, { kpis: [], revenue: [], sources: [], funnel: [], team: [] })
+  const loaders = ['getKpis', 'getTrend', 'getSources', 'getFunnel', 'getTeam', 'getPipeline', 'getForecast', 'getLostReasons', 'getCampaigns', 'getActivity', 'getFollowUps']
+  for (const name of loaders) await reports[name](filters)
+  assert.equal(calls.length, loaders.length + 1) // follow-ups reads response and task compliance
   for (const call of calls) {
     const url = new URL(call.url, 'https://fixture.test')
+    assert(url.pathname.startsWith('/api/reports/'))
     for (const [key, value] of Object.entries(filters)) assert.equal(url.searchParams.get(key), value)
     assert.equal(call.options.headers.Authorization, 'Bearer private-token')
   }
+  assert.equal(new URL(calls[0].url, 'https://fixture.test').searchParams.get('compare'), 'previous')
+  assert.equal(new URL(calls[1].url, 'https://fixture.test').searchParams.get('interval'), 'auto')
   const url = new URL(sourceLeadUrl('none', filters), 'https://fixture.test')
   assert.equal(url.pathname, '/app/leads'); assert.equal(url.searchParams.get('ownerId'), 'me')
   assert.equal(url.searchParams.get('sourceId'), 'none'); assert(!url.searchParams.get('status').includes('junk'))
+  const stage = new URL(stageDealsUrl('pipe', 'stage', filters, { rotting: 'true' }), 'https://fixture.test')
+  assert.equal(stage.pathname, '/app/deals'); assert.equal(stage.searchParams.get('stageId'), 'stage')
+  assert.equal(stage.searchParams.get('status'), 'open'); assert.equal(stage.searchParams.get('ownerId'), 'me'); assert.equal(stage.searchParams.get('rotting'), 'true')
   await exportReport('funnel', filters)
   assert(calls.at(-1).url.startsWith('/api/reports/funnel/export?'))
   globalThis.fetch = async () => respond({ code: 'FORBIDDEN', message: 'Denied' }, 403)
-  await assert.rejects(getReports(filters), { status: 403, code: 'FORBIDDEN' })
+  for (const name of loaders) await assert.rejects(reports[name](filters), { status: 403, code: 'FORBIDDEN' })
 })
 
 test('capture settings always persist through the authenticated API and never save on errors', async (t) => {
@@ -611,7 +618,7 @@ test('rollout switches disable reports and settings without fabricating numbers 
   const disabled = { VITE_CRM_REPORTS_API: 'false', VITE_CRM_CAPTURE_API: 'false', VITE_CRM_ASSIGNMENT_API: 'false' }
   const reports = await import(moduleUrl('src/features/reports/api.ts', disabled))
   assert.equal(reports.reportsLive, false)
-  await assert.rejects(reports.getReports({ from: '2026-10-01', to: '2026-10-02' }), { code: 'FEATURE_DISABLED' })
+  for (const name of ['getKpis', 'getTrend', 'getPipeline', 'getForecast', 'getCampaigns', 'getFollowUps']) await assert.rejects(reports[name]({ from: '2026-10-01', to: '2026-10-02' }), { code: 'FEATURE_DISABLED' })
   const { makeCaptureApi } = await import(moduleUrl('src/features/capture/api.ts', disabled))
   const service = makeCaptureApi('workspace:user')
   await assert.rejects(service.listForms(), { code: 'FEATURE_DISABLED' })

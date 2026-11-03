@@ -126,7 +126,7 @@ export interface FollowUpSummary {
   compliancePercent: number | null
 }
 
-const live = <T>(path: string, query: Record<string, string | number | undefined>) => {
+const live = async <T>(path: string, query: Record<string, string | number | undefined>) => {
   if (!reportsLive) throw new ApiError('Workspace reports are temporarily unavailable. Please try again later.', 503, 'FEATURE_DISABLED')
   return api<T>(path, { query })
 }
