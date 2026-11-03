@@ -14,6 +14,7 @@ import { emailStatusLabel, mergeNames, splitExclusions } from './content'
 import { RichEmailEditor } from './RichEmailEditor'
 import { templateKey } from '../templates/api'
 import { useGmail } from './useGmail'
+import { PageHeader } from '../../components/app/States'
 
 export default function GmailSettings() {
   const orgId = useOrgId(), { user } = useAuth()
@@ -28,7 +29,7 @@ function Settings() {
   async function sync() { setError(''); try { const result = await syncGmail(); setNotice(result.queued ? 'Sync requested. Matching replies will appear in the timeline when processed.' : 'Sync is unavailable.'); await refresh() } catch (err) { setError(err instanceof Error ? err.message : 'Couldn’t request sync.') } }
   const account = gmail.data?.account, connected = account && ['connected', 'syncing', 'delayed'].includes(account.status)
   return <div className="max-w-3xl space-y-8">
-    <header><h1 className="font-display text-xl font-semibold text-ink">Gmail</h1><p className="mt-1 text-sm leading-6 text-muted">Your work mailbox, matching conversations, and email templates.</p></header>
+    <PageHeader title="Gmail" description="Your work mailbox, matching conversations, and email templates." />
     {gmail.isPending && <p className="text-sm text-muted">Loading Gmail…</p>}
     {gmail.isError && <FormAlert>Couldn’t load Gmail. <button className="underline" onClick={() => gmail.refetch()}>Try again</button></FormAlert>}
     {gmail.data && <section className="space-y-4 rounded-xl border border-line bg-surface p-5">

@@ -10,6 +10,7 @@ import { useSeo } from '../../lib/useSeo'
 import { useOrgId } from '../crm/hooks'
 import { detachGoogle, googleKey, googleMe, revokeGoogleProject, serviceLabels, setGoogleService, startGoogle, statusLabel, type GoogleService } from './api'
 import { GoogleSetupDetails } from './GoogleServiceGate'
+import { PageHeader } from '../../components/app/States'
 
 const permissionText: Record<GoogleService, string> = {
   calendar: 'Allow TechSync to create secondary Google calendars and manage events on calendars it creates. This does not allow reading all events on your primary calendar.',
@@ -49,7 +50,7 @@ function Connections() {
     catch (err) { setError(err instanceof Error ? err.message : 'Couldn’t update this service.') } finally { setBusy(false) }
   }
   return <div className="max-w-3xl space-y-6">
-    <header><h1 className="font-display text-xl font-semibold text-ink">Google connections</h1><p className="mt-1 text-sm leading-6 text-muted">Manage the Google account and permissions you use in this workspace.</p></header>
+    <PageHeader title="Google connections" description="Manage the Google account and permissions you use in this workspace." />
     <p className="rounded-xl border border-line bg-surface-subtle p-4 text-sm leading-6">Use Calendar & Meet to schedule CRM meetings and Google Sheets to create spreadsheets or copy lead data. Drive attachment browsing is still pending.</p>
     {callback && <p role="status" className="text-sm leading-6">{callbackMessages[callback] || 'The Google connection could not be completed or the request expired. Start again from this page.'}</p>}
     {query.isPending && <p role="status" className="text-sm text-muted">Loading Google connections…</p>}

@@ -3,7 +3,7 @@ import { RecordWorkspace } from '../crm/components/RecordWorkspace'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ArrowRight, Building2, Check, Clock, Pencil, Plus, Trash2, Trophy, X } from 'lucide-react'
+import { ArrowRight, Building2, Handshake, Check, Clock, Pencil, Plus, Trash2, Trophy, X } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
 import { cn } from '../../lib/cn'
 import { qk } from '../../lib/queryKeys'
@@ -37,6 +37,7 @@ import {
 } from './api'
 import { DealFormDrawer } from './DealFormDrawer'
 import { useDealMover } from './useDealMover'
+import { RecordHeader, RecordIcon } from '../../components/app/RecordHeader'
 
 const duration = (s: number | null) =>
   s === null ? '' : s < 86_400 ? `${Math.max(1, Math.round(s / 3600))} h` : `${Math.round(s / 86_400)} d`
@@ -189,10 +190,6 @@ export default function DealDetailPage() {
 
   return (
     <div className="app-page">
-      <Link to="/app/deals" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        Deals
-      </Link>
       {deal.deletedAt && (
         <div className="mt-4">
           <DeletedBanner
@@ -216,13 +213,18 @@ export default function DealDetailPage() {
         </div>
       )}
 
-      <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">{deal.title}</h1>
-          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
-            <span className="text-lg font-semibold text-ink tabular-nums">
-              {formatMinor(deal.valueMinor, deal.currency)}
-            </span>
+      <RecordHeader
+        className="mt-4"
+        media={<RecordIcon><Handshake className="size-6" /></RecordIcon>}
+        title={deal.title}
+        status={
+          <Badge tone={deal.status === 'won' ? 'success' : deal.status === 'lost' ? 'danger' : 'brand'}>
+            {deal.stage.name}
+          </Badge>
+        }
+        subtitle={
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="font-semibold text-ink tabular-nums">{formatMinor(deal.valueMinor, deal.currency)}</span>
             {deal.status === 'open' && (
               <span className="tabular-nums">
                 Weighted {formatMinor(deal.weightedMinor, deal.currency)} ({deal.probability}%)
@@ -235,14 +237,11 @@ export default function DealDetailPage() {
                 {deal.company.name}
               </Link>
             )}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Badge tone={deal.status === 'won' ? 'success' : deal.status === 'lost' ? 'danger' : 'brand'}>
-              {deal.stage.name}
-            </Badge>
-            {deal.status === 'lost' && deal.lostReason && (
-              <span className="text-xs text-muted">{deal.lostReason.name}</span>
-            )}
+          </span>
+        }
+        facts={
+          <>
+            {deal.status === 'lost' && deal.lostReason && <span className="text-xs text-muted">{deal.lostReason.name}</span>}
             {deal.isRotting && (
               <Badge tone="warning">
                 <Clock className="size-3" aria-hidden="true" />
@@ -250,31 +249,31 @@ export default function DealDetailPage() {
               </Badge>
             )}
             <TagChips tags={deal.tags} max={6} />
-          </div>
-        </div>
-        <div className="flex shrink-0 gap-2">
-          {canUpdate && (
-            <Button size="sm" onClick={() => setDialog('edit')}>
-              <Pencil className="size-4" aria-hidden="true" />
-              Edit
-            </Button>
-          )}
-          {canDelete && !deal.deletedAt && (
-            <Button size="sm" variant="ghost" onClick={() => setDialog('delete')} aria-label="Delete deal">
-              <Trash2 className="size-4" aria-hidden="true" />
-            </Button>
-          )}
-        </div>
-      </header>
-
-      <div className="mt-6">
+          </>
+        }
+        actions={
+          <>
+            {canUpdate && (
+              <Button size="sm" onClick={() => setDialog('edit')}>
+                <Pencil className="size-4" aria-hidden="true" />
+                Edit
+              </Button>
+            )}
+            {canDelete && !deal.deletedAt && (
+              <Button size="sm" variant="ghost" onClick={() => setDialog('delete')} aria-label="Delete deal">
+                <Trash2 className="size-4" aria-hidden="true" />
+              </Button>
+            )}
+          </>
+        }
+      >
         <StageStepper deal={deal} stages={stages} disabled={!canUpdate || mover.busy} onMove={(s) => void mover.move(deal, s)} />
         {pipeline?.readOnly && (
           <p className="mt-2 text-xs text-amber-700">
             This pipeline is read-only on your plan — the deal can only be marked won or lost.
           </p>
         )}
-      </div>
+      </RecordHeader>
 
       <div className="record-workspace mt-6">
         <div className="space-y-6">

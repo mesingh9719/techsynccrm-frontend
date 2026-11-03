@@ -17,6 +17,7 @@ import { listTemplates, templateKey, updateTemplate, type Template, type Templat
 import { TemplateEditor } from './TemplateEditor'
 import { TemplatePreview } from './TemplatePreview'
 import './templates.css'
+import { PageHeader } from '../../components/app/States'
 
 const icons = { email: Mail, whatsapp: MessageCircle, sms: MessageSquareText }
 export default function TemplatesPage() {
@@ -53,7 +54,7 @@ function TemplateLibrary() {
   const hasFilters = Boolean(search || channel || category)
   const canCreateChannel = (c: TemplateChannel) => canWrite && (c !== 'email' || emailEnabled)
   return <div className="app-page template-library space-y-6">
-    <header className="flex flex-wrap items-start justify-between gap-4"><div><div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted"><LayoutTemplate className="size-4" />YOUR TEAM’S PLAYBOOK</div><h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Templates</h1><p className="mt-2 max-w-xl text-sm leading-6 text-muted">Less rewriting. More meaningful conversations.<br className="hidden sm:block" /> Keep your best messages ready for the next opportunity.</p></div>{canWrite && <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setGallery(true)}><Sparkles className="size-4" />Explore starters</Button><Button onClick={() => setEditor({ initial: { name: '', channel: emailEnabled ? 'email' : 'whatsapp', category: 'general', subject: '', bodyHtml: '', shared: false } })}><Plus className="size-4" />New template</Button></div>}</header>
+    <PageHeader title="Templates" description="Less rewriting, more meaningful conversations. Keep your best messages ready for the next opportunity." actions={canWrite && <><Button variant="secondary" onClick={() => setGallery(true)}><Sparkles className="size-4" />Explore starters</Button><Button onClick={() => setEditor({ initial: { name: '', channel: emailEnabled ? 'email' : 'whatsapp', category: 'general', subject: '', bodyHtml: '', shared: false } })}><Plus className="size-4" />New template</Button></>} />
     <section className="template-intro flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-200 bg-brand-50 p-5 sm:px-6"><div className="flex items-start gap-4"><span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-brand-200 bg-surface text-brand-700"><FileText className="size-5" /></span><div><p className="text-sm font-semibold text-ink">The right words, ready when you need them</p><p className="mt-1 max-w-xl text-xs leading-5 text-muted">Personalize with CRM fields. Preview before saving. Use directly from a lead or contact.</p></div></div><Link to="/app/leads" className="inline-flex items-center gap-2 text-xs font-semibold text-brand-700">Go to leads <ArrowRight className="size-3.5" /></Link></section>
     {!emailEnabled && <p className="rounded-xl border border-line bg-surface p-4 text-sm text-muted">WhatsApp and SMS quick replies are available on your plan. Email template editing requires <Link className="font-medium text-brand-700 underline" to="/app/settings/plan">Growth or above</Link>.</p>}
     <section aria-label="Template library" className="space-y-5">

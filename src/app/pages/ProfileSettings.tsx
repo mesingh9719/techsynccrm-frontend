@@ -22,6 +22,7 @@ import { Notice, StatusChip } from '../../components/ui/Signal'
 import { formatDate } from '../../lib/format'
 import './account-settings.css'
 import { SaveBar, SettingsSection } from '../../components/app/SettingsSection'
+import { PageHeader } from '../../components/app/States'
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024
 
@@ -229,7 +230,7 @@ export default function ProfileSettings() {
   const { user } = useAuth()
   if (!user) return null
   return <div className="account-settings space-y-6">
-    <header className="account-settings-header"><div><p className="account-settings-eyebrow">Your account · Personal details</p><h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Profile</h1><p className="mt-2 text-sm text-muted">Make your workspace feel a little more like you.</p></div><StatusChip tone="info" icon={UserRound}>Personal settings</StatusChip></header>
+    <PageHeader title="Profile" description="Make your workspace feel a little more like you." />
     <PhotoUploader user={user} />
     <div className="account-settings-grid">
       <div className="account-settings-main">

@@ -7,7 +7,7 @@ import { useSeo } from '../../lib/useSeo'
 import { Button } from '../../components/ui/Button'
 import { Field, Input, Textarea } from '../../components/ui/Form'
 import { Notice, StatusChip } from '../../components/ui/Signal'
-import { EmptyState, ErrorState, ListSkeleton } from '../../components/app/States'
+import { EmptyState, ErrorState, ListSkeleton, PageHeader } from '../../components/app/States'
 import { ConfirmDialog } from '../../components/app/Dialog'
 import { SettingsSection } from '../../components/app/SettingsSection'
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
@@ -26,7 +26,7 @@ export default function AvailabilitySettings() {
   const { user } = useAuth(), { organization, query: organizationQuery } = useOrg()
   const scope = `${user?.organization?.id}:${user?.id}`, timezone = user?.timezone ?? organization?.timezone ?? 'Asia/Kolkata'
   if (!user?.organization) return null
-  if (!user.timezone && !organization) return <div className="account-settings space-y-6"><h1 className="font-display text-2xl font-semibold text-ink">Your availability</h1>{organizationQuery.isError ? <ErrorState error={organizationQuery.error} onRetry={() => organizationQuery.refetch()} /> : <ListSkeleton label="Loading your planning time zone" rows={3} />}</div>
+  if (!user.timezone && !organization) return <div className="account-settings space-y-6"><PageHeader title="Your availability" description="Plan your time away and keep your team in the loop." />{organizationQuery.isError ? <ErrorState error={organizationQuery.error} onRetry={() => organizationQuery.refetch()} /> : <ListSkeleton label="Loading your planning time zone" rows={3} />}</div>
   return <AvailabilityScreen key={scope} scope={scope} timezone={timezone} />
 }
 
@@ -70,7 +70,7 @@ function AvailabilityScreen({ scope, timezone }: { scope: string; timezone: stri
   }
   return <div className="account-settings availability-settings space-y-6">
     {guard.confirmation}
-    <header className="account-settings-header"><div><p className="account-settings-eyebrow">Your account · Time & availability</p><h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Your availability</h1><p className="mt-2 text-sm text-muted">Plan your time away and keep your team in the loop.</p></div><StatusChip tone="info" icon={Globe2}>{timezone}</StatusChip></header>
+    <PageHeader title="Your availability" description="Plan your time away and keep your team in the loop." meta={<>Time zone: {timezone}</>} />
     {!assignmentLive && <PreviewNotice>Save an out-of-office plan in this browser. Live assignment rules will not skip you until the availability service is connected.</PreviewNotice>}
     <div className="availability-status" data-tone={statusTone} role="status"><span className="preferences-icon" data-tone={statusTone}>{active.length ? <CalendarOff className="size-5" aria-hidden="true" /> : <CalendarCheck className="size-5" aria-hidden="true" />}</span><div className="min-w-0 flex-1"><h2 className="text-sm font-semibold text-ink">{query.isPending ? 'Checking your availability…' : query.isError ? 'Couldn’t check your availability' : !assignmentLive ? 'Your time-away planning preview' : active.length ? 'You have time away active now' : 'No active time away'}</h2><p className="mt-1 text-xs leading-5 text-muted">{query.isError ? 'Try refreshing your saved periods below.' : !assignmentLive ? 'These periods are saved in this browser while live availability is disconnected.' : active.length ? 'Automatic assignment can skip you during your saved time away.' : upcoming.length ? `${upcoming.length} upcoming ${upcoming.length === 1 ? 'period' : 'periods'} planned. Your current lead ownership stays in place.` : 'Add a period when you’ll be away from new enquiries.'}</p></div>{query.isSuccess && <StatusChip tone={statusTone}>{!assignmentLive ? 'Preview only' : active.length ? 'Out of office' : 'No active period'}</StatusChip>}</div>
     <div className="account-settings-grid">

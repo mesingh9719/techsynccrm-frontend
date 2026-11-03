@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { ArrowRight, CalendarDays, Check, CheckCheck, Clock3, ExternalLink, Info, LockKeyhole, Mail, PenLine, RefreshCw, ShieldCheck, Unplug, Users } from 'lucide-react'
 import { ConfirmDialog } from '../../components/app/Dialog'
-import { ErrorState, Skeleton } from '../../components/app/States'
+import { ErrorState, Skeleton, PageHeader } from '../../components/app/States'
 import { Button } from '../../components/ui/Button'
 import { Notice, StatusChip } from '../../components/ui/Signal'
 import { useToast } from '../../components/ui/Toast'
@@ -26,12 +26,15 @@ export default function EmailSettings() {
   const refresh = () => client.invalidateQueries({ queryKey: emailKey(orgId) })
   const account = query.data?.account, status = mailboxStatus(account?.status), connected = status === 'CONNECTED'
   const active = Boolean(account && !['disconnected', 'deleting'].includes(account.status))
-  return <div className="email-settings">
-    <header className="email-page-header">
-      <div><p className="email-eyebrow">Your workspace · Communication</p><h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Email settings</h1><p className="mt-2 text-sm text-muted">A familiar address. More personal conversations.</p></div>
-      <Button variant="secondary" size="sm" loading={query.isFetching} onClick={() => query.refetch()}><RefreshCw className="size-3.5" aria-hidden="true" />Refresh status</Button>
-      <Button variant="secondary" to="/app/templates">Manage templates</Button>
-    </header>
+  return <div className="email-settings space-y-6">
+    <PageHeader
+      title="Email settings"
+      description="A familiar address. More personal conversations."
+      actions={<>
+        <Button variant="secondary" loading={query.isFetching} onClick={() => query.refetch()}><RefreshCw className="size-3.5" aria-hidden="true" />Refresh status</Button>
+        <Button variant="secondary" to="/app/templates">Manage templates</Button>
+      </>}
+    />
     {query.isPending ? <div className="email-settings-grid" aria-label="Loading email settings"><Skeleton className="h-80 rounded-2xl" /><Skeleton className="h-72 rounded-2xl" /></div> : query.isError ? <ErrorState error={query.error} onRetry={() => query.refetch()} /> : <div className="email-settings-grid">
       <div className="email-settings-main">
         {query.data.tenantEnabled === false && <Notice tone="warning" title="Email connections are paused">Your administrator has turned off email connections for this workspace. You can still manage an existing connection.</Notice>}

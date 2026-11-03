@@ -20,6 +20,7 @@ import { OverdueBadge, Sidebar } from './Sidebar'
 import { useNavItemVisible, useSidebarPreference } from './useSidebarPreference'
 import { mainNav, mobileTabKeys } from './navigation'
 import { Topbar } from './Topbar'
+import { BackBar } from './BackBar'
 import { useAppShortcuts } from './useAppShortcuts'
 
 /**
@@ -327,6 +328,7 @@ function Shell() {
         <TermsBanner />
         <EmailPrompt />
         <main id="main" tabIndex={-1} className="flex-1 outline-none">
+          <BackBar />
           <Outlet />
         </main>
       </div>

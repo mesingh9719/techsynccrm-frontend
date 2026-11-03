@@ -1,8 +1,8 @@
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Code2, FileText, Monitor, Save, Smartphone } from 'lucide-react'
+import { Code2, FileText, Monitor, Save, Smartphone } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { useAuth } from '../../lib/useAuth'
 import { useCan, useOrg } from '../../lib/useOrg'
@@ -30,10 +30,6 @@ function TemplatePicker({ onPick }: { onPick: (template: FormTemplate) => void }
   return (
     <div className="app-page space-y-6">
       <div>
-        <Link to="/app/settings/forms" className="mb-3 inline-flex items-center gap-1 text-xs text-muted">
-          <ArrowLeft className="size-4" />
-          All web forms
-        </Link>
         <h1 className="text-2xl font-semibold tracking-tight text-ink">What kind of form do you need?</h1>
         <p className="mt-2 text-sm text-muted">Pick a starting point. You can change every field, colour and word afterwards.</p>
       </div>
@@ -237,10 +233,6 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
     <div className="app-page space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
-          <Link to="/app/settings/forms" className="mb-3 inline-flex items-center gap-1 text-xs text-muted">
-            <ArrowLeft className="size-4" />
-            All web forms
-          </Link>
           <h1 className="truncate text-2xl font-semibold tracking-tight text-ink">{form.name || 'Untitled form'}</h1>
           <p className="mt-2 text-sm text-muted">Edit on the left. Your form updates on the right as you type.</p>
         </div>

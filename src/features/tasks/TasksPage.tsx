@@ -4,7 +4,7 @@ import { FilterChips, SearchInput } from '../../components/app/FilterBar'
 import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
 import { useState } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { AlarmClock, CalendarCheck, CalendarDays, CheckCircle2, ClipboardCheck, Clock3, Plus, RefreshCw } from 'lucide-react'
+import { AlarmClock, CalendarCheck, CalendarDays, CheckCircle2, Clock3, Plus, RefreshCw } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
 import { qk } from '../../lib/queryKeys'
 import { useAuth } from '../../lib/useAuth'
@@ -15,7 +15,7 @@ import { ApiError } from '../../services/http'
 import { Button } from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
-import { EmptyState, ErrorState, ListSkeleton, LoadMore } from '../../components/app/States'
+import { EmptyState, ErrorState, ListSkeleton, LoadMore, PageHeader } from '../../components/app/States'
 import { UserPicker } from '../../components/app/UserPicker'
 import { useOrgId } from '../crm/hooks'
 import type { Task, TaskView } from '../crm/types'
@@ -82,7 +82,7 @@ export default function TasksPage() {
   const counts = tasks.data?.pages[0]?.counts, items = tasks.data?.pages.flatMap((page) => page.items) ?? []
   const selected = VIEWS.find((item) => item.value === view)!
   return <div className="app-page max-w-6xl tasks-workspace">
-    <header className="tasks-page-header"><div className="flex min-w-0 items-start gap-3"><span className="task-page-icon"><ClipboardCheck className="size-6" /></span><div><p className="tasks-eyebrow">YOUR NEXT STEPS</p><h1 className="page-title">Tasks</h1><p className="mt-1 text-sm text-muted">Keep conversations moving, one clear next step at a time.</p><p className="mt-2 text-xs text-muted">{now.toLocaleDateString(undefined, { timeZone: timezone, weekday: 'long', day: 'numeric', month: 'long' })} · {timezone}</p></div></div>{canCreate && <Button onClick={() => setCreating(true)}><Plus className="size-4" />New task</Button>}</header>
+    <PageHeader title="Tasks" description="Keep conversations moving, one clear next step at a time." meta={`${now.toLocaleDateString(undefined, { timeZone: timezone, weekday: 'long', day: 'numeric', month: 'long' })} · ${timezone}`} actions={canCreate && <Button onClick={() => setCreating(true)}><Plus className="size-4" />New task</Button>} />
     <div className="task-view-cards" role="group" aria-label="Task views">{VIEWS.map(({ value, label, hint, icon: Icon }) => <button key={value} type="button" className="task-view-card" data-view={value} aria-pressed={view === value} onClick={() => setFilter('view', value === 'today' ? undefined : value)}><span className="flex items-center justify-between gap-2"><span className="text-sm font-medium">{label}</span><Icon className="size-4" /></span><strong className="task-view-count">{counts?.[value] ?? '—'}</strong><span className="task-view-hint">{hint}</span></button>)}</div>
     {canCreate && <QuickAdd onAdded={(task) => replaceFilters({ view: task.dueAt && toDateInput(new Date(task.dueAt), timezone) === toDateInput(new Date(), timezone) ? 'today' : 'upcoming' })} />}
     <section className="task-filter-panel surface" aria-label="Task filters"><SearchInput value={filters.q} onChange={(value) => setFilter('q', value || undefined)} label="Search tasks" placeholder="Search task titles" className="task-search" />

@@ -5,7 +5,6 @@ import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import {
-  ArrowLeft,
   Check,
   Copy,
   ExternalLink,
@@ -37,6 +36,7 @@ import { buildUtmUrl, getCampaign, getCampaignLeads, getMetaCampaignState, metaA
 import { CampaignFormDrawer } from './CampaignFormDrawer'
 import { useCampaignMutations, useCampaignOptions } from './useCampaigns'
 import { CAMPAIGN_OBJECTIVE_LABELS, CAMPAIGN_STATUS_LABELS, isMetaCampaign, type CampaignStatus } from './types'
+import { RecordHeader } from '../../components/app/RecordHeader'
 
 export default function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -170,31 +170,17 @@ export default function CampaignDetailPage() {
 
   return (
     <div className="app-page space-y-6">
-      {/* Header */}
-      <div>
-        <Link
-          to="/app/campaigns"
-          className="inline-flex items-center gap-2 text-xs font-medium text-muted hover:text-ink mb-3 transition-colors"
-        >
-          <ArrowLeft className="size-4" />
-          Back to campaigns
-        </Link>
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <CampaignChannelIcon type={campaign.type} large />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-display text-2xl font-semibold tracking-tight break-words text-ink sm:text-3xl">{campaign.name}</h1>
-                <CampaignStatusBadge status={campaign.status} />
-              </div>
-              <p className="mt-2 text-xs leading-5 break-all text-muted">
-                Tracking code: <span className="font-mono text-ink">{campaign.code}</span> · Created{' '}
-                {relativeTime(campaign.createdAt)}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
+      <RecordHeader
+        media={<CampaignChannelIcon type={campaign.type} large />}
+        title={campaign.name}
+        status={<CampaignStatusBadge status={campaign.status} />}
+        subtitle={
+          <>
+            Tracking code: <span className="font-mono text-ink">{campaign.code}</span> · Created {relativeTime(campaign.createdAt)}
+          </>
+        }
+        actions={
+          <>
             {editable && (
               <>
                 {linkedMeta && canManageMeta && <Button variant="secondary" size="sm" onClick={() => linkedMeta ? setMetaConfirmation({ status: metaEnabled ? 'paused' : 'active', ifMatch: campaign.updatedAt }) : undefined} loading={setStatus.isPending} disabled={linkedMeta && (!metaQuery.data || metaQuery.isError || metaArchived || (!metaEnabled && metaEnded))}>
@@ -222,9 +208,9 @@ export default function CampaignDetailPage() {
             {canCreate && <Button variant="ghost" size="sm" onClick={() => { setDuplicating(true); setDrawerOpen(true) }}><Copy className="size-4" />Duplicate</Button>}
             {canDelete && <Button variant="ghost" size="sm" className="text-danger" onClick={() => setDeleting(true)}>Delete</Button>}
             {canReadDeals && <Button variant="secondary" size="sm" to={`/app/deals?campaignId=${campaign.id}`}><span>View in pipeline</span><ArrowRight className="size-4" aria-hidden="true" /></Button>}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {linkedMeta && <section className="surface space-y-3 p-5" aria-label="Meta delivery">
         <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="section-title">Meta delivery</h2><p className="mt-1 text-sm text-muted">Enable and Pause update Meta. Sync Meta reads its latest status into the CRM.</p></div><a href={metaAdsManagerUrl(campaign)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-brand-700 hover:underline">Open Meta Ads Manager<ExternalLink className="size-4" aria-hidden="true" /></a></div>

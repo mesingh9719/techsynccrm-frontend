@@ -11,7 +11,7 @@ import { Notice, StatusChip } from '../../components/ui/Signal'
 import { Switch } from '../../components/ui/Switch'
 import { useToast } from '../../components/ui/Toast'
 import { SaveBar, SettingsSection } from '../../components/app/SettingsSection'
-import { ErrorState, Skeleton } from '../../components/app/States'
+import { ErrorState, Skeleton, PageHeader } from '../../components/app/States'
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { getNotificationPreferences, notificationKeys, updateNotificationPreferences, type NotificationPreferences } from './api'
 import '../../app/pages/account-settings.css'
@@ -104,7 +104,7 @@ export default function NotificationSettings() {
   const { user } = useAuth(), orgId = user?.organization?.id ?? 'none'
   const prefs = useQuery({ queryKey: notificationKeys(orgId, user?.id ?? 'none').preferences, queryFn: getNotificationPreferences, enabled: Boolean(user?.organization) })
   return <div className="account-settings notifications-settings space-y-6">
-    <header className="account-settings-header"><div><p className="account-settings-eyebrow">Your account · Updates & reminders</p><h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Notifications</h1><p className="mt-2 text-sm text-muted">Keep the updates that matter. Make room for everything else.</p></div><Button variant="secondary" size="sm" to="/app/notifications"><Inbox className="size-3.5" aria-hidden="true" />Open inbox<ArrowUpRight className="size-3.5" aria-hidden="true" /></Button></header>
+    <PageHeader title="Notifications" description="Keep the updates that matter. Make room for everything else." actions={<Button variant="secondary" to="/app/notifications"><Inbox className="size-3.5" aria-hidden="true" />Open inbox<ArrowUpRight className="size-3.5" aria-hidden="true" /></Button>} />
     {prefs.isPending ? <div className="space-y-5" aria-label="Loading notification preferences"><Skeleton className="h-24 rounded-xl" /><Skeleton className="h-96 rounded-xl" /></div> : prefs.isError ? <ErrorState error={prefs.error} onRetry={() => prefs.refetch()} /> : <PreferencesForm key={`${orgId}:${user?.id}`} initial={prefs.data} />}
   </div>
 }

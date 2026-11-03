@@ -3,7 +3,7 @@ import { RecordWorkspace } from '../crm/components/RecordWorkspace'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Building2, Mail, MessageCircle, Pencil, Phone, Star, Trash2 } from 'lucide-react'
+import { Building2, Mail, MessageCircle, Pencil, Phone, Star, Trash2 } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
 import { qk } from '../../lib/queryKeys'
 import { useAuth } from '../../lib/useAuth'
@@ -23,6 +23,7 @@ import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
 import { RecordDeals } from '../deals/RecordDeals'
 import { deleteContact, getContact, restoreContact, updateContact, type ContactInput } from './api'
 import { ContactFormDrawer } from './ContactFormDrawer'
+import { RecordHeader } from '../../components/app/RecordHeader'
 
 const dateTime = (iso: string | null) =>
   iso ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(new Date(iso)) : null
@@ -79,10 +80,6 @@ export default function ContactDetailPage() {
 
   return (
     <div className="app-page">
-      <Link to="/app/contacts" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        Contacts
-      </Link>
 
       {contact.deletedAt && (
         <div className="mt-4">
@@ -117,24 +114,21 @@ export default function ContactDetailPage() {
         </div>
       )}
 
-      <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-4">
-          <Avatar name={contact.displayName} size="lg" />
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-ink">{contact.displayName}</h1>
-            <p className="mt-1 text-sm text-muted">
-              {[contact.title, contact.companies.find((c) => c.isPrimary)?.name].filter(Boolean).join(' at ') ||
-                'No company yet'}
-            </p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Badge tone={contact.lifecycleStage === 'customer' ? 'success' : 'neutral'}>
-                {lifecycleLabels[contact.lifecycleStage]}
-              </Badge>
-              <TagChips tags={contact.tags} max={6} />
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
+      <RecordHeader
+        className="mt-4"
+        media={<Avatar name={contact.displayName} size="lg" />}
+        title={contact.displayName}
+        status={
+          <Badge tone={contact.lifecycleStage === 'customer' ? 'success' : 'neutral'}>
+            {lifecycleLabels[contact.lifecycleStage]}
+          </Badge>
+        }
+        subtitle={
+          [contact.title, contact.companies.find((c) => c.isPrimary)?.name].filter(Boolean).join(' at ') || 'No company yet'
+        }
+        facts={contact.tags.length > 0 && <TagChips tags={contact.tags} max={6} />}
+        actions={
+          <>
           {primaryPhone && (
             <Button href={`tel:${primaryPhone.e164 ?? primaryPhone.raw}`} variant="secondary" size="sm">
               <Phone className="size-4" aria-hidden="true" />
@@ -170,8 +164,9 @@ export default function ContactDetailPage() {
               <Trash2 className="size-4" aria-hidden="true" />
             </Button>
           )}
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="record-workspace mt-6">
         <div className="space-y-6">

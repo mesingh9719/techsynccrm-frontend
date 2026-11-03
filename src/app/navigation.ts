@@ -102,7 +102,16 @@ export const settingsNavItem: NavItem = {
   shortcut: 's',
 }
 
-export type SettingsGroup = 'Account' | 'Workspace' | 'Sales setup' | 'Lead capture' | 'Data'
+export type SettingsGroup = 'Account' | 'Workspace & team' | 'Plan & billing' | 'Sales setup' | 'Lead capture' | 'Integrations' | 'Data'
+
+export interface SettingsGroupMeta {
+  key: SettingsGroup
+  /** One line under the group heading on the Settings home grid. */
+  description: string
+  icon: ComponentType<{ className?: string }>
+  /** Accent for the group's icon tiles (a CSS color; mixed with the surface for light and dark). */
+  accent: string
+}
 
 export interface SettingsNavItem {
   key: string
@@ -112,34 +121,44 @@ export interface SettingsNavItem {
   module?: string
   group: SettingsGroup
   icon: ComponentType<{ className?: string }>
-  /** One line shown in settings search results and as the item tooltip. */
+  /** One line shown on the Settings home card, in search results and as the item tooltip. */
   description: string
   /** Hidden from members who can't use the page at all. */
   permission?: Permission
 }
 
-export const settingsGroups: SettingsGroup[] = ['Account', 'Workspace', 'Sales setup', 'Lead capture', 'Data']
+export const settingsGroupMeta: SettingsGroupMeta[] = [
+  { key: 'Account', description: 'Your profile, sign-in and personal preferences', icon: UserRound, accent: '#7c3aed' },
+  { key: 'Workspace & team', description: 'Company details, people and roles', icon: Building2, accent: '#4f46e5' },
+  { key: 'Plan & billing', description: 'Your plan, usage limits and invoices', icon: CreditCard, accent: '#d97706' },
+  { key: 'Sales setup', description: 'Pipelines, lead rules, fields and templates', icon: SquareKanban, accent: '#059669' },
+  { key: 'Lead capture', description: 'Forms and routing for new enquiries', icon: FileInput, accent: '#0284c7' },
+  { key: 'Integrations', description: 'Google, Gmail and Facebook connections', icon: PlugZap, accent: '#db2777' },
+  { key: 'Data', description: 'Imports and exports', icon: ArrowDownUp, accent: '#475569' },
+]
+
+export const settingsGroups: SettingsGroup[] = settingsGroupMeta.map((g) => g.key)
 
 export const settingsNav: SettingsNavItem[] = [
   { key: 'profile', label: 'Profile', to: '/app/settings/profile', ready: true, group: 'Account', icon: UserRound, description: 'Name, photo, email and phone' },
-  { key: 'google', label: 'Google connections', to: '/app/settings/google', ready: true, group: 'Account', icon: PlugZap, description: 'Your Calendar, Drive and Sheets permission preferences' },
-  { key: 'gmail', label: 'Email settings', to: '/app/settings/gmail', ready: true, group: 'Account', icon: Inbox, description: 'Connect and manage your work Gmail' },
   { key: 'security', label: 'Security', to: '/app/settings/security', ready: true, group: 'Account', icon: ShieldCheck, description: 'Password, two-factor and sessions' },
   { key: 'notifications', label: 'Notifications', to: '/app/settings/notifications', ready: true, group: 'Account', icon: Bell, description: 'What you hear about, and where' },
   { key: 'availability', label: 'Availability', to: '/app/settings/availability', ready: true, group: 'Account', icon: CalendarOff, description: 'Out-of-office for new enquiries' },
-  { key: 'workspace', label: 'General', to: '/app/settings/workspace', ready: true, group: 'Workspace', icon: Building2, description: 'Company identity, region and business details' },
-  { key: 'google-team', label: 'Team & Google', to: '/app/settings/google-team', ready: true, group: 'Workspace', icon: PlugZap, permission: 'google.connections.manage', description: 'Team Google connections and service preferences' },
-  { key: 'team-email', label: 'Team & Email', to: '/app/settings/team-email', ready: true, group: 'Workspace', icon: Inbox, permission: 'email.connections.manage', description: 'Team Gmail connections and email preferences' },
-  { key: 'team', label: 'Team & roles', to: '/app/settings/team', ready: true, group: 'Workspace', icon: UsersRound, description: 'Invite people, roles and sales teams' },
-  { key: 'plan', label: 'Plan & usage', to: '/app/settings/plan', ready: true, group: 'Workspace', icon: Gauge, description: 'Your plan, limits and seats' },
-  { key: 'billing', label: 'Billing', to: '/app/settings/billing', ready: false, module: 'M16', group: 'Workspace', icon: CreditCard, description: 'Invoices and payment method' },
+  { key: 'workspace', label: 'General', to: '/app/settings/workspace', ready: true, group: 'Workspace & team', icon: Building2, description: 'Company identity, region and business details' },
+  { key: 'team', label: 'Team & roles', to: '/app/settings/team', ready: true, group: 'Workspace & team', icon: UsersRound, description: 'Invite people, roles and sales teams' },
+  { key: 'plan', label: 'Plan & usage', to: '/app/settings/plan', ready: true, group: 'Plan & billing', icon: Gauge, description: 'Your plan, limits and seats' },
+  { key: 'billing', label: 'Billing', to: '/app/settings/billing', ready: false, module: 'M16', group: 'Plan & billing', icon: CreditCard, description: 'Invoices and payment method' },
   { key: 'pipelines', label: 'Pipelines', to: '/app/settings/pipelines', ready: true, group: 'Sales setup', icon: SquareKanban, description: 'Deal stages and probabilities' },
-  { key: 'templates', label: 'Templates', to: '/app/templates', ready: true, group: 'Sales setup', icon: LayoutTemplate, description: 'Personal and team email, WhatsApp and SMS templates' },
   { key: 'lead-settings', label: 'Lead settings', to: '/app/settings/leads', ready: true, group: 'Sales setup', icon: Inbox, description: 'Sources, scoring weights and lost reasons' },
   { key: 'custom-fields', label: 'Custom fields', to: '/app/settings/custom-fields', ready: true, group: 'Sales setup', icon: TextCursorInput, description: 'Extra fields on records' },
   { key: 'tags', label: 'Tags', to: '/app/settings/tags', ready: true, group: 'Sales setup', icon: Tag, description: 'Labels to organise records' },
+  { key: 'templates', label: 'Templates', to: '/app/templates', ready: true, group: 'Sales setup', icon: LayoutTemplate, description: 'Personal and team email, WhatsApp and SMS templates' },
   { key: 'forms', label: 'Web forms', to: '/app/settings/forms', ready: true, group: 'Lead capture', icon: FileInput, description: 'Embeddable enquiry forms' },
   { key: 'assignment', label: 'Assignment rules', to: '/app/settings/assignment', ready: true, group: 'Lead capture', icon: Shuffle, description: 'Who gets each new lead' },
-  { key: 'facebook', label: 'Facebook Lead Ads', to: '/app/settings/facebook', ready: true, group: 'Lead capture', icon: Facebook, description: 'Bring in leads from Facebook forms' },
+  { key: 'google', label: 'Google connections', to: '/app/settings/google', ready: true, group: 'Integrations', icon: PlugZap, description: 'Your Calendar, Drive and Sheets permission preferences' },
+  { key: 'gmail', label: 'Email settings', to: '/app/settings/gmail', ready: true, group: 'Integrations', icon: Inbox, description: 'Connect and manage your work Gmail' },
+  { key: 'google-team', label: 'Team & Google', to: '/app/settings/google-team', ready: true, group: 'Integrations', icon: PlugZap, permission: 'google.connections.manage', description: 'Team Google connections and service preferences' },
+  { key: 'team-email', label: 'Team & Email', to: '/app/settings/team-email', ready: true, group: 'Integrations', icon: Inbox, permission: 'email.connections.manage', description: 'Team Gmail connections and email preferences' },
+  { key: 'facebook', label: 'Facebook Lead Ads', to: '/app/settings/facebook', ready: true, group: 'Integrations', icon: Facebook, description: 'Bring in leads from Facebook forms' },
   { key: 'data', label: 'Import & export', to: '/app/settings/data', ready: true, group: 'Data', icon: ArrowDownUp, description: 'Import history and your exports' },
 ]

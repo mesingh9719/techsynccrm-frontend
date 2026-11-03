@@ -2,7 +2,7 @@ import { RecordWorkspace } from '../crm/components/RecordWorkspace'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Globe, Pencil, Phone, Plus, Trash2, Users } from 'lucide-react'
+import { Globe, Pencil, Phone, Plus, Trash2, Users } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
 import { gstStates } from '../../lib/india'
 import { qk } from '../../lib/queryKeys'
@@ -24,6 +24,7 @@ import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
 import { RecordDeals } from '../deals/RecordDeals'
 import { deleteCompany, getCompany, listCompanyContacts, restoreCompany, updateCompany, type CompanyInput } from './api'
 import { CompanyFormDrawer } from './CompanyFormDrawer'
+import { RecordHeader } from '../../components/app/RecordHeader'
 
 const stateName = (code: string | null | undefined) => gstStates.find(([c]) => c === code)?.[1] ?? null
 
@@ -81,10 +82,6 @@ export default function CompanyDetailPage() {
 
   return (
     <div className="app-page">
-      <Link to="/app/companies" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        Companies
-      </Link>
       {company.deletedAt && (
         <div className="mt-4">
           <DeletedBanner
@@ -117,24 +114,19 @@ export default function CompanyDetailPage() {
         </div>
       )}
 
-      <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-sm font-semibold text-white">
+      <RecordHeader
+        className="mt-4"
+        media={
+          <span className="flex items-center justify-center rounded-xl bg-zinc-900 text-sm font-semibold text-white" aria-hidden="true">
             {company.name.slice(0, 2).toUpperCase()}
           </span>
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-ink">{company.name}</h1>
-            <p className="mt-1 text-sm text-muted">
-              {[company.industry, address?.city, stateName(address?.stateCode)].filter(Boolean).join(' · ') ||
-                'No details yet'}
-            </p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {company.gstin && <Badge tone="brand">GST registered</Badge>}
-              <TagChips tags={company.tags} max={6} />
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
+        }
+        title={company.name}
+        status={company.gstin && <Badge tone="brand">GST registered</Badge>}
+        subtitle={[company.industry, address?.city, stateName(address?.stateCode)].filter(Boolean).join(' · ') || 'No details yet'}
+        facts={company.tags.length > 0 && <TagChips tags={company.tags} max={6} />}
+        actions={
+          <>
           {company.website && (
             <Button
               href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
@@ -164,8 +156,9 @@ export default function CompanyDetailPage() {
               <Trash2 className="size-4" aria-hidden="true" />
             </Button>
           )}
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="record-workspace mt-6">
         <div className="space-y-6">

@@ -16,6 +16,7 @@ import { GoogleServiceGate } from './GoogleServiceGate'
 import { CalendarSetup, MeetingDialog } from './MeetingDialog'
 import { cancelMeeting, listMeetings, retryMeeting, setupCalendar, type GoogleMeeting } from './api'
 import './google-tools.css'
+import { PageHeader } from '../../components/app/States'
 
 const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone.replace('Asia/Calcutta', 'Asia/Kolkata')
 const time = (value: string) => new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
@@ -24,7 +25,7 @@ const statusLabel = (event: GoogleMeeting) => event.cancelRequested && event.sta
 export default function CalendarPage() {
   useSeo({ title: 'Calendar & Google Meet', noindex: true })
   const key = useGoogleResourceKey()
-  return <div className="app-page max-w-wide space-y-5"><header className="google-page-heading"><span className="google-page-icon"><CalendarDays className="size-6" /></span><div><p className="google-eyebrow">YOUR WORKSPACE</p><h1 className="font-display text-2xl font-semibold">Calendar & Google Meet</h1><p className="mt-1 text-sm text-muted">Plan a conversation, link a CRM record and keep every next step in view.</p></div></header><GoogleServiceGate service="calendar"><CalendarWorkspace key={key.join(':')} /></GoogleServiceGate></div>
+  return <div className="app-page max-w-wide space-y-5"><PageHeader title="Calendar & Google Meet" description="Plan a conversation, link a CRM record and keep every next step in view." /><GoogleServiceGate service="calendar"><CalendarWorkspace key={key.join(':')} /></GoogleServiceGate></div>
 }
 function touchesDay(event: GoogleMeeting, month: Date, day: number) {
   const start = new Date(month.getFullYear(), month.getMonth(), day), end = new Date(month.getFullYear(), month.getMonth(), day + 1)

@@ -101,7 +101,8 @@ const appRoutes: RouteObject = {
       path: 'settings',
       lazy: page(() => import('./app/pages/SettingsLayout')),
       children: [
-        { index: true, element: <Navigate to="workspace" replace /> },
+        // The Settings home grid is drawn by SettingsLayout itself.
+        { index: true, element: null },
         { path: 'forms', lazy: page(() => import('./features/capture/WebFormsPage')) },
         { path: 'assignment', lazy: page(() => import('./features/capture/AssignmentPage')) },
         { path: 'templates', element: <Navigate to="/app/templates" replace /> },

@@ -1,6 +1,4 @@
 .lead-page { --lead-soft-blue: #f0f9ff; }
-.lead-page .lead-header { position: relative; overflow: hidden; border: 1px solid var(--color-line); border-top: 3px solid var(--color-brand-400); border-radius: 1rem; background: linear-gradient(110deg, #f5f3ff 0%, var(--color-surface) 45%); box-shadow: 0 4px 16px #17203304; }
-.lead-eyebrow { margin-bottom: .3rem; color: var(--color-brand-700); font-size: 9px; line-height: 1.5; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
 .lead-page .lead-facts { margin-left: 0; gap: .5rem; clip-path: none; font-size: 11px; }
 .lead-page .lead-facts > li { gap: .35rem; min-height: 1.7rem; padding: .15rem .55rem; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); }
 .lead-page .lead-facts > li::before { display: none; }

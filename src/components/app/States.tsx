@@ -5,9 +5,13 @@ import { cn } from '../../lib/cn'
 import { Button } from '../ui/Button'
 import { ApiError } from '../../services/http'
 
-/** Title row for an app page: heading, optional description, actions on the right. */
-export function PageHeader({ title, description, actions, className, breadcrumbs }: {
-  title: string; description?: ReactNode; actions?: ReactNode; className?: string
+/**
+ * The shared title row for every app page: optional breadcrumbs, heading, description, an optional
+ * meta line (dates, counts), and actions on the right. Use it instead of a hand-built header so
+ * every module looks the same.
+ */
+export function PageHeader({ title, description, meta, actions, className, breadcrumbs }: {
+  title: ReactNode; description?: ReactNode; meta?: ReactNode; actions?: ReactNode; className?: string
   breadcrumbs?: { label: string; to?: string }[]
 }) {
   return (
@@ -16,6 +20,7 @@ export function PageHeader({ title, description, actions, className, breadcrumbs
         {breadcrumbs && <nav aria-label="Breadcrumb" className="mb-3"><ol className="flex flex-wrap items-center gap-2 text-xs text-muted">{breadcrumbs.map((item, index) => <li key={`${item.label}-${index}`} className="flex items-center gap-2">{index > 0 && <ChevronRight className="size-3" aria-hidden="true" />}{item.to ? <Link to={item.to} className="hover:text-brand-700 hover:underline">{item.label}</Link> : <span aria-current="page">{item.label}</span>}</li>)}</ol></nav>}
         <h1 className="page-title">{title}</h1>
         {description && <p className="page-description">{description}</p>}
+        {meta && <p className="page-meta">{meta}</p>}
       </div>
       {actions && <div className="page-header-actions">{actions}</div>}
     </header>

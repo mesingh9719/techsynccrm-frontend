@@ -8,6 +8,7 @@ import { useCan } from '../../lib/useOrg'
 import { useSeo } from '../../lib/useSeo'
 import { useOrgId } from '../crm/hooks'
 import { detachGoogle, googleKey, googleLogs, googleTeam, googleTenantSettings, saveGoogleTenantSettings, serviceLabels, statusLabel, type GoogleConnection, type GoogleTenantSettings } from './api'
+import { PageHeader } from '../../components/app/States'
 
 export default function GoogleTeam() {
   const canManage = useCan('google.connections.manage'), orgId = useOrgId()
@@ -30,7 +31,7 @@ function TeamSettings() {
     catch (err) { setError(err instanceof Error ? err.message : 'Couldn’t save preferences.') } finally { setBusy(false); setPending(null) }
   }
   return <div className="max-w-4xl space-y-6">
-    <header><h1 className="font-display text-xl font-semibold">Team Google connections</h1><p className="mt-1 text-sm leading-6 text-muted">Manage workspace preferences and connection status. Each teammate connects their own Google account.</p></header>
+    <PageHeader title="Team Google connections" description="Manage workspace preferences and connection status. Each teammate connects their own Google account." />
     <p className="rounded-xl border border-line p-4 text-sm leading-6">Members can schedule meetings with Google Meet and create or edit Google Sheets. Enable each service here and in server configuration, then members connect their own accounts. Drive attachment browsing is still pending.</p>
     <section className="space-y-4 rounded-xl border border-line bg-surface p-5"><h2 className="font-medium">Workspace preferences</h2>
       {tenant.isPending && <p role="status">Loading preferences…</p>}

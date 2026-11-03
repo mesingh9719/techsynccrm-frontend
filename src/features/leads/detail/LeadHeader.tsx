@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom'
-import { CalendarPlus, ChevronRight, Clock, Ellipsis, Hand, Link2, Pencil, Sparkles, Trash2, UserRoundPlus } from 'lucide-react'
+import { CalendarPlus, Clock, Ellipsis, Hand, Link2, Pencil, Sparkles, Trash2, UserRoundPlus } from 'lucide-react'
 import { Avatar } from '../../../components/ui/Badge'
+import { RecordHeader } from '../../../components/app/RecordHeader'
 import { Button } from '../../../components/ui/Button'
 import { Menu, MenuItem, MenuSeparator } from '../../../components/app/Menu'
 import { useToast } from '../../../components/ui/Toast'
@@ -16,8 +16,8 @@ import { StageTracker } from './StageTracker'
 import { FROZEN, type LeadDetail } from './useLeadDetail'
 
 /**
- * Compact record header: who (identity + key facts) and do (contact, convert) on one band,
- * the stage stepper beneath. Wraps to stacked rows on narrow screens.
+ * The lead's record header (shared RecordHeader card): identity and key facts, contact and convert
+ * actions, the log prompt and stage tracker beneath.
  */
 export function LeadHeader({
   detail,
@@ -48,30 +48,14 @@ export function LeadHeader({
   const subtitle = [lead.companyName, lead.city, lead.source?.name].filter(Boolean).join(' · ')
 
   return (
-    <header className="lead-header surface">
-      <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-muted">
-        <Link to="/app/leads" className="rounded hover:text-ink hover:underline">
-          Leads
-        </Link>
-        <ChevronRight className="size-3" aria-hidden="true" />
-        <span className="truncate text-ink" aria-current="page">
-          {lead.displayName}
-        </span>
-      </nav>
-
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
-        <div className="flex min-w-[16rem] flex-1 items-start gap-3">
-          <Avatar name={lead.displayName} size="md" className="mt-0.5 size-12! text-base!" />
-          <div className="min-w-0">
-            <p className="lead-eyebrow">Lead overview</p>
-            <div className="flex flex-wrap items-center gap-3">
-            <h1 className="truncate font-display text-2xl! leading-8 font-semibold tracking-tight text-ink" title={lead.displayName}>
-              {lead.displayName}
-            </h1>
-            <LeadStatusBadge status={lead.status} />
-            </div>
-            <p className="truncate text-sm text-muted">{subtitle || 'No company or location yet'}</p>
-            <ul className="lead-facts mt-2" aria-label="Key facts">
+    <RecordHeader
+      media={<Avatar name={lead.displayName} size="md" />}
+      title={lead.displayName}
+      titleHint={lead.displayName}
+      status={<LeadStatusBadge status={lead.status} />}
+      subtitle={subtitle || 'No company or location yet'}
+      facts={
+            <ul className="lead-facts" aria-label="Key facts">
               <li data-fact="score">
                 <span className="text-muted">Score</span>
                 <ScorePill score={lead.score} breakdown={lead.scoreBreakdown} frozen={FROZEN.includes(lead.status)} />
@@ -100,10 +84,9 @@ export function LeadHeader({
                 Added {relativeTime(lead.createdAt)}
               </li>
             </ul>
-          </div>
-        </div>
-
-        <div className="flex max-w-full flex-wrap items-center gap-2">
+      }
+      actions={
+        <>
           {!lead.deletedAt && <ContactActions comm={comm} canLog={can.createTasks} onMeeting={can.createTasks ? onMeeting : undefined} />}
           <span className="mx-1 hidden h-6 w-px bg-line sm:block" aria-hidden="true" />
           {can.claim && (
@@ -161,14 +144,11 @@ export function LeadHeader({
               </>
             )}
           </Menu>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       <LogPrompt comm={comm} name={lead.firstName ?? lead.displayName} onCallback={onCallback} onAddNotes={onAddNotes} />
-
-      <div className="mt-4 border-t border-line pt-3">
-        <StageTracker lead={lead} canUpdate={can.update} onChange={act} onConvert={onConvert} />
-      </div>
-    </header>
+      <StageTracker lead={lead} canUpdate={can.update} onChange={act} onConvert={onConvert} />
+    </RecordHeader>
   )
 }

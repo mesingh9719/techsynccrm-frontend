@@ -41,9 +41,8 @@
   .google-meeting-lead { padding-top: 2rem; }
 }
 
-.google-page-heading { display: flex; gap: 1rem; align-items: center; }
 .google-page-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 3rem; height: 3rem; border: 1px solid var(--color-brand-100); border-radius: .85rem; background: var(--color-brand-50); color: var(--color-brand-700); }
-.google-eyebrow, .google-sheet-kicker { font-size: .65rem; font-weight: 600; letter-spacing: .08em; color: var(--color-muted); }
+.google-sheet-kicker { font-size: .65rem; font-weight: 600; letter-spacing: .08em; color: var(--color-muted); }
 .google-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
 .google-overview-item { padding: 1rem 1.25rem; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: .8rem; }
 .google-calendar-toolbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; }
@@ -95,8 +94,6 @@
   .google-overview { gap: .5rem; }
   .google-overview-item { padding: .75rem; }
   .google-overview-item p:first-child { min-height: 2rem; font-size: .65rem; }
-  .google-page-heading { align-items: start; gap: .7rem; }
-  .google-page-heading .google-page-icon { width: 2.5rem; height: 2.5rem; }
   .google-day-cell .google-day { padding: .35rem .1rem 2.6rem; min-height: 5rem; }
   .google-day-add { top: auto; bottom: .1rem; right: calc(50% - 1.25rem); width: 2.5rem; height: 2.5rem; }
   .google-day-dot { margin-left: .1rem; width: .25rem; height: .25rem; }

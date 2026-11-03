@@ -23,7 +23,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Input } from '../../components/ui/Form'
 import { CopyButton } from '../../components/ui/CopyButton'
 import { Dialog } from '../../components/app/Dialog'
-import { ErrorState, Skeleton } from '../../components/app/States'
+import { ErrorState, Skeleton, PageHeader } from '../../components/app/States'
 import { PreviewNotice } from '../../components/app/PreviewNotice'
 import { SourceBadge } from '../leads/SourceBadge'
 import { sourceIcon } from '../leads/sourceIcons'
@@ -180,19 +180,16 @@ export default function IntegrationsPage() {
   )
   return (
     <div className="app-page space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="eyebrow">Your lead sources</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink">Every enquiry. One inbox.</h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-            Connect the places your customers find you. Spend less time moving leads and more time talking to them.
-          </p>
-        </div>
-        <Button to="/app/settings/assignment" variant="secondary">
-          <PlugZap className="size-4" />
-          Assignment rules
-        </Button>
-      </header>
+      <PageHeader
+        title="Integrations"
+        description="Every enquiry, one inbox. Connect the places your customers find you and spend less time moving leads."
+        actions={
+          <Button to="/app/settings/assignment" variant="secondary">
+            <PlugZap className="size-4" />
+            Assignment rules
+          </Button>
+        }
+      />
       <section className="surface flex flex-wrap items-center justify-between gap-4 p-5"><div><h2 className="font-medium text-ink">Google Workspace</h2><p className="mt-1 text-sm text-muted">Schedule lead meetings with Google Meet and create or edit Google Sheets from the sidebar. Connect your own Google account to begin.</p></div><Button to="/app/settings/google" variant="secondary">Google connections</Button></section>
       <div className="grid gap-3 sm:grid-cols-3">
         {[

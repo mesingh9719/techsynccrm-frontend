@@ -375,6 +375,7 @@ html[data-crm-theme] .crm-shell {
   .page-header { @apply flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between; }
   .page-title { @apply font-display text-page-title font-semibold tracking-tight text-ink; }
   .page-description { @apply mt-2 max-w-2xl text-sm leading-6 text-muted; }
+  .page-meta { @apply mt-2 text-xs text-muted; }
   .icon-button { @apply inline-flex size-10 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-surface-subtle hover:text-ink disabled:pointer-events-none disabled:opacity-50; }
   .filter-toolbar { @apply flex min-w-0 flex-col gap-3 rounded-card border border-line bg-surface p-3 sm:flex-row sm:flex-wrap sm:items-center; }
   .metric-band { @apply grid grid-cols-1 divide-y divide-line overflow-hidden rounded-card border border-line bg-surface shadow-card sm:grid-cols-2 xl:grid-cols-4; }
@@ -705,8 +706,6 @@ html[data-crm-theme] .crm-shell {
 }
 
 /* ── Lead detail: three columns by container width, tabs + quick-action bar on phones ───────── */
-.lead-header { padding: 1rem; }
-@media (min-width: 640px) { .lead-header { padding: 1.25rem 1.5rem; } }
 .lead-layout { container-type: inline-size; margin-top: 1rem; }
 .lead-tabs {
   position: sticky;
@@ -1077,6 +1076,29 @@ button:hover > .lead-card { box-shadow: inset 0 0 0 1px var(--color-brand-300), 
 
 /* Page header actions share one height (40px) whatever Button size each page passed; menus and
    dialogs rendered inside are deeper in the tree and unaffected. */
+/* ── Record header (RecordHeader): one card for every lead, deal, contact, company, campaign ── */
+.record-header {
+  position: relative;
+  padding: 1rem;
+  border: 1px solid var(--color-line);
+  border-top: 3px solid var(--color-brand-400);
+  border-radius: var(--radius-card);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--color-brand-500) 5%, var(--color-surface)) 0%, var(--color-surface) 55%);
+  box-shadow: var(--shadow-card);
+}
+@media (min-width: 640px) { .record-header { padding: 1.25rem 1.5rem; } }
+.record-header-main { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem 1.5rem; }
+.record-header-identity { display: flex; min-width: min(100%, 16rem); flex: 1; align-items: flex-start; gap: 0.875rem; }
+.record-header-media { display: flex; flex-shrink: 0; }
+.record-header-media > * { width: 3rem !important; height: 3rem !important; box-shadow: 0 0 0 1px var(--color-line), var(--shadow-card); }
+.record-header-icon { display: inline-flex; align-items: center; justify-content: center; border-radius: 0.75rem; background: var(--color-brand-50); color: var(--color-brand-700); box-shadow: inset 0 0 0 1px var(--color-brand-100); }
+.record-header-title-row { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.75rem; }
+.crm-shell .record-header-title { min-width: 0; font-family: var(--font-display); font-size: 1.5rem; line-height: 2rem; font-weight: 600; letter-spacing: -0.01em; color: var(--color-ink); overflow-wrap: anywhere; }
+.record-header-subtitle { margin-top: 0.125rem; font-size: var(--text-sm); line-height: 1.5rem; color: var(--color-muted); overflow-wrap: anywhere; }
+.record-header-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.625rem; }
+.record-header-actions { display: flex; max-width: 100%; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.record-header-footer { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--color-line); }
+
 .page-header-actions { display: flex; max-width: 100%; flex-shrink: 0; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .page-header-actions > :is(a, button),
 .page-header-actions > div > :is(a, button) { height: 2.5rem; min-height: 2.5rem; padding-inline: 1rem; border-radius: var(--radius-control); font-size: var(--text-sm); }

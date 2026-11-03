@@ -14,12 +14,13 @@ import { useSeo } from '../../lib/useSeo'
 import { GoogleServiceGate } from './GoogleServiceGate'
 import { createSheet, listSheets, readSheet, retrySheet, saveSheet, type CellChange, type CrmSheet } from './api'
 import './google-tools.css'
+import { PageHeader } from '../../components/app/States'
 
 const exportColumns = [['id', 'Lead ID'], ['displayName', 'Name'], ['primaryEmail', 'Email'], ['primaryPhoneE164', 'Phone'], ['companyName', 'Company'], ['status', 'Status'], ['city', 'City'], ['budgetMinor', 'Budget'], ['source', 'Source'], ['owner', 'Owner']]
 export default function SheetsPage() {
   useSeo({ title: 'Google Sheets', noindex: true })
   const key = useGoogleResourceKey()
-  return <div className="app-page max-w-wide space-y-5"><header className="google-page-heading"><span className="google-page-icon google-sheets-icon"><FileSpreadsheet className="size-6" /></span><div><p className="google-eyebrow">YOUR WORKSPACE</p><h1 className="font-display text-2xl font-semibold">Google Sheets</h1><p className="mt-1 text-sm text-muted">A place for customer notes, lead snapshots and the details that move work forward.</p></div></header><GoogleServiceGate service="sheets"><SheetsWorkspace key={key.join(':')} /></GoogleServiceGate></div>
+  return <div className="app-page max-w-wide space-y-5"><PageHeader title="Google Sheets" description="A place for customer notes, lead snapshots and the details that move work forward." /><GoogleServiceGate service="sheets"><SheetsWorkspace key={key.join(':')} /></GoogleServiceGate></div>
 }
 function SheetsWorkspace() {
   const key = useGoogleResourceKey(), client = useQueryClient(), canExport = useCan('records.export'), [params, setParams] = useSearchParams()

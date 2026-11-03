@@ -31,7 +31,7 @@ import { Button } from '../../components/ui/Button'
 import { Field, FormAlert, Input, PasswordInput } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { Dialog } from '../../components/app/Dialog'
-import { ErrorState, Skeleton } from '../../components/app/States'
+import { ErrorState, Skeleton, PageHeader } from '../../components/app/States'
 import { SettingsSection } from '../../components/app/SettingsSection'
 import './account-settings.css'
 import { RecoveryCodes, TwoFactorSetup } from '../../components/app/TwoFactorSetup'
@@ -396,7 +396,7 @@ export default function SecuritySettings() {
   const factorEnabled = twoFactor.data?.enabled
   const refreshing = twoFactor.isFetching || sessions.isFetching
   return <div className="account-settings space-y-6">
-    <header className="account-settings-header"><div><p className="account-settings-eyebrow">Your account · Protection & access</p><h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Security</h1><p className="mt-2 text-sm text-muted">Keep your account protected and your devices in view.</p></div><Button variant="secondary" size="sm" loading={refreshing} onClick={() => Promise.all([twoFactor.refetch(), sessions.refetch()])}><RefreshCw className="size-3.5" aria-hidden="true" />Refresh security</Button></header>
+    <PageHeader title="Security" description="Keep your account protected and your devices in view." actions={<Button variant="secondary" loading={refreshing} onClick={() => Promise.all([twoFactor.refetch(), sessions.refetch()])}><RefreshCw className="size-3.5" aria-hidden="true" />Refresh security</Button>} />
     <nav className="security-overview" aria-label="Security overview">
       <a className="security-stat" href="#password-settings" data-tone={user?.hasPassword === false ? 'violet' : 'success'}><span className="security-stat-icon"><KeyRound className="size-4" aria-hidden="true" /></span><div><p className="security-stat-title">Sign-in method</p><p className="security-stat-value">{user?.hasPassword === false ? 'Google sign-in' : 'Password set'}</p></div></a>
       <a className="security-stat" href="#two-factor-settings" data-tone={twoFactor.isError || twoFactor.isPending ? 'neutral' : factorEnabled ? 'success' : 'warning'}><span className="security-stat-icon"><ShieldCheck className="size-4" aria-hidden="true" /></span><div><p className="security-stat-title">Two-factor authentication</p><p className="security-stat-value">{twoFactor.isPending ? 'Checking…' : twoFactor.isError ? 'Status unavailable' : factorEnabled ? 'Turned on' : 'Not turned on'}</p></div></a>
