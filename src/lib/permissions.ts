@@ -18,6 +18,7 @@ export type Permission =
   | 'email.templates.write.own'
   | 'email.templates.manage'
   | 'reports.read'
+  | 'targets.manage'
   | 'settings.forms.manage'
   | 'settings.assignment.manage'
   | 'settings.workspace.manage'

@@ -1,8 +1,36 @@
-import { useState } from 'react'
+import { useState, type ComponentType } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useForm, useWatch, type FieldPath } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, ArrowRight, Check, CircleCheck } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  BarChart3,
+  Briefcase,
+  Building2,
+  Check,
+  CircleCheck,
+  Crown,
+  Factory,
+  GraduationCap,
+  HeartPulse,
+  Home,
+  Inbox,
+  KanbanSquare,
+  Megaphone,
+  MessageCircle,
+  PenLine,
+  Phone,
+  ReceiptText,
+  Repeat,
+  Shapes,
+  Sparkles,
+  Store,
+  Target,
+  UserRound,
+  Users,
+  Wrench,
+} from 'lucide-react'
 import { completeOnboarding } from '../services/auth'
 import { ApiError } from '../services/http'
 import { companySizes, industries, onboardingGoals, onboardingSchema, type OnboardingValues } from '../lib/schemas'
@@ -11,25 +39,113 @@ import { useAuth } from '../lib/useAuth'
 import { useSeo } from '../lib/useSeo'
 import { cn } from '../lib/cn'
 import { Button } from '../components/ui/Button'
-import { Field, FormAlert, Input, Select } from '../components/ui/Form'
+import { Field, FormAlert, Input } from '../components/ui/Form'
 import { RequireStage } from '../components/auth/Guards'
+import { Facebook } from '../features/leads/BrandIcons'
+import { FacebookConnectStep } from '../features/onboarding/FacebookConnectStep'
 import type { AuthUser } from '../types'
 
-const roleSuggestions = ['Founder / Owner', 'Sales manager', 'Sales executive', 'Marketing', 'Operations']
+type Icon = ComponentType<{ className?: string }>
+type Industry = (typeof industries)[number]
+type TeamSize = (typeof companySizes)[number]
 
-const steps: { title: string; description: string; fields: FieldPath<OnboardingValues>[] }[] = [
-  { title: 'About you', description: 'So we can tailor TechSync to how you work.', fields: ['jobRole', 'phone'] },
-  {
-    title: 'Your company',
-    description: 'We’ll set up your workspace with a pipeline for your industry.',
-    fields: ['company', 'industry', 'teamSize'],
-  },
-  { title: 'Your goals', description: 'Pick what matters most — we’ll show you where to start.', fields: ['goals'] },
+const roles: { label: string; icon: Icon }[] = [
+  { label: 'Founder / Owner', icon: Crown },
+  { label: 'Sales manager', icon: Target },
+  { label: 'Sales executive', icon: Briefcase },
+  { label: 'Marketing', icon: Megaphone },
+  { label: 'Operations', icon: Wrench },
 ]
 
+const industryIcons: Record<Industry, Icon> = {
+  'Retail & distribution': Store,
+  Manufacturing: Factory,
+  'Professional services': Briefcase,
+  'Real estate': Home,
+  Education: GraduationCap,
+  Healthcare: HeartPulse,
+  Other: Shapes,
+}
+
+const teamSizeLabels: Record<TeamSize, string> = {
+  '1–10': 'Small team',
+  '11–50': 'Growing',
+  '51–200': 'Mid-size',
+  '201–500': 'Large',
+  '500+': 'Enterprise',
+}
+
+const goalIcons: Record<(typeof onboardingGoals)[number]['value'], Icon> = {
+  capture_leads: Inbox,
+  manage_pipeline: KanbanSquare,
+  whatsapp: MessageCircle,
+  automate_followups: Repeat,
+  quotes_invoices: ReceiptText,
+  reports: BarChart3,
+}
+
+// Mirrors backend/src/config/pipelineTemplates.js so the preview shows the stages the workspace really gets.
+const defaultStages = ['New', 'Qualified', 'Proposal sent', 'Negotiation']
+const industryStages: Partial<Record<Industry, string[]>> = {
+  'Retail & distribution': ['New enquiry', 'Sample/visit', 'Quotation sent', 'Negotiation'],
+  Manufacturing: ['RFQ received', 'Technical discussion', 'Quotation sent', 'Negotiation', 'PO pending'],
+  'Professional services': ['Discovery', 'Proposal sent', 'Negotiation', 'Contract sent'],
+  'Real estate': ['Enquiry', 'Site visit scheduled', 'Site visit done', 'Negotiation', 'Booking'],
+  Education: ['Enquiry', 'Counselling', 'Application', 'Fee pending'],
+  Healthcare: ['Enquiry', 'Consultation', 'Proposal', 'Negotiation'],
+}
+
+const steps: { title: string; short: string; caption: string; description: string; icon: Icon; fields: FieldPath<OnboardingValues>[] }[] = [
+  { title: 'Tell us about you', short: 'About you', caption: 'Your role', description: 'So we can tailor TechSync to how you work.', icon: UserRound, fields: ['jobRole', 'phone'] },
+  {
+    title: 'Set up your company',
+    short: 'Your company',
+    caption: 'Name, industry and size',
+    description: 'We’ll build your workspace with a pipeline made for your industry.',
+    icon: Building2,
+    fields: ['company', 'industry', 'teamSize'],
+  },
+  { title: 'What do you want to achieve?', short: 'Your goals', caption: 'Where to start', description: 'Pick everything that matters — we’ll show you where to start.', icon: Target, fields: ['goals'] },
+  {
+    title: 'Connect Facebook Lead Ads',
+    short: 'Connect Facebook',
+    caption: 'Optional · Pages, forms, campaigns',
+    description: 'Your workspace is ready. Capture leads from your Facebook and Instagram ads automatically.',
+    icon: Facebook,
+    fields: [],
+  },
+]
+const CONNECT_STEP = steps.length - 1
 const allFields = steps.flatMap((s) => s.fields)
 
-function OnboardingForm({ user }: { user: AuthUser }) {
+const tile =
+  'cursor-pointer select-none rounded-xl bg-white ring-1 transition-all duration-200 outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500 focus-visible:ring-2 focus-visible:ring-brand-500'
+const tileIdle = 'ring-zinc-200 hover:-translate-y-0.5 hover:shadow-float hover:ring-zinc-300'
+const tileActive = 'bg-brand-50/70 ring-2 ring-brand-500 shadow-float'
+const tileIcon = (active?: boolean) =>
+  cn('flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors sm:size-9', active ? 'bg-brand-600 text-white' : 'bg-zinc-100 text-zinc-600')
+
+function initials(name: string) {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? '')
+      .join('') || '?'
+  )
+}
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null
+  return (
+    <p id={id} role="alert" className="mt-2 text-sm text-red-600">
+      {message}
+    </p>
+  )
+}
+
+function OnboardingForm({ user, onLaunch }: { user: AuthUser; onLaunch: (launching: boolean) => void }) {
   const navigate = useNavigate()
   const location = useLocation()
   const justVerified = Boolean((location.state as { justVerified?: boolean } | null)?.justVerified)
@@ -41,6 +157,7 @@ function OnboardingForm({ user }: { user: AuthUser }) {
     handleSubmit,
     control,
     setValue,
+    setFocus,
     setError,
     trigger,
     formState: { errors, isSubmitting },
@@ -55,21 +172,27 @@ function OnboardingForm({ user }: { user: AuthUser }) {
     },
   })
 
-  const jobRole = useWatch({ control, name: 'jobRole' })
-  const teamSize = useWatch({ control, name: 'teamSize' })
-  const goals = useWatch({ control, name: 'goals' })
-  const isLast = step === steps.length - 1
+  const [jobRole, company, industry, teamSize, goals] = useWatch({ control, name: ['jobRole', 'company', 'industry', 'teamSize', 'goals'] })
+  const customRole = Boolean(jobRole?.trim()) && !roles.some((r) => r.label === jobRole)
+  const current = steps[step]
+  const StepIcon = current.icon
+  const finishing = step === CONNECT_STEP - 1
+  const launched = step === CONNECT_STEP
+  const orgId = user.organization?.id
 
   async function next() {
-    if (await trigger(steps[step].fields, { shouldFocus: true })) setStep((s) => s + 1)
+    if (await trigger(current.fields, { shouldFocus: true })) setStep((s) => s + 1)
   }
 
   const onSubmit = async (values: OnboardingValues) => {
     setServerError(null)
+    // Creating the workspace advances the account past onboarding; stay for the optional connect step.
+    onLaunch(true)
     try {
       await completeOnboarding(values)
-      navigate('/app/setup', { replace: true, state: { welcome: true } })
+      setStep(CONNECT_STEP)
     } catch (err) {
+      onLaunch(false)
       setServerError(applyServerErrors(err, setError, allFields))
       // Jump back to the first step with a server-side field error.
       if (err instanceof ApiError) {
@@ -79,253 +202,419 @@ function OnboardingForm({ user }: { user: AuthUser }) {
     }
   }
 
+  const finish = () => navigate('/app/setup', { replace: true, state: { welcome: true } })
+
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-12 sm:py-16">
-      {justVerified && (
-        <p
-          className="mb-6 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200"
-          role="status"
-        >
-          <CircleCheck className="size-4 shrink-0" aria-hidden="true" />
-          Email verified — welcome, {user.fullName.split(' ')[0]}! Let’s set up your workspace.
-        </p>
-      )}
+    <div className="relative isolate overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-48 -z-10 h-[36rem] bg-[radial-gradient(55%_60%_at_50%_0%,var(--color-brand-200),transparent_70%)] opacity-60"
+        aria-hidden="true"
+      />
 
-      <ol className="flex items-center gap-2" aria-label="Onboarding progress">
-        {steps.map((s, i) => (
-          <li key={s.title} className="flex flex-1 items-center gap-2" aria-current={i === step ? 'step' : undefined}>
-            <span
-              className={cn(
-                'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                i < step
-                  ? 'bg-brand-600 text-white'
-                  : i === step
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-white text-zinc-500 ring-1 ring-zinc-200',
+      <div className="mx-auto w-full max-w-6xl px-3 py-6 sm:px-6 sm:py-12">
+        <div className="grid overflow-hidden rounded-[1.25rem] bg-white shadow-frame lg:min-h-[44rem] lg:grid-cols-[22rem_minmax(0,1fr)]">
+          <Rail
+            user={user}
+            step={step}
+            justVerified={justVerified}
+            company={company}
+            industry={industry}
+            teamSize={teamSize}
+          />
+
+          <form
+            // Enter on an earlier step means "Continue", not "submit everything".
+            onSubmit={
+              finishing
+                ? handleSubmit(onSubmit)
+                : (e) => {
+                    e.preventDefault()
+                    // The connect step holds Facebook controls; leaving it is an explicit click.
+                    if (!launched) void next()
+                  }
+            }
+            noValidate
+            className="flex min-w-0 flex-col"
+          >
+            <div className="border-b border-zinc-100 px-6 pt-5 pb-4 lg:hidden">
+              <div className="flex gap-1.5" aria-hidden="true">
+                {steps.map((s, i) => (
+                  <span key={s.short} className={cn('h-1.5 flex-1 rounded-full transition-colors', i <= step ? 'bg-brand-600' : 'bg-zinc-200')} />
+                ))}
+              </div>
+              <p className="mt-2 text-xs font-medium text-zinc-500">
+                Welcome, {user.fullName.split(' ')[0]} · {current.short}
+              </p>
+            </div>
+
+            <div key={step} className="flex-1 animate-fade-up px-5 py-8 sm:px-10 sm:py-10">
+              <div className="flex items-center gap-4">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-float">
+                  <StepIcon className="size-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-mono text-xs font-medium tracking-wider text-brand-700 uppercase">
+                    Step {step + 1} of {steps.length}
+                    {launched && ' · Optional'}
+                  </p>
+                  <h1 className="mt-0.5 font-display text-2xl font-semibold tracking-tight text-zinc-950">{current.title}</h1>
+                </div>
+              </div>
+              <p className="mt-3 text-zinc-600">{current.description}</p>
+
+              {serverError && (
+                <div className="mt-6">
+                  <FormAlert>{serverError}</FormAlert>
+                </div>
               )}
-            >
-              {i < step ? <Check className="size-4" aria-hidden="true" /> : i + 1}
-            </span>
-            <span
-              className={cn('hidden text-sm sm:inline', i === step ? 'font-medium text-zinc-900' : 'text-zinc-500')}
-            >
-              {s.title}
-            </span>
-            {i < steps.length - 1 && (
-              <span className={cn('h-px flex-1', i < step ? 'bg-brand-600' : 'bg-zinc-200')} aria-hidden="true" />
-            )}
-          </li>
-        ))}
-      </ol>
 
-      <form
-        // Enter on an earlier step means "Continue", not "submit everything".
-        onSubmit={
-          isLast
-            ? handleSubmit(onSubmit)
-            : (e) => {
-                e.preventDefault()
-                void next()
-              }
-        }
-        noValidate
-        className="mt-8 rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-10"
-      >
-        <p className="font-mono text-xs font-medium tracking-wider text-zinc-500 uppercase">
-          Step {step + 1} of {steps.length}
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950 sm:text-3xl">{steps[step].title}</h1>
-        <p className="mt-2 text-zinc-600">{steps[step].description}</p>
-
-        {serverError && (
-          <div className="mt-6">
-            <FormAlert>{serverError}</FormAlert>
-          </div>
-        )}
-
-        <div className="mt-8 space-y-6">
-          {step === 0 && (
-            <>
-              <Field label="Your role" error={errors.jobRole?.message}>
-                {({ id, describedBy, invalid }) => (
+              <div className="mt-8 space-y-8">
+                {step === 0 && (
                   <>
-                    <Input
-                      id={id}
-                      autoComplete="organization-title"
-                      placeholder="e.g. Founder, Sales manager"
-                      aria-describedby={describedBy}
-                      invalid={invalid}
-                      {...register('jobRole')}
-                    />
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {roleSuggestions.map((r) => (
+                    <div>
+                      <p className="mb-3 text-sm font-medium text-zinc-800" id="role-picker">
+                        What best describes you?
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3" role="group" aria-labelledby="role-picker">
+                        {roles.map(({ label, icon: RoleIcon }) => {
+                          const active = jobRole === label
+                          return (
+                            <button
+                              key={label}
+                              type="button"
+                              aria-pressed={active}
+                              onClick={() => setValue('jobRole', label, { shouldValidate: true })}
+                              className={cn(tile, 'flex h-16 items-center gap-2.5 px-3 text-left sm:gap-3 sm:px-3.5', active ? tileActive : tileIdle)}
+                            >
+                              <span className={tileIcon(active)}>
+                                <RoleIcon className="size-[18px]" />
+                              </span>
+                              <span className={cn('min-w-0 text-[13px] leading-tight sm:text-sm', active ? 'font-semibold text-brand-900' : 'font-medium text-zinc-800')}>{label}</span>
+                            </button>
+                          )
+                        })}
                         <button
-                          key={r}
                           type="button"
-                          onClick={() => setValue('jobRole', r, { shouldValidate: true })}
-                          className={cn(
-                            'rounded-full px-3 py-1 text-sm ring-1 transition-colors',
-                            jobRole === r
-                              ? 'bg-zinc-900 text-white ring-zinc-900'
-                              : 'text-zinc-600 ring-zinc-200 hover:ring-zinc-300',
-                          )}
+                          aria-pressed={customRole}
+                          onClick={() => {
+                            if (!customRole) setValue('jobRole', '')
+                            setFocus('jobRole')
+                          }}
+                          className={cn(tile, 'flex h-16 items-center gap-2.5 px-3 text-left sm:gap-3 sm:px-3.5', customRole ? tileActive : tileIdle)}
                         >
-                          {r}
+                          <span className={tileIcon(customRole)}>
+                            <PenLine className="size-[18px]" />
+                          </span>
+                          <span className={cn('min-w-0 text-[13px] leading-tight sm:text-sm', customRole ? 'font-semibold text-brand-900' : 'font-medium text-zinc-800')}>Something else</span>
                         </button>
-                      ))}
+                      </div>
                     </div>
+                    <div className="grid gap-6 sm:grid-cols-2">
+                      <Field label="Your role" error={errors.jobRole?.message}>
+                        {({ id, describedBy, invalid }) => (
+                          <Input
+                            id={id}
+                            autoComplete="organization-title"
+                            placeholder="e.g. Business development lead"
+                            aria-describedby={describedBy}
+                            invalid={invalid}
+                            {...register('jobRole')}
+                          />
+                        )}
+                      </Field>
+                      <Field label="Phone" optional error={errors.phone?.message}>
+                        {({ id, describedBy, invalid }) => (
+                          <div className="relative">
+                            <Phone className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
+                            <Input
+                              id={id}
+                              type="tel"
+                              autoComplete="tel"
+                              placeholder="+91 98450 12345"
+                              aria-describedby={describedBy}
+                              invalid={invalid}
+                              className="pl-10"
+                              {...register('phone')}
+                            />
+                          </div>
+                        )}
+                      </Field>
+                    </div>
+                    <p className="-mt-4 text-sm text-zinc-500">Your phone is only used for onboarding help over WhatsApp or a call. We never share it.</p>
                   </>
                 )}
-              </Field>
-              <Field
-                label="Phone"
-                optional
-                error={errors.phone?.message}
-                hint="For onboarding help over WhatsApp or a call. We never share it."
-              >
-                {({ id, describedBy, invalid }) => (
-                  <Input
-                    id={id}
-                    type="tel"
-                    autoComplete="tel"
-                    placeholder="+91 98450 12345"
-                    aria-describedby={describedBy}
-                    invalid={invalid}
-                    {...register('phone')}
-                  />
-                )}
-              </Field>
-            </>
-          )}
 
-          {step === 1 && (
-            <>
-              <Field label="Company name" error={errors.company?.message}>
-                {({ id, describedBy, invalid }) => (
-                  <Input
-                    id={id}
-                    autoComplete="organization"
-                    autoFocus
-                    aria-describedby={describedBy}
-                    invalid={invalid}
-                    {...register('company')}
-                  />
-                )}
-              </Field>
-              <Field label="Industry" error={errors.industry?.message}>
-                {({ id, describedBy, invalid }) => (
-                  <Select
-                    id={id}
-                    aria-describedby={describedBy}
-                    invalid={invalid}
-                    defaultValue=""
-                    {...register('industry')}
-                  >
-                    <option value="" disabled>
-                      Choose your industry
-                    </option>
-                    {industries.map((i) => (
-                      <option key={i} value={i}>
-                        {i}
-                      </option>
-                    ))}
-                  </Select>
-                )}
-              </Field>
-              <fieldset aria-describedby={errors.teamSize ? 'teamsize-error' : undefined}>
-                <legend className="mb-2 text-sm font-medium text-zinc-800">Team size</legend>
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                  {companySizes.map((size) => (
-                    <label
-                      key={size}
-                      className={cn(
-                        'flex h-11 cursor-pointer items-center justify-center rounded-lg text-sm ring-1 transition-colors select-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500',
-                        teamSize === size
-                          ? 'bg-zinc-900 font-medium text-white ring-zinc-900'
-                          : 'bg-white text-zinc-700 ring-zinc-300 hover:ring-zinc-400',
+                {step === 1 && (
+                  <>
+                    <Field label="Company name" error={errors.company?.message}>
+                      {({ id, describedBy, invalid }) => (
+                        <div className="relative">
+                          <Building2 className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
+                          <Input
+                            id={id}
+                            autoComplete="organization"
+                            autoFocus
+                            placeholder="e.g. Sharma Traders"
+                            aria-describedby={describedBy}
+                            invalid={invalid}
+                            className="pl-10"
+                            {...register('company')}
+                          />
+                        </div>
                       )}
-                    >
-                      <input type="radio" value={size} className="sr-only" {...register('teamSize')} />
-                      {size}
-                    </label>
-                  ))}
-                </div>
-                {errors.teamSize && (
-                  <p id="teamsize-error" role="alert" className="mt-2 text-sm text-red-600">
-                    {errors.teamSize.message}
-                  </p>
-                )}
-              </fieldset>
-            </>
-          )}
+                    </Field>
 
-          {step === 2 && (
-            <fieldset aria-describedby={errors.goals ? 'goals-error' : undefined}>
-              <legend className="sr-only">Goals</legend>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {onboardingGoals.map((g) => {
-                  const checked = goals?.includes(g.value)
-                  return (
-                    <label
-                      key={g.value}
-                      className={cn(
-                        'relative flex cursor-pointer flex-col rounded-xl p-4 ring-1 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-500',
-                        checked ? 'bg-brand-50/60 ring-brand-400' : 'ring-zinc-200 hover:ring-zinc-300',
-                      )}
-                    >
-                      <input type="checkbox" value={g.value} className="sr-only" {...register('goals')} />
-                      <span className="pr-6 font-medium text-zinc-900">{g.label}</span>
-                      <span className="mt-1 text-sm text-zinc-500">{g.description}</span>
+                    <fieldset aria-describedby={errors.industry ? 'industry-error' : undefined}>
+                      <legend className="mb-3 text-sm font-medium text-zinc-800">Industry</legend>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+                        {industries.map((value) => {
+                          const IndustryIcon = industryIcons[value]
+                          const active = industry === value
+                          return (
+                            <label
+                              key={value}
+                              className={cn(
+                                tile,
+                                'flex h-16 items-center gap-2.5 px-3 sm:gap-3 sm:px-3.5',
+                                // "Other" spans the last row so the grid stays even.
+                                value === 'Other' && 'col-span-2 sm:col-span-3',
+                                active ? tileActive : tileIdle,
+                              )}
+                            >
+                              <input type="radio" value={value} className="sr-only" {...register('industry')} />
+                              <span className={tileIcon(active)}>
+                                <IndustryIcon className="size-[18px]" />
+                              </span>
+                              <span className={cn('min-w-0 text-[13px] leading-tight sm:text-sm', active ? 'font-semibold text-brand-900' : 'font-medium text-zinc-800')}>
+                                {value === 'Other' ? 'Other — a general sales pipeline' : value}
+                              </span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                      <FieldError id="industry-error" message={errors.industry?.message} />
+                    </fieldset>
+
+                    <fieldset aria-describedby={errors.teamSize ? 'teamsize-error' : undefined}>
+                      <legend className="mb-3 text-sm font-medium text-zinc-800">Team size</legend>
+                      <div className="grid grid-cols-5 gap-2 sm:gap-3">
+                        {companySizes.map((size) => {
+                          const active = teamSize === size
+                          return (
+                            <label key={size} className={cn(tile, 'flex h-20 flex-col items-center justify-center px-1 text-center', active ? tileActive : tileIdle)}>
+                              <input type="radio" value={size} className="sr-only" {...register('teamSize')} />
+                              <Users className={cn('size-4', active ? 'text-brand-600' : 'text-zinc-400')} aria-hidden="true" />
+                              <span className={cn('mt-1 text-sm', active ? 'font-semibold text-brand-900' : 'font-medium text-zinc-900')}>{size}</span>
+                              <span className="hidden text-xs text-zinc-500 sm:block">{teamSizeLabels[size]}</span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                      <FieldError id="teamsize-error" message={errors.teamSize?.message} />
+                    </fieldset>
+                  </>
+                )}
+
+                {step === 2 && (
+                  <fieldset aria-describedby={errors.goals ? 'goals-error' : 'goals-hint'}>
+                    <legend className="sr-only">Goals</legend>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p id="goals-hint" className="text-sm font-medium text-zinc-800">
+                        Select all that apply
+                      </p>
                       <span
-                        className={cn(
-                          'absolute top-4 right-4 flex size-5 items-center justify-center rounded-md ring-1',
-                          checked ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white ring-zinc-300',
-                        )}
-                        aria-hidden="true"
+                        className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors', goals?.length ? 'bg-brand-600 text-white' : 'bg-zinc-100 text-zinc-500')}
+                        aria-live="polite"
                       >
-                        {checked && <Check className="size-4" strokeWidth={3} />}
+                        {goals?.length ?? 0} selected
                       </span>
-                    </label>
-                  )
-                })}
-              </div>
-              {errors.goals && (
-                <p id="goals-error" role="alert" className="mt-2 text-sm text-red-600">
-                  {errors.goals.message}
-                </p>
-              )}
-            </fieldset>
-          )}
-        </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {onboardingGoals.map((g) => {
+                        const GoalIcon = goalIcons[g.value]
+                        const checked = Boolean(goals?.includes(g.value))
+                        return (
+                          <label key={g.value} className={cn(tile, 'relative flex min-h-24 items-start gap-3.5 p-4', checked ? tileActive : tileIdle)}>
+                            <input type="checkbox" value={g.value} className="sr-only" {...register('goals')} />
+                            <span className={cn(tileIcon(checked), 'size-10 sm:size-10')}>
+                              <GoalIcon className="size-5" />
+                            </span>
+                            <span className="pr-6">
+                              <span className="block font-medium text-zinc-900">{g.label}</span>
+                              <span className="mt-0.5 block text-sm leading-snug text-zinc-500">{g.description}</span>
+                            </span>
+                            <span
+                              className={cn(
+                                'absolute top-4 right-4 flex size-5 items-center justify-center rounded-full ring-1 transition-colors',
+                                checked ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white ring-zinc-300',
+                              )}
+                              aria-hidden="true"
+                            >
+                              {checked && <Check className="size-3.5" strokeWidth={3} />}
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                    <FieldError id="goals-error" message={errors.goals?.message} />
+                  </fieldset>
+                )}
 
-        <div className="mt-10 flex items-center justify-between gap-3 border-t border-zinc-100 pt-6">
-          {step > 0 ? (
-            <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
-              <ArrowLeft className="size-4" aria-hidden="true" />
-              Back
-            </Button>
-          ) : (
-            <span />
-          )}
-          {isLast ? (
-            <Button type="submit" size="lg" loading={isSubmitting}>
-              {isSubmitting ? 'Setting up…' : 'Finish setup'}
-            </Button>
-          ) : (
-            // type="submit" so Enter advances too; the form's onSubmit routes to next() before the last step.
-            <Button type="submit" size="lg">
-              Continue
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Button>
-          )}
+                {launched && orgId && <FacebookConnectStep orgId={orgId} />}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border-t border-zinc-100 bg-surface-subtle px-6 py-4 sm:px-10">
+              {step > 0 && !launched ? (
+                <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
+                  <ArrowLeft className="size-4" aria-hidden="true" />
+                  Back
+                </Button>
+              ) : launched ? (
+                <span className="hidden text-sm text-zinc-500 sm:inline">You can connect later from Integrations.</span>
+              ) : (
+                <span />
+              )}
+              <div className="flex items-center gap-4">
+                {!launched && (
+                  <span className="hidden text-xs text-zinc-500 md:inline" aria-hidden="true">
+                    Press <kbd className="rounded border border-zinc-200 bg-white px-1.5 py-0.5 font-mono text-[11px] text-zinc-700">Enter ↵</kbd>
+                  </span>
+                )}
+                {finishing ? (
+                  <Button type="submit" size="lg" loading={isSubmitting}>
+                    {isSubmitting ? 'Creating workspace…' : 'Create workspace'}
+                    {!isSubmitting && <Sparkles className="size-4" aria-hidden="true" />}
+                  </Button>
+                ) : launched ? (
+                  <Button size="lg" onClick={finish}>
+                    Go to my workspace
+                    <ArrowRight className="size-4" aria-hidden="true" />
+                  </Button>
+                ) : (
+                  // type="submit" so Enter advances too; the form's onSubmit routes to next() before the last form step.
+                  <Button type="submit" size="lg">
+                    Continue
+                    <ArrowRight className="size-4" aria-hidden="true" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
+  )
+}
+
+/** Brand rail: greeting, vertical stepper and a live preview of the workspace being created. */
+function Rail({
+  user,
+  step,
+  justVerified,
+  company,
+  industry,
+  teamSize,
+}: {
+  user: AuthUser
+  step: number
+  justVerified: boolean
+  company?: string
+  industry?: Industry
+  teamSize?: TeamSize
+}) {
+  const stages = (industry && industryStages[industry]) || defaultStages
+  const name = company?.trim()
+
+  return (
+    <aside className="relative hidden flex-col overflow-hidden bg-zinc-950 p-8 text-white lg:flex">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] [background-size:28px_28px]"
+        aria-hidden="true"
+      />
+      <div className="pointer-events-none absolute -top-32 -left-24 size-80 rounded-full bg-brand-600/45 blur-3xl" aria-hidden="true" />
+
+      <div className="relative">
+        {justVerified ? (
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-2.5 py-1 text-xs font-medium text-emerald-300 ring-1 ring-emerald-400/30" role="status">
+            <CircleCheck className="size-3.5" aria-hidden="true" />
+            Email verified
+          </p>
+        ) : (
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-sidebar-ink ring-1 ring-white/15">
+            <Sparkles className="size-3.5 text-highlight" aria-hidden="true" />
+            Workspace setup
+          </p>
+        )}
+        <p className="mt-5 font-display text-2xl leading-tight font-semibold">Welcome, {user.fullName.split(' ')[0]}.</p>
+        <p className="mt-1.5 text-sm text-sidebar-muted">Let’s build your workspace — it takes about a minute.</p>
+      </div>
+
+      <ol className="relative mt-9 space-y-1" aria-label="Onboarding progress">
+        {steps.map((s, i) => {
+          const done = i < step
+          const active = i === step
+          return (
+            <li key={s.short} className="relative flex gap-3.5 pb-5 last:pb-0" aria-current={active ? 'step' : undefined}>
+              {i < steps.length - 1 && (
+                <span className={cn('absolute top-8 bottom-0 left-[15px] w-px', done ? 'bg-brand-400' : 'bg-white/15')} aria-hidden="true" />
+              )}
+              <span
+                className={cn(
+                  'relative flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors',
+                  done ? 'bg-brand-500 text-white' : active ? 'bg-white text-zinc-950 ring-4 ring-white/15' : 'bg-white/5 text-sidebar-muted ring-1 ring-white/20',
+                )}
+              >
+                {done ? <Check className="size-4" strokeWidth={3} aria-hidden="true" /> : i + 1}
+              </span>
+              <span className="pt-1">
+                <span className={cn('block text-sm font-medium', active ? 'text-white' : done ? 'text-sidebar-ink' : 'text-sidebar-muted')}>
+                  {s.short}
+                  <span className="sr-only">{done ? ' (done)' : active ? ' (current)' : ''}</span>
+                </span>
+                <span className="block text-xs text-sidebar-muted">{s.caption}</span>
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+
+      <div className="relative mt-auto pt-8" aria-hidden="true">
+        <div className="rounded-card bg-white/[0.06] p-4 ring-1 ring-white/10 backdrop-blur">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-highlight font-display font-bold text-zinc-950">{initials(name ?? '')}</span>
+            <span className="min-w-0">
+              <span className={cn('block truncate font-semibold', !name && 'text-white/50')}>{name || 'Your company'}</span>
+              <span className="block truncate text-xs text-sidebar-muted">{[industry ?? 'Industry', teamSize ? `${teamSize} people` : 'Team size'].join(' · ')}</span>
+            </span>
+          </div>
+          <p className="mt-4 text-[11px] font-medium tracking-wider text-sidebar-muted uppercase">{industry === 'Education' ? 'Admissions' : 'Sales pipeline'}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {[...stages, 'Won'].map((stage, i, all) => (
+              <span
+                key={`${industry ?? 'default'}-${stage}`}
+                className={cn(
+                  'animate-fade-in rounded-md px-2 py-1 text-[11px] font-medium',
+                  i === all.length - 1 ? 'bg-highlight/90 text-zinc-950' : 'bg-white/10 text-sidebar-ink',
+                )}
+              >
+                {stage}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </aside>
   )
 }
 
 export default function Onboarding() {
   useSeo({ title: 'Set up your workspace', noindex: true })
   const { user } = useAuth()
-  return <RequireStage path="/onboarding">{user && <OnboardingForm user={user} />}</RequireStage>
+  const [launching, setLaunching] = useState(false)
+  return (
+    <RequireStage path="/onboarding" stay={launching}>
+      {user && <OnboardingForm user={user} onLaunch={setLaunching} />}
+    </RequireStage>
+  )
 }

@@ -18,15 +18,16 @@ export function FullPageSpinner({ label = 'Loading…' }: { label?: string }) {
 /**
  * Only renders `children` for a signed-in user whose next step is `path`
  * ('/verify-email', '/onboarding' or '/app'); everyone else is redirected to where they belong.
+ * `stay` keeps the page mounted after it advances the stage itself (onboarding's optional last step).
  */
-export function RequireStage({ path, children }: { path: StagePath; children: ReactNode }) {
+export function RequireStage({ path, children, stay = false }: { path: StagePath; children: ReactNode; stay?: boolean }) {
   const { status, user } = useAuth()
   const location = useLocation()
 
   if (status === 'loading') return <FullPageSpinner />
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
   const next = nextPathFor(user)
-  if (next !== path) return <Navigate to={next} replace />
+  if (next !== path && !stay) return <Navigate to={next} replace />
   return <>{children}</>
 }
 

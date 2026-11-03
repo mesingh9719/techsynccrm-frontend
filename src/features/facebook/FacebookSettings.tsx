@@ -12,9 +12,9 @@ import { EmptyState, ErrorState, ListSkeleton, PageHeader } from '../../componen
 import { UserPicker } from '../../components/app/UserPicker'
 import { useToast } from '../../components/ui/Toast'
 import * as fb from './api'
+import { DEFAULT_FIELD_MAPPING } from './mapping'
 
 const FIELD_LABELS: Record<string, string> = { fullName: 'Full name', firstName: 'First name', lastName: 'Last name', email: 'Email', phone: 'Phone', companyName: 'Company', city: 'City', pincode: 'PIN code', requirement: 'Requirement / notes' }
-const DEFAULTS: Record<string, string> = { full_name: 'fullName', first_name: 'firstName', last_name: 'lastName', email: 'email', phone_number: 'phone', company_name: 'companyName', city: 'city', zip_code: 'pincode' }
 const panel = 'space-y-4 rounded-xl bg-surface p-5 ring-1 ring-line'
 function Paging({ next, first, onNext, onFirst }: { next?: string | null; first: boolean; onNext: (cursor: string) => void; onFirst: () => void }) {
   return <div className="flex gap-2">{!first && <Button size="sm" variant="ghost" onClick={onFirst}>First page</Button>}{next && <Button size="sm" variant="secondary" onClick={() => onNext(next)}>Next page</Button>}</div>
@@ -41,7 +41,7 @@ function FormEditor({ form, pageId, onSaved }: { form: fb.FacebookForm; pageId: 
   const [dedupe, setDedupe] = useState(form.settings?.dedupe ?? true)
   const [owner, setOwner] = useState<string | null>(form.settings?.defaultOwnerId ?? null)
   const questions = (form.questions ?? []).filter((q): q is typeof q & { key: string } => Boolean(q.key))
-  const [mapping, setMapping] = useState<Record<string, string>>(() => Object.fromEntries(questions.map((q) => [q.key, form.settings?.mapping[q.key] ?? DEFAULTS[q.key] ?? ''])))
+  const [mapping, setMapping] = useState<Record<string, string>>(() => Object.fromEntries(questions.map((q) => [q.key, form.settings?.mapping[q.key] ?? DEFAULT_FIELD_MAPPING[q.key] ?? ''])))
   const [busy, setBusy] = useState(false), [error, setError] = useState('')
   async function save() {
     setBusy(true); setError('')

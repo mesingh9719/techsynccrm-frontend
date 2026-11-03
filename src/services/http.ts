@@ -281,19 +281,28 @@ export async function upload<T>(path: string, file: Blob, options: UploadOptions
   return res.json?.data as T
 }
 
-/** Private-storage POST. Never sends the API access token or refresh cookie to storage. */
+/**
+ * Private-storage upload. PUT sends the raw file to a signed upload URL with `fields` as headers;
+ * POST sends a form upload. Never sends the API access token or refresh cookie to storage.
+ */
 export function postToStorage(
   url: string,
   file: File,
   fields: Record<string, string>,
   onProgress?: (n: number) => void,
+  method: 'POST' | 'PUT' = 'POST',
 ) {
   return new Promise<void>((resolve, reject) => {
-    const form = new FormData()
-    Object.entries(fields).forEach(([k, v]) => form.append(k, v))
-    form.append('file', file)
     const xhr = new XMLHttpRequest()
-    xhr.open('POST', url)
+    xhr.open(method, url)
+    let body: FormData | File = file
+    if (method === 'PUT') Object.entries(fields).forEach(([k, v]) => xhr.setRequestHeader(k, v))
+    else {
+      const form = new FormData()
+      Object.entries(fields).forEach(([k, v]) => form.append(k, v))
+      form.append('file', file)
+      body = form
+    }
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress?.(e.loaded / e.total)
     }
@@ -302,6 +311,6 @@ export function postToStorage(
         ? resolve()
         : reject(new ApiError('Storage upload failed. Please try again.', xhr.status))
     xhr.onerror = () => reject(new ApiError('Storage could not be reached.', 0, 'NETWORK_ERROR'))
-    xhr.send(form)
+    xhr.send(body)
   })
 }
