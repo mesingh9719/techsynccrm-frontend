@@ -1,6 +1,6 @@
-import { useState, type ComponentType } from 'react'
+import { useId, useRef, useState, type ComponentType, type FocusEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useForm, useWatch, type FieldPath } from 'react-hook-form'
+import { Controller, useForm, useWatch, type FieldPath } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   ArrowLeft,
@@ -11,42 +11,38 @@ import {
   Check,
   CircleCheck,
   Crown,
-  Factory,
-  GraduationCap,
-  HeartPulse,
-  Home,
   Inbox,
   KanbanSquare,
   Megaphone,
   MessageCircle,
   PenLine,
-  Phone,
   ReceiptText,
   Repeat,
-  Shapes,
+  Search,
   Sparkles,
-  Store,
   Target,
   UserRound,
   Users,
   Wrench,
+  X,
 } from 'lucide-react'
 import { completeOnboarding } from '../services/auth'
 import { ApiError } from '../services/http'
-import { companySizes, industries, onboardingGoals, onboardingSchema, type OnboardingValues } from '../lib/schemas'
+import { companyName, companySizes, isOptionalMobile, onboardingGoals, onboardingSchema, type OnboardingValues } from '../lib/schemas'
 import { applyServerErrors } from '../lib/forms'
 import { useAuth } from '../lib/useAuth'
 import { useSeo } from '../lib/useSeo'
 import { cn } from '../lib/cn'
+import { IndustryIcon, searchIndustries, useIndustries, type Industry } from '../lib/industries'
 import { Button } from '../components/ui/Button'
 import { Field, FormAlert, Input } from '../components/ui/Form'
+import { PhoneInput } from '../components/ui/PhoneInput'
 import { RequireStage } from '../components/auth/Guards'
 import { Facebook } from '../features/leads/BrandIcons'
 import { FacebookConnectStep } from '../features/onboarding/FacebookConnectStep'
 import type { AuthUser } from '../types'
 
 type Icon = ComponentType<{ className?: string }>
-type Industry = (typeof industries)[number]
 type TeamSize = (typeof companySizes)[number]
 
 const roles: { label: string; icon: Icon }[] = [
@@ -56,16 +52,6 @@ const roles: { label: string; icon: Icon }[] = [
   { label: 'Marketing', icon: Megaphone },
   { label: 'Operations', icon: Wrench },
 ]
-
-const industryIcons: Record<Industry, Icon> = {
-  'Retail & distribution': Store,
-  Manufacturing: Factory,
-  'Professional services': Briefcase,
-  'Real estate': Home,
-  Education: GraduationCap,
-  Healthcare: HeartPulse,
-  Other: Shapes,
-}
 
 const teamSizeLabels: Record<TeamSize, string> = {
   '1–10': 'Small team',
@@ -85,14 +71,15 @@ const goalIcons: Record<(typeof onboardingGoals)[number]['value'], Icon> = {
 }
 
 // Mirrors backend/src/config/pipelineTemplates.js so the preview shows the stages the workspace really gets.
+// Keyed by template; each industry (industries table) names its template.
 const defaultStages = ['New', 'Qualified', 'Proposal sent', 'Negotiation']
-const industryStages: Partial<Record<Industry, string[]>> = {
-  'Retail & distribution': ['New enquiry', 'Sample/visit', 'Quotation sent', 'Negotiation'],
-  Manufacturing: ['RFQ received', 'Technical discussion', 'Quotation sent', 'Negotiation', 'PO pending'],
-  'Professional services': ['Discovery', 'Proposal sent', 'Negotiation', 'Contract sent'],
-  'Real estate': ['Enquiry', 'Site visit scheduled', 'Site visit done', 'Negotiation', 'Booking'],
-  Education: ['Enquiry', 'Counselling', 'Application', 'Fee pending'],
-  Healthcare: ['Enquiry', 'Consultation', 'Proposal', 'Negotiation'],
+const pipelineStages: Record<string, string[]> = {
+  retail: ['New enquiry', 'Sample/visit', 'Quotation sent', 'Negotiation'],
+  manufacturing: ['RFQ received', 'Technical discussion', 'Quotation sent', 'Negotiation', 'PO pending'],
+  services: ['Discovery', 'Proposal sent', 'Negotiation', 'Contract sent'],
+  real_estate: ['Enquiry', 'Site visit scheduled', 'Site visit done', 'Negotiation', 'Booking'],
+  education: ['Enquiry', 'Counselling', 'Application', 'Fee pending'],
+  healthcare: ['Enquiry', 'Consultation', 'Proposal', 'Negotiation'],
 }
 
 const steps: { title: string; short: string; caption: string; description: string; icon: Icon; fields: FieldPath<OnboardingValues>[] }[] = [
@@ -103,7 +90,7 @@ const steps: { title: string; short: string; caption: string; description: strin
     caption: 'Name, industry and size',
     description: 'We’ll build your workspace with a pipeline made for your industry.',
     icon: Building2,
-    fields: ['company', 'industry', 'teamSize'],
+    fields: ['company', 'industryId', 'teamSize'],
   },
   { title: 'What do you want to achieve?', short: 'Your goals', caption: 'Where to start', description: 'Pick everything that matters — we’ll show you where to start.', icon: Target, fields: ['goals'] },
   {
@@ -145,6 +132,143 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   )
 }
 
+/**
+ * Finds industries that aren't tiles. A pick that isn't a tile shows as its own selected tile above
+ * the box. Combobox pattern: arrows move, Enter picks (without submitting the step), Esc closes.
+ */
+function IndustrySearch({ industries, value, onSelect }: { industries: Industry[]; value?: string; onSelect: (id: string) => void }) {
+  const id = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(0)
+  const results = searchIndustries(industries, query)
+  const picked = industries.find((i) => i.id === value)
+  const other = industries.find((i) => i.slug === 'other')
+  const pickedFromSearch = picked && !picked.featured ? picked : undefined
+  const expanded = open && query.trim() !== ''
+
+  function choose(id: string) {
+    onSelect(id)
+    setQuery('')
+    setOpen(false)
+  }
+
+  function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      setOpen(true)
+      if (results.length) setActive((i) => (i + (e.key === 'ArrowDown' ? 1 : results.length - 1)) % results.length)
+    } else if (e.key === 'Enter') {
+      // Enter in the search box picks; it never submits the step.
+      e.preventDefault()
+      if (expanded && results[active]) choose(results[active].id)
+    } else if (e.key === 'Escape' && expanded) {
+      e.preventDefault()
+      setOpen(false)
+    }
+  }
+
+  return (
+    <div className="mt-3 space-y-3">
+      {pickedFromSearch && (
+        <div className={cn(tile, tileActive, 'flex h-16 items-center gap-3 px-3.5')}>
+          <span className={tileIcon(true)}>
+            <IndustryIcon icon={pickedFromSearch.icon} className="size-[18px]" />
+          </span>
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-brand-900">{pickedFromSearch.name}</span>
+          <Check className="size-4 shrink-0 text-brand-600" aria-hidden="true" />
+          <span className="sr-only">selected</span>
+        </div>
+      )}
+      <div className="relative">
+        <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
+        <input
+          ref={inputRef}
+          type="text"
+          role="combobox"
+          aria-label="Search all industries"
+          aria-expanded={expanded}
+          aria-controls={`${id}-list`}
+          aria-autocomplete="list"
+          aria-activedescendant={expanded && results[active] ? `${id}-opt-${active}` : undefined}
+          autoComplete="off"
+          maxLength={60}
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setActive(0)
+            setOpen(true)
+          }}
+          onFocus={() => setOpen(true)}
+          // Delay so a click on an option lands before the list closes.
+          onBlur={() => setTimeout(() => setOpen(false), 120)}
+          onKeyDown={onKeyDown}
+          placeholder={`Don’t see yours? Search ${industries.length - 1} industries — e.g. pharma, gym, CA`}
+          className="block h-11 w-full rounded-xl border border-line bg-white pr-10 pl-10 text-sm text-ink shadow-card transition-colors placeholder:text-zinc-400 hover:border-zinc-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery('')
+              inputRef.current?.focus()
+            }}
+            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-zinc-400 hover:text-zinc-700"
+            aria-label="Clear search"
+          >
+            <X className="size-4" aria-hidden="true" />
+          </button>
+        )}
+        {expanded && (
+          <ul
+            id={`${id}-list`}
+            role="listbox"
+            aria-label="Industries"
+            className="absolute inset-x-0 top-full z-20 mt-1.5 max-h-72 overflow-y-auto rounded-xl bg-white p-1.5 shadow-float ring-1 ring-zinc-200"
+          >
+            {results.length ? (
+              results.map((r, i) => {
+                return (
+                  <li
+                    key={r.id}
+                    id={`${id}-opt-${i}`}
+                    role="option"
+                    aria-selected={i === active}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => choose(r.id)}
+                    onMouseEnter={() => setActive(i)}
+                    className={cn('flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2 text-sm', i === active ? 'bg-brand-50 text-brand-900' : 'text-zinc-800')}
+                  >
+                    <span className={tileIcon(i === active)}>
+                      <IndustryIcon icon={r.icon} className="size-4" />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
+                    {r.id === value && <Check className="size-4 shrink-0 text-brand-600" aria-hidden="true" />}
+                  </li>
+                )
+              })
+            ) : (
+              <li role="option" aria-selected={false} aria-disabled="true" className="px-2.5 py-2 text-sm text-zinc-500">
+                No match.
+                {other && (
+                  <>
+                    {' '}
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => choose(other.id)} className="font-medium text-brand-700 underline-offset-2 hover:underline">
+                      Choose {other.name}
+                    </button>{' '}
+                    for a general sales pipeline.
+                  </>
+                )}
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function OnboardingForm({ user, onLaunch }: { user: AuthUser; onLaunch: (launching: boolean) => void }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -172,7 +296,12 @@ function OnboardingForm({ user, onLaunch }: { user: AuthUser; onLaunch: (launchi
     },
   })
 
-  const [jobRole, company, industry, teamSize, goals] = useWatch({ control, name: ['jobRole', 'company', 'industry', 'teamSize', 'goals'] })
+  const [jobRole, phone, company, industryId, teamSize, goals] = useWatch({ control, name: ['jobRole', 'phone', 'company', 'industryId', 'teamSize', 'goals'] })
+  const { industries, isPending: industriesLoading, isError: industriesFailed, refetch: retryIndustries } = useIndustries()
+  const industry = industries.find((i) => i.id === industryId)
+  // Continue stays disabled while a filled-in field is invalid; empty required fields still get their message on Continue.
+  const phoneInvalid = step === 0 && !isOptionalMobile(phone ?? '')
+  const companyInvalid = step === 1 && Boolean(company?.trim()) && !companyName.safeParse(company).success
   const customRole = Boolean(jobRole?.trim()) && !roles.some((r) => r.label === jobRole)
   const current = steps[step]
   const StepIcon = current.icon
@@ -324,19 +453,24 @@ function OnboardingForm({ user, onLaunch }: { user: AuthUser; onLaunch: (launchi
                       </Field>
                       <Field label="Phone" optional error={errors.phone?.message}>
                         {({ id, describedBy, invalid }) => (
-                          <div className="relative">
-                            <Phone className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-400" aria-hidden="true" />
-                            <Input
-                              id={id}
-                              type="tel"
-                              autoComplete="tel"
-                              placeholder="+91 98450 12345"
-                              aria-describedby={describedBy}
-                              invalid={invalid}
-                              className="pl-10"
-                              {...register('phone')}
-                            />
-                          </div>
+                          <Controller
+                            control={control}
+                            name="phone"
+                            render={({ field }) => (
+                              <PhoneInput
+                                id={id}
+                                value={field.value ?? ''}
+                                onChange={field.onChange}
+                                // Continue stays disabled while the number is invalid, so say why once they leave the field.
+                                onBlur={() => {
+                                  field.onBlur()
+                                  if (field.value) void trigger('phone')
+                                }}
+                                aria-describedby={describedBy}
+                                invalid={invalid}
+                              />
+                            )}
+                          />
                         )}
                       </Field>
                     </div>
@@ -354,45 +488,70 @@ function OnboardingForm({ user, onLaunch }: { user: AuthUser; onLaunch: (launchi
                             id={id}
                             autoComplete="organization"
                             autoFocus
+                            maxLength={80}
                             placeholder="e.g. Sharma Traders"
                             aria-describedby={describedBy}
                             invalid={invalid}
                             className="pl-10"
-                            {...register('company')}
+                            {...register('company', {
+                              // Say why Continue is disabled once they leave the field.
+                              onBlur: (e: FocusEvent<HTMLInputElement>) => {
+                                if (e.target.value.trim()) void trigger('company')
+                              },
+                            })}
                           />
                         </div>
                       )}
                     </Field>
 
-                    <fieldset aria-describedby={errors.industry ? 'industry-error' : undefined}>
+                    <fieldset aria-describedby={errors.industryId ? 'industry-error' : undefined} aria-busy={industriesLoading || undefined}>
                       <legend className="mb-3 text-sm font-medium text-zinc-800">Industry</legend>
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-                        {industries.map((value) => {
-                          const IndustryIcon = industryIcons[value]
-                          const active = industry === value
-                          return (
-                            <label
-                              key={value}
-                              className={cn(
-                                tile,
-                                'flex h-16 items-center gap-2.5 px-3 sm:gap-3 sm:px-3.5',
-                                // "Other" spans the last row so the grid stays even.
-                                value === 'Other' && 'col-span-2 sm:col-span-3',
-                                active ? tileActive : tileIdle,
-                              )}
-                            >
-                              <input type="radio" value={value} className="sr-only" {...register('industry')} />
-                              <span className={tileIcon(active)}>
-                                <IndustryIcon className="size-[18px]" />
-                              </span>
-                              <span className={cn('min-w-0 text-[13px] leading-tight sm:text-sm', active ? 'font-semibold text-brand-900' : 'font-medium text-zinc-800')}>
-                                {value === 'Other' ? 'Other — a general sales pipeline' : value}
-                              </span>
-                            </label>
-                          )
-                        })}
-                      </div>
-                      <FieldError id="industry-error" message={errors.industry?.message} />
+                      {industriesFailed ? (
+                        <p className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200" role="alert">
+                          We couldn’t load the industry list.
+                          <button type="button" onClick={() => void retryIndustries()} className="font-medium underline underline-offset-2">
+                            Try again
+                          </button>
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+                          {industriesLoading
+                            ? Array.from({ length: 7 }, (_, i) => <span key={i} className={cn('h-16 animate-pulse rounded-xl bg-zinc-100', i === 6 && 'col-span-2 sm:col-span-3')} />)
+                            : industries
+                                .filter((i) => i.featured)
+                                .map(({ id: value, name, icon, slug }) => {
+                                  const active = industryId === value
+                                  return (
+                                    <label
+                                      key={value}
+                                      className={cn(
+                                        tile,
+                                        'flex h-16 items-center gap-2.5 px-3 sm:gap-3 sm:px-3.5',
+                                        // "Other" spans the last row so the grid stays even.
+                                        slug === 'other' && 'col-span-2 sm:col-span-3',
+                                        active ? tileActive : tileIdle,
+                                      )}
+                                    >
+                                      <input type="radio" value={value} className="sr-only" {...register('industryId')} />
+                                      <span className={tileIcon(active)}>
+                                        <IndustryIcon icon={icon} className="size-[18px]" />
+                                      </span>
+                                      <span className={cn('min-w-0 text-[13px] leading-tight sm:text-sm', active ? 'font-semibold text-brand-900' : 'font-medium text-zinc-800')}>
+                                        {slug === 'other' ? `${name} — a general sales pipeline` : name}
+                                      </span>
+                                    </label>
+                                  )
+                                })}
+                        </div>
+                      )}
+                      {!industriesLoading && !industriesFailed && (
+                        <IndustrySearch
+                          industries={industries}
+                          value={industryId}
+                          onSelect={(id) => setValue('industryId', id, { shouldValidate: true, shouldDirty: true })}
+                        />
+                      )}
+                      <FieldError id="industry-error" message={errors.industryId?.message} />
                     </fieldset>
 
                     <fieldset aria-describedby={errors.teamSize ? 'teamsize-error' : undefined}>
@@ -493,7 +652,7 @@ function OnboardingForm({ user, onLaunch }: { user: AuthUser; onLaunch: (launchi
                   </Button>
                 ) : (
                   // type="submit" so Enter advances too; the form's onSubmit routes to next() before the last form step.
-                  <Button type="submit" size="lg">
+                  <Button type="submit" size="lg" disabled={phoneInvalid || companyInvalid}>
                     Continue
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </Button>
@@ -523,7 +682,8 @@ function Rail({
   industry?: Industry
   teamSize?: TeamSize
 }) {
-  const stages = (industry && industryStages[industry]) || defaultStages
+  const pipeline = industry?.pipelineTemplate
+  const stages = (pipeline && pipelineStages[pipeline]) || defaultStages
   const name = company?.trim()
 
   return (
@@ -585,14 +745,14 @@ function Rail({
             <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-highlight font-display font-bold text-zinc-950">{initials(name ?? '')}</span>
             <span className="min-w-0">
               <span className={cn('block truncate font-semibold', !name && 'text-white/50')}>{name || 'Your company'}</span>
-              <span className="block truncate text-xs text-sidebar-muted">{[industry ?? 'Industry', teamSize ? `${teamSize} people` : 'Team size'].join(' · ')}</span>
+              <span className="block truncate text-xs text-sidebar-muted">{[industry?.name ?? 'Industry', teamSize ? `${teamSize} people` : 'Team size'].join(' · ')}</span>
             </span>
           </div>
-          <p className="mt-4 text-[11px] font-medium tracking-wider text-sidebar-muted uppercase">{industry === 'Education' ? 'Admissions' : 'Sales pipeline'}</p>
+          <p className="mt-4 text-[11px] font-medium tracking-wider text-sidebar-muted uppercase">{pipeline === 'education' ? 'Admissions' : 'Sales pipeline'}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {[...stages, 'Won'].map((stage, i, all) => (
               <span
-                key={`${industry ?? 'default'}-${stage}`}
+                key={`${industry?.id ?? 'default'}-${stage}`}
                 className={cn(
                   'animate-fade-in rounded-md px-2 py-1 text-[11px] font-medium',
                   i === all.length - 1 ? 'bg-highlight/90 text-zinc-950' : 'bg-white/10 text-sidebar-ink',

@@ -190,7 +190,7 @@ export default function IntegrationsPage() {
           </Button>
         }
       />
-      <section className="surface flex flex-wrap items-center justify-between gap-4 p-5"><div><h2 className="font-medium text-ink">Google Workspace</h2><p className="mt-1 text-sm text-muted">Schedule lead meetings with Google Meet and create or edit Google Sheets from the sidebar. Connect your own Google account to begin.</p></div><Button to="/app/settings/google" variant="secondary">Google connections</Button></section>
+      <section className="surface flex flex-wrap items-center justify-between gap-4 p-5"><div><h2 className="font-medium text-ink">Google Workspace</h2><p className="mt-1 text-sm text-muted">Schedule lead meetings with Google Meet and create or edit Google Sheets from the sidebar. Connect your own Google account to begin.</p></div><Button to="/app/settings/connections#google" variant="secondary">Email & Google</Button></section>
       <div className="grid gap-3 sm:grid-cols-3">
         {[
           { label: 'Connected sources', value: (connected ? 1 : 0) + (liveForms ? 1 : 0), icon: CircleCheck },

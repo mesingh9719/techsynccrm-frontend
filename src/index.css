@@ -539,6 +539,8 @@ html[data-crm-theme] .crm-shell {
 
 .sidebar-rail, .bottom-tabs { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .sidebar-link { position: relative; white-space: nowrap; }
+/* Unlayered so it beats the switcher's own light hover:bg-surface-subtle utility inside the dark rail. */
+.sidebar-rail .workspace-switcher:is(:hover, [aria-expanded='true']) { background: var(--color-sidebar-hover); }
 .sidebar-rail .workspace-switcher .workspace-name { color: var(--color-sidebar-ink); }
 .sidebar-rail .workspace-switcher :is(.workspace-plan, svg) { color: var(--color-sidebar-muted); }
 .sidebar-link.is-active { background: var(--color-sidebar-active); color: var(--color-sidebar-ink); }

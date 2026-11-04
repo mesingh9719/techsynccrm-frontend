@@ -40,7 +40,7 @@ export function useSetupProgress() {
     Boolean(facebook.data?.connected && facebook.data.pages.some((p) => p.enabled && p.forms.some((f) => f.enabled)))
   const firstLead = useQuery({ queryKey: qk.org(orgId).leads.list({ limit: 1, counts: true }), queryFn: () => listLeads({ limit: 1, counts: true }), enabled: canCreateLead })
   const items = [
-    ...(canConnectEmail && gmail.data?.enabled && gmail.data.entitled && gmail.data.tenantEnabled !== false ? [{ key: 'gmail', title: 'Connect your Gmail', description: 'Use your work address to email leads from TechSync.', done: Boolean(gmail.data.account && ['connected', 'syncing', 'delayed'].includes(gmail.data.account.status)), href: '/app/settings/gmail' }] : []),
+    ...(canConnectEmail && gmail.data?.enabled && gmail.data.entitled && gmail.data.tenantEnabled !== false ? [{ key: 'gmail', title: 'Connect your Gmail', description: 'Use your work address to email leads from TechSync.', done: Boolean(gmail.data.account && ['connected', 'syncing', 'delayed'].includes(gmail.data.account.status)), href: '/app/settings/connections#email' }] : []),
     {
       key: 'workspace',
       title: 'Make this workspace yours',

@@ -9,7 +9,8 @@ import { emitAppEvent } from '../../lib/appEvents'
 import { deleteCurrentOrganization, updateCurrentOrganization, uploadImage, type OrganizationUpdate } from '../../services/organizations'
 import { fetchMe } from '../../services/auth'
 import { ApiError } from '../../services/http'
-import { companySizes, industries, workspaceSettingsSchema, type WorkspaceSettingsValues } from '../../lib/schemas'
+import { companySizes, workspaceSettingsSchema, type WorkspaceSettingsValues } from '../../lib/schemas'
+import { sortForSelect, useIndustries } from '../../lib/industries'
 import { gstStates, timeZoneOptions } from '../../lib/india'
 import { nextPathFor } from '../../lib/useAuth'
 import { useCan, useEntitlement, useOrg } from '../../lib/useOrg'
@@ -28,7 +29,7 @@ const MAX_LOGO_BYTES = 2 * 1024 * 1024
 const toValues = (org: Organization): WorkspaceSettingsValues => ({
   name: org.name,
   slug: org.slug,
-  industry: org.industry ?? '',
+  industryId: org.industryId ?? '',
   teamSize: org.teamSize ?? '',
   timezone: org.timezone,
   currency: org.currency,
@@ -46,7 +47,7 @@ function toUpdate(v: WorkspaceSettingsValues): OrganizationUpdate {
   return {
     name: v.name,
     slug: v.slug,
-    industry: v.industry || null,
+    industryId: v.industryId || null,
     teamSize: v.teamSize || null,
     timezone: v.timezone,
     currency: v.currency,
@@ -135,6 +136,8 @@ function SettingsForm({ org, canEdit }: { org: Organization; canEdit: boolean })
   const notify = useToast()
   const [serverError, setServerError] = useState<string | null>(null)
   const [tzOptions] = useState(() => timeZoneOptions(org.timezone))
+  const { industries } = useIndustries()
+  const industryChoices = sortForSelect(org.industry && !industries.some((i) => i.id === org.industry?.id) ? [...industries, { ...org.industry, featured: false, keywords: [], pipelineTemplate: null }] : industries)
   const {
     register,
     handleSubmit,
@@ -176,17 +179,19 @@ function SettingsForm({ org, canEdit }: { org: Organization; canEdit: boolean })
         <LogoUploader org={org} canEdit={canEdit} onChanged={applyOrg} />
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <Field label="Company name" error={errors.name?.message}>
-            {({ id, describedBy, invalid }) => <Input id={id} disabled={disabled} aria-describedby={describedBy} invalid={invalid} {...register('name')} />}
+            {({ id, describedBy, invalid }) => <Input id={id} disabled={disabled} maxLength={80} aria-describedby={describedBy} invalid={invalid} {...register('name')} />}
           </Field>
           <Field label="Workspace address" error={errors.slug?.message} hint="Lowercase letters, numbers and hyphens.">
             {({ id, describedBy, invalid }) => <Input id={id} disabled={disabled} aria-describedby={describedBy} invalid={invalid} {...register('slug')} />}
           </Field>
-          <Field label="Industry" error={errors.industry?.message}>
+          <Field label="Industry" error={errors.industryId?.message}>
             {({ id, describedBy, invalid }) => (
-              <Select id={id} disabled={disabled} aria-describedby={describedBy} invalid={invalid} {...register('industry')}>
+              <Select id={id} disabled={disabled} aria-describedby={describedBy} invalid={invalid} {...register('industryId')}>
                 <option value="">Not set</option>
-                {industries.map((i) => (
-                  <option key={i}>{i}</option>
+                {industryChoices.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name}
+                  </option>
                 ))}
               </Select>
             )}

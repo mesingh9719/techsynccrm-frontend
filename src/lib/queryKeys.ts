@@ -18,6 +18,9 @@ export const qk = {
   /** Workspaces the user belongs to (not tied to the active one). */
   workspaces: ['workspaces'] as const,
 
+  /** Industry master list (GET /api/meta/industries); the same for everyone. */
+  industries: ['industries'] as const,
+
   /** The signed-in person's own account (not workspace data). */
   me: {
     sessions: ['me', 'sessions'] as const,

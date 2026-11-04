@@ -20,7 +20,7 @@ export interface ChecklistItem {
 }
 
 export type OrganizationUpdate = Partial<
-  Pick<Organization, 'name' | 'slug' | 'industry' | 'teamSize' | 'logoFileId' | 'timezone' | 'currency' | 'country' | 'stateCode' | 'gstin' | 'legalName' | 'address' | 'require2fa'>
+  Pick<Organization, 'name' | 'slug' | 'industryId' | 'teamSize' | 'logoFileId' | 'timezone' | 'currency' | 'country' | 'stateCode' | 'gstin' | 'legalName' | 'address' | 'require2fa'>
 >
 
 export function listOrganizations() {
@@ -43,7 +43,7 @@ export async function switchOrganization(organizationId: string) {
 }
 
 /** Creates another workspace and switches to it. */
-export async function createOrganization(values: { company: string; industry: string; teamSize: string }) {
+export async function createOrganization(values: { company: string; industryId: string; teamSize: string }) {
   const data = await api<SessionPayload>('/organizations', { method: 'POST', body: values })
   setSession(data)
   return data.user

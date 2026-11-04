@@ -10,7 +10,7 @@ import type { GmailState } from './api'
 export function ConnectGmail({ state, returnTo }: { state: GmailState; returnTo: string }) {
   const connect = useConnectGmail(), canConnect = useCan('email.connect'), canManage = useCan('email.connections.manage'), notify = useToast()
   if (!canConnect) return <Notice title="A mailbox connection needs employee access">Your role does not include connecting a mailbox. Ask your administrator for access.</Notice>
-  if (state.tenantEnabled === false) return <Notice tone="warning" title="Email connections are turned off">Your administrator can enable email connections in Team &amp; Email.</Notice>
+  if (state.tenantEnabled === false) return <Notice tone="warning" title="Email connections are turned off">{canManage ? 'Turn on Gmail connections in Team & workspace.' : 'Your administrator needs to turn on email connections for this workspace.'}</Notice>
   if (!state.entitled) return <Notice tone="violet" title="Gmail is included in Growth and above" actions={<Button variant="secondary" size="sm" to="/app/settings/plan">View plan<ArrowUpRight className="size-3.5" aria-hidden="true" /></Button>}>Connect your work Gmail when your workspace has an eligible plan.</Notice>
   if (!state.enabled) return <div className="space-y-3"><Notice tone="warning" title="Gmail setup is pending">Your administrator can complete the setup to enable connections.</Notice>{canManage && state.setup && <details className="rounded-xl border border-line bg-surface-subtle p-4 text-xs"><summary className="cursor-pointer font-semibold text-ink">Administrator setup details</summary><ul className="mt-3 space-y-2 text-muted">{[
     { pending: state.setup.missing.includes('enabled'), label: 'Enable email connections on the server' },

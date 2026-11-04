@@ -5,7 +5,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { handleGlobalApiError } from '../../lib/apiErrors'
 import { gstStates } from '../../lib/india'
 import { qk } from '../../lib/queryKeys'
-import { companySizes, industries } from '../../lib/schemas'
+import { companySizes } from '../../lib/schemas'
+import { sortForSelect, useIndustries } from '../../lib/industries'
 import { useAuth } from '../../lib/useAuth'
 import { useCan } from '../../lib/useOrg'
 import { ApiError } from '../../services/http'
@@ -92,6 +93,9 @@ export function CompanyFormDrawer({ open, onClose, company = null, initialName, 
   const [conflicts, setConflicts] = useState<Duplicate[]>([])
   const [busy, setBusy] = useState(false)
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((d) => ({ ...d, [key]: value }))
+  const { industries } = useIndustries()
+  const industryNames = sortForSelect(industries).map((i) => i.name)
+  if (draft.industry && !industryNames.includes(draft.industry)) industryNames.unshift(draft.industry)
 
   const check = { name: draft.name.trim(), domain: draft.domain.trim() || draft.website.trim(), gstin: draft.gstin.trim() }
   const live = useDuplicateCheck(JSON.stringify(check), open && check.name.length >= 3, (signal) =>
@@ -172,8 +176,8 @@ export function CompanyFormDrawer({ open, onClose, company = null, initialName, 
               {({ id }) => (
                 <Select id={id} value={draft.industry} onChange={(e) => set('industry', e.target.value)}>
                   <option value="">Not set</option>
-                  {industries.map((i) => (
-                    <option key={i}>{i}</option>
+                  {industryNames.map((name) => (
+                    <option key={name}>{name}</option>
                   ))}
                 </Select>
               )}

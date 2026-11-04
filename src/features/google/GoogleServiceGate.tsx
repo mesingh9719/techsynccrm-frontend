@@ -25,7 +25,7 @@ export function GoogleServiceGate({ service, children }: { service: GoogleServic
     <h2 className="font-medium">{issue.title}</h2>
     <p className="text-sm leading-6 text-muted">{issue.message}</p>
     {manage && issue.kind === 'setup' && <GoogleSetupDetails missing={state.data.setup.missing} />}
-    <div className="flex flex-wrap gap-3"><Button to="/app/settings/google" size="sm">Google connections</Button>{manage && <Button to="/app/settings/google-team" size="sm" variant="secondary">Team & Google</Button>}</div>
+    <div className="flex flex-wrap gap-3"><Button to="/app/settings/connections#google" size="sm">Open Email & Google</Button>{manage && <Button to="/app/settings/connections/team" size="sm" variant="secondary">Team & workspace</Button>}</div>
   </div>
   return children
 }

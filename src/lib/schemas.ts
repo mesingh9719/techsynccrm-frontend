@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { isValidPhoneNumber } from 'libphonenumber-js/min'
+import { isValidPhoneNumber as isValidMobileNumber } from 'libphonenumber-js/mobile'
 
 const PERSONAL_DOMAINS = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'rediffmail.com', 'icloud.com']
 
@@ -11,11 +13,37 @@ const workEmail = email.refine(
 
 const name = z.string().trim().min(2, 'Enter at least 2 characters').max(60, 'Keep it under 60 characters')
 
-/** Optional; accepts Indian and international formats with spaces, dashes and a leading +. */
+/** A real, dialable number: 10-digit Indian numbers as typed, other countries with a leading +. */
+const isValidPhone = (v: string) => isValidPhoneNumber(v, 'IN')
+
+/** Optional; accepts Indian and international formats with spaces, dashes and a leading +; checks the number is valid. */
 const phone = z
   .string()
   .trim()
-  .refine((v) => v === '' || /^\+?[0-9][0-9\s-]{7,15}$/.test(v), 'Enter a valid phone number')
+  .refine((v) => v === '' || isValidPhone(v), 'Enter a valid phone number (add the country code if outside India)')
+
+/** True for an empty value or a valid mobile number (Indian as typed, others with +code). */
+export const isOptionalMobile = (v: string) => v.trim() === '' || isValidMobileNumber(v.trim(), 'IN')
+
+/** Optional; the user's own number, used for WhatsApp/call onboarding help, so it must be a mobile. */
+const mobile = z
+  .string()
+  .trim()
+  .refine(isOptionalMobile, 'Enter a valid mobile number (add the country code if outside India)')
+
+const COMPANY_NAME_CHARS = /^[\p{L}\p{M}\p{N} &.,'’()/+-]+$/u
+const countOf = (v: string, re: RegExp) => v.match(re)?.length ?? 0
+
+/** A workspace/company name: real words, sensible length, no keyboard mashing like "89sd987sd98f7s9d…". */
+export const companyName = z
+  .string()
+  .trim()
+  .min(2, 'Company name is required')
+  .max(80, 'Keep it under 80 characters')
+  .refine((v) => COMPANY_NAME_CHARS.test(v), "Use letters, numbers, spaces and & . , ' - ( ) / only")
+  .refine((v) => countOf(v, /\p{L}/gu) >= 1, 'Include at least one letter')
+  .refine((v) => countOf(v, /\p{N}/gu) <= countOf(v, /\p{L}/gu) && v.split(/\s+/).every((w) => w.length <= 25), 'That doesn’t look like a company name')
+  .transform((v) => v.replace(/\s+/g, ' '))
 
 export const companySizes = ['1–10', '11–50', '51–200', '201–500', '500+'] as const
 
@@ -99,15 +127,6 @@ export const newPasswordSchema = z
   .refine((v) => v.password === v.confirm, { path: ['confirm'], message: 'Passwords don’t match' })
 export type NewPasswordValues = z.infer<typeof newPasswordSchema>
 
-export const industries = [
-  'Retail & distribution',
-  'Manufacturing',
-  'Professional services',
-  'Real estate',
-  'Education',
-  'Healthcare',
-  'Other',
-] as const
 
 export const onboardingGoals = [
   { value: 'capture_leads', label: 'Capture every lead', description: 'Web forms, WhatsApp, IndiaMART and calls in one inbox' },
@@ -120,16 +139,17 @@ export const onboardingGoals = [
 
 export const onboardingSchema = z.object({
   jobRole: z.string().trim().min(2, 'Tell us your role').max(60),
-  phone,
-  company: z.string().trim().min(2, 'Company name is required').max(80),
-  industry: z.enum(industries, { error: 'Choose your industry' }),
+  phone: mobile,
+  company: companyName,
+  /** Id from the industries master list (lib/industries.ts); the server checks it exists. */
+  industryId: z.string().min(1, 'Choose your industry'),
   teamSize: z.enum(companySizes, { error: 'Select your team size' }),
   goals: z.array(z.enum(onboardingGoals.map((g) => g.value) as [string, ...string[]])).min(1, 'Pick at least one goal'),
 })
 export type OnboardingValues = z.infer<typeof onboardingSchema>
 
 /** Creating an extra workspace: the company step of onboarding. */
-export const createWorkspaceSchema = onboardingSchema.pick({ company: true, industry: true, teamSize: true })
+export const createWorkspaceSchema = onboardingSchema.pick({ company: true, industryId: true, teamSize: true })
 export type CreateWorkspaceValues = z.infer<typeof createWorkspaceSchema>
 
 const optionalText = (max: number) => z.string().trim().max(max, `Keep it under ${max} characters`)
@@ -137,13 +157,13 @@ const optionalText = (max: number) => z.string().trim().max(max, `Keep it under 
 /** Settings → Workspace. GSTIN ↔ state is re-checked by the server. */
 export const workspaceSettingsSchema = z
   .object({
-    name: z.string().trim().min(2, 'Company name is required').max(80, 'Keep it under 80 characters'),
+    name: companyName,
     slug: z
       .string()
       .trim()
       .toLowerCase()
       .regex(/^[a-z0-9](?:[a-z0-9-]{1,38})[a-z0-9]$/, 'Use 3–40 lowercase letters, numbers and hyphens (not at the start or end)'),
-    industry: z.string(),
+    industryId: z.string(),
     teamSize: z.string(),
     timezone: z.string().min(1, 'Choose a time zone'),
     currency: z.enum(['INR', 'USD']),
@@ -184,7 +204,7 @@ export function passwordStrength(value: string) {
 export const profileSchema = z.object({
   fullName: name,
   jobRole: z.string().trim().max(60, 'Keep it under 60 characters'),
-  phone,
+  phone: mobile,
   timezone: z.string(),
 })
 export type ProfileValues = z.infer<typeof profileSchema>

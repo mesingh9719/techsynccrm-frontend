@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Building2, GitMerge, Plus, Tag, Trash2, UserRound, X } from 'lucide-react'
 import { qk } from '../../lib/queryKeys'
-import { industries } from '../../lib/schemas'
+import { sortForSelect, useIndustries } from '../../lib/industries'
 import { useCan } from '../../lib/useOrg'
 import { useSeo } from '../../lib/useSeo'
 import { useUrlFilters } from '../../lib/useUrlFilters'
@@ -56,6 +56,7 @@ const mergeFields = [
 export default function CompaniesPage() {
   useSeo({ title: 'Companies', noindex: true })
   const orgId = useOrgId()
+  const { industries } = useIndustries()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const notify = useToast()
@@ -209,7 +210,7 @@ export default function CompaniesPage() {
             label="Industry"
             value={filters.industry}
             onChange={(v) => setFilter('industry', v)}
-            options={industries.map((i) => ({ value: i, label: i }))}
+            options={sortForSelect(industries).map((i) => ({ value: i.name, label: i.name }))}
           />
           <FilterSelect
             label="Tag"

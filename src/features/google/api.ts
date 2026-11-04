@@ -19,7 +19,7 @@ export interface GoogleLog { id: string; action: string; service: GoogleService 
 export interface GooglePage<T> { items: T[]; total: number; page: number; pageSize: number }
 export const googleKey = (orgId: string) => ['org', orgId, 'google'] as const
 export const googleMe = () => api<GoogleState>('/google/connections/me')
-export const startGoogle = (service: GoogleService, consentVersion: string) => api<{ url: string }>('/google/oauth/start', { method: 'POST', body: { service, consentVersion, returnTo: '/app/settings/google' } })
+export const startGoogle = (service: GoogleService, consentVersion: string) => api<{ url: string }>('/google/oauth/start', { method: 'POST', body: { service, consentVersion, returnTo: '/app/settings/connections' } })
 export const setGoogleService = (id: string, service: GoogleService, enabled: boolean, consentVersion: string) => api<GoogleConnection>(`/google/connections/${id}/services/${service}`, { method: 'PATCH', body: { enabled, consentVersion } })
 export const detachGoogle = (id: string, admin = false) => api<{ disconnected: boolean }>(`/google/${admin ? 'admin/' : ''}connections/${id}/disconnect`, { method: 'POST' })
 export const revokeGoogleProject = (id: string) => api<{ disconnected: boolean; revocationPending: boolean }>(`/google/connections/${id}/revoke-project-grant`, { method: 'POST', body: { confirmProjectRevocation: true } })

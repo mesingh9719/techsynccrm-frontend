@@ -35,16 +35,14 @@ export function useSettingsStatus(): Partial<Record<string, SettingsStatus>> {
     status.team = { text: `${seats.used} of ${seats.limit} seats`, tone: seats.used >= seats.limit ? 'warning' : 'neutral' }
   }
 
-  const mailbox = gmail.data?.account
-  if (gmail.data && mailbox) {
-    const ok = ['connected', 'syncing', 'delayed'].includes(mailbox.status)
-    status.gmail = ok ? { text: 'Connected', tone: 'success' } : { text: 'Needs attention', tone: 'warning' }
-  } else if (gmail.data?.enabled && gmail.data.entitled) status.gmail = { text: 'Not connected', tone: 'neutral' }
-
-  const connection = google.data?.connection
-  if (connection?.status === 'connected') status.google = { text: 'Connected', tone: 'success' }
-  else if (connection?.status === 'reconnect_required') status.google = { text: 'Reconnect', tone: 'warning' }
-  else if (google.data?.canConnect) status.google = { text: 'Not connected', tone: 'neutral' }
+  // One badge for the merged Email & Google area: attention first, then how much is connected.
+  const mailbox = gmail.data?.account, connection = google.data?.connection
+  const mailboxOk = Boolean(mailbox && ['connected', 'syncing', 'delayed'].includes(mailbox.status))
+  const googleOk = connection?.status === 'connected'
+  if ((mailbox && !mailboxOk && mailbox.status !== 'disconnected') || connection?.status === 'reconnect_required') status.connections = { text: 'Needs attention', tone: 'warning' }
+  else if (mailboxOk && googleOk) status.connections = { text: 'Connected', tone: 'success' }
+  else if (mailboxOk || googleOk) status.connections = { text: 'Partly set up', tone: 'neutral' }
+  else if ((gmail.data?.enabled && gmail.data.entitled) || google.data?.canConnect) status.connections = { text: 'Not connected', tone: 'neutral' }
 
   if (facebook.data) {
     const forms = facebook.data.pages.filter((p) => p.enabled).flatMap((p) => p.forms)

@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowRight, CalendarDays, Check, CheckCheck, Clock3, ExternalLink, Info, LockKeyhole, Mail, PenLine, RefreshCw, ShieldCheck, Unplug, Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, CalendarDays, Check, CheckCheck, Clock3, Mail, PenLine, ShieldCheck, Unplug } from 'lucide-react'
 import { ConfirmDialog } from '../../components/app/Dialog'
-import { ErrorState, Skeleton, PageHeader } from '../../components/app/States'
+import { ErrorState, Skeleton } from '../../components/app/States'
 import { Button } from '../../components/ui/Button'
 import { Notice, StatusChip } from '../../components/ui/Signal'
 import { useToast } from '../../components/ui/Toast'
 import { useCan } from '../../lib/useOrg'
-import { useSeo } from '../../lib/useSeo'
 import { useOrgId } from '../crm/hooks'
 import { emailKey, saveGmailSettings, type GmailAccount } from './api'
 import { ConnectGmail } from './ConnectGmail'
@@ -16,63 +16,43 @@ import { disconnectEmail } from './foundationApi'
 import { emailDate, mailboxStatus } from './presentation'
 import { RichEmailEditor } from './RichEmailEditor'
 import { useGmail } from './useGmail'
+import { CONNECTIONS_PATH, CONNECTIONS_TEAM_PATH, MAILBOX_PATH } from '../connections/paths'
 import './email.css'
 
-export default function EmailSettings() {
-  useSeo({ title: 'Email settings', noindex: true })
+/** The member's own Gmail mailbox: connection, next step and signature. */
+export function GmailSection({ id }: { id?: string }) {
   const query = useGmail(), orgId = useOrgId(), client = useQueryClient(), notify = useToast()
-  const canManage = useCan('email.connections.manage'), canConnect = useCan('email.connect')
+  const canConnect = useCan('email.connect'), canManage = useCan('email.connections.manage')
   const [confirm, setConfirm] = useState(false)
   const refresh = () => client.invalidateQueries({ queryKey: emailKey(orgId) })
   const account = query.data?.account, status = mailboxStatus(account?.status), connected = status === 'CONNECTED'
   const active = Boolean(account && !['disconnected', 'deleting'].includes(account.status))
-  return <div className="email-settings space-y-6">
-    <PageHeader
-      title="Email settings"
-      description="A familiar address. More personal conversations."
-      actions={<>
-        <Button variant="secondary" loading={query.isFetching} onClick={() => query.refetch()}><RefreshCw className="size-3.5" aria-hidden="true" />Refresh status</Button>
-        <Button variant="secondary" to="/app/templates">Manage templates</Button>
-      </>}
-    />
-    {query.isPending ? <div className="email-settings-grid" aria-label="Loading email settings"><Skeleton className="h-80 rounded-2xl" /><Skeleton className="h-72 rounded-2xl" /></div> : query.isError ? <ErrorState error={query.error} onRetry={() => query.refetch()} /> : <div className="email-settings-grid">
-      <div className="email-settings-main">
-        {query.data.tenantEnabled === false && <Notice tone="warning" title="Email connections are paused">Your administrator has turned off email connections for this workspace. You can still manage an existing connection.</Notice>}
-        <section className="email-card" aria-label="Gmail connection">
-          <div className="email-card-heading"><div className="flex items-center gap-2 text-sm font-semibold"><Mail className="size-4 text-brand-700" aria-hidden="true" />Your mailbox</div><ConnectionBadge status={status} /></div>
-          <div className="mailbox-hero" data-connected={connected}>
-            <div className="flex items-start gap-4"><span className="mailbox-icon"><Mail className="size-6" aria-hidden="true" /></span><div className="min-w-0 flex-1"><p className="mb-1 text-xs font-medium text-muted">Gmail / Google Workspace</p>{account ? <h2 className="break-all text-lg font-semibold tracking-tight text-ink">{account.email}</h2> : <h2 className="text-lg font-semibold text-ink">Your work email belongs here</h2>}<p className="mt-2 text-sm leading-6 text-muted">{connected ? 'Send thoughtful follow-ups from the address your customers know.' : 'Connect your own mailbox and keep your customer conversations close.'}</p></div></div>
-            <div className="mt-5 flex flex-wrap gap-2"><StatusChip tone="violet" icon={Mail}>{query.data.syncEnabled ? 'Sending & reply sync' : 'Send permission'}</StatusChip><StatusChip tone="info" icon={ShieldCheck}>You control access</StatusChip></div>
-          </div>
-          {account && <dl className="mailbox-facts"><div><dt className="flex items-center gap-1.5"><CalendarDays className="size-3" aria-hidden="true" />Connected on</dt><dd>{account.connectedAt ? emailDate(account.connectedAt) : 'Previously connected'}</dd></div><div><dt className="flex items-center gap-1.5"><Clock3 className="size-3" aria-hidden="true" />Last email sent</dt><dd>{emailDate(account.lastUsedAt)}</dd></div></dl>}
-          <div className="email-card-body space-y-4">
-            {status === 'NEEDS_RECONNECT' && <Notice tone="warning" title="Reconnect your Gmail">Your Gmail connection needs attention. Reconnect to continue.</Notice>}
-            {status === 'ERROR' && <Notice tone="danger" title="Your connection is paused">Check your workspace access and reconnect your Gmail to continue.</Notice>}
-            {connected && !query.data.entitled && <Notice tone="violet" title="Your plan needs attention" actions={<Button variant="secondary" size="sm" to="/app/settings/plan">View plan</Button>}>Your mailbox is saved. Gmail sending requires Growth or above.</Notice>}
-            {connected && query.data.enabled && query.data.entitled && <Notice tone="success" title="Your mailbox is connected" icon={CheckCheck}>This is the address TechSync will use for your emails. You can disconnect anytime.</Notice>}
-            {connected && !query.data.enabled && query.data.tenantEnabled !== false && <Notice tone="warning" title="Connection setup needs attention">Your mailbox is saved, but sending is unavailable until server setup is complete.</Notice>}
-            {!connected && query.data.tenantEnabled !== false && <ConnectGmail state={query.data} returnTo="/app/settings/gmail" />}
-            {query.data.syncEnabled && <Button variant="secondary" size="sm" to="/app/settings/gmail-history"><Clock3 className="size-3.5" aria-hidden="true" />Mailbox history settings<ArrowRight className="size-3.5" aria-hidden="true" /></Button>}
-            {active && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4"><p className="max-w-xs text-xs leading-5 text-muted">Disconnecting stops future access. Your existing CRM history stays in place.</p><Button variant="ghost" size="sm" className="text-red-700 hover:bg-red-50" disabled={account?.status === 'deleting'} onClick={() => setConfirm(true)}><Unplug className="size-3.5" aria-hidden="true" />Disconnect</Button></div>}
-          </div>
-        </section>
-        {connected && account && canConnect && query.data.enabled && query.data.entitled && <SignatureSettings key={account.id} account={account} allowed={query.data.canCustomizeSignature !== false} onSaved={refresh} />}
-        {!connected && query.data.enabled && <div className="email-card email-card-body"><h2 className="text-sm font-semibold text-ink">Three small steps. One connected mailbox.</h2><ol className="mt-4 grid gap-4 sm:grid-cols-3">{['Choose Connect Gmail below your mailbox.', 'Select the Google account you use for work.', 'Allow sending and return to your lead.'].map((step, index) => <li key={step} className="email-setup-step"><span>{index + 1}</span><p>{step}</p></li>)}</ol></div>}
-      </div>
-      <aside className="email-settings-aside" aria-label="Email help">
-        <section className="email-card"><div className="email-card-heading"><h2 className="flex items-center gap-2 text-sm font-semibold"><ShieldCheck className="size-4 text-emerald-700" aria-hidden="true" />You stay in control</h2></div><div className="email-card-body"><ul className="email-security-list">{[
-          { icon: Mail, title: query.data.syncEnabled ? 'Your existing permissions' : 'Focused permissions', description: query.data.syncEnabled ? 'Your previously authorized matching replies can appear in CRM history.' : 'New connections request permission to send email on your behalf.' },
-          { icon: LockKeyhole, title: 'A protected connection', description: 'Your connection credentials are encrypted and kept off your browser.' },
-          { icon: Unplug, title: 'Disconnect anytime', description: 'You or your workspace administrator can stop access when needed.' },
-        ].map(({ icon: Icon, title, description }) => <li key={title}><span className="email-icon-tile"><Icon className="size-4" aria-hidden="true" /></span><div><h3 className="text-xs font-semibold text-ink">{title}</h3><p className="mt-1 text-xs leading-5 text-muted">{description}</p></div></li>)}</ul><a href="/privacy" target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-brand-700 hover:underline">Read our privacy policy<ExternalLink className="size-3" aria-hidden="true" /></a></div></section>
-        {canManage && <section className="email-card email-card-body"><span className="email-icon-tile mb-3"><Users className="size-4" aria-hidden="true" /></span><h2 className="text-sm font-semibold">Bring your team along</h2><p className="mt-2 text-xs leading-5 text-muted">See connected mailboxes, remind teammates and manage your workspace’s email preferences.</p><Button variant="secondary" size="sm" className="mt-4 w-full" to="/app/settings/team-email">Team &amp; Email<ArrowRight className="size-3.5" aria-hidden="true" /></Button></section>}
-        <Notice title="A different work address?" icon={Info}>Your connected Gmail can be different from your TechSync sign-in email.</Notice>
-      </aside>
-    </div>}
+  return <div id={id} className="grid scroll-mt-24 gap-5">
+    {query.isPending ? <Skeleton className="h-72 rounded-2xl" /> : query.isError ? <ErrorState error={query.error} onRetry={() => query.refetch()} /> : <>
+      <section className="email-card" aria-label="Gmail connection">
+        <div className="email-card-heading"><div className="min-w-0"><h2 className="flex items-center gap-2 text-sm font-semibold text-ink"><Mail className="size-4 text-rose-600" aria-hidden="true" />Gmail</h2><p className="mt-1 text-xs text-muted">Email leads from your own work address and keep replies on the record.</p></div><ConnectionBadge status={status} /></div>
+        <div className="mailbox-hero" data-connected={connected}>
+          <div className="flex items-start gap-4"><span className="mailbox-icon"><Mail className="size-6" aria-hidden="true" /></span><div className="min-w-0 flex-1"><p className="mb-1 text-xs font-medium text-muted">Gmail / Google Workspace mailbox</p>{account ? <h3 className="break-all text-lg font-semibold tracking-tight text-ink">{account.email}</h3> : <h3 className="text-lg font-semibold text-ink">No mailbox connected yet</h3>}<p className="mt-2 text-sm leading-6 text-muted">{connected ? 'Emails you send from TechSync go out from this address.' : 'Connect the mailbox you use for work. It can be different from your TechSync sign-in email.'}</p></div></div>
+          <div className="mt-5 flex flex-wrap gap-2"><StatusChip tone="violet" icon={Mail}>{query.data.syncEnabled ? 'Sending & reply sync' : 'Send permission only'}</StatusChip><StatusChip tone="info" icon={ShieldCheck}>Encrypted, disconnect anytime</StatusChip></div>
+        </div>
+        {account && <dl className="mailbox-facts"><div><dt className="flex items-center gap-1.5"><CalendarDays className="size-3" aria-hidden="true" />Connected on</dt><dd>{account.connectedAt ? emailDate(account.connectedAt) : 'Previously connected'}</dd></div><div><dt className="flex items-center gap-1.5"><Clock3 className="size-3" aria-hidden="true" />Last email sent</dt><dd>{emailDate(account.lastUsedAt)}</dd></div></dl>}
+        <div className="email-card-body space-y-4">
+          {query.data.tenantEnabled === false && <Notice tone="warning" title="Email connections are off for this workspace">{canManage ? <>Turn them on in <Link className="font-medium underline" to={CONNECTIONS_TEAM_PATH}>Team &amp; workspace</Link>.</> : 'Your administrator needs to turn email connections on. You can still manage an existing connection.'}</Notice>}
+          {status === 'NEEDS_RECONNECT' && <Notice tone="warning" title="Reconnect your Gmail">Google access expired or was removed. Reconnect to keep sending.</Notice>}
+          {status === 'ERROR' && <Notice tone="danger" title="Your connection is paused">Check your workspace access and reconnect your Gmail to continue.</Notice>}
+          {connected && !query.data.entitled && <Notice tone="violet" title="Your plan needs attention" actions={<Button variant="secondary" size="sm" to="/app/settings/plan">View plan</Button>}>Your mailbox is saved. Gmail sending requires Growth or above.</Notice>}
+          {connected && query.data.enabled && query.data.entitled && <Notice tone="success" title="Ready to send" icon={CheckCheck}>TechSync uses this address for your emails.</Notice>}
+          {connected && !query.data.enabled && query.data.tenantEnabled !== false && <Notice tone="warning" title="Sending is unavailable">Your mailbox is saved, but the server’s Gmail setup isn’t complete. Ask your administrator.</Notice>}
+          {!connected && query.data.tenantEnabled !== false && <ConnectGmail state={query.data} returnTo={CONNECTIONS_PATH} />}
+          {(query.data.syncEnabled || (active && canConnect)) && <Button variant="secondary" size="sm" to={MAILBOX_PATH}><Clock3 className="size-3.5" aria-hidden="true" />Mailbox history, exclusions &amp; templates<ArrowRight className="size-3.5" aria-hidden="true" /></Button>}
+          {active && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4"><p className="max-w-xs text-xs leading-5 text-muted">Disconnecting stops future access. Your existing CRM history stays in place.</p><Button variant="ghost" size="sm" className="text-red-700 hover:bg-red-50" disabled={account?.status === 'deleting'} onClick={() => setConfirm(true)}><Unplug className="size-3.5" aria-hidden="true" />Disconnect Gmail</Button></div>}
+        </div>
+      </section>
+      {connected && account && canConnect && query.data.enabled && query.data.entitled && <SignatureSettings key={account.id} account={account} allowed={query.data.canCustomizeSignature !== false} onSaved={refresh} />}
+    </>}
     {confirm && account && <ConfirmDialog open onClose={() => setConfirm(false)} title="Disconnect Gmail?" description={`TechSync will stop accessing ${account.email}. You can reconnect anytime.`} confirmLabel="Disconnect" tone="danger" onConfirm={async () => { await disconnectEmail(account.id); setConfirm(false); notify({ title: 'Gmail disconnected' }); await refresh() }} />}
   </div>
 }
-
 function SignatureSettings({ account, allowed, onSaved }: { account: GmailAccount; allowed: boolean; onSaved: () => Promise<unknown> }) {
   const [html, setHtml] = useState(account.signatureHtml), [saved, setSaved] = useState(account.signatureHtml)
   const [seed, setSeed] = useState({ html: account.signatureHtml, version: 0 }), [busy, setBusy] = useState(false), [error, setError] = useState('')

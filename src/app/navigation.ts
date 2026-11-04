@@ -12,6 +12,7 @@ import {
   Gauge,
   House,
   Inbox,
+  Mail,
   ListChecks,
   LayoutTemplate,
   Megaphone,
@@ -133,7 +134,7 @@ export const settingsGroupMeta: SettingsGroupMeta[] = [
   { key: 'Plan & billing', description: 'Your plan, usage limits and invoices', icon: CreditCard, accent: '#d97706' },
   { key: 'Sales setup', description: 'Pipelines, lead rules, fields and templates', icon: SquareKanban, accent: '#059669' },
   { key: 'Lead capture', description: 'Forms and routing for new enquiries', icon: FileInput, accent: '#0284c7' },
-  { key: 'Integrations', description: 'Google, Gmail and Facebook connections', icon: PlugZap, accent: '#db2777' },
+  { key: 'Integrations', description: 'Email & Google, and Facebook Lead Ads', icon: PlugZap, accent: '#db2777' },
   { key: 'Data', description: 'Imports and exports', icon: ArrowDownUp, accent: '#475569' },
 ]
 
@@ -155,10 +156,7 @@ export const settingsNav: SettingsNavItem[] = [
   { key: 'templates', label: 'Templates', to: '/app/templates', ready: true, group: 'Sales setup', icon: LayoutTemplate, description: 'Personal and team email, WhatsApp and SMS templates' },
   { key: 'forms', label: 'Web forms', to: '/app/settings/forms', ready: true, group: 'Lead capture', icon: FileInput, description: 'Embeddable enquiry forms' },
   { key: 'assignment', label: 'Assignment rules', to: '/app/settings/assignment', ready: true, group: 'Lead capture', icon: Shuffle, description: 'Who gets each new lead' },
-  { key: 'google', label: 'Google connections', to: '/app/settings/google', ready: true, group: 'Integrations', icon: PlugZap, description: 'Your Calendar, Drive and Sheets permission preferences' },
-  { key: 'gmail', label: 'Email settings', to: '/app/settings/gmail', ready: true, group: 'Integrations', icon: Inbox, description: 'Connect and manage your work Gmail' },
-  { key: 'google-team', label: 'Team & Google', to: '/app/settings/google-team', ready: true, group: 'Integrations', icon: PlugZap, permission: 'google.connections.manage', description: 'Team Google connections and service preferences' },
-  { key: 'team-email', label: 'Team & Email', to: '/app/settings/team-email', ready: true, group: 'Integrations', icon: Inbox, permission: 'email.connections.manage', description: 'Team Gmail connections and email preferences' },
+  { key: 'connections', label: 'Email & Google', to: '/app/settings/connections', ready: true, group: 'Integrations', icon: Mail, description: 'Gmail, Calendar & Meet and Google Sheets, for you and your team' },
   { key: 'facebook', label: 'Facebook Lead Ads', to: '/app/settings/facebook', ready: true, group: 'Integrations', icon: Facebook, description: 'Bring in leads from Facebook forms' },
   { key: 'data', label: 'Import & export', to: '/app/settings/data', ready: true, group: 'Data', icon: ArrowDownUp, description: 'Import history and your exports' },
 ]

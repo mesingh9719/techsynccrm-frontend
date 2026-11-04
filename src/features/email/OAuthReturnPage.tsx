@@ -8,8 +8,8 @@ export default function OAuthReturnPage() {
   useSeo({ title: 'Gmail connection', noindex: true })
   const navigate = useNavigate(), handled = useRef(false)
   const [params] = useSearchParams(), status = params.get('gmail') ?? '', connected = status === 'connected'
-  const path = params.get('returnTo') ?? '/app/settings/gmail'
-  const returnTo = /^\/app\/(?:leads\/[\w-]+|contacts\/[\w-]+|settings\/(?:gmail|email|team-email))$/.test(path) ? path : '/app/settings/gmail'
+  const path = params.get('returnTo') ?? '/app/settings/connections'
+  const returnTo = /^\/app\/(?:leads\/[\w-]+|contacts\/[\w-]+|settings\/(?:gmail|email|team-email|connections|connections\/team))$/.test(path) ? path : '/app/settings/connections'
   useEffect(() => {
     if (handled.current) return
     handled.current = true

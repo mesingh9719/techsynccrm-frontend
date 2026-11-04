@@ -15,10 +15,11 @@ import { RichEmailEditor } from './RichEmailEditor'
 import { templateKey } from '../templates/api'
 import { useGmail } from './useGmail'
 import { PageHeader } from '../../components/app/States'
+import { CONNECTIONS_PATH } from '../connections/paths'
 
 export default function GmailSettings() {
   const orgId = useOrgId(), { user } = useAuth()
-  useSeo({ title: 'Gmail settings', noindex: true })
+  useSeo({ title: 'Mailbox history & templates', noindex: true })
   return <Settings key={`${orgId}:${user?.id}`} />
 }
 function Settings() {
@@ -29,12 +30,12 @@ function Settings() {
   async function sync() { setError(''); try { const result = await syncGmail(); setNotice(result.queued ? 'Sync requested. Matching replies will appear in the timeline when processed.' : 'Sync is unavailable.'); await refresh() } catch (err) { setError(err instanceof Error ? err.message : 'Couldn’t request sync.') } }
   const account = gmail.data?.account, connected = account && ['connected', 'syncing', 'delayed'].includes(account.status)
   return <div className="max-w-3xl space-y-8">
-    <PageHeader title="Gmail" description="Your work mailbox, matching conversations, and email templates." />
+    <PageHeader title="Mailbox history & templates" description="Reply sync, exclusions, imported history and your email templates." breadcrumbs={[{ label: 'Email & Google', to: CONNECTIONS_PATH }, { label: 'Mailbox' }]} />
     {gmail.isPending && <p className="text-sm text-muted">Loading Gmail…</p>}
     {gmail.isError && <FormAlert>Couldn’t load Gmail. <button className="underline" onClick={() => gmail.refetch()}>Try again</button></FormAlert>}
     {gmail.data && <section className="space-y-4 rounded-xl border border-line bg-surface p-5">
       {account && <><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-medium">{account.email}</h2><p className="mt-1 text-sm text-muted">{emailStatusLabel[account.status] ?? account.status}{account.lastSyncedAt ? ` · Last synced ${new Date(account.lastSyncedAt).toLocaleString('en-IN')}` : ' · No completed sync yet'}</p></div><div className="flex gap-2">{connected && canConnect && gmail.data.enabled && gmail.data.entitled && gmail.data.syncEnabled && <Button variant="secondary" size="sm" onClick={sync}>Sync now</Button>}{account.status !== 'disconnected' && account.status !== 'deleting' && <Button variant="secondary" size="sm" onClick={() => setConfirm({ account, history: false })}>Disconnect</Button>}</div></div>{account.coverageGap && <p className="text-sm text-amber-700">A sync gap was detected. TechSync is checking the available matching history; completeness is not guaranteed.</p>}{account.lastError && <p className="text-sm text-muted">{account.status === 'reconnect_required' ? 'Google access expired or was revoked. Reconnect to resume sending and sync.' : account.status === 'paused' ? 'Gmail is paused. Check your role and workspace plan.' : account.lastError === 'GMAIL_HISTORY_DELETED' ? 'Imported content was deleted.' : 'The last Gmail operation did not complete. Check the connection or request sync again.'}</p>}</>}
-      {!connected && <ConnectGmail state={gmail.data} returnTo="/app/settings/gmail" />}
+      {!connected && <ConnectGmail state={gmail.data} returnTo={CONNECTIONS_PATH} />}
       {connected && canConnect && gmail.data.enabled && gmail.data.entitled && <><p className="text-sm leading-6 text-muted">Only matched CRM conversations are shared with record readers. Disconnecting stops future access and keeps existing history until its retention limit.</p><MailboxSettings key={`${account.id}:${account.signatureHtml}:${account.excludedAddresses.join(',')}:${account.excludedDomains.join(',')}`} account={account} onSaved={refresh} /></>}
       {account && <Button variant="ghost" size="sm" disabled={account.status === 'deleting'} onClick={() => setConfirm({ account, history: true })}>Delete this mailbox’s imported history</Button>}
     </section>}

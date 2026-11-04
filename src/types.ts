@@ -214,7 +214,9 @@ export interface Organization {
   id: string
   name: string
   slug: string
-  industry: string | null
+  /** Row of the industries master list; null when not chosen. */
+  industryId: string | null
+  industry: { id: string; slug: string; name: string; icon: string } | null
   teamSize: string | null
   logoFileId: string | null
   logoUrl: string | null

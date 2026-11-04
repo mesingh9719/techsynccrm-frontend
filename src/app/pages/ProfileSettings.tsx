@@ -1,6 +1,6 @@
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useRef, useState, type ChangeEvent } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, BadgeCheck, BriefcaseBusiness, Building2, CalendarDays, Check, Clock3, Globe2, ImageUp, Mail, MailWarning, ShieldCheck, Sparkles, UserRound } from 'lucide-react'
 import { discardEmailChange, requestEmailChange, updateProfile } from '../../services/account'
@@ -15,6 +15,7 @@ import { useSeo } from '../../lib/useSeo'
 import type { AuthUser } from '../../types'
 import { Button } from '../../components/ui/Button'
 import { Field, FormAlert, Input, PasswordInput, Select } from '../../components/ui/Form'
+import { PhoneInput } from '../../components/ui/PhoneInput'
 import { useToast } from '../../components/ui/Toast'
 import { Dialog } from '../../components/app/Dialog'
 import { UserAvatar } from '../../components/app/UserAvatar'
@@ -78,6 +79,8 @@ function ProfileForm({ user }: { user: AuthUser }) {
     handleSubmit,
     reset,
     setError,
+    control,
+    trigger,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ProfileValues>({ resolver: zodResolver(profileSchema), defaultValues: defaults })
 
@@ -106,7 +109,25 @@ function ProfileForm({ user }: { user: AuthUser }) {
           {({ id, describedBy, invalid }) => <Input id={id} autoComplete="organization-title" aria-describedby={describedBy} invalid={invalid} {...register('jobRole')} />}
         </Field>
         <Field label="Phone" optional error={errors.phone?.message}>
-          {({ id, describedBy, invalid }) => <Input id={id} type="tel" autoComplete="tel" placeholder="+91 98450 12345" aria-describedby={describedBy} invalid={invalid} {...register('phone')} />}
+          {({ id, describedBy, invalid }) => (
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field }) => (
+                <PhoneInput
+                  id={id}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={() => {
+                    field.onBlur()
+                    if (field.value) void trigger('phone')
+                  }}
+                  aria-describedby={describedBy}
+                  invalid={invalid}
+                />
+              )}
+            />
+          )}
         </Field>
         <Field label="Time zone" error={errors.timezone?.message} hint="Used for your reminders and “today”.">
           {({ id, describedBy, invalid }) => (

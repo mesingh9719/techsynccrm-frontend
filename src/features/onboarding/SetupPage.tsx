@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Check, CheckCircle2, Mail, Sparkles, UserPlus } 
 import { useAuth } from '../../lib/useAuth'
 import { useOrg } from '../../lib/useOrg'
 import { qk } from '../../lib/queryKeys'
+import { companyName } from '../../lib/schemas'
 import { updateCurrentOrganization } from '../../services/organizations'
 import { fetchMe } from '../../services/auth'
 import { createInvitations } from '../../services/team'
@@ -81,7 +82,7 @@ export default function SetupPage() {
                     id={id}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    maxLength={120}
+                    maxLength={80}
                     autoComplete="organization"
                   />
                 )}
@@ -220,14 +221,15 @@ export default function SetupPage() {
               loading={busy}
               onClick={async () => {
                 setError('')
-                if (name.trim().length < 2) return setError('Enter a workspace name with at least two characters.')
+                const parsed = companyName.safeParse(name)
+                if (!parsed.success) return setError(parsed.error.issues[0].message)
                 if (!progress.allowed) {
                   next()
                   return
                 }
                 setBusy(true)
                 try {
-                  await updateCurrentOrganization({ name: name.trim() })
+                  await updateCurrentOrganization({ name: parsed.data })
                   await Promise.all([
                     client.invalidateQueries({ queryKey: qk.org(user!.organization!.id).current }),
                     client.invalidateQueries({ queryKey: qk.workspaces }),

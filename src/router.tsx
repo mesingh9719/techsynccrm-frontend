@@ -6,6 +6,8 @@ import { RootShell } from './components/app/RootShell'
 import type { RouteHandle } from './app/pages/ComingSoon'
 import { FullPageSpinner } from './components/auth/Guards'
 import { RouteError } from './pages/RouteError'
+import { KeepQueryRedirect } from './components/app/KeepQueryRedirect'
+import { CONNECTIONS_PATH, CONNECTIONS_TEAM_PATH, MAILBOX_PATH } from './features/connections/paths'
 
 /** Wraps a dynamic page import so each route ships as its own chunk. */
 const page = (load: () => Promise<{ default: ComponentType }>) => async () => {
@@ -109,12 +111,17 @@ const appRoutes: RouteObject = {
         { path: 'tags', lazy: page(() => import('./features/tags/TagsSettings')) },
         { path: 'availability', lazy: page(() => import('./features/capture/AvailabilitySettings')) },
         { path: 'workspace', lazy: page(() => import('./app/pages/WorkspaceSettings')) },
-        { path: 'gmail', lazy: page(() => import('./features/email/EmailSettings')) },
-        { path: 'email', lazy: page(() => import('./features/email/EmailSettings')) },
-        { path: 'gmail-history', lazy: page(() => import('./features/email/GmailSettings')) },
-        { path: 'google', lazy: page(() => import('./features/google/GoogleSettings')) },
-        { path: 'google-team', lazy: page(() => import('./features/google/GoogleTeam')) },
-        { path: 'team-email', lazy: page(() => import('./features/email/TeamEmail')) },
+        // Email & Google: one area for Gmail, Calendar & Meet, Sheets and Drive (personal + team).
+        { path: 'connections', lazy: page(() => import('./features/connections/ConnectionsPage')) },
+        { path: 'connections/team', lazy: page(() => import('./features/connections/TeamConnectionsPage')) },
+        { path: 'connections/mailbox', lazy: page(() => import('./features/email/GmailSettings')) },
+        // Retired URLs (bookmarks, emails, OAuth returns) keep working.
+        { path: 'gmail', element: <KeepQueryRedirect to={CONNECTIONS_PATH} hash="#email" /> },
+        { path: 'email', element: <KeepQueryRedirect to={CONNECTIONS_PATH} hash="#email" /> },
+        { path: 'google', element: <KeepQueryRedirect to={CONNECTIONS_PATH} hash="#google" /> },
+        { path: 'gmail-history', element: <KeepQueryRedirect to={MAILBOX_PATH} /> },
+        { path: 'google-team', element: <KeepQueryRedirect to={CONNECTIONS_TEAM_PATH} /> },
+        { path: 'team-email', element: <KeepQueryRedirect to={CONNECTIONS_TEAM_PATH} /> },
         { path: 'profile', lazy: page(() => import('./app/pages/ProfileSettings')) },
         { path: 'security', lazy: page(() => import('./app/pages/SecuritySettings')) },
         { path: 'notifications', lazy: page(() => import('./features/notifications/NotificationSettings')) },

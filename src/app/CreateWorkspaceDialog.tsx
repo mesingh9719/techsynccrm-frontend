@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { companySizes, createWorkspaceSchema, industries, type CreateWorkspaceValues } from '../lib/schemas'
+import { companySizes, createWorkspaceSchema, type CreateWorkspaceValues } from '../lib/schemas'
+import { sortForSelect, useIndustries } from '../lib/industries'
 import { applyServerErrors } from '../lib/forms'
 import { Dialog } from '../components/app/Dialog'
 import { Button } from '../components/ui/Button'
@@ -19,6 +20,7 @@ export function CreateWorkspaceDialog({ open, onClose }: { open: boolean; onClos
     setError,
     formState: { errors, isSubmitting },
   } = useForm<CreateWorkspaceValues>({ resolver: zodResolver(createWorkspaceSchema), defaultValues: { company: '' } })
+  const { industries } = useIndustries()
 
   function close() {
     reset()
@@ -32,7 +34,7 @@ export function CreateWorkspaceDialog({ open, onClose }: { open: boolean; onClos
       await createAndSwitch(values)
       close()
     } catch (err) {
-      setServerError(applyServerErrors(err, setError, ['company', 'industry', 'teamSize']))
+      setServerError(applyServerErrors(err, setError, ['company', 'industryId', 'teamSize']))
     }
   }
 
@@ -55,17 +57,19 @@ export function CreateWorkspaceDialog({ open, onClose }: { open: boolean; onClos
     >
       <form id="create-workspace-form" onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
         <Field label="Company name" error={errors.company?.message}>
-          {({ id, describedBy, invalid }) => <Input id={id} autoComplete="organization" aria-describedby={describedBy} invalid={invalid} {...register('company')} />}
+          {({ id, describedBy, invalid }) => <Input id={id} autoComplete="organization" maxLength={80} aria-describedby={describedBy} invalid={invalid} {...register('company')} />}
         </Field>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Industry" error={errors.industry?.message}>
+          <Field label="Industry" error={errors.industryId?.message}>
             {({ id, describedBy, invalid }) => (
-              <Select id={id} aria-describedby={describedBy} invalid={invalid} defaultValue="" {...register('industry')}>
+              <Select id={id} aria-describedby={describedBy} invalid={invalid} defaultValue="" {...register('industryId')}>
                 <option value="" disabled>
                   Choose
                 </option>
-                {industries.map((i) => (
-                  <option key={i}>{i}</option>
+                {sortForSelect(industries).map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name}
+                  </option>
                 ))}
               </Select>
             )}
