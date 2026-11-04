@@ -54,9 +54,9 @@ export interface NavItem {
 
 export const mainNav: NavItem[] = [
   { key: 'home', label: t('nav.home', 'Dashboard'), shortLabel: 'Home', to: '/app', icon: House, end: true, ready: true, shortcut: 'h' },
-  { key: 'leads', label: t('nav.leads', 'Leads'), to: '/app/leads', icon: Inbox, ready: true, shortcut: 'l', permission: 'leads.read' },
-  { key: 'campaigns', label: 'Campaigns', to: '/app/campaigns', icon: Megaphone, ready: true, shortcut: 'm', permission: 'campaigns.read' },
-  { key: 'deals', label: t('nav.deals', 'Pipeline'), to: '/app/deals', icon: SquareKanban, ready: true, shortcut: 'd', permission: 'deals.read' },
+  { key: 'leads', label: t('nav.leads', 'Leads'), to: '/app/leads', icon: Inbox, ready: true, shortcut: 'l', permission: 'leads.list' },
+  { key: 'campaigns', label: 'Campaigns', to: '/app/campaigns', icon: Megaphone, ready: true, shortcut: 'm', permission: 'campaigns.list' },
+  { key: 'deals', label: t('nav.deals', 'Pipeline'), to: '/app/deals', icon: SquareKanban, ready: true, shortcut: 'd', permission: 'deals.list' },
   {
     key: 'tasks',
     label: t('nav.tasks', 'Tasks & follow-ups'),
@@ -65,7 +65,7 @@ export const mainNav: NavItem[] = [
     icon: ListChecks,
     ready: true,
     shortcut: 't',
-    permission: 'tasks.read',
+    permission: 'tasks.list',
   },
   {
     key: 'contacts',
@@ -74,7 +74,7 @@ export const mainNav: NavItem[] = [
     icon: Users,
     ready: true,
     shortcut: 'c',
-    permission: 'contacts.read',
+    permission: 'contacts.list',
   },
   { key: 'templates', label: 'Templates', to: '/app/templates', icon: LayoutTemplate, ready: true },
   { key: 'calendar', label: 'Calendar & Meet', to: '/app/calendar', icon: CalendarDays, ready: true, permission: 'google.connect.own' },
@@ -88,6 +88,7 @@ export const mainNav: NavItem[] = [
     ready: true,
     module: 'M15',
     shortcut: 'r',
+    permission: 'reports.read',
   },
 ]
 

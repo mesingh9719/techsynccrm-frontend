@@ -38,6 +38,9 @@ export const qk = {
       memberOptions: (q: string) => [...base, 'memberOptions', q] as const,
       invitations: [...base, 'invitations'] as const,
       teams: [...base, 'teams'] as const,
+      // Roles (RBAC): the list with member counts, and the permission catalogue
+      roles: [...base, 'roles'] as const,
+      roleCatalogue: [...base, 'roles', 'catalogue'] as const,
       // CRM records (M07, M08): list(params) / detail(id) per entity
       contacts: record(base, 'contacts'),
       companies: record(base, 'companies'),

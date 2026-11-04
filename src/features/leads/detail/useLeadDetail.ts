@@ -24,8 +24,12 @@ export function useLeadDetail(id: string) {
   const query = useQuery({ queryKey: qk.org(orgId).leads.detail(id), queryFn: () => getLead(id) })
   const canUpdateAny = useCan('leads.update')
   const canDeleteAny = useCan('leads.delete')
-  const canAssign = useCan('records.assign')
-  const canTasks = useCan('tasks.read')
+  const canAssign = useCan('leads.assign')
+  const canStatus = useCan('leads.status')
+  const canConvert = useCan('leads.convert')
+  const canClaim = useCan('leads.claim')
+  const canCall = useCan('leads.call')
+  const canTasks = useCan('tasks.list')
   const canCreateTasks = useCan('tasks.create')
   const taskParams = { view: 'open' as const, entityType: 'lead' as const, entityId: id, limit: 50 }
   const taskQuery = useInfiniteQuery({
@@ -51,7 +55,11 @@ export function useLeadDetail(id: string) {
       !lead!.ownerId &&
       !lead!.deletedAt &&
       isOpen &&
-      permissions.some((p) => p === 'records.claim' || p.startsWith('records.assign')),
+      (canClaim || canAssign),
+    /** Status changes (leads.status) reach every lead the role can see, like the server. */
+    status: Boolean(lead) && canStatus && !lead!.deletedAt && lead!.status !== 'converted',
+    convert: Boolean(lead) && canConvert && isOpen && !lead!.deletedAt,
+    call: canCall,
     tasks: canTasks && lead?.status !== 'converted' && !lead?.deletedAt,
     createTasks: canCreateTasks && lead?.status !== 'converted' && !lead?.deletedAt,
   }

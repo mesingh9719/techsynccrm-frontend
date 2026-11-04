@@ -86,7 +86,8 @@ export function CompanyFormDrawer({ open, onClose, company = null, initialName, 
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const notify = useToast()
-  const canAssign = useCan('records.assign')
+  const canAssign = useCan('companies.assign')
+  const canView = useCan('companies.view')
   const [draft, setDraft] = useState<Draft>(() => fromCompany(company, user?.id ?? null, initialName))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string | null>(null)
@@ -122,7 +123,7 @@ export function CompanyFormDrawer({ open, onClose, company = null, initialName, 
       close()
       if (!company) {
         if (onCreated) onCreated(saved)
-        else navigate(`/app/companies/${saved.id}`)
+        else if (canView) navigate(`/app/companies/${saved.id}`)
       }
     } catch (err) {
       if (err instanceof ApiError && err.code === 'STALE_UPDATE') await queryClient.invalidateQueries({ queryKey: qk.org(orgId).companies.all })
@@ -194,12 +195,16 @@ export function CompanyFormDrawer({ open, onClose, company = null, initialName, 
                 </Select>
               )}
             </Field>
-            <Field label="Phone" optional error={errors.phone}>
-              {({ id, invalid }) => <Input id={id} type="tel" invalid={invalid} value={draft.phone} onChange={(e) => set('phone', e.target.value)} />}
-            </Field>
-            <Field label="Email" optional error={errors.email}>
-              {({ id, invalid }) => <Input id={id} type="email" invalid={invalid} value={draft.email} onChange={(e) => set('email', e.target.value)} />}
-            </Field>
+            {!company?.contactInfoHidden && (
+              <>
+                <Field label="Phone" optional error={errors.phone}>
+                  {({ id, invalid }) => <Input id={id} type="tel" invalid={invalid} value={draft.phone} onChange={(e) => set('phone', e.target.value)} />}
+                </Field>
+                <Field label="Email" optional error={errors.email}>
+                  {({ id, invalid }) => <Input id={id} type="email" invalid={invalid} value={draft.email} onChange={(e) => set('email', e.target.value)} />}
+                </Field>
+              </>
+            )}
           </FieldRow>
         </FormSection>
 

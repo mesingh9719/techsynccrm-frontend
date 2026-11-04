@@ -5,6 +5,7 @@ import { handleGlobalApiError } from '../../../lib/apiErrors'
 import { useToast } from '../../../components/ui/Toast'
 import { logActivity, outcomeLabels } from '../../activities/api'
 import { useOrgId } from '../../crm/hooks'
+import { useCan } from '../../../lib/useOrg'
 import type { CallOutcome, LeadRecord } from '../../crm/types'
 import { whatsappLink } from '../../crm/format'
 import { previewMerge } from '../../email/content'
@@ -22,9 +23,10 @@ export const channelLabel: Record<Channel, string> = { call: 'call', whatsapp: '
 
 /**
  * Communication hub state for one lead: open the right app (optionally pre-filled from a template),
- * then ask how it went so the conversation is logged in one tap.
+ * then ask how it went so the conversation is logged in one tap. Calling needs `leads.call`, which
+ * also lets a role log its calls without being able to log other activity.
  */
-export function useCommunication({ lead, ownerName, workspaceName, canLog = false, onEmail }: { lead: LeadRecord; ownerName?: string | null; workspaceName?: string | null; canLog?: boolean; onEmail?: (draft: { subject?: string; body?: string }) => void }) {
+export function useCommunication({ lead, ownerName, workspaceName, canLog = false, canCall = true, onEmail }: { lead: LeadRecord; ownerName?: string | null; workspaceName?: string | null; canLog?: boolean; canCall?: boolean; onEmail?: (draft: { subject?: string; body?: string }) => void }) {
   const orgId = useOrgId()
   const client = useQueryClient()
   const notify = useToast()
@@ -41,7 +43,9 @@ export function useCommunication({ lead, ownerName, workspaceName, canLog = fals
   const managedFields = { firstName: lead.firstName, lastName: lead.lastName, name: lead.displayName, company: lead.companyName, owner: ownerName, workspace: workspaceName }
   const preview = (text: string) => previewMerge(text, managedFields).value
 
-  const available: Record<Channel, boolean> = { call: Boolean(dial), whatsapp: Boolean(phone?.e164), sms: Boolean(dial), email: Boolean(email) && !['converted', 'lost', 'junk'].includes(lead.status) && !lead.deletedAt }
+  // Emailing from the CRM is its own permission (email.send); the server checks it too.
+  const canEmail = useCan('email.send')
+  const available: Record<Channel, boolean> = { call: Boolean(dial) && canCall, whatsapp: Boolean(phone?.e164), sms: Boolean(dial), email: canEmail && Boolean(email) && !['converted', 'lost', 'junk'].includes(lead.status) && !lead.deletedAt }
 
   function start(channel: Channel, template?: MessageTemplate) {
     if (!available[channel] || lead.deletedAt || saving) return
@@ -68,11 +72,11 @@ export function useCommunication({ lead, ownerName, workspaceName, canLog = fals
             : `mailto:${email}${subject || body ? `?subject=${q(subject ?? '')}&body=${q(body ?? '')}` : ''}`
     if (channel === 'whatsapp') window.open(url, '_blank', 'noopener')
     else window.location.href = url
-    if (canLog) setPending({ channel, body, subject })
+    if (canLog || (channel === 'call' && canCall)) setPending({ channel, body, subject })
   }
 
   async function log(outcome?: CallOutcome) {
-    if (!pending || !canLog || saving) return null
+    if (!pending || !(canLog || (pending.channel === 'call' && canCall)) || saving) return null
     setSaving(true)
     try {
       const activity = await logActivity({

@@ -45,7 +45,7 @@ export default function ReportsPage() {
   const { user } = useAuth()
   const { organization } = useOrg()
   const canRead = useCan('reports.read')
-  const canExport = useCan('records.export')
+  const canExport = useCan('reports.export')
   const sources = useLeadSources()
   const timezone = organization?.timezone ?? 'Asia/Kolkata'
   const { today, month } = workspaceDates(timezone)

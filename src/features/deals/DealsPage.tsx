@@ -58,6 +58,7 @@ function toBoardDeal(d: DealRecord): BoardDeal {
 
 /** Board for one pipeline: optimistic moves, rollback on error, per-column "Load more". */
 function BoardView({ params, canMove, onClear }: { params: Record<string, string | undefined>; canMove: boolean; onClear: () => void }) {
+  const canView = useCan('deals.view')
   const orgId = useOrgId()
   const { organization } = useOrg()
   const currency = organization?.currency ?? 'INR'
@@ -163,7 +164,7 @@ function BoardView({ params, canMove, onClear }: { params: Record<string, string
         stages={stages}
         deals={allDeals.map(toBoardDeal)}
         canMove={canMove && !mover.busy}
-        onOpen={(id) => navigate(`/app/deals/${id}`)}
+        onOpen={canView ? (id) => navigate(`/app/deals/${id}`) : undefined}
         onMove={(dealId, stageId) => {
           const deal = byId.get(dealId)
           const stage = columns.find((c) => c.id === stageId)
@@ -219,7 +220,8 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const notify = useToast()
-  const canAssign = useCan('records.assign')
+  const canAssign = useCan('deals.assign')
+  const canView = useCan('deals.view')
   const canDelete = useCan('deals.delete')
   const list = useRecordList(qk.org(orgId).deals.lists, params, (p) => listDeals({ ...p, limit: 50 }))
   const rows = useMemo(() => list.data?.pages.flatMap((p) => p.items) ?? [], [list.data])
@@ -322,7 +324,7 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
             onSortChange={(s) => setFilter('sort', s)}
             selectedIds={canUpdate ? selected : undefined}
             onSelectionChange={canUpdate ? setSelected : undefined}
-            onRowClick={(d) => navigate(`/app/deals/${d.id}`)}
+            onRowClick={canView ? (d) => navigate(`/app/deals/${d.id}`) : undefined}
             mobileCard={(d) => (
               <div className="flex items-center justify-between gap-3 rounded-xl bg-surface p-3 ring-1 ring-line">
                 <div className="min-w-0">

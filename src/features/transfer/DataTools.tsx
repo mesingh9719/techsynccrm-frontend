@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
 import { Menu, MenuItem, MenuSeparator } from '../../components/app/Menu'
 import { useCan } from '../../lib/useOrg'
+import { TRANSFER_MODULE } from './api'
 import { useAuth } from '../../lib/useAuth'
 import { createExport, getExport, type TransferEntity, type ExportJob } from './api'
 
@@ -19,8 +20,8 @@ export function DataTools({
   filters: Record<string, string | number | boolean | undefined>
   columns?: string[]
 }) {
-  const canImport = useCan('records.import'),
-    canExport = useCan('records.export'),
+  const canImport = useCan(`${TRANSFER_MODULE[entityType]}.import`),
+    canExport = useCan(`${TRANSFER_MODULE[entityType]}.export`),
     notify = useToast(),
     { user } = useAuth(),
     navigate = useNavigate()

@@ -190,7 +190,7 @@ function SeatSelection({ org }: { org: Organization }) {
                 label={
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-medium text-ink">{m.fullName}</span>
-                    <Badge>{roleLabels[m.role]}</Badge>
+                    <Badge>{m.roleName ?? roleLabels[m.role]}</Badge>
                   </span>
                 }
                 description={m.email}

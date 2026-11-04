@@ -47,10 +47,10 @@ export default function CampaignDetailPage() {
   const options = useCampaignOptions()
   const canCreate = useCan('campaigns.create')
   const canDelete = useCan('campaigns.delete')
-  const canReadLeads = useCan('leads.read')
-  const canReadDeals = useCan('deals.read')
+  const canReadLeads = useCan('leads.list')
+  const canReadDeals = useCan('deals.list')
   const { user } = useAuth()
-  const canRead = useCan('campaigns.read')
+  const canRead = useCan('campaigns.view')
   const canEdit = useCan('campaigns.update')
   const canManageMeta = useCan('settings.workspace.manage')
 

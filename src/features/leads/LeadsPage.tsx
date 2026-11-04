@@ -87,10 +87,11 @@ export default function LeadsPage() {
   const queryClient = useQueryClient()
   const notify = useToast()
   const canCreate = useCan('leads.create')
+  const canView = useCan('leads.view')
   const canUpdate = useCan('leads.update')
   const canDelete = useCan('leads.delete')
-  const canAssign = useCan('records.assign')
-  const canExport = useCan('records.export')
+  const canAssign = useCan('leads.assign')
+  const canExport = useCan('leads.export')
   const canReadCampaigns = useCan('campaigns.read')
   const members = useQuery({
     queryKey: qk.org(orgId).memberOptions(''),
@@ -99,9 +100,7 @@ export default function LeadsPage() {
   })
   const [view, setView] = useState<'table' | 'cards'>('table')
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const canClaim = (user?.organization?.permissions ?? []).some(
-    (p) => p === 'records.claim' || p.startsWith('records.assign'),
-  )
+  const canClaim = useCan('leads.claim') || canAssign
   const defs = useCustomFieldDefs('lead')
   const tags = useTags()
   const sources = useLeadSources()
@@ -574,7 +573,7 @@ export default function LeadsPage() {
             onSortChange={(s) => setFilter('sort', s)}
             selectedIds={canUpdate && !isDeletedView ? selected : undefined}
             onSelectionChange={canUpdate && !isDeletedView ? setSelected : undefined}
-            onRowClick={(l) => navigate(`/app/leads/${l.id}`)}
+            onRowClick={canView ? (l) => navigate(`/app/leads/${l.id}`) : undefined}
             footer={
               list.hasNextPage && (
                 <Button size="sm" variant="secondary" loading={list.isFetchingNextPage} onClick={() => list.fetchNextPage()}>

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getCurrentOrganization } from '../services/organizations'
-import { hasPermission, type Permission } from './permissions'
+import { hasAnyRecordAction, hasPermission, type Permission, type RecordAction } from './permissions'
 import { qk } from './queryKeys'
 import { useAuth } from './useAuth'
 import type { LimitKey, OrganizationUsage, PlanId } from '../types'
@@ -31,6 +31,12 @@ export function useOrg() {
 export function useCan(permission: Permission) {
   const { user } = useAuth()
   return hasPermission(user?.organization?.permissions, permission)
+}
+
+/** Whether the member may do `action` (import, export…) on any record module. */
+export function useCanAny(action: RecordAction) {
+  const { user } = useAuth()
+  return hasAnyRecordAction(user?.organization?.permissions, action)
 }
 
 export interface Entitlement {

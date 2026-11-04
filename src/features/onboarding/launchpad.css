@@ -1,0 +1,103 @@
+/* Workspace launch — dark hero in the sidebar palette, light working area below. */
+.launchpad { overflow: hidden; border: 1px solid var(--color-line); border-radius: 1.25rem; background: var(--color-surface); box-shadow: 0 18px 40px -18px #11182733, 0 2px 6px #1118270a; }
+.launchpad-hero { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; overflow: hidden; padding: 1.75rem; background: var(--color-sidebar); color: var(--color-sidebar-ink); }
+.launchpad-glow { position: absolute; inset: 0; pointer-events: none; background:
+  radial-gradient(36rem 18rem at 95% -30%, #6366f173, transparent 70%),
+  radial-gradient(26rem 14rem at 0% 140%, #d9f36a2e, transparent 70%),
+  repeating-linear-gradient(90deg, #ffffff06 0 1px, transparent 1px 48px),
+  repeating-linear-gradient(0deg, #ffffff06 0 1px, transparent 1px 48px); }
+.launchpad-monogram { position: relative; display: grid; width: 3.5rem; height: 3.5rem; flex-shrink: 0; place-items: center; overflow: hidden; border-radius: 1rem; background: linear-gradient(135deg, #818cf8, #6366f1 55%, #4338ca); box-shadow: 0 10px 24px -8px #6366f1aa, inset 0 1px 0 #ffffff40; color: #fff; font-size: 1.15rem; font-weight: 700; letter-spacing: .02em; }
+.launchpad-monogram img { width: 100%; height: 100%; object-fit: cover; }
+.launchpad-eyebrow { display: inline-flex; align-items: center; gap: .4rem; padding: .25rem .65rem; border: 1px solid #ffffff1f; border-radius: 999px; background: #ffffff0d; color: var(--color-highlight); font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+.launchpad-title { margin-top: .7rem; font-size: clamp(1.3rem, 2.2vw, 1.65rem); font-weight: 600; letter-spacing: -.02em; line-height: 1.2; color: #fff; }
+.launchpad-sub { margin-top: .45rem; max-width: 42rem; font-size: 13px; line-height: 1.6; color: var(--color-sidebar-muted); }
+.launchpad-trust { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; margin-top: .9rem; }
+.launchpad-trust li { display: inline-flex; align-items: center; gap: .35rem; font-size: 12px; color: var(--color-sidebar-ink); }
+.launchpad-trust svg { color: var(--color-highlight); }
+.launchpad-icon-button { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border-radius: .65rem; color: var(--color-sidebar-muted); }
+.launchpad-icon-button:hover { background: var(--color-sidebar-hover); color: #fff; }
+.launchpad-ring { position: relative; width: 5.75rem; height: 5.75rem; }
+.launchpad-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); filter: drop-shadow(0 0 10px #d9f36a33); }
+.launchpad-ring circle { fill: none; stroke-width: 6; }
+.launchpad-ring-track { stroke: #ffffff17; }
+.launchpad-ring-value { stroke: var(--color-highlight); stroke-linecap: round; transition: stroke-dashoffset .7s cubic-bezier(.22,1,.36,1); }
+.launchpad-ring > span { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; line-height: 1.15; }
+.launchpad-ring strong { font-size: 1.2rem; color: #fff; }
+.launchpad-ring small { max-width: 4rem; font-size: 9.5px; color: var(--color-sidebar-muted); }
+
+.launchpad-next { display: flex; flex-wrap: wrap; align-items: center; gap: .9rem; padding: 1rem 1.5rem; background: linear-gradient(90deg, color-mix(in srgb, var(--step-accent) 6%, var(--color-surface)), var(--color-surface) 60%); }
+.launchpad-body { display: grid; gap: 1.25rem; padding: 1.25rem; background: linear-gradient(180deg, var(--color-canvas), var(--color-surface) 14rem); }
+.launchpad-rail { display: grid; align-content: start; gap: 1rem; }
+.launchpad-steps { position: relative; display: grid; gap: .35rem; }
+.launchpad-steps li { position: relative; }
+.launchpad-steps li:not(:last-child)::after { content: ''; position: absolute; left: 1.85rem; top: 3.1rem; bottom: -.55rem; width: 2px; border-radius: 2px; background: var(--color-line); }
+.launchpad-steps li:has([data-done='true']):not(:last-child)::after { background: color-mix(in srgb, var(--color-highlight) 70%, #84cc16); }
+.launchpad-step { --ring: transparent; display: flex; width: 100%; align-items: center; gap: .85rem; padding: .8rem .9rem; border: 1px solid transparent; border-radius: .9rem; color: var(--color-ink); text-align: left; transition: background .15s, border-color .15s, box-shadow .2s; }
+.launchpad-step:hover { background: var(--color-surface); border-color: var(--color-line); }
+.launchpad-step:focus-visible { outline: 2px solid var(--step-accent); outline-offset: 2px; }
+.launchpad-step[data-active='true'] { background: var(--color-surface); border-color: color-mix(in srgb, var(--step-accent) 30%, var(--color-line)); box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--step-accent) 45%, transparent); }
+.launchpad-step-index { position: relative; z-index: 1; display: grid; width: 1.95rem; height: 1.95rem; flex-shrink: 0; place-items: center; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); font-size: 12px; font-weight: 700; color: var(--color-muted); transition: background .2s, color .2s; }
+.launchpad-step[data-active='true'] .launchpad-step-index { border-color: transparent; background: var(--step-accent); color: #fff; box-shadow: 0 0 0 4px color-mix(in srgb, var(--step-accent) 18%, transparent); }
+.launchpad-step[data-done='true'] .launchpad-step-index { border-color: transparent; background: var(--color-highlight); color: var(--color-sidebar); }
+.launchpad-done-tag { padding: .05rem .4rem; border-radius: 999px; background: #ecfccb; color: #3f6212; font-size: 10px; font-weight: 600; }
+.launchpad-ready { padding: 1rem; border: 1px solid var(--color-line); border-radius: .9rem; background: var(--color-surface); }
+.launchpad-ready ul { display: grid; gap: .45rem; margin-top: .6rem; }
+.launchpad-ready li { display: flex; align-items: center; gap: .5rem; font-size: 12px; color: var(--color-muted); }
+.launchpad-ready svg { flex-shrink: 0; padding: 2px; border-radius: 999px; background: #dcfce7; color: #15803d; }
+.launchpad-collapse { display: inline-flex; align-items: center; gap: .35rem; justify-self: start; padding: .35rem .5rem; border-radius: .5rem; font-size: 12px; color: var(--color-muted); }
+.launchpad-collapse:hover { background: var(--color-surface); color: var(--color-ink); }
+
+.launchpad-panel { --step-accent: var(--color-brand-500); min-width: 0; overflow: hidden; border: 1px solid var(--color-line); border-radius: 1rem; background: var(--color-surface); box-shadow: 0 1px 2px #1118270a; animation: launch-in .35s cubic-bezier(.22,1,.36,1); }
+.launchpad-panel-head { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 1rem; padding: 1.4rem 1.5rem; border-top: 3px solid var(--step-accent); border-bottom: 1px solid var(--color-line); background: linear-gradient(120deg, color-mix(in srgb, var(--step-accent) 6%, var(--color-surface)), var(--color-surface) 65%); }
+.launchpad-panel-body { padding: 1.5rem; }
+.launchpad-panel-icon { display: grid; width: 3rem; height: 3rem; flex-shrink: 0; place-items: center; border-radius: .9rem; background: var(--color-surface); color: var(--step-accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--step-accent) 25%, transparent), 0 6px 16px -8px color-mix(in srgb, var(--step-accent) 60%, transparent); }
+.launchpad-panel-icon-sm { width: 2.5rem; height: 2.5rem; border-radius: .75rem; }
+.launchpad-need { padding: .2rem .6rem; border: 1px solid var(--color-line); border-radius: 999px; background: var(--color-surface); font-size: 11px; font-weight: 500; color: var(--color-ink); }
+@keyframes launch-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Business details form */
+.launch-form { display: grid; gap: 1rem; }
+.launch-fieldset { display: grid; gap: 1rem; min-width: 0; margin: 0; padding: 1.15rem 1.15rem 1.25rem; border: 1px solid var(--color-line); border-radius: .9rem; background: var(--color-surface); }
+.launch-fieldset legend { float: left; display: flex; width: 100%; align-items: center; gap: .5rem; margin-bottom: .25rem; padding: 0; font-size: 13px; font-weight: 600; color: var(--color-ink); }
+.launch-fieldset legend + * { clear: both; }
+.launch-fieldset legend svg { padding: .3rem; width: 1.6rem; height: 1.6rem; border-radius: .5rem; background: color-mix(in srgb, var(--step-accent, #6366f1) 10%, var(--color-surface)); color: var(--step-accent, var(--color-brand-500)); }
+.launch-gst { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; border: 1px dashed var(--color-line); border-radius: .75rem; background: var(--color-canvas); }
+.launch-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; padding-top: 1rem; border-top: 1px solid var(--color-line); }
+
+/* Tiles */
+.launch-tiles { display: grid; gap: .85rem; }
+.launch-tile { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 1.1rem; border: 1px solid var(--color-line); border-radius: .9rem; background: var(--color-surface); }
+.launch-tile[data-done='true'] { border-color: #bbf7d0; background: linear-gradient(160deg, #f0fdf4, var(--color-surface) 70%); }
+.launch-tile-link { transition: border-color .15s, box-shadow .2s, transform .2s; }
+.launch-tile-link:hover { border-color: color-mix(in srgb, var(--step-accent) 45%, var(--color-line)); box-shadow: 0 14px 28px -16px color-mix(in srgb, var(--step-accent) 55%, transparent); transform: translateY(-2px); }
+.launch-tile-icon { display: grid; width: 2.25rem; height: 2.25rem; margin-bottom: .8rem; place-items: center; border-radius: .7rem; background: color-mix(in srgb, var(--step-accent) 10%, var(--color-surface)); color: var(--step-accent); }
+.launch-roles { display: grid; gap: .65rem; }
+.launch-roles li { display: flex; align-items: flex-start; gap: .65rem; padding: .8rem .9rem; border: 1px solid var(--color-line); border-radius: .8rem; font-size: 12px; color: var(--color-muted); }
+.launch-roles li svg { margin-top: .1rem; flex-shrink: 0; color: var(--step-accent); }
+.launch-roles strong { display: block; margin-bottom: .1rem; font-size: 13px; color: var(--color-ink); }
+
+/* Launch focus page */
+.launch-welcome { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.launch-live-dot { width: .5rem; height: .5rem; border-radius: 999px; background: #22c55e; box-shadow: 0 0 0 4px #22c55e26; }
+.launch-skip { display: inline-flex; align-items: center; gap: .35rem; padding: .5rem .8rem; border-radius: .6rem; font-size: 13px; font-weight: 500; color: var(--color-muted); }
+.launch-skip:hover { background: var(--color-surface); color: var(--color-ink); }
+.launch-unlocks { display: grid; gap: .85rem; }
+.launch-unlocks li { position: relative; display: flex; align-items: flex-start; gap: .8rem; overflow: hidden; padding: 1.1rem; border: 1px dashed var(--color-line); border-radius: 1rem; background: color-mix(in srgb, var(--color-surface) 70%, transparent); }
+.launch-unlock-icon { display: grid; width: 2.25rem; height: 2.25rem; flex-shrink: 0; place-items: center; border-radius: .7rem; background: var(--color-canvas); color: var(--color-muted); }
+.launch-unlock-art { position: absolute; right: 1rem; bottom: 0; display: flex; align-items: flex-end; gap: 4px; height: 2.4rem; opacity: .5; }
+.launch-unlock-art i { width: 6px; border-radius: 3px 3px 0 0; background: var(--color-line); }
+.launch-unlock-art i:nth-child(1) { height: 35%; } .launch-unlock-art i:nth-child(2) { height: 60%; } .launch-unlock-art i:nth-child(3) { height: 45%; } .launch-unlock-art i:nth-child(4) { height: 85%; } .launch-unlock-art i:nth-child(5) { height: 65%; }
+
+@media (min-width: 640px) { .launch-tiles, .launch-roles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .launch-unlocks { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) {
+  .launchpad-body { grid-template-columns: 18.5rem minmax(0, 1fr); padding: 1.5rem; }
+  .launch-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 479px) {
+  .launchpad-hero { padding: 1.25rem; }
+  .launchpad-monogram { display: none; }
+  .launchpad-ring { width: 4.75rem; height: 4.75rem; }
+  .launchpad-panel-head, .launchpad-panel-body { padding: 1.1rem; }
+  .launchpad-next { padding: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) { .launchpad-panel { animation: none; } .launchpad-ring-value, .launch-tile-link { transition: none; } }

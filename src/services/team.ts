@@ -1,5 +1,5 @@
 /** Team management for the current workspace (M04): members, invitations, teams. */
-import type { Invitation, Member, MemberOption, MemberRole, Team } from '../types'
+import type { Invitation, Member, MemberOption, Team } from '../types'
 import { api } from './http'
 
 export function listMembers(params: { status?: 'active' | 'deactivated' | 'all'; q?: string } = {}) {
@@ -11,7 +11,7 @@ export function memberOptions(q?: string) {
   return api<{ members: MemberOption[] }>('/members/options', { query: { q } }).then((d) => d.members)
 }
 
-export function updateMember(userId: string, values: { role?: MemberRole; title?: string | null; teamIds?: string[] }) {
+export function updateMember(userId: string, values: { role?: string; title?: string | null; teamIds?: string[] }) {
   return api<{ member: Member }>(`/members/${userId}`, { method: 'PATCH', body: values }).then((d) => d.member)
 }
 
@@ -33,7 +33,7 @@ export function listInvitations() {
   return api<{ invitations: Invitation[] }>('/invitations').then((d) => d.invitations)
 }
 
-export function createInvitations(values: { emails: string[]; role: MemberRole; teamIds?: string[] }) {
+export function createInvitations(values: { emails: string[]; role: string; teamIds?: string[] }) {
   return api<{ results: InviteResult[] }>('/invitations', { method: 'POST', body: values }).then((d) => d.results)
 }
 

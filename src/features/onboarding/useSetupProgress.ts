@@ -3,7 +3,7 @@ import { useGmail } from '../email/useGmail'
 import { listLeads } from '../leads/api'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../lib/useAuth'
-import { useCan } from '../../lib/useOrg'
+import { useCan, useCanAny } from '../../lib/useOrg'
 import { qk } from '../../lib/queryKeys'
 import { listInvitations, listMembers } from '../../services/team'
 import { captureKeys, captureLive, makeCaptureApi } from '../capture/api'
@@ -16,7 +16,7 @@ export function useSetupProgress() {
     canInvite = useCan('members.invite'),
     canCreateLead = useCan('leads.create')
   const orgId = user?.organization?.id ?? 'none'
-  const canImport = useCan('records.import'), canConfigurePipeline = useCan('settings.pipelines.manage')
+  const canImport = useCanAny('import'), canConfigurePipeline = useCan('settings.pipelines.manage')
   const checklist = useQuery({ queryKey: qk.org(orgId).checklist, queryFn: getChecklist })
   const facebook = useQuery({
     queryKey: ['org', orgId, 'facebook', 'status'],

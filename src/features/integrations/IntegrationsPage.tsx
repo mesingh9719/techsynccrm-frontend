@@ -16,7 +16,7 @@ import {
   Webhook,
 } from 'lucide-react'
 import { useAuth } from '../../lib/useAuth'
-import { useCan } from '../../lib/useOrg'
+import { useCan, useCanAny } from '../../lib/useOrg'
 import { useSeo } from '../../lib/useSeo'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
@@ -123,7 +123,7 @@ export default function IntegrationsPage() {
   useSeo({ title: 'Integrations', noindex: true })
   const { user } = useAuth(),
     allowed = useCan('settings.workspace.manage'),
-    canImport = useCan('records.import'),
+    canImport = useCanAny('import'),
     orgId = user?.organization?.id ?? 'none'
   const [params, setParams] = useSearchParams(),
     [term, setTerm] = useState(''),

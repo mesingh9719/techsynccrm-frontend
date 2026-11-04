@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { CircleAlert, Pencil, Trash2, X } from 'lucide-react'
+import { CircleAlert, Lock, Pencil, Trash2, X } from 'lucide-react'
 import { cn } from '../../../lib/cn'
 import { Avatar } from '../../../components/ui/Badge'
 import { Button } from '../../../components/ui/Button'
@@ -8,6 +8,16 @@ import { compactInr, formatMinor, matchedOnLabels, minorToRupeesText, rupeesToMi
 import type { Duplicate, OwnerSummary } from '../types'
 
 /** Small building blocks shared by the contact, company and lead screens. */
+
+/** Shown where a phone number or email would be, for roles that can't see them. */
+export function HiddenContact({ className }: { className?: string }) {
+  return (
+    <span className={cn('inline-flex items-center gap-1 text-xs text-muted', className)} title="Your role can't see phone numbers and emails">
+      <Lock className="size-3" aria-hidden="true" />
+      Hidden
+    </span>
+  )
+}
 
 export function OwnerCell({ owner, emptyLabel = 'Unassigned' }: { owner: OwnerSummary | null; emptyLabel?: string }) {
   if (!owner) return <span className="text-muted">{emptyLabel}</span>

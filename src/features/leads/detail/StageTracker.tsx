@@ -21,12 +21,15 @@ const hints: Partial<Record<LeadStatus, string>> = {
  */
 export function StageTracker({
   lead,
-  canUpdate,
+  canStatus,
+  canConvert,
   onChange,
   onConvert,
 }: {
   lead: LeadRecord
-  canUpdate: boolean
+  /** Change status (leads.status) and convert (leads.convert) are separate permissions. */
+  canStatus: boolean
+  canConvert: boolean
   onChange: (fn: () => Promise<LeadRecord>, message: string) => Promise<boolean>
   onConvert: () => void
 }) {
@@ -55,7 +58,7 @@ export function StageTracker({
           const done = !closed && currentIndex > index
           const current = lead.status === stage
           const reachable =
-            canUpdate && !current && (stage === 'converted' ? isOpen : allowed.includes(stage as Exclude<LeadStatus, 'converted'>))
+            !current && (stage === 'converted' ? canConvert && isOpen : canStatus && allowed.includes(stage as Exclude<LeadStatus, 'converted'>))
           const label = leadStatusLabels[stage]
           return (
             <li key={stage} className="min-w-0 flex-1">
@@ -89,7 +92,7 @@ export function StageTracker({
           {lead.status === 'junk' && lead.junkReason && <span className="font-normal">· {junkReasonLabels[lead.junkReason]}</span>}
         </span>
       ) : (
-        canUpdate &&
+        (canStatus || canConvert) &&
         isOpen && (
           <Menu
             align="end"
@@ -102,15 +105,17 @@ export function StageTracker({
           >
             {(close) => (
               <>
-                <MenuItem icon={<Sparkles className="size-4" />} onSelect={() => (close(), onConvert())}>
-                  Won — convert
-                </MenuItem>
-                {allowed.includes('lost') && (
+                {canConvert && (
+                  <MenuItem icon={<Sparkles className="size-4" />} onSelect={() => (close(), onConvert())}>
+                    Won — convert
+                  </MenuItem>
+                )}
+                {canStatus && allowed.includes('lost') && (
                   <MenuItem icon={<CircleX className="size-4" />} onSelect={() => (close(), setClosing('lost'))}>
                     Mark as lost…
                   </MenuItem>
                 )}
-                {allowed.includes('junk') && (
+                {canStatus && allowed.includes('junk') && (
                   <MenuItem icon={<Ban className="size-4" />} tone="danger" onSelect={() => (close(), setClosing('junk'))}>
                     Mark as junk…
                   </MenuItem>

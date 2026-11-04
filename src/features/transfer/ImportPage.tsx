@@ -16,13 +16,14 @@ import { IMPORT_STEPS, SAMPLE_COLUMNS } from './importConstants'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../../lib/useAuth'
-import { useCan, useOrg } from '../../lib/useOrg'
+import { useCanAny, useOrg } from '../../lib/useOrg'
+import { hasPermission } from '../../lib/permissions'
 import { Button } from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Form'
 import { uploadFile } from '../files/api'
 import { createCustomField } from '../crm/api'
 import { useCustomFieldDefs } from '../crm/hooks'
-import { createImport, updateImport, previewImport, startImport, getImport, cancelImport, undoImport, importErrors, getImportTemplate, type ImportJob, type Preview, type TransferEntity } from './api'
+import { createImport, updateImport, previewImport, startImport, getImport, cancelImport, undoImport, importErrors, getImportTemplate, TRANSFER_MODULE, type ImportJob, type Preview, type TransferEntity } from './api'
 
 const ImportSpreadsheetStep = lazy(() => import('./ImportSpreadsheetStep'))
 const ImportReviewStep = lazy(() => import('./ImportReviewStep'))
@@ -46,8 +47,15 @@ const STEP_COPY = [
 ]
 
 function ImportWizard({ initial }: { initial?: ImportJob }) {
-  const [params] = useSearchParams(), { user } = useAuth(), canImport = useCan('records.import')
-  const [entity, setEntity] = useState<TransferEntity>(() => initial?.entityType ?? entityFrom(params.get('entity')))
+  const [params] = useSearchParams(), { user } = useAuth()
+  const permissions = user?.organization?.permissions
+  // Only the record types this role may import are offered.
+  const importable = RECORD_TYPES.filter((t) => hasPermission(permissions, `${TRANSFER_MODULE[t.value]}.import`))
+  const canImport = importable.length > 0
+  const [entity, setEntity] = useState<TransferEntity>(() => {
+    const wanted = initial?.entityType ?? entityFrom(params.get('entity'))
+    return importable.some((t) => t.value === wanted) || initial ? wanted : (importable[0]?.value ?? wanted)
+  })
   const [job, setJob] = useState<ImportJob | null>(initial ?? null), [step, setStep] = useState(initial ? initial.status === 'draft' ? 2 : 6 : 1), [busy, setBusy] = useState(false), [error, setError] = useState(''), [progress, setProgress] = useState(0), [preview, setPreview] = useState<Preview | null>(null), [mappingName, setMappingName] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploadStatus, setUploadStatus] = useState<UploadProgressStatus>('uploading')
@@ -187,7 +195,7 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
             {step === 1 && <>
               <Part number={1} title="What are you importing?">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="radiogroup" aria-label="Record type">
-                  {RECORD_TYPES.map(({ value, title, description, icon: Icon }) => {
+                  {importable.map(({ value, title, description, icon: Icon }) => {
                     const on = entity === value
                     return (
                       <label key={value} className={cn('relative flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors has-focus-visible:ring-4 has-focus-visible:ring-brand-100', on ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-line bg-surface hover:border-zinc-300 hover:bg-surface-subtle', busy && 'pointer-events-none opacity-60')}>
@@ -477,7 +485,7 @@ function ChoiceGroup<T extends string>({ name, value, onChange, options }: { nam
 }
 
 export default function ImportPage() {
-  const [params] = useSearchParams(), { user } = useAuth(), allowed = useCan('records.import')
+  const [params] = useSearchParams(), { user } = useAuth(), allowed = useCanAny('import')
   const id = params.get('id')
   const resume = useQuery({ queryKey: ['org', user?.organization?.id, 'import-resume', id], queryFn: () => getImport(id!), enabled: Boolean(id && allowed) })
   if (id && allowed && resume.isPending) return <div className="app-page"><ListSkeleton label="Loading import" /></div>

@@ -1,7 +1,7 @@
 /** Auth API calls. Each successful sign-in-type call updates the in-memory session (see http.ts). */
 import type { AuthUser } from '../types'
 import type { LoginValues, OnboardingValues, SignupValues } from '../lib/schemas'
-import { api, clearSession, refreshSession, setSession, updateSessionUser, type SessionPayload } from './http'
+import { api, clearSession, onAccessVersionChange, refreshSession, setSession, updateSessionUser, type SessionPayload } from './http'
 
 let initPromise: Promise<boolean> | null = null
 
@@ -65,6 +65,8 @@ export interface InvitationPreview {
   inviterName: string | null
   email: string
   role: string
+  /** The custom role's name, when the invitation is for one. */
+  roleName: string | null
   status: 'pending' | 'expired' | 'accepted' | 'revoked'
   accountExists: boolean
 }
@@ -101,6 +103,17 @@ export async function fetchMe() {
   updateSessionUser(user)
   return user
 }
+
+// The member's permissions changed on the server: reload the session copy, then refetch the
+// workspace's cached data, since which records they can see may have changed too.
+onAccessVersionChange(async () => {
+  const user = await fetchMe()
+  const orgId = user.organization?.id
+  if (!orgId) return
+  // Imported lazily: the query client imports this module (via apiErrors).
+  const { queryClient } = await import('../lib/queryClient')
+  await queryClient.invalidateQueries({ queryKey: ['org', orgId] })
+})
 
 // Verification links can be opened twice in React StrictMode; reuse the in-flight request per token.
 const verifyRequests = new Map<string, Promise<AuthUser>>()

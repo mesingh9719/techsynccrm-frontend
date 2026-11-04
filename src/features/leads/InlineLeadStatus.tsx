@@ -3,7 +3,6 @@ import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-
 import { Menu, MenuItem } from '../../components/app/Menu'
 import { useToast } from '../../components/ui/Toast'
 import { qk } from '../../lib/queryKeys'
-import { useAuth } from '../../lib/useAuth'
 import { useCan } from '../../lib/useOrg'
 import { useOrgId } from '../crm/hooks'
 import { leadStatusLabels } from '../crm/format'
@@ -18,11 +17,10 @@ type Cache = LeadRecord | InfiniteData<LeadPage>
 export function InlineLeadStatus({ lead }: { lead: LeadRecord }) {
   const client = useQueryClient(),
     orgId = useOrgId(),
-    notify = useToast(),
-    { user } = useAuth()
+    notify = useToast()
   const [reasonStatus, setReasonStatus] = useState<'lost' | 'junk' | null>(null)
-  const canUpdate = useCan('leads.update')
-  const ownOnly = user?.organization?.permissions.includes('leads.update.own')
+  // Status is its own permission (leads.status) and covers every lead the role can see.
+  const canStatus = useCan('leads.status')
   const allowed = LEAD_TRANSITIONS[lead.status]
   function updateCache(record: LeadRecord) {
     client.setQueriesData<Cache>({ queryKey: qk.org(orgId).leads.all }, (old) => {
@@ -62,7 +60,7 @@ export function InlineLeadStatus({ lead }: { lead: LeadRecord }) {
         client.invalidateQueries({ queryKey: ['org', orgId, 'dashboard'] }),
       ]),
   })
-  if (!canUpdate || (ownOnly && lead.ownerId !== user?.id) || lead.deletedAt || !allowed.length)
+  if (!canStatus || lead.deletedAt || !allowed.length)
     return <LeadStatusBadge status={lead.status} />
   return (
     <span onClick={(e) => e.stopPropagation()} className="inline-flex">

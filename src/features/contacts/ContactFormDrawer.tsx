@@ -2,7 +2,7 @@ import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Building2, Contact, Info, Milestone, ShieldCheck, UserRound } from 'lucide-react'
+import { Building2, Contact, Info, Lock, Milestone, ShieldCheck, UserRound } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
 import { qk } from '../../lib/queryKeys'
 import { useAuth } from '../../lib/useAuth'
@@ -85,7 +85,8 @@ export function ContactFormDrawer({ open, onClose, contact = null, defaultCompan
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const notify = useToast()
-  const canAssign = useCan('records.assign')
+  const canAssign = useCan('contacts.assign')
+  const canView = useCan('contacts.view')
   const [draft, setDraft] = useState<Draft>(() => {
     const d = fromContact(contact, user?.id ?? null)
     if (!contact && defaultCompany) d.companies = [{ option: defaultCompany, role: '', isPrimary: true }]
@@ -122,7 +123,7 @@ export function ContactFormDrawer({ open, onClose, contact = null, defaultCompan
       await queryClient.invalidateQueries({ queryKey: qk.org(orgId).current })
       notify({ title: contact ? 'Contact saved' : `${saved.displayName} added` })
       close()
-      if (!contact) navigate(`/app/contacts/${saved.id}`)
+      if (!contact && canView) navigate(`/app/contacts/${saved.id}`)
     } catch (err) {
       if (err instanceof ApiError && err.code === 'STALE_UPDATE') await queryClient.invalidateQueries({ queryKey: qk.org(orgId).contacts.all })
       if (err instanceof ApiError && err.code === 'DUPLICATE_FOUND') setConflicts((err.details?.duplicates as Duplicate[]) ?? [])
@@ -173,12 +174,18 @@ export function ContactFormDrawer({ open, onClose, contact = null, defaultCompan
           <Field label="Job title" optional error={errors.title}>
             {({ id, invalid }) => <Input id={id} invalid={invalid} value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. Purchase head" />}
           </Field>
-          <Field label="Phone" optional error={errors.phones}>
-            {({ id }) => <PhonesEditor idPrefix={id} value={draft.phones} onChange={(v) => set('phones', v)} errors={fieldErrorsUnder(errors, 'phones')} />}
-          </Field>
-          <Field label="Email" optional error={errors.emails}>
-            {({ id }) => <EmailsEditor idPrefix={id} value={draft.emails} onChange={(v) => set('emails', v)} errors={fieldErrorsUnder(errors, 'emails')} />}
-          </Field>
+          {contact?.contactInfoHidden ? (
+            <p className="flex items-center gap-2 rounded-lg bg-surface-subtle px-3 py-2 text-sm text-muted ring-1 ring-line"><Lock className="size-4 shrink-0" aria-hidden="true" />Phone numbers and emails are hidden for your role and stay as they are.</p>
+          ) : (
+            <>
+              <Field label="Phone" optional error={errors.phones}>
+                {({ id }) => <PhonesEditor idPrefix={id} value={draft.phones} onChange={(v) => set('phones', v)} errors={fieldErrorsUnder(errors, 'phones')} />}
+              </Field>
+              <Field label="Email" optional error={errors.emails}>
+                {({ id }) => <EmailsEditor idPrefix={id} value={draft.emails} onChange={(v) => set('emails', v)} errors={fieldErrorsUnder(errors, 'emails')} />}
+              </Field>
+            </>
+          )}
         </FormSection>
 
         <FormSection title="Companies" icon={Building2} description="Where they work. The primary company shows on their profile.">

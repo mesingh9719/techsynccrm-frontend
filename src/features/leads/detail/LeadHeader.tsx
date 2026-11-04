@@ -43,7 +43,7 @@ export function LeadHeader({
   onAddNotes: () => void
 }) {
   const lead = detail.lead as LeadRecord
-  const { can, isOpen, act } = detail
+  const { can, act } = detail
   const notify = useToast()
   const subtitle = [lead.companyName, lead.city, lead.source?.name].filter(Boolean).join(' · ')
 
@@ -95,7 +95,7 @@ export function LeadHeader({
               Claim
             </Button>
           )}
-          {can.update && isOpen && (
+          {can.convert && (
             <Button size="sm" className="h-9" onClick={onConvert}>
               <Sparkles className="size-4" aria-hidden="true" />
               Convert
@@ -148,7 +148,7 @@ export function LeadHeader({
       }
     >
       <LogPrompt comm={comm} name={lead.firstName ?? lead.displayName} onCallback={onCallback} onAddNotes={onAddNotes} />
-      <StageTracker lead={lead} canUpdate={can.update} onChange={act} onConvert={onConvert} />
+      <StageTracker lead={lead} canStatus={Boolean(can.status)} canConvert={Boolean(can.convert)} onChange={act} onConvert={onConvert} />
     </RecordHeader>
   )
 }

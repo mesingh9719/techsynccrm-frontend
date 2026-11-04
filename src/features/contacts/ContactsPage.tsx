@@ -21,7 +21,7 @@ import { formatCustomValue } from '../crm/customFieldFormat'
 import { ColumnChooser, CustomFieldFilters, FilterSelect } from '../crm/components/ListTools'
 import { bulkSummary, customFilterKeys, useColumnPrefs } from '../crm/listHelpers'
 import { MergeDialog } from '../crm/components/MergeDialog'
-import { BulkBar, BulkButton, OwnerCell } from '../crm/components/RecordParts'
+import { BulkBar, BulkButton, HiddenContact, OwnerCell } from '../crm/components/RecordParts'
 import { SavedViewsMenu } from '../crm/components/SavedViewsMenu'
 import { TagChips } from '../crm/components/Tags'
 import { formatPhone, lifecycleLabels, relativeTime } from '../crm/format'
@@ -49,9 +49,10 @@ export default function ContactsPage() {
   const queryClient = useQueryClient()
   const notify = useToast()
   const canCreate = useCan('contacts.create')
+  const canView = useCan('contacts.view')
   const canUpdate = useCan('contacts.update')
   const canDelete = useCan('contacts.delete')
-  const canAssign = useCan('records.assign')
+  const canAssign = useCan('contacts.assign')
   const defs = useCustomFieldDefs('contact')
   const tags = useTags()
   const keys = useMemo(() => [...CORE_KEYS, ...customFilterKeys(defs.data)], [defs.data])
@@ -93,13 +94,14 @@ export default function ContactsPage() {
       key: 'phone',
       header: 'Phone',
       hideBelow: 'lg',
-      cell: (c) => (
-        <span className="tabular-nums">
-          {c.primaryPhoneE164 ? formatPhone(c.primaryPhoneE164) : (c.phones[0]?.raw ?? '—')}
-        </span>
-      ),
+      cell: (c) =>
+        c.contactInfoHidden ? (
+          <HiddenContact />
+        ) : (
+          <span className="tabular-nums">{c.primaryPhoneE164 ? formatPhone(c.primaryPhoneE164) : (c.phones[0]?.raw ?? '—')}</span>
+        ),
     },
-    { key: 'email', header: 'Email', hideBelow: 'lg', cell: (c) => c.primaryEmail ?? '—' },
+    { key: 'email', header: 'Email', hideBelow: 'lg', cell: (c) => (c.contactInfoHidden ? <HiddenContact /> : (c.primaryEmail ?? '—')) },
     {
       key: 'stage',
       header: 'Stage',
@@ -332,7 +334,7 @@ export default function ContactsPage() {
               onSortChange={(s) => setFilter('sort', s)}
               selectedIds={canUpdate && !isDeletedView ? selected : undefined}
               onSelectionChange={canUpdate && !isDeletedView ? setSelected : undefined}
-              onRowClick={(c) => navigate(`/app/contacts/${c.id}`)}
+              onRowClick={canView ? (c) => navigate(`/app/contacts/${c.id}`) : undefined}
               mobileCard={(c) => (
                 <div className="flex items-center gap-3 rounded-xl bg-surface p-3 ring-1 ring-line">
                   <Avatar name={c.displayName} size="sm" />

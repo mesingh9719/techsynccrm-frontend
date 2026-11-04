@@ -201,9 +201,14 @@ export interface OrganizationSummary {
   name: string
   slug: string
   plan: PlanId
+  /** Base role; with a custom role this is its tier and `roleId` / `roleName` name the custom role. */
   role: MemberRole
-  /** The member's permissions (backend config/permissions.js); read through useCan. */
+  roleId: string | null
+  roleName: string
+  /** The member's effective permissions (backend services/roleAccess.service.js); read through useCan. */
   permissions: string[]
+  /** Fingerprint of `permissions`; workspace responses send the current one as X-Access-Version. */
+  accessVersion: string
   /** Members must have 2FA on to use this workspace. */
   require2fa: boolean
 }
@@ -275,7 +280,10 @@ export interface Member {
   userId: string
   fullName: string
   email: string
+  /** Built-in role, or the tier of their custom role (`roleId` / `roleName`). */
   role: MemberRole
+  roleId: string | null
+  roleName: string | null
   status: 'active' | 'invited' | 'deactivated'
   title: string | null
   joinedAt: string | null
@@ -296,6 +304,8 @@ export interface Invitation {
   id: string
   email: string
   role: MemberRole
+  roleId: string | null
+  roleName: string | null
   teamIds: string[]
   status: 'pending' | 'expired'
   expiresAt: string
@@ -309,6 +319,92 @@ export interface Team {
   name: string
   createdAt: string
   members: { userId: string; isManager: boolean; fullName: string; email: string | null }[]
+}
+
+// ---------- Roles (RBAC) ----------
+
+export type PermissionScope = 'all' | 'team' | 'own'
+
+/**
+ * One action in a module of the roles screen. Record modules: `key` is the action (`list`) and
+ * the permission is `<module>.<key>`; other modules: `key` is the whole permission.
+ * `scoped`: granted as `<permission>.<scope>` with the module's scope.
+ */
+export interface ModuleAction {
+  key: string
+  label: string
+  description?: string
+  scoped?: boolean
+  scopes?: PermissionScope[]
+  /** Other actions of the same module this one needs. */
+  requires?: string[]
+  /** Only the Owner role holds it. */
+  ownerOnly?: boolean
+  /** Only the locked Owner and Admin roles hold it. */
+  adminOnly?: boolean
+}
+
+/** A card on the roles screen (backend config/permissions.js MODULES). */
+export interface PermissionModule {
+  key: string
+  label: string
+  description: string
+  /** A record module: switched on by `<key>.read.<scope>`, with a "which records" choice. */
+  records: boolean
+  /** Other scoped modules (reports): the permission that switches it on. */
+  access?: string
+  scopes?: PermissionScope[]
+  actions: ModuleAction[]
+}
+
+/** GET /api/roles/catalogue */
+export interface PermissionCatalogue {
+  modules: PermissionModule[]
+  scopes: PermissionScope[]
+  defaults: Record<MemberRole, string[]>
+  colors: string[]
+}
+
+export interface Role {
+  /** Built-in roles: the key (`manager`). Custom roles: the row id. */
+  id: string
+  system: boolean
+  key: MemberRole | null
+  name: string
+  description: string | null
+  color: string | null
+  /** Owner and Admin: never editable. */
+  locked: boolean
+  /** Built-in roles: differs from the defaults. Custom roles: always true. */
+  customised: boolean
+  /** The current member may edit it. */
+  editable: boolean
+  permissions: string[]
+  defaults: string[] | null
+  memberCount: number
+  /** For STALE_UPDATE checks; 0 while a built-in role is at its defaults. */
+  version: number
+  updatedAt: string | null
+}
+
+/** GET /api/roles */
+export interface RoleList {
+  roles: Role[]
+  canManage: boolean
+}
+
+export interface RoleProblem {
+  permission: string
+  message: string
+  kind: 'invalid' | 'combination'
+}
+
+/** POST /api/roles/preview */
+export interface RolePreview {
+  problems: RoleProblem[]
+  permissions: string[]
+  changes: { added: string[]; removed: string[] }
+  affected: { count: number; members: { userId: string; fullName: string }[] }
 }
 
 // ---------- Account (M05) ----------

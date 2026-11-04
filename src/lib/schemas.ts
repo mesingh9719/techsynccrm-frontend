@@ -221,7 +221,8 @@ export type ChangePasswordValues = z.infer<typeof changePasswordSchema>
 
 export const inviteSchema = z.object({
   emails: z.string().refine((v) => parseEmails(v).valid.length > 0, 'Add at least one email address'),
-  role: z.enum(['admin', 'manager', 'sales_rep', 'viewer'], { error: 'Choose a role' }),
+  /** A built-in role key or a custom role id. */
+  role: z.string().min(1, 'Choose a role'),
 })
 export type InviteValues = z.infer<typeof inviteSchema>
 

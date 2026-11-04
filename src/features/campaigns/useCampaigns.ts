@@ -8,7 +8,7 @@ import type { CampaignInput, CampaignStatus } from './types'
 
 export function useCampaigns() {
   const orgId = useOrgId()
-  const allowed = useCan('campaigns.read')
+  const allowed = useCan('campaigns.list')
   return useQuery({
     queryKey: ['org', orgId, 'campaigns'],
     queryFn: () => listCampaigns(orgId),

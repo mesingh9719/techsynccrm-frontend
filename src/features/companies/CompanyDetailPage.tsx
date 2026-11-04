@@ -17,7 +17,7 @@ import { ConfirmDialog } from '../../components/app/Dialog'
 import { ErrorState, Skeleton } from '../../components/app/States'
 import { ContactFormDrawer } from '../contacts/ContactFormDrawer'
 import { formatCustomValue } from '../crm/customFieldFormat'
-import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel } from '../crm/components/RecordParts'
+import { DeletedBanner, FieldRow, HiddenContact, InlineText, OwnerCell, Panel } from '../crm/components/RecordParts'
 import { TagChips } from '../crm/components/Tags'
 import { formatPhone, relativeTime } from '../crm/format'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
@@ -139,7 +139,7 @@ export default function CompanyDetailPage() {
               Website
             </Button>
           )}
-          {(company.phoneE164 || company.phoneRaw) && (
+          {!company.contactInfoHidden && (company.phoneE164 || company.phoneRaw) && (
             <Button href={`tel:${company.phoneE164 ?? company.phoneRaw}`} variant="secondary" size="sm">
               <Phone className="size-4" aria-hidden="true" />
               Call
@@ -173,9 +173,11 @@ export default function CompanyDetailPage() {
                 />
               </FieldRow>
               <FieldRow label="Domain">{company.domain ?? '—'}</FieldRow>
-              <FieldRow label="Phone">{formatPhone(company.phoneE164, company.phoneRaw)}</FieldRow>
+              <FieldRow label="Phone">{company.contactInfoHidden ? <HiddenContact /> : formatPhone(company.phoneE164, company.phoneRaw)}</FieldRow>
               <FieldRow label="Email">
-                {company.email ? (
+                {company.contactInfoHidden ? (
+                  <HiddenContact />
+                ) : company.email ? (
                   <a href={`mailto:${company.email}`} className="hover:underline">
                     {company.email}
                   </a>

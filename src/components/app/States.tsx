@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react'
-import { CircleAlert, RefreshCw, Inbox, ChevronRight } from 'lucide-react'
+import { CircleAlert, RefreshCw, Inbox, ChevronRight, Lock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { cn } from '../../lib/cn'
 import { Button } from '../ui/Button'
@@ -57,13 +57,18 @@ export function EmptyState({
 
 /** A failed load, with a retry button. */
 export function ErrorState({ error, onRetry, className }: { error: unknown; onRetry?: () => void; className?: string }) {
-  const message =
-    error instanceof ApiError && error.status !== 0 && error.status < 500 ? error.message : 'We couldn’t load this. Check your connection and try again.'
+  // Not allowed by the member's role: retrying won't help, so say who can change it instead.
+  const forbidden = error instanceof ApiError && error.status === 403
+  const message = forbidden
+    ? 'Your role doesn’t include this. Ask an owner or admin if you need access.'
+    : error instanceof ApiError && error.status !== 0 && error.status < 500
+      ? error.message
+      : 'We couldn’t load this. Check your connection and try again.'
   return (
     <div role="alert" className={cn('flex flex-col items-center rounded-card bg-surface px-6 py-12 text-center ring-1 ring-line', className)}>
-      <CircleAlert className="size-6 text-danger" aria-hidden="true" />
+      {forbidden ? <Lock className="size-6 text-muted" aria-hidden="true" /> : <CircleAlert className="size-6 text-danger" aria-hidden="true" />}
       <p className="mt-3 text-sm text-ink">{message}</p>
-      {onRetry && (
+      {onRetry && !forbidden && (
         <Button variant="secondary" size="sm" onClick={onRetry} className="mt-5">
           <RefreshCw className="size-4" aria-hidden="true" />
           Try again

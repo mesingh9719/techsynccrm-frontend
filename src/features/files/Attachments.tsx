@@ -14,7 +14,8 @@ function Attachment({ file, onDelete }: { file: FileRecord; onDelete: () => void
   const [removing, setRemoving] = useState(false)
   const notify = useToast()
   const { user } = useAuth()
-  const canDelete = file.uploadedById === user?.id || ['owner', 'admin'].includes(user?.organization?.role ?? '')
+  const canManageAll = useCan('files.manage')
+  const canDelete = file.uploadedById === user?.id || canManageAll
   const details = useQuery({ queryKey: ['org', user?.organization?.id, 'file', file.id], queryFn: () => getFile(file.id), staleTime: 10 * 60_000 })
   const viewable = file.contentType.startsWith('image/') || file.contentType === 'application/pdf'
   async function remove() {
@@ -36,7 +37,9 @@ function Attachment({ file, onDelete }: { file: FileRecord; onDelete: () => void
 export function Attachments({ entityType, entityId }: { entityType: string; entityId: string }) {
   const { user } = useAuth()
   const resource = { lead: 'leads', contact: 'contacts', company: 'companies', deal: 'deals' }[entityType] as 'leads' | 'contacts' | 'companies' | 'deals'
-  const canUpload = useCan(`${resource}.update`)
+  const canEditRecord = useCan(`${resource}.update`)
+  const canUploadFiles = useCan('files.upload')
+  const canUpload = canEditRecord && canUploadFiles
   const queryClient = useQueryClient(), notify = useToast(), input = useRef<HTMLInputElement>(null)
   const [progress, setProgress] = useState<number | null>(null)
   const [activeUpload, setActiveUpload] = useState<{ name: string; index: number; total: number } | null>(null)

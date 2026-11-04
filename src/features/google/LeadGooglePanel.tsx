@@ -12,7 +12,7 @@ import { CreateSheetDialog, SheetList } from './SheetsPage'
 import { listMeetings, listSheets } from './api'
 
 export function LeadGooglePanel({ lead }: { lead: { id: string; displayName: string; deletedAt?: string | null } }) {
-  const allowed = useCan('google.connect.own'), tasks = useCan('tasks.create'), canExport = useCan('records.export'), key = useGoogleResourceKey()
+  const allowed = useCan('google.connect.own'), tasks = useCan('tasks.create'), canExport = useCan('leads.export'), key = useGoogleResourceKey()
   if (!allowed || lead.deletedAt) return null
   return <section className="surface space-y-4 p-4" aria-label="Lead Google tools"><h2 className="font-medium">Calendar, Meet & Sheets</h2><LeadTools key={`${key.join(':')}:${lead.id}`} lead={{ id: lead.id, label: lead.displayName }} tasks={tasks} canExport={canExport} /></section>
 }

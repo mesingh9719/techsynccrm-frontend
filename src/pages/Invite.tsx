@@ -46,7 +46,7 @@ function Header({ invite }: { invite: InvitationPreview }) {
       <h1 className="mt-5 text-2xl font-semibold tracking-tight text-zinc-950">Join {invite.organizationName}</h1>
       <p className="mt-2 text-zinc-600">
         {invite.inviterName ?? 'A teammate'} invited <strong className="font-medium text-zinc-900">{invite.email}</strong> to join as{' '}
-        {roleLabels[invite.role as MemberRole] ?? invite.role}.
+        {invite.roleName ?? roleLabels[invite.role as MemberRole] ?? invite.role}.
       </p>
     </div>
   )

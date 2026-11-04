@@ -81,7 +81,7 @@ export function WorkspaceSwitcher({ className, compact = false }: { className?: 
                 icon={switchingId === ws.id ? <LoaderCircle className="size-4 animate-spin" /> : ws.id === current.id ? <Check className="size-4 text-brand-700" /> : null}
               >
                 <span className="block truncate font-medium text-ink">{ws.name}</span>
-                <span className="block text-xs text-muted">{roleLabels[ws.role]}</span>
+                <span className="block text-xs text-muted">{ws.roleName ?? roleLabels[ws.role]}</span>
               </MenuItem>
             ))}
             <MenuSeparator />

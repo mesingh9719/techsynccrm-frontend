@@ -16,7 +16,7 @@ import { useToast } from '../../components/ui/Toast'
 import { ConfirmDialog } from '../../components/app/Dialog'
 import { ErrorState, Skeleton } from '../../components/app/States'
 import { formatCustomValue } from '../crm/customFieldFormat'
-import { DeletedBanner, FieldRow, InlineText, OwnerCell, Panel } from '../crm/components/RecordParts'
+import { DeletedBanner, FieldRow, HiddenContact, InlineText, OwnerCell, Panel } from '../crm/components/RecordParts'
 import { TagChips } from '../crm/components/Tags'
 import { formatPhone, lifecycleLabels, relativeTime, whatsappLink } from '../crm/format'
 import { useCustomFieldDefs, useOrgId } from '../crm/hooks'
@@ -41,6 +41,7 @@ export default function ContactDetailPage() {
   const canUpdateAny = useCan('contacts.update')
   const canDeleteAny = useCan('contacts.delete')
   const canSendEmail = useCan('email.send')
+  const canCall = useCan('contacts.call')
   const [emailOpen, setEmailOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -129,7 +130,7 @@ export default function ContactDetailPage() {
         facts={contact.tags.length > 0 && <TagChips tags={contact.tags} max={6} />}
         actions={
           <>
-          {primaryPhone && (
+          {primaryPhone && canCall && (
             <Button href={`tel:${primaryPhone.e164 ?? primaryPhone.raw}`} variant="secondary" size="sm">
               <Phone className="size-4" aria-hidden="true" />
               Call
@@ -197,14 +198,20 @@ export default function ContactDetailPage() {
                 />
               </FieldRow>
               <FieldRow label="Phone">
-                {contact.phones.length ? (
+                {contact.contactInfoHidden ? (
+                  <HiddenContact />
+                ) : contact.phones.length ? (
                   <ul className="space-y-1">
                     {contact.phones.map((p) => (
                       <li key={p.raw} className="flex items-center gap-2 tabular-nums">
                         {p.primary && <Star className="size-3 fill-amber-400 text-amber-400" aria-label="Primary" />}
-                        <a href={`tel:${p.e164 ?? p.raw}`} className="hover:underline">
-                          {formatPhone(p.e164, p.raw)}
-                        </a>
+                        {canCall ? (
+                          <a href={`tel:${p.e164 ?? p.raw}`} className="hover:underline">
+                            {formatPhone(p.e164, p.raw)}
+                          </a>
+                        ) : (
+                          <span>{formatPhone(p.e164, p.raw)}</span>
+                        )}
                         {p.whatsapp && <Badge tone="success">WhatsApp</Badge>}
                         {!p.e164 && <span className="text-xs text-amber-700">(not a valid number)</span>}
                       </li>
@@ -215,7 +222,9 @@ export default function ContactDetailPage() {
                 )}
               </FieldRow>
               <FieldRow label="Email">
-                {contact.emails.length ? (
+                {contact.contactInfoHidden ? (
+                  <HiddenContact />
+                ) : contact.emails.length ? (
                   <ul className="space-y-1">
                     {contact.emails.map((e) => (
                       <li key={e.value} className="flex items-center gap-2">

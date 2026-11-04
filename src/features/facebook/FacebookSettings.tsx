@@ -20,7 +20,7 @@ function Paging({ next, first, onNext, onFirst }: { next?: string | null; first:
   return <div className="flex gap-2">{!first && <Button size="sm" variant="ghost" onClick={onFirst}>First page</Button>}{next && <Button size="sm" variant="secondary" onClick={() => onNext(next)}>Next page</Button>}</div>
 }
 function CaptureGuide() {
-  const canImport = useCan('records.import')
+  const canImport = useCan('leads.import')
   return <section className={panel} aria-labelledby="facebook-capture-guide">
     <div><h2 id="facebook-capture-guide" className="font-semibold">What gets synced</h2><p className="mt-2 text-sm leading-6 text-muted">This connection imports submissions from the Facebook Instant Forms you enable below.</p></div>
     <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"><p className="font-medium">Adding a contact in Business Suite is a separate workflow.</p><p className="mt-1">Contacts entered with “Add leads” in Leads Center (shown with source “Direct”) are outside this Instant Form connection. Add those contacts in this CRM, or import a spreadsheet containing their details.</p></div>

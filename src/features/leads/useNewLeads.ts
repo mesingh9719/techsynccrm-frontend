@@ -10,7 +10,7 @@ import { listLeads } from './api'
 /** A bounded latest-leads poll; old/initial records and the actor's own manual creates do not toast. */
 export function useNewLeads() {
   const { user } = useAuth(),
-    canRead = useCan('leads.read'),
+    canRead = useCan('leads.list'),
     client = useQueryClient(),
     navigate = useNavigate(),
     notify = useToast()

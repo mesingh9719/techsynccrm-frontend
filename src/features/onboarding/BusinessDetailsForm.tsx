@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
@@ -38,14 +38,14 @@ export function BusinessDetailsForm({ org, onSaved }: { org: Organization; onSav
   const client = useQueryClient(), notify = useToast()
   const [tzOptions] = useState(() => timeZoneOptions(org.timezone))
   const [serverError, setServerError] = useState('')
-  const { register, handleSubmit, watch, setValue, setError, formState: { errors, isSubmitting } } = useForm<Values>({
+  const { register, handleSubmit, control, setValue, setError, formState: { errors, isSubmitting } } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
       legalName: org.legalName ?? org.name, line1: org.address?.line1 ?? '', city: org.address?.city ?? '', stateCode: org.stateCode ?? '',
-      pincode: org.address?.pincode ?? '', gstRegistered: Boolean(org.gstin), gstin: org.gstin ?? '', timezone: org.timezone || 'Asia/Kolkata', currency: org.currency ?? 'INR',
+      pincode: org.address?.pincode ?? '', gstRegistered: Boolean(org.gstin) || !org.legalName, gstin: org.gstin ?? '', timezone: org.timezone || 'Asia/Kolkata', currency: org.currency ?? 'INR',
     },
   })
-  const registered = watch('gstRegistered')
+  const registered = useWatch({ control, name: 'gstRegistered' })
   const gstin = register('gstin')
 
   async function onSubmit(v: Values) {
@@ -77,7 +77,7 @@ export function BusinessDetailsForm({ org, onSaved }: { org: Organization; onSav
         <Field label="Legal business name" required error={errors.legalName?.message} hint="As it should appear on quotes and invoices." className="sm:col-span-2">
           {({ id, describedBy, invalid }) => <Input id={id} autoComplete="organization" aria-describedby={describedBy} invalid={invalid} {...register('legalName')} />}
         </Field>
-        <div className="sm:col-span-2 flex items-start justify-between gap-4 rounded-xl border border-line bg-surface-subtle/70 px-4 py-3">
+        <div className="launch-gst sm:col-span-2">
           <div><p className="flex items-center gap-1.5 text-sm font-medium text-ink"><ReceiptText className="size-4 text-muted" aria-hidden="true" />GST registered</p><p id="gst-hint" className="mt-0.5 text-xs text-muted">Turn off if your business doesn’t have a GSTIN yet.</p></div>
           <Switch label="GST registered" describedBy="gst-hint" checked={registered} onChange={(next) => setValue('gstRegistered', next, { shouldDirty: true })} />
         </div>
@@ -116,9 +116,9 @@ export function BusinessDetailsForm({ org, onSaved }: { org: Organization; onSav
       </div>
     </fieldset>
     {serverError && <FormAlert>{serverError}</FormAlert>}
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="launch-actions">
       <p className="flex items-center gap-1.5 text-xs text-muted"><BadgeCheck className="size-3.5 text-emerald-600" aria-hidden="true" />You can change these anytime in Settings → General.</p>
-      <Button type="submit" loading={isSubmitting}>Save business details</Button>
+      <Button type="submit" loading={isSubmitting}>Save and continue</Button>
     </div>
   </form>
 }

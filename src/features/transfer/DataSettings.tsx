@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Building2, CircleAlert, Download, FileSpreadsheet, FileText, Layers3, Sparkles, Upload, Users } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { useAuth } from '../../lib/useAuth'
-import { useCan } from '../../lib/useOrg'
+import { useCanAny } from '../../lib/useOrg'
 import { Button } from '../../components/ui/Button'
 import { Tabs } from '../../components/ui/Tabs'
 import { useToast } from '../../components/ui/Toast'
@@ -178,8 +178,8 @@ const FILTERS: { value: ImportFilter; label: string; match: (j: ImportHistoryIte
 
 export default function DataSettings() {
   const { user } = useAuth()
-  const allowed = useCan('records.import'),
-    canExport = useCan('records.export')
+  const allowed = useCanAny('import'),
+    canExport = useCanAny('export')
   const notify = useToast()
   const [downloading, setDownloading] = useState<string | null>(null)
   const [tab, setTab] = useState<'imports' | 'exports'>(allowed ? 'imports' : 'exports')

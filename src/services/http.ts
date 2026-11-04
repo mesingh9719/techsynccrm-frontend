@@ -70,11 +70,37 @@ export interface SessionPayload {
 
 export function setSession({ user, accessToken: token }: SessionPayload) {
   accessToken = token
+  pendingAccessVersion = null
   emit({ status: 'authenticated', user })
 }
 
 export function updateSessionUser(user: AuthUser) {
+  pendingAccessVersion = null
   emit({ status: 'authenticated', user })
+}
+
+// ---------- Permission changes ----------
+
+let accessChangeListener: (() => Promise<unknown>) | null = null
+let pendingAccessVersion: string | null = null
+
+/**
+ * Called when a workspace response's X-Access-Version differs from the session's
+ * `accessVersion` (an admin changed this member's role or edited it). services/auth.ts reloads
+ * the session, so `useCan` updates without signing in again. Once per new version.
+ */
+export function onAccessVersionChange(listener: () => Promise<unknown>) {
+  accessChangeListener = listener
+}
+
+function checkAccessVersion(res: Response) {
+  const version = res.headers.get('X-Access-Version')
+  const current = state.user?.organization?.accessVersion
+  if (!version || !current || version === current || version === pendingAccessVersion || !accessChangeListener) return
+  pendingAccessVersion = version
+  accessChangeListener().catch(() => {
+    if (pendingAccessVersion === version) pendingAccessVersion = null
+  })
 }
 
 export function clearSession() {
@@ -177,6 +203,7 @@ export async function apiBlob(path: string, options: RequestOptions = {}): Promi
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const orgId = state.user?.organization?.id
   const res = await authenticatedResponse(path, options)
+  if (!options.anonymous) checkAccessVersion(res)
   const data = await parse<T>(res)
   if (orgId && !options.anonymous && options.method && options.method !== 'GET') {
     for (const listener of writeListeners) {

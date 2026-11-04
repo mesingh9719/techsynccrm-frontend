@@ -1,0 +1,6 @@
+/* Dashboard cards: softer corners, layered shadow and a gentle lift on hover. */
+.dashboard-page .surface { border-radius: 1rem; box-shadow: 0 1px 2px #1118270a, 0 8px 24px -16px #11182724; transition: box-shadow .2s, border-color .2s; }
+.dashboard-page [data-dashboard-widget] > .surface:hover { border-color: color-mix(in srgb, var(--color-brand-500) 18%, var(--color-line)); box-shadow: 0 1px 2px #1118270a, 0 16px 32px -18px #4f46e540; }
+.dashboard-page .section-title { letter-spacing: -.01em; }
+.dashboard-page .section-title > svg:first-child { box-sizing: content-box; padding: .35rem; border-radius: .55rem; background: var(--color-canvas); }
+@media (prefers-reduced-motion: reduce) { .dashboard-page .surface { transition: none; } }

@@ -28,11 +28,13 @@ import { getBoard } from '../deals/api'
 import { MyDay } from '../tasks/MyDay'
 import { getTaskSummary } from '../activities/api'
 import { listNotifications } from '../notifications/api'
-import { SetupChecklist } from '../onboarding/SetupChecklist'
+import { LaunchFocus, LaunchPad } from '../onboarding/LaunchPad'
+import { useLaunchSteps, type LaunchState } from '../onboarding/useLaunchSteps'
 import { listCampaigns } from '../campaigns/api'
 import { memberOptions } from '../../services/team'
 import { qk } from '../../lib/queryKeys'
 import { workspaceDates } from './dates'
+import './dashboard.css'
 import { getDateRangeForPreset } from './datePresets'
 import { DashboardFilters, type DashboardFilterState } from './DashboardFilters'
 import { DashboardKpis } from './DashboardKpis'
@@ -52,23 +54,28 @@ import {
 export default function DashboardPage() {
   const { user } = useAuth()
   const orgId = useOrgId()
+  const launch = useLaunchSteps()
+  // A brand-new workspace sees only the launch panel until its business details are saved.
+  if (launch.loading) return <div className="app-page space-y-5" aria-label="Loading dashboard"><Skeleton className="h-16 w-80" /><Skeleton className="h-[28rem] rounded-2xl" /></div>
+  if (launch.focus) return <LaunchFocus launch={launch} />
   return (
-    <DashboardWorkspace key={`${orgId}:${user?.id}`} storageKey={dashboardStorageKey(orgId, user?.id ?? 'anonymous')} />
+    <DashboardWorkspace key={`${orgId}:${user?.id}`} launch={launch} storageKey={dashboardStorageKey(orgId, user?.id ?? 'anonymous')} />
   )
 }
 
-function DashboardWorkspace({ storageKey }: { storageKey: string }) {
+function DashboardWorkspace({ storageKey, launch }: { storageKey: string; launch: LaunchState }) {
   useSeo({ title: 'Dashboard', noindex: true })
   const { user } = useAuth()
   const { organization } = useOrg()
   const orgId = useOrgId()
   const queryClient = useQueryClient()
-  const canLeads = useCan('leads.read'),
-    canDeals = useCan('deals.read'),
-    canTasks = useCan('tasks.read')
+  const canLeads = useCan('leads.list'),
+    canViewLeads = useCan('leads.view'),
+    canDeals = useCan('deals.list'),
+    canTasks = useCan('tasks.list')
   const canCreateLead = useCan('leads.create'),
     canReports = useCan('reports.read')
-  const canCampaigns = useCan('campaigns.read')
+  const canCampaigns = useCan('campaigns.list')
   const [preferences, setPreferences] = useState(() => readPreferences(storageKey))
   const [customizing, setCustomizing] = useState(false)
   const [saveNotice, setSaveNotice] = useState('')
@@ -191,7 +198,8 @@ function DashboardWorkspace({ storageKey }: { storageKey: string }) {
       case 'tasks':
         return <MyDay />
       case 'setup':
-        return <SetupChecklist />
+        // Drawn above the dashboard as the workspace launch panel.
+        return null
       case 'updates':
         return <RecentUpdates />
       case 'team':
@@ -232,18 +240,20 @@ function DashboardWorkspace({ storageKey }: { storageKey: string }) {
             ) : attention.isError ? (
               <ErrorState error={attention.error} onRetry={() => attention.refetch()} />
             ) : !attention.data?.items.length ? (
-              <div className="flex min-h-52 flex-col items-center justify-center p-6 text-center">
-                <span className="flex size-11 items-center justify-center rounded-full bg-emerald-500/10">
+              <div className="flex items-center gap-4 px-5 py-5">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 ring-4 ring-emerald-500/5">
                   <CircleCheck className="size-5 text-success" />
                 </span>
-                <p className="mt-3 text-sm font-semibold text-ink">You’re all caught up</p>
-                <p className="mt-1 text-xs leading-5 text-muted">No new enquiries waiting for a first response.</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink">You’re all caught up</p>
+                  <p className="mt-0.5 text-xs leading-5 text-muted">No new enquiries waiting for a first response.</p>
+                </div>
               </div>
             ) : (
               <ul className="grid divide-y divide-line px-5 md:grid-cols-2 md:gap-x-6 xl:grid-cols-3">
                 {attention.data.items.map((lead) => (
                   <li key={lead.id}>
-                    <Link to={`/app/leads/${lead.id}`} className="group flex items-center gap-3 py-4">
+                    <Link to={canViewLeads ? `/app/leads/${lead.id}` : `/app/leads?q=${encodeURIComponent(lead.displayName)}`} className="group flex items-center gap-3 py-4">
                       <Avatar name={lead.displayName} size="sm" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-semibold text-ink group-hover:text-brand-700">
@@ -255,7 +265,7 @@ function DashboardWorkspace({ storageKey }: { storageKey: string }) {
                         {!lead.ownerId && <span className="mt-1 block text-xs text-warning">Unassigned</span>}
                       </div>
                       <ArrowUpRight className="size-4 shrink-0 text-muted group-hover:text-brand-700" />
-                      <span className="sr-only">Follow up</span>
+                      <span className="sr-only">{canViewLeads ? 'Follow up' : 'Find in leads'}</span>
                     </Link>
                   </li>
                 ))}
@@ -382,6 +392,7 @@ function DashboardWorkspace({ storageKey }: { storageKey: string }) {
           </button>
         </div>
       } />
+      {visibleWidgets.includes('setup') && <LaunchPad launch={launch} mode="inline" />}
       <DashboardFilters
         filters={filters}
         onChange={setFilters}
@@ -423,9 +434,9 @@ function DashboardWorkspace({ storageKey }: { storageKey: string }) {
         boardLoading={board.isPending}
         taskLoading={tasks.isPending}
       />
-      {visibleWidgets.some((id) => id !== 'attention') && (
+      {visibleWidgets.some((id) => id !== 'attention' && id !== 'setup') && (
         <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {visibleWidgets.filter((id) => id !== 'attention').map((id) => (
+          {visibleWidgets.filter((id) => id !== 'attention' && id !== 'setup').map((id) => (
             <div
               key={id}
               data-dashboard-widget={id}

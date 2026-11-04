@@ -60,7 +60,8 @@ export function DealFormDrawer({
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const notify = useToast()
-  const canAssign = useCan('records.assign')
+  const canAssign = useCan('deals.assign')
+  const canView = useCan('deals.view')
   const pipelines = usePipelines()
   const sources = useLeadSources()
   const [draft, setDraft] = useState<Draft>(() => ({
@@ -116,7 +117,7 @@ export function DealFormDrawer({
       await invalidateSales(queryClient, orgId, { timeline: true })
       notify({ title: deal ? 'Deal saved' : `${saved.title} added` })
       close()
-      if (!deal) navigate(`/app/deals/${saved.id}`)
+      if (!deal && canView) navigate(`/app/deals/${saved.id}`)
     } catch (err) {
       if (err instanceof ApiError && err.code === 'STALE_UPDATE') await invalidateSales(queryClient, orgId, { timeline: true })
       if (err instanceof ApiError && err.code === 'STAGE_REQUIREMENTS') setServerError(`${err.message} (${((err.details?.missing as string[]) ?? []).join(', ')})`)

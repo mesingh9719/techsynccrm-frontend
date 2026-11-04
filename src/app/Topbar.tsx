@@ -155,7 +155,7 @@ function UserMenu() {
             <p className="truncate text-xs text-muted">{user.email}</p>
             {user.organization && (
               <p className="mt-1 text-xs text-muted">
-                {roleLabels[user.organization.role]} · {user.organization.name}
+                {user.organization.roleName ?? roleLabels[user.organization.role]} · {user.organization.name}
               </p>
             )}
           </div>

@@ -76,6 +76,8 @@ interface RecordBase {
   createdAt: string
   updatedAt: string
   deletedAt: string | null
+  /** Phone numbers and emails were removed: this role lacks "See phone numbers and emails". */
+  contactInfoHidden?: boolean
 }
 
 export type LifecycleStage = 'subscriber' | 'lead' | 'customer' | 'inactive'

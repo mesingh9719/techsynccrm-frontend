@@ -13,7 +13,7 @@ export interface LinkedRecord { entityType: RecordType; entityId: string; name: 
 const recordLabels: Record<RecordType, string> = { lead: 'Lead', contact: 'Contact', company: 'Company', deal: 'Deal' }
 export function RecordLinkPicker({ value, onChange }: { value: LinkedRecord | null; onChange: (value: LinkedRecord | null) => void }) {
   const orgId = useOrgId()
-  const lead = useCan('leads.read'), contact = useCan('contacts.read'), company = useCan('companies.read'), deal = useCan('deals.read')
+  const lead = useCan('leads.list'), contact = useCan('contacts.list'), company = useCan('companies.list'), deal = useCan('deals.list')
   const available = (Object.keys(recordLabels) as RecordType[]).filter((type) => ({ lead, contact, company, deal })[type])
   const [chosenType, setType] = useState<RecordType>(value?.entityType || available[0] || 'lead')
   const type = value?.entityType || chosenType

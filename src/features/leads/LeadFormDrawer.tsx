@@ -13,7 +13,7 @@ import { Button } from '../../components/ui/Button'
 import { Field, Input, MoneyInput, Select, Textarea } from '../../components/ui/Form'
 import { useToast } from '../../components/ui/Toast'
 import { FieldRow, FormDrawer, FormSection } from '../../components/app/FormDrawer'
-import { Contact, MapPin, MessageSquareText, Radio, UserPlus, UserRound } from 'lucide-react'
+import { Contact, Lock, MapPin, MessageSquareText, Radio, UserPlus, UserRound } from 'lucide-react'
 import { UserPicker } from '../../components/app/UserPicker'
 import { EmailsEditor, PhonesEditor, type EmailDraft, type PhoneDraft } from '../crm/components/ContactPoints'
 import { cleanEmails, cleanPhones } from '../crm/listHelpers'
@@ -82,7 +82,8 @@ export function LeadFormDrawer({
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const notify = useToast()
-  const canAssign = useCan('records.assign')
+  const canAssign = useCan('leads.assign')
+  const canView = useCan('leads.view')
   const sources = useLeadSources()
   const { data: campaigns = [] } = useCampaigns()
   const [draft, setDraft] = useState<Draft>(() => fromLead(lead, user?.id ?? null))
@@ -148,7 +149,7 @@ export function LeadFormDrawer({
       await invalidateSales(queryClient, orgId)
       notify({ title: lead ? 'Lead saved' : `${saved.displayName} added` })
       close()
-      if (!lead) navigate(`/app/leads/${saved.id}`)
+      if (!lead && canView) navigate(`/app/leads/${saved.id}`)
     } catch (err) {
       if (err instanceof ApiError && err.code === 'STALE_UPDATE')
         await queryClient.invalidateQueries({ queryKey: qk.org(orgId).leads.all })
@@ -205,12 +206,18 @@ export function LeadFormDrawer({
               {({ id, invalid }) => <Input id={id} invalid={invalid} value={draft.lastName} onChange={(e) => set('lastName', e.target.value)} autoComplete="off" />}
             </Field>
           </FieldRow>
-          <Field label="Phone" optional error={errors.phones}>
-            {({ id }) => <PhonesEditor idPrefix={id} value={draft.phones} onChange={(v) => set('phones', v)} errors={fieldErrorsUnder(errors, 'phones')} />}
-          </Field>
-          <Field label="Email" optional error={errors.emails}>
-            {({ id }) => <EmailsEditor idPrefix={id} value={draft.emails} onChange={(v) => set('emails', v)} errors={fieldErrorsUnder(errors, 'emails')} />}
-          </Field>
+          {lead?.contactInfoHidden ? (
+            <p className="flex items-center gap-2 rounded-lg bg-surface-subtle px-3 py-2 text-sm text-muted ring-1 ring-line"><Lock className="size-4 shrink-0" aria-hidden="true" />Phone numbers and emails are hidden for your role and stay as they are.</p>
+          ) : (
+            <>
+              <Field label="Phone" optional error={errors.phones}>
+                {({ id }) => <PhonesEditor idPrefix={id} value={draft.phones} onChange={(v) => set('phones', v)} errors={fieldErrorsUnder(errors, 'phones')} />}
+              </Field>
+              <Field label="Email" optional error={errors.emails}>
+                {({ id }) => <EmailsEditor idPrefix={id} value={draft.emails} onChange={(v) => set('emails', v)} errors={fieldErrorsUnder(errors, 'emails')} />}
+              </Field>
+            </>
+          )}
         </FormSection>
 
         <FormSection title="Enquiry" icon={MessageSquareText} description="What they need and what it’s worth">

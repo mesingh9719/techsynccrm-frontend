@@ -61,9 +61,10 @@ export default function CompaniesPage() {
   const queryClient = useQueryClient()
   const notify = useToast()
   const canCreate = useCan('companies.create')
+  const canView = useCan('companies.view')
   const canUpdate = useCan('companies.update')
   const canDelete = useCan('companies.delete')
-  const canAssign = useCan('records.assign')
+  const canAssign = useCan('companies.assign')
   const defs = useCustomFieldDefs('company')
   const tags = useTags()
   const keys = useMemo(() => [...CORE_KEYS, ...customFilterKeys(defs.data)], [defs.data])
@@ -319,7 +320,7 @@ export default function CompaniesPage() {
               onSortChange={(s) => setFilter('sort', s)}
               selectedIds={canUpdate && !isDeletedView ? selected : undefined}
               onSelectionChange={canUpdate && !isDeletedView ? setSelected : undefined}
-              onRowClick={(c) => navigate(`/app/companies/${c.id}`)}
+              onRowClick={canView ? (c) => navigate(`/app/companies/${c.id}`) : undefined}
               mobileCard={(c) => (
                 <div className="flex items-center gap-3 rounded-xl bg-surface p-3 ring-1 ring-line">
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-subtle text-xs font-semibold text-muted">

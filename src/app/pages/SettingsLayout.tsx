@@ -13,10 +13,9 @@ import { useSettingsStatus, type SettingsStatus } from './settingsStatus'
 import './settings-layout.css'
 
 const ROOT = '/app/settings'
-/** Shared-layout id: the clicked card's surface morphs into the sidebar's active pill (and back). */
+/** Shared-layout id: the clicked row's surface morphs into the sidebar's active pill (and back). */
 const MORPH_ID = 'settings-active'
 const spring: Transition = { type: 'spring', stiffness: 420, damping: 38, mass: 0.9 }
-const ease = [0.22, 1, 0.36, 1] as const
 
 const accentStyle = (group: SettingsGroupMeta) => ({ '--settings-accent': group.accent }) as CSSProperties
 const isSettingsPage = (item: SettingsNavItem) => item.to.startsWith(`${ROOT}/`)
@@ -66,39 +65,37 @@ function StatusBadge({ status, soon }: { status?: SettingsStatus; soon?: boolean
   )
 }
 
-/* ── Home: every settings page as a card, grouped by module ─────────────────────────────── */
+/* ── Home: every settings page as a compact row, grouped into module panels ────────────── */
 
-function SettingsCard({ item, status, morph, index, onOpen }: { item: SettingsNavItem; status?: SettingsStatus; morph: boolean; index: number; onOpen: (item: SettingsNavItem) => void }) {
+function SettingsRow({ item, status, morph, first, onOpen }: { item: SettingsNavItem; status?: SettingsStatus; morph: boolean; first: boolean; onOpen: (item: SettingsNavItem) => void }) {
   return (
-    <motion.li
-      initial={{ opacity: 0, y: 14, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.45, ease, delay: Math.min(index * 0.03, 0.45) }}
-      className="min-w-0"
-    >
+    <li className="min-w-0">
       <Link
         to={item.to}
-        className="settings-tile"
+        className={cn('settings-row', morph && 'is-recent', first && 'is-first')}
+        title={item.description}
         onClick={(e) => {
           if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0 || !isSettingsPage(item)) return
-          // Tag this card as the morph source before the route (and the sidebar) renders.
+          // Tag this row as the morph source before the route (and the sidebar) renders.
           flushSync(() => onOpen(item))
         }}
       >
-        <motion.span layoutId={morph ? MORPH_ID : undefined} transition={spring} className="settings-tile-bg" style={{ borderRadius: 12 }} aria-hidden="true" />
-        <span className="settings-tile-top">
-          <span className="settings-tile-icon" aria-hidden="true">
-            <item.icon className="size-5" />
-          </span>
-          <StatusBadge status={status} soon={!item.ready} />
+        <motion.span layoutId={morph ? MORPH_ID : undefined} transition={spring} className="settings-row-bg" style={{ borderRadius: 8 }} aria-hidden="true" />
+        <span className="settings-row-icon" aria-hidden="true">
+          <item.icon className="size-4" />
         </span>
-        <span className="settings-tile-title">
-          {item.label}
-          <ChevronRight className="settings-tile-arrow size-4" aria-hidden="true" />
+        <span className="settings-row-text">
+          <span className="settings-row-title">{item.label}</span>
+          <span className="settings-row-description">{item.description}</span>
         </span>
-        <span className="settings-tile-description">{item.description}</span>
+        <StatusBadge status={status} soon={!item.ready} />
+        {first ? (
+          <kbd className="settings-row-kbd" title="Press Enter to open">↵</kbd>
+        ) : (
+          <ChevronRight className="settings-row-arrow size-4" aria-hidden="true" />
+        )}
       </Link>
-    </motion.li>
+    </li>
   )
 }
 
@@ -109,7 +106,9 @@ function SettingsHome({ nav, morphKey, onOpen }: { nav: SettingsNavItem[]; morph
   const [query, setQuery] = useState('')
   const term = query.trim().toLowerCase()
   const shown = term ? nav.filter((item) => matchesTerm(item, term)) : nav
-  let index = 0
+  // While searching, Enter opens the first match (nav order is group order); mark it so that's visible.
+  const firstKey = term ? shown[0]?.key : undefined
+  let panel = 0
 
   return (
     <div className="settings-home">
@@ -132,31 +131,38 @@ function SettingsHome({ nav, morphKey, onOpen }: { nav: SettingsNavItem[]; morph
         }
       />
 
-      {shown.length === 0 && <p className="settings-home-empty">No settings match “{query.trim()}”.</p>}
+      {term && (
+        <p className={cn('settings-home-count', !shown.length && 'is-empty')} aria-live="polite">
+          {shown.length ? `${shown.length} ${shown.length === 1 ? 'setting matches' : 'settings match'} “${query.trim()}”` : `No settings match “${query.trim()}”.`}
+        </p>
+      )}
 
-      {settingsGroupMeta.map((group) => {
-        const items = shown.filter((item) => item.group === group.key)
-        if (!items.length) return null
-        const headingId = `settings-group-${group.key.replace(/\W+/g, '-').toLowerCase()}`
-        return (
-          <section key={group.key} className="settings-module" style={accentStyle(group)} aria-labelledby={headingId}>
-            <div className="settings-module-header">
-              <span className="settings-module-icon" aria-hidden="true">
-                <group.icon className="size-4" />
-              </span>
-              <div className="min-w-0">
-                <h2 id={headingId} className="settings-module-title">{group.key}</h2>
-                <p className="settings-module-description">{group.description}</p>
-              </div>
-            </div>
-            <ul className="settings-tiles">
-              {items.map((item) => (
-                <SettingsCard key={item.key} item={item} status={status[item.key]} morph={morphKey === item.key} index={index++} onOpen={onOpen} />
-              ))}
-            </ul>
-          </section>
-        )
-      })}
+      <div className="settings-modules">
+        {settingsGroupMeta.map((group) => {
+          const items = shown.filter((item) => item.group === group.key)
+          if (!items.length) return null
+          const headingId = `settings-group-${group.key.replace(/\W+/g, '-').toLowerCase()}`
+          return (
+            <section key={group.key} className="settings-module" style={{ ...accentStyle(group), '--i': panel++ } as CSSProperties} aria-labelledby={headingId}>
+              <header className="settings-module-header">
+                <span className="settings-module-icon" aria-hidden="true">
+                  <group.icon className="size-3.5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 id={headingId} className="settings-module-title">{group.key}</h2>
+                  <p className="settings-module-description">{group.description}</p>
+                </div>
+                <span className="settings-module-count" aria-label={`${items.length} ${items.length === 1 ? 'setting' : 'settings'}`}>{items.length}</span>
+              </header>
+              <ul className="settings-rows">
+                {items.map((item) => (
+                  <SettingsRow key={item.key} item={item} status={status[item.key]} morph={morphKey === item.key} first={item.key === firstKey} onOpen={onOpen} />
+                ))}
+              </ul>
+            </section>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -191,30 +197,25 @@ function SettingsSidebar({ nav, current }: { nav: SettingsNavItem[]; current?: S
   }
   const term = query.trim().toLowerCase()
   const matches = term ? nav.filter((item) => matchesTerm(item, term)) : []
-  let index = 0
 
   return (
-    <motion.aside
-      className="settings-nav"
-      aria-label="Settings"
-      // Opacity only: a moving parent would bend the active pill's morph from the clicked card.
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3, ease }}
-    >
-      <Link to={ROOT} className="settings-back">
-        <span className="settings-back-icon" aria-hidden="true">
-          <LayoutGrid className="size-3.5" />
-        </span>
-        <span className="flex-1">Settings</span>
-        <span className="text-xs font-medium text-muted">All</span>
-      </Link>
-      <SearchField value={query} onChange={setQuery} className="mt-3" onSubmit={() => matches[0] && navigate(matches[0].to)} />
+    // Fades in with CSS (opacity only: a moving parent would bend the active pill's morph from the clicked row).
+    <aside className="settings-nav" aria-label="Settings">
+      <div className="settings-nav-head">
+        <Link to={ROOT} className="settings-back">
+          <span className="settings-back-icon" aria-hidden="true">
+            <LayoutGrid className="size-3.5" />
+          </span>
+          <span className="flex-1">Settings</span>
+          <span className="settings-back-hint">All</span>
+        </Link>
+        <SearchField value={query} onChange={setQuery} className="mt-2.5" onSubmit={() => matches[0] && navigate(matches[0].to)} />
+      </div>
 
-      <nav className="mt-4" aria-label="Settings sections">
+      <nav aria-label="Settings sections">
         {term ? (
           matches.length ? (
-            <ul className="space-y-0.5">
+            <ul className="space-y-px">
               {matches.map((item) => (
                 <li key={item.key}>
                   <NavItem item={item} active={item === current} showDescription />
@@ -231,16 +232,11 @@ function SettingsSidebar({ nav, current }: { nav: SettingsNavItem[]; current?: S
             return (
               <div key={group.key} className="settings-group" style={accentStyle(group)}>
                 <p className="settings-group-label">{group.key}</p>
-                <ul className="space-y-0.5">
+                <ul className="space-y-px">
                   {items.map((item) => (
-                    <motion.li
-                      key={item.key}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3, ease, delay: 0.05 + Math.min(index++ * 0.018, 0.35) }}
-                    >
+                    <li key={item.key}>
                       <NavItem item={item} active={item === current} />
-                    </motion.li>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -248,7 +244,7 @@ function SettingsSidebar({ nav, current }: { nav: SettingsNavItem[]; current?: S
           })
         )}
       </nav>
-    </motion.aside>
+    </aside>
   )
 }
 
@@ -292,16 +288,16 @@ function SettingsJump({ nav, current }: { nav: SettingsNavItem[]; current?: Sett
 }
 
 /**
- * Settings shell. At /app/settings: a module-by-module grid of cards. On a sub-page: a grouped,
+ * Settings shell. At /app/settings: module panels of compact, searchable rows. On a sub-page: a grouped,
  * searchable sidebar (a native “jump to” picker on phones and tablets) beside the page. The clicked
- * card morphs into the sidebar's active item, and back when returning to the grid.
+ * row morphs into the sidebar's active item, and back when returning to the overview.
  */
 export default function SettingsLayout() {
   const { pathname } = useLocation()
   const nav = useVisibleNav()
   const isHome = pathname.replace(/\/+$/, '') === ROOT
   const current = nav.find((item) => isSettingsPage(item) && (pathname === item.to || pathname.startsWith(`${item.to}/`)))
-  // The card that morphs: the one just clicked, or (back on the grid) the page we came from.
+  // The row that morphs: the one just clicked, or (back on the overview) the page we came from.
   const [morphKey, setMorphKey] = useState<string | null>(null)
   if (!isHome && current && morphKey !== current.key) setMorphKey(current.key)
 
@@ -317,15 +313,10 @@ export default function SettingsLayout() {
             <SettingsSidebar nav={nav} current={current} />
             <div className="settings-content">
               <SettingsJump nav={nav} current={current} />
-              <motion.div
-                key={pathname}
-                className="settings-page"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, ease, delay: 0.04 }}
-              >
+              {/* Keyed so each page replays the short CSS fade-up on navigation. */}
+              <div key={pathname} className="settings-page">
                 <Outlet />
-              </motion.div>
+              </div>
             </div>
           </div>
         )}

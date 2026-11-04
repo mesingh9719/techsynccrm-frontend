@@ -6,9 +6,18 @@ import type { MemberRole } from '../types'
  * always enforces, this only decides what to show.
  *
  * Strings are `<resource>.<action>` or `<resource>.<action>.<scope>`; asking for `leads.read`
- * matches any scope (all / team / own).
+ * matches any scope (all / team / own). Only scope suffixes match: `members.manage` does not
+ * match `members.manage.admins`. Keep in step with MODULES in backend config/permissions.js.
+ *
+ * Record modules: `read` = the module is on (and which records); `list` = see the list page;
+ * `view` = open details; `contactInfo` = see phone numbers and emails (otherwise the server
+ * removes them and sets `contactInfoHidden`); plus actions such as `call`, `status`, `assign`.
  */
+export type RecordModule = 'leads' | 'contacts' | 'companies' | 'deals' | 'tasks' | 'campaigns'
+export type RecordAction = 'read' | 'list' | 'view' | 'contactInfo' | 'call' | 'create' | 'update' | 'status' | 'assign' | 'claim' | 'convert' | 'delete' | 'import' | 'export'
+
 export type Permission =
+  | 'reports.export'
   | 'google.connect.own'
   | 'google.connections.manage'
   | 'google.settings.manage'
@@ -20,7 +29,7 @@ export type Permission =
   | 'reports.read'
   | 'targets.manage'
   | 'settings.forms.manage'
-  | 'settings.assignment.manage'
+  | 'settings.automation.manage'
   | 'settings.workspace.manage'
   | 'settings.security.manage'
   | 'settings.billing.manage'
@@ -29,16 +38,23 @@ export type Permission =
   | 'members.invite'
   | 'members.manage'
   | 'members.manage.admins'
-  | 'records.import'
-  | 'records.export'
-  | 'records.assign'
-  | 'records.claim'
+  | 'roles.manage'
+  | 'files.upload'
+  | 'files.manage'
   | 'settings.customFields.manage'
   | 'settings.pipelines.manage'
-  | `${'leads' | 'contacts' | 'companies' | 'deals' | 'tasks' | 'campaigns'}.${'read' | 'create' | 'update' | 'delete'}`
+  | `${RecordModule}.${RecordAction}`
+
+const SCOPES = ['all', 'team', 'own']
+const RECORD_MODULES: RecordModule[] = ['leads', 'contacts', 'companies', 'deals', 'tasks', 'campaigns']
 
 export function hasPermission(permissions: readonly string[] | undefined, permission: Permission) {
-  return Boolean(permissions?.some((p) => p === permission || p.startsWith(`${permission}.`)))
+  return Boolean(permissions?.some((p) => p === permission || (p.startsWith(`${permission}.`) && SCOPES.includes(p.slice(permission.length + 1)))))
+}
+
+/** Whether the member may do `action` (import, export…) on at least one record module. */
+export function hasAnyRecordAction(permissions: readonly string[] | undefined, action: RecordAction) {
+  return RECORD_MODULES.some((m) => hasPermission(permissions, `${m}.${action}`))
 }
 
 export const roleLabels: Record<MemberRole, string> = {

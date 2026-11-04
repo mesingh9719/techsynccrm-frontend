@@ -82,6 +82,7 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
     ownerName: lead.owner?.fullName ?? user?.fullName,
     workspaceName: user?.organization?.name,
     canLog: can.createTasks,
+    canCall: can.call,
     onEmail: canSendEmail ? (draft) => { setEmailDraft(draft); setConversationView('email'); setTab('activity') } : undefined,
   })
   const openTasks = detail.tasks.data

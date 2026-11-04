@@ -23,7 +23,7 @@ export default function SheetsPage() {
   return <div className="app-page max-w-wide space-y-5"><PageHeader title="Google Sheets" description="A place for customer notes, lead snapshots and the details that move work forward." /><GoogleServiceGate service="sheets"><SheetsWorkspace key={key.join(':')} /></GoogleServiceGate></div>
 }
 function SheetsWorkspace() {
-  const key = useGoogleResourceKey(), client = useQueryClient(), canExport = useCan('records.export'), [params, setParams] = useSearchParams()
+  const key = useGoogleResourceKey(), client = useQueryClient(), canExport = useCan('leads.export'), [params, setParams] = useSearchParams()
   const [search, setSearch] = useState(''), [q, setQuery] = useState(''), [kind, setKind] = useState(''), [status, setStatus] = useState('')
   const [page, setPage] = useState(1), [creating, setCreating] = useState<'blank' | 'leads' | null>(null)
   const selected = params.get('sheet')

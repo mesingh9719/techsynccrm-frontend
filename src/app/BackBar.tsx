@@ -51,9 +51,11 @@ export function BackBar() {
   const parent = parentOf(pathname)
   if (!parent) return null
   const wide = pathname.startsWith(SETTINGS.to)
+  // On desktop a settings page's sidebar header already links back to Settings; skip the duplicate.
+  const inSettingsRail = parent === SETTINGS
 
   return (
-    <div className={cn('mx-auto -mb-3 w-full px-4 pt-4 sm:px-6 lg:px-8', wide ? 'max-w-wide' : 'max-w-app')}>
+    <div className={cn('mx-auto -mb-3 w-full px-4 pt-4 sm:px-6 lg:px-8', wide ? 'max-w-wide' : 'max-w-app', inSettingsRail && 'lg:hidden')}>
       <a
         href={parent.to}
         onClick={(e) => {

@@ -37,10 +37,21 @@ export function CommandSearch() {
   const navigate = useNavigate()
   const id = useId()
 
-  const canLeads = useCan('leads.read')
-  const canContacts = useCan('contacts.read')
-  const canCompanies = useCan('companies.read')
-  const canDeals = useCan('deals.read')
+  // Search uses the list endpoints; results open details only for roles that may open them.
+  const canLeads = useCan('leads.list')
+  const canContacts = useCan('contacts.list')
+  const canCompanies = useCan('companies.list')
+  const canDeals = useCan('deals.list')
+  const canCampaigns = useCan('campaigns.list')
+  const view = {
+    leads: useCan('leads.view'),
+    contacts: useCan('contacts.view'),
+    companies: useCan('companies.view'),
+    deals: useCan('deals.view'),
+    campaigns: useCan('campaigns.view'),
+  }
+  /** The record page, or the list filtered to the search when details are off for this role. */
+  const target = (module: keyof typeof view, id: string) => (view[module] ? `/app/${module}/${id}` : `/app/${module}?q=${encodeURIComponent(query)}`)
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -71,7 +82,7 @@ export function CommandSearch() {
         canContacts ? listContacts(params) : null,
         canCompanies ? listCompanies(params) : null,
         canDeals ? listDeals(params) : null,
-        listCampaigns(orgId),
+        canCampaigns ? listCampaigns(orgId) : null,
       ])
       const qLower = query.toLowerCase()
       const matchingCampaigns = (campaigns ?? []).filter(
@@ -82,31 +93,31 @@ export function CommandSearch() {
         ...(leads?.items ?? []).map((r) => ({
           name: r.displayName,
           type: 'Lead',
-          to: `/app/leads/${r.id}`,
+          to: target('leads', r.id),
           detail: r.companyName ?? r.primaryEmail,
         })),
         ...matchingCampaigns.map((c) => ({
           name: c.name,
           type: 'Campaign',
-          to: `/app/campaigns/${c.id}`,
+          to: target('campaigns', c.id),
           detail: `${c.code} · ${c.type}`,
         })),
         ...(contacts?.items ?? []).map((r) => ({
           name: r.displayName,
           type: 'Contact',
-          to: `/app/contacts/${r.id}`,
+          to: target('contacts', r.id),
           detail: r.primaryEmail,
         })),
         ...(companies?.items ?? []).map((r) => ({
           name: r.name,
           type: 'Company',
-          to: `/app/companies/${r.id}`,
+          to: target('companies', r.id),
           detail: r.domain,
         })),
         ...(deals?.items ?? []).map((r) => ({
           name: r.title,
           type: 'Deal',
-          to: `/app/deals/${r.id}`,
+          to: target('deals', r.id),
           detail: r.company?.name,
         })),
       ]

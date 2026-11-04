@@ -15,8 +15,8 @@ export function RecordWorkspace({ entityType, entityId, name, canPin, deals, all
   const id = useId()
   const [active, setActive] = useState('activity')
   const refs = useRef<Array<HTMLButtonElement | null>>([])
-  const canTasks = useCan('tasks.read')
-  const canDeals = useCan('deals.read')
+  const canTasks = useCan('tasks.list')
+  const canDeals = useCan('deals.list')
   const tabs = [
     { key: 'activity', label: 'Activity', icon: Activity, body: <>{overview}<Timeline entityType={entityType} entityId={entityId} recordName={name} canPin={canPin} /></> },
     { key: 'notes', label: 'Notes', icon: NotebookPen, body: <Timeline notesOnly entityType={entityType} entityId={entityId} recordName={name} canPin={canPin} /> },

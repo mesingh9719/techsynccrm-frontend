@@ -108,7 +108,7 @@ function CampaignFormContent({
   const notify = useToast()
   const options = useCampaignOptions()
   const sources = useLeadSources()
-  const canAssign = useCan('records.assign')
+  const canAssign = useCan('campaigns.assign')
   const linkedMeta = isMetaCampaign(campaign)
 
   const [draft, setDraft] = useState<CampaignDraft>(() => {

@@ -6,7 +6,7 @@ import { gstStates } from '../../../lib/india'
 import { useCan } from '../../../lib/useOrg'
 import { useToast } from '../../../components/ui/Toast'
 import { CampaignPicker } from '../../campaigns/CampaignPicker'
-import { OwnerCell, InlineMoney, InlineText } from '../../crm/components/RecordParts'
+import { HiddenContact, OwnerCell, InlineMoney, InlineText } from '../../crm/components/RecordParts'
 import { TagChips, TagPicker } from '../../crm/components/Tags'
 import { formatCustomValue } from '../../crm/customFieldFormat'
 import { formatPhone, relativeTime } from '../../crm/format'
@@ -86,7 +86,8 @@ export function ProfileCard({
   const lead = detail.lead as LeadRecord
   const { can, patch } = detail
   const defs = useCustomFieldDefs('lead')
-  const canReadCampaigns = useCan('campaigns.read')
+  const canReadCampaigns = useCan('campaigns.view')
+  const canPickCampaign = useCan('campaigns.read')
   const notify = useToast()
   const [editingTags, setEditingTags] = useState(false)
   const [pickingCampaign, setPickingCampaign] = useState(false)
@@ -108,14 +109,20 @@ export function ProfileCard({
       >
         <dl className="lead-fields">
           <Row label="Phone" id="lead-field-phone">
-            {lead.phones.length ? (
+            {lead.contactInfoHidden ? (
+              <HiddenContact />
+            ) : lead.phones.length ? (
               <ul className="space-y-1">
                 {lead.phones.map((p) => (
                   <li key={p.raw} className="group flex items-center gap-2 tabular-nums">
                     <Phone className="size-3.5 shrink-0 text-muted" aria-hidden="true" />
-                    <a href={`tel:${p.e164 ?? p.raw}`} className="truncate hover:text-brand-700 hover:underline">
-                      {formatPhone(p.e164, p.raw)}
-                    </a>
+                    {can.call ? (
+                      <a href={`tel:${p.e164 ?? p.raw}`} className="truncate hover:text-brand-700 hover:underline">
+                        {formatPhone(p.e164, p.raw)}
+                      </a>
+                    ) : (
+                      <span className="truncate">{formatPhone(p.e164, p.raw)}</span>
+                    )}
                     {p.primary && lead.phones.length > 1 && <Star className="size-3 shrink-0 fill-amber-400 text-amber-400" aria-label="Primary" />}
                     {!p.e164 && <span className="text-xs text-warning">invalid</span>}
                     <CopyValue value={p.e164 ?? p.raw} label="phone number" />
@@ -127,7 +134,9 @@ export function ProfileCard({
             ) : '—'}
           </Row>
           <Row label="Email" id="lead-field-email">
-            {lead.emails.length ? (
+            {lead.contactInfoHidden ? (
+              <HiddenContact />
+            ) : lead.emails.length ? (
               <ul className="space-y-1">
                 {lead.emails.map((e) => (
                   <li key={e.value} className="group flex min-w-0 items-center gap-2">
@@ -278,7 +287,7 @@ export function ProfileCard({
                 <span className={cn('min-w-0 truncate', !campaign && 'text-muted')}>{campaign?.name ?? 'Not attributed'}</span>
               )}
               {campaign && 'deleted' in campaign && campaign.deleted && <span className="text-xs text-muted">Deleted campaign</span>}
-              {can.update && canReadCampaigns && (
+              {can.update && canPickCampaign && (
                 <button type="button" onClick={() => setPickingCampaign(true)} className="text-xs font-medium text-brand-700 hover:underline">
                   {campaign ? 'Change' : 'Link'}
                 </button>
