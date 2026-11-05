@@ -107,7 +107,7 @@ export function UpgradeDialog({ prompt, onClose }: { prompt: UpgradePrompt | nul
         </p>
       ) : (
         <>
-          {copy && <p className="mb-4 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">{copy.description}</p>}
+          {copy && <p className="mb-4 rounded-card bg-brand-50 px-4 py-3 text-sm text-brand-900">{copy.description}</p>}
           <p className="text-sm font-medium text-ink">
             {plan.name} includes{plan.userLimit ? ` · ${plan.userLimit.toLowerCase()}` : ''}:
           </p>

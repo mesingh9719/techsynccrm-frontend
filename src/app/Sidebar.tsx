@@ -26,8 +26,8 @@ export function OverdueBadge({ active, dot = false }: { active: boolean; dot?: b
   return (
     <span
       className={cn(
-        'rounded-full px-2 text-xs font-semibold tabular-nums',
-        active ? 'bg-black/25 text-white' : 'bg-red-500/15 text-red-300',
+        'rounded-chip px-1.5 text-xs font-medium tabular-nums',
+        active ? 'bg-surface text-red-700' : 'text-red-700',
       )}
       aria-label={`${n} overdue`}
     >
@@ -61,7 +61,7 @@ function SidebarLink({ item, onNavigate, collapsed = false }: { item: NavItem; o
         aria-label={collapsed ? `${item.label} (upgrade required)` : undefined}
         className="sidebar-link w-full"
       >
-        <item.icon className="size-[18px] shrink-0" aria-hidden="true" />
+        <item.icon className="size-4 shrink-0" aria-hidden="true" />
         <span className="sidebar-label flex-1 text-left">{item.label}</span>
         <Lock className="sidebar-label size-4 text-sidebar-muted" aria-label="Upgrade required" />
       </button>
@@ -82,7 +82,7 @@ function SidebarLink({ item, onNavigate, collapsed = false }: { item: NavItem; o
       {({ isActive }) => (
         <>
           <span className="relative flex shrink-0">
-            <item.icon className="size-[18px]" aria-hidden="true" />
+            <item.icon className="size-4" aria-hidden="true" />
             {collapsed && item.key === 'tasks' && <OverdueBadge active={isActive} dot />}
           </span>
           <span className="sidebar-label flex-1 truncate">{item.label}</span>
@@ -132,14 +132,14 @@ interface SidebarProps {
 /** App navigation: workspace switcher, main sections, settings. Used in the desktop rail and the mobile drawer. */
 export function Sidebar({ onNavigate, collapsed = false, onToggle, onClose }: SidebarProps) {
   const tooltip = useRailTooltip(collapsed)
-  const pad = 'px-3'
+  const pad = 'px-2'
 
   return (
     <div className="sidebar-rail flex h-full min-h-0 flex-col" data-collapsed={collapsed || undefined} {...tooltip.handlers}>
-      <div className={cn('flex h-16 shrink-0 items-center gap-3 overflow-hidden border-b border-sidebar-hover', collapsed ? 'justify-center px-3' : 'px-5')}>
+      <div className={cn('flex h-12 shrink-0 items-center gap-2.5 overflow-hidden', collapsed ? 'justify-center px-3' : 'px-4')}>
         <Link to="/app" onClick={onNavigate} className="flex min-w-0 items-center gap-3 rounded-control" aria-label="TechSync CRM home" data-tip="Dashboard">
-          <LogoMark className="size-8 shrink-0" />
-          <span className="sidebar-label truncate font-display text-base font-semibold whitespace-nowrap">
+          <LogoMark className="size-6 shrink-0" />
+          <span className="sidebar-label truncate text-sm font-semibold whitespace-nowrap">
             TechSync <span className="font-normal text-sidebar-muted">CRM</span>
           </span>
         </Link>
@@ -150,13 +150,13 @@ export function Sidebar({ onNavigate, collapsed = false, onToggle, onClose }: Si
         )}
       </div>
 
-      <div className={cn('py-3', pad)}>
+      <div className={cn('pb-2', pad)}>
         <WorkspaceSwitcher compact={collapsed} />
       </div>
 
       <nav aria-label="Main" className={cn('sidebar-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pb-4', pad)}>
         <p className="sidebar-label sidebar-section">Workspace</p>
-        <ul className="space-y-1">
+        <ul className="space-y-px">
           {mainNav.map((item) => (
             <li key={item.key}>
               <SidebarLink item={item} onNavigate={onNavigate} collapsed={collapsed} />
@@ -165,13 +165,13 @@ export function Sidebar({ onNavigate, collapsed = false, onToggle, onClose }: Si
         </ul>
       </nav>
 
-      <div className={cn('shrink-0 space-y-1 overflow-hidden border-t border-sidebar-hover py-3', pad)}>
+      <div className={cn('shrink-0 space-y-px overflow-hidden border-t border-line py-2', pad)}>
         <Link to="/app/setup" onClick={onNavigate} className="sidebar-link" data-tip="Getting started" aria-label={collapsed ? 'Getting started' : undefined}>
-          <Rocket className="size-[18px] shrink-0" aria-hidden="true" />
+          <Rocket className="size-4 shrink-0" aria-hidden="true" />
           <span className="sidebar-label truncate">Getting started</span>
         </Link>
         <Link to="/contact?topic=support" onClick={onNavigate} className="sidebar-link" data-tip="Contact support" aria-label={collapsed ? 'Contact support' : undefined}>
-          <LifeBuoy className="size-[18px] shrink-0" aria-hidden="true" />
+          <LifeBuoy className="size-4 shrink-0" aria-hidden="true" />
           <span className="sidebar-label truncate">Contact support</span>
         </Link>
         <SidebarLink item={settingsNavItem} onNavigate={onNavigate} collapsed={collapsed} />
@@ -186,9 +186,9 @@ export function Sidebar({ onNavigate, collapsed = false, onToggle, onClose }: Si
             className="sidebar-link w-full"
           >
             {collapsed ? (
-              <PanelLeftOpen className="size-[18px] shrink-0" aria-hidden="true" />
+              <PanelLeftOpen className="size-4 shrink-0" aria-hidden="true" />
             ) : (
-              <PanelLeftClose className="size-[18px] shrink-0" aria-hidden="true" />
+              <PanelLeftClose className="size-4 shrink-0" aria-hidden="true" />
             )}
             <span className="sidebar-label flex-1 text-left">Collapse sidebar</span>
             <kbd className="sidebar-label rounded-control border border-sidebar-active px-1.5 text-xs text-sidebar-muted">[</kbd>

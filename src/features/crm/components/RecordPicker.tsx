@@ -78,7 +78,7 @@ export function RecordPicker({
 
   return (
     <div ref={rootRef} className="relative" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false) }}>
-      <div className={cn('flex h-10 items-center rounded-lg border bg-surface pr-2', invalid ? 'border-red-400' : 'border-zinc-300', open && 'border-brand-500 ring-4 ring-brand-100')}>
+      <div className={cn('flex h-8 items-center rounded-control border bg-surface pr-2', invalid ? 'border-red-400' : 'border-zinc-300', open && 'border-brand-500 ring-4 ring-brand-100')}>
         <input
           id={id}
           role="combobox"
@@ -98,7 +98,7 @@ export function RecordPicker({
             setOpen(true)
           }}
           onKeyDown={onKeyDown}
-          className="h-full min-w-0 flex-1 rounded-lg bg-transparent px-4 text-sm text-ink placeholder:text-muted focus:outline-none"
+          className="h-full min-w-0 flex-1 rounded-control bg-transparent px-4 text-sm text-ink placeholder:text-muted focus:outline-none"
         />
         {selected && !open ? (
           <button type="button" onClick={() => onChange(null)} className="rounded-control p-1 text-muted hover:text-ink" aria-label="Clear">
@@ -122,7 +122,7 @@ export function RecordPicker({
               onPointerDown={(e) => e.preventDefault()}
               onClick={() => choose(o)}
               onPointerEnter={() => setActive(i)}
-              className={cn('cursor-pointer rounded-lg px-3 py-2 text-sm', i === active ? 'bg-zinc-100' : '')}
+              className={cn('cursor-pointer rounded-control px-3 py-2 text-sm', i === active ? 'bg-zinc-100' : '')}
             >
               <span className="block truncate font-medium text-ink">{o.label}</span>
               {o.hint && <span className="block truncate text-xs text-muted">{o.hint}</span>}

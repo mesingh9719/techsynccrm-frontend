@@ -39,7 +39,7 @@ function ColorInput({ label, value, onChange }: { label: string; value: string; 
     <Field label={label}>
       {({ id }) => (
         <div className="flex items-center gap-2">
-          <input type="color" id={id} value={value} onChange={(e) => onChange(e.target.value)} className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-line bg-surface p-1" />
+          <input type="color" id={id} value={value} onChange={(e) => onChange(e.target.value)} className="h-8 w-12 shrink-0 cursor-pointer rounded-control border border-line bg-surface p-1" />
           <span className="font-mono text-xs text-muted">{value}</span>
         </div>
       )}
@@ -89,8 +89,8 @@ function LogoEditor({ logo, workspaceLogoUrl, onChange }: { logo: FormLogo; work
         <p className="text-xs text-amber-800">Your workspace has no logo yet. Add one in Workspace settings, or upload a logo just for this form.</p>
       )}
       {(logo.mode === 'custom' || progress !== null) && (
-        <div className="flex items-center gap-4 rounded-xl border border-line bg-surface-subtle/60 p-3">
-          <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-line">
+        <div className="flex items-center gap-4 rounded-card border border-line bg-surface-subtle/60 p-3">
+          <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-control bg-white ring-1 ring-line">
             {shown ? <img src={shown} alt="Uploaded logo" className="max-h-14 max-w-14 object-contain" /> : <ImageUp className="size-5 text-muted" />}
           </span>
           <div className="min-w-0">
@@ -117,7 +117,7 @@ function LogoEditor({ logo, workspaceLogoUrl, onChange }: { logo: FormLogo; work
                     role="radio"
                     aria-checked={active}
                     onClick={() => set({ placement: p.value })}
-                    className={cn('relative rounded-xl border p-3 text-left transition-colors', active ? 'border-brand-500 bg-brand-50/50 ring-1 ring-brand-500' : 'border-line hover:border-zinc-300')}
+                    className={cn('relative rounded-card border p-3 text-left transition-colors', active ? 'border-brand-500 bg-brand-50/50 ring-1 ring-brand-500' : 'border-line hover:border-zinc-300')}
                   >
                     <p.icon className="size-4 text-brand-700" aria-hidden="true" />
                     <span className="mt-2 block text-sm font-medium text-ink">{p.label}</span>
@@ -214,9 +214,9 @@ export function DesignEditor({
                 type="button"
                 aria-pressed={active}
                 onClick={() => onChange({ ...settings, brandColor: t.brandColor, theme: { ...settings.theme, ...t.theme } })}
-                className={cn('rounded-xl border p-2 text-center text-xs font-medium text-ink transition-colors', active ? 'border-brand-500 ring-1 ring-brand-500' : 'border-line hover:border-zinc-300')}
+                className={cn('rounded-card border p-2 text-center text-xs font-medium text-ink transition-colors', active ? 'border-brand-500 ring-1 ring-brand-500' : 'border-line hover:border-zinc-300')}
               >
-                <span className="mb-1.5 flex h-8 items-center justify-center rounded-lg" style={{ backgroundColor: t.theme.pageBackground }}>
+                <span className="mb-1.5 flex h-8 items-center justify-center rounded-control" style={{ backgroundColor: t.theme.pageBackground }}>
                   <span className="flex h-5 w-10 items-center justify-center rounded-md" style={{ backgroundColor: t.theme.cardBackground }}>
                     <span className="h-1.5 w-6 rounded-full" style={{ backgroundColor: t.brandColor }} />
                   </span>

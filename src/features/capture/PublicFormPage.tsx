@@ -44,7 +44,7 @@ export default function PublicFormPage() {
         ) : query.isError ? (
           <ErrorState error={query.error} onRetry={() => query.refetch()} />
         ) : !query.data.isActive ? (
-          <p className="rounded-xl border border-line bg-surface p-8 text-center text-sm text-muted">
+          <p className="rounded-card border border-line bg-surface p-8 text-center text-sm text-muted">
             This form is currently closed. Please contact the business directly.
           </p>
         ) : (

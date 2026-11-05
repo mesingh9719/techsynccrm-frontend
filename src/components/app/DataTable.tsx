@@ -129,8 +129,8 @@ export function DataTable<T>({
     <div className={cn('min-w-0 space-y-3', className)}>
       {showColumnControls && (
         <div className="flex justify-end">
-          <Menu align="end" trigger={(props) => <button {...props} type="button" className="inline-flex min-h-10 items-center gap-2 rounded-control border border-line bg-surface px-3 text-xs hover:bg-surface-subtle"><Columns3 className="size-4" />Columns</button>}>
-            {() => <>{columns.map((column) => <label key={column.key} className="flex min-h-10 items-center gap-3 rounded-control px-3 text-sm hover:bg-surface-subtle"><input type="checkbox" role="menuitemcheckbox" aria-checked={!hiddenColumns.has(column.key)} checked={!hiddenColumns.has(column.key)} disabled={!hiddenColumns.has(column.key) && displayedColumns.length === 1} onChange={() => setHiddenColumns((previous) => { const next = new Set(previous); if (next.has(column.key)) next.delete(column.key); else next.add(column.key); return next })} />{column.header || 'Actions'}</label>)}</>}
+          <Menu align="end" trigger={(props) => <button {...props} type="button" className="toolbar-button"><Columns3 className="size-4" />Columns</button>}>
+            {() => <>{columns.map((column) => <label key={column.key} className="flex min-h-8 items-center gap-3 rounded-control px-3 text-sm hover:bg-surface-subtle"><input type="checkbox" role="menuitemcheckbox" aria-checked={!hiddenColumns.has(column.key)} checked={!hiddenColumns.has(column.key)} disabled={!hiddenColumns.has(column.key) && displayedColumns.length === 1} onChange={() => setHiddenColumns((previous) => { const next = new Set(previous); if (next.has(column.key)) next.delete(column.key); else next.add(column.key); return next })} />{column.header || 'Actions'}</label>)}</>}
           </Menu>
         </div>
       )}
@@ -220,7 +220,7 @@ export function DataTable<T>({
                       <button
                         type="button"
                         onClick={() => headerSort(column)}
-                        className="compact-control inline-flex items-center gap-1 uppercase hover:text-ink"
+                        className="compact-control inline-flex items-center gap-1 hover:text-ink"
                       >
                         {column.header}
                         {active ? (
@@ -283,7 +283,7 @@ export function DataTable<T>({
                       {column.cell(row)}
                     </td>
                   ))}
-                  {onRowClick && <td className="row-actions" onClick={(event) => event.stopPropagation()}><Menu align="end" trigger={(props) => <button {...props} type="button" aria-label={`Actions for ${caption.toLowerCase()} record ${id}`} className="icon-button size-10" title="Record actions"><MoreHorizontal className="size-4" /></button>}>{(close) => <MenuItem icon={<ArrowUpRight className="size-4" />} onSelect={() => { close(); onRowClick(row) }}>Open record</MenuItem>}</Menu></td>}
+                  {onRowClick && <td className="row-actions" onClick={(event) => event.stopPropagation()}><Menu align="end" trigger={(props) => <button {...props} type="button" aria-label={`Actions for ${caption.toLowerCase()} record ${id}`} className="icon-button size-7" title="Record actions"><MoreHorizontal className="size-4" /></button>}>{(close) => <MenuItem icon={<ArrowUpRight className="size-4" />} onSelect={() => { close(); onRowClick(row) }}>Open record</MenuItem>}</Menu></td>}
                 </tr>
               )
             })}
@@ -294,7 +294,7 @@ export function DataTable<T>({
           <p id={view === 'cards' && mobileCard ? undefined : helpId}>{status}</p>
           <div className="flex items-center gap-2">
             {footer}
-            <button type="button" aria-pressed={dense} onClick={() => setDense((previous) => !previous)} className="icon-button size-10" aria-label={dense ? 'Use comfortable row spacing' : 'Use compact row spacing'} title={dense ? 'Comfortable rows' : 'Compact rows'}>{dense ? <AlignJustify className="size-4" /> : <List className="size-4" />}</button>
+            <button type="button" aria-pressed={dense} onClick={() => setDense((previous) => !previous)} className="icon-button size-7" aria-label={dense ? 'Use comfortable row spacing' : 'Use compact row spacing'} title={dense ? 'Comfortable rows' : 'Compact rows'}>{dense ? <AlignJustify className="size-4" /> : <List className="size-4" />}</button>
           </div>
         </div>
       </div>

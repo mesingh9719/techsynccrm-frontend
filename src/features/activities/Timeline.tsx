@@ -122,7 +122,7 @@ function MentionTextarea({ value, onChange, placeholder, id, rows = 3 }: { value
       {query !== null && items.length > 0 && (
         <ul ref={panel} popover="manual" id={listId} role="listbox" aria-label="Mention a teammate" className="crm-popover menu-surface">
           {items.map((m, i) => (
-            <li key={m.userId} id={`${listId}-${m.userId}`} role="option" aria-selected={i === active} onPointerDown={(e) => e.preventDefault()} onClick={() => insert(m)} className={cn('flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm', i === active && 'bg-surface-subtle')}>
+            <li key={m.userId} id={`${listId}-${m.userId}`} role="option" aria-selected={i === active} onPointerDown={(e) => e.preventDefault()} onClick={() => insert(m)} className={cn('flex cursor-pointer items-center gap-2 rounded-control px-2 py-2 text-sm', i === active && 'bg-surface-subtle')}>
               <Avatar name={m.fullName} size="xs" />
               <span className="truncate">{m.fullName}</span>
             </li>
@@ -180,18 +180,18 @@ function ComposerForm({ kind, entityType, entityId, onDone, initialBody = '' }: 
       {guard.confirmation}
       {kind === 'call' && (
         <div className="grid gap-3 sm:grid-cols-3">
-          <Select aria-label="Direction" value={direction} onChange={(e) => setDirection(e.target.value as 'outbound' | 'inbound')} className="h-10! text-sm">
+          <Select aria-label="Direction" value={direction} onChange={(e) => setDirection(e.target.value as 'outbound' | 'inbound')} className="h-8! text-sm">
             <option value="outbound">I called them</option>
             <option value="inbound">They called</option>
           </Select>
-          <Select aria-label="Outcome" value={outcome} onChange={(e) => setOutcome(e.target.value as CallOutcome)} className="h-10! text-sm">
+          <Select aria-label="Outcome" value={outcome} onChange={(e) => setOutcome(e.target.value as CallOutcome)} className="h-8! text-sm">
             {Object.entries(outcomeLabels).map(([v, l]) => (
               <option key={v} value={v}>
                 {l}
               </option>
             ))}
           </Select>
-          <Input aria-label="Duration in minutes" type="number" min={0} placeholder="Minutes" value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-10! text-sm" />
+          <Input aria-label="Duration in minutes" type="number" min={0} placeholder="Minutes" value={minutes} onChange={(e) => setMinutes(e.target.value)} className="h-8! text-sm" />
         </div>
       )}
       {['whatsapp', 'email', 'sms'].includes(kind) && (
@@ -202,8 +202,8 @@ function ComposerForm({ kind, entityType, entityId, onDone, initialBody = '' }: 
       )}
       {(kind === 'meeting' || kind === 'site_visit') && (
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input aria-label="Subject" placeholder={kind === 'meeting' ? 'Meeting about…' : 'Visit purpose'} value={subject} onChange={(e) => setSubject(e.target.value)} className="h-10! text-sm" />
-          <Input aria-label="Location" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} className="h-10! text-sm" />
+          <Input aria-label="Subject" placeholder={kind === 'meeting' ? 'Meeting about…' : 'Visit purpose'} value={subject} onChange={(e) => setSubject(e.target.value)} className="h-8! text-sm" />
+          <Input aria-label="Location" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} className="h-8! text-sm" />
         </div>
       )}
       {kind === 'note' ? (
@@ -213,7 +213,7 @@ function ComposerForm({ kind, entityType, entityId, onDone, initialBody = '' }: 
       )}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-3">
-          {kind !== 'note' && <Input aria-label="When" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="h-10! w-auto text-sm" />}
+          {kind !== 'note' && <Input aria-label="When" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="h-8! w-auto text-sm" />}
           {kind === 'call' && outcome === 'callback_requested' && (
             <label className="flex items-center gap-2 text-sm text-ink">
               <input type="checkbox" checked={followUp} onChange={(e) => setFollowUp(e.target.checked)} className="size-4 rounded border-line text-brand-700" />
@@ -265,7 +265,7 @@ function ActivityEntry({ activity, canPin, onChanged, entityType, entityId }: { 
       <span className={cn('relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full ring-4 ring-surface', system ? 'bg-surface-subtle text-muted' : activity.type === 'note' ? 'bg-amber-50 text-amber-700  ' : 'bg-brand-50 text-brand-700  ')}>
         <Icon className="size-4" aria-hidden="true" />
       </span>
-      <div className={cn('min-w-0 flex-1', !system && 'rounded-xl bg-surface p-3 ring-1 ring-line text-ink', activity.isPinned && 'ring-amber-300 ')}>
+      <div className={cn('min-w-0 flex-1', !system && 'rounded-card bg-surface p-3 ring-1 ring-line text-ink', activity.isPinned && 'ring-amber-300 ')}>
         <div className="flex items-start justify-between gap-2">
           <p className={cn('text-sm', system ? 'text-muted' : 'text-ink')}>
             {system ? (
@@ -444,13 +444,13 @@ export function Timeline({ entityType, entityId, recordName, canPin = false, not
   ]
 
   return (
-    <section className="rounded-card bg-surface p-5 shadow-card ring-1 ring-line text-ink" aria-label="Timeline">
+    <section className="rounded-card bg-surface p-5  ring-1 ring-line text-ink" aria-label="Timeline">
       <div className="flex min-h-8 items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-ink">{notesOnly ? 'Notes' : 'Activity timeline'}</h2>
         {actions}
       </div>
       {canLog && (
-        <div className="mt-4 rounded-xl bg-surface-subtle p-3 ring-1 ring-line">
+        <div className="mt-4 rounded-card bg-surface-subtle p-3 ring-1 ring-line">
           <div role="group" aria-label="Add to timeline" className="no-scrollbar -mx-1 mb-3 flex gap-1 overflow-x-auto px-1">
             {tabs.filter((item) => !notesOnly || item.key === 'note').map((t) => (
               <button
@@ -459,7 +459,7 @@ export function Timeline({ entityType, entityId, recordName, canPin = false, not
                 aria-pressed={composer === t.key}
                 data-composer-kind={t.key}
                 onClick={() => (t.key === 'task' ? setTaskOpen(true) : setComposer(t.key))}
-                className={cn('inline-flex h-8 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors', composer === t.key && t.key !== 'task' ? 'bg-surface text-ink shadow-card ring-1 ring-line' : 'text-muted hover:text-ink')}
+                className={cn('inline-flex h-8 shrink-0 items-center gap-2 rounded-control px-3 text-sm font-medium transition-colors', composer === t.key && t.key !== 'task' ? 'bg-surface text-ink  ring-1 ring-line' : 'text-muted hover:text-ink')}
               >
                 <t.icon className="size-4" aria-hidden="true" />
                 {t.label}
@@ -501,7 +501,7 @@ export function Timeline({ entityType, entityId, recordName, canPin = false, not
         ) : timeline.isError ? (
           <ErrorState error={timeline.error} onRetry={() => timeline.refetch()} />
         ) : !items.length && !pinned.length ? (
-          <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">Nothing here yet. Log a call or add a note to start the history.</p>
+          <p className="rounded-card border border-dashed border-line p-4 text-sm text-muted">Nothing here yet. Log a call or add a note to start the history.</p>
         ) : (
           <>
             {pinned.length > 0 && (

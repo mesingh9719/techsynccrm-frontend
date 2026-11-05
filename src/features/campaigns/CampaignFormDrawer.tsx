@@ -343,7 +343,7 @@ function CampaignFormContent({
             )}
           </Field>
           {generatedUrl && (
-            <div className="rounded-lg border border-brand-100 bg-brand-50/50 p-3">
+            <div className="rounded-control border border-line bg-surface-subtle p-3">
               <div className="mb-1.5 flex items-center justify-between gap-2">
                 <span className="text-xs font-medium text-ink">Your tracking link</span>
                 <Button size="sm" variant="secondary" onClick={copyTrackingLink} type="button" className="compact-control min-h-0!">

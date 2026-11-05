@@ -8,7 +8,7 @@ import { TaskItem } from './TaskItem'
 export function MyDay() {
   const summary = useTaskSummary()
   return (
-    <section className="rounded-card bg-surface p-6 shadow-card ring-1 ring-line">
+    <section className="rounded-card bg-surface p-6  ring-1 ring-line">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 font-semibold text-ink">

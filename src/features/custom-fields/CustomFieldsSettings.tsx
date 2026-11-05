@@ -161,7 +161,7 @@ function FieldDialog({ entityType, field, onClose }: { entityType: CustomFieldEn
             <legend className="mb-2 text-sm font-medium text-ink">Options</legend>
             <ul className="space-y-2">
               {options.map((o, i) => (
-                <li key={o.value} className="flex items-center gap-2 rounded-lg bg-surface-subtle px-3 py-2 text-sm">
+                <li key={o.value} className="flex items-center gap-2 rounded-control bg-surface-subtle px-3 py-2 text-sm">
                   <input
                     value={o.label}
                     aria-label={`Option ${i + 1}`}
@@ -290,7 +290,7 @@ export default function CustomFieldsSettings() {
           ) : !fields.length ? (
             <EmptyState title="No custom fields yet" description="Add one to capture what matters to your business." className="py-10" />
           ) : (
-            <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
+            <ul className="divide-y divide-zinc-100 rounded-card ring-1 ring-line">
               {fields.map((f, i) => (
                 <li
                   key={f.id}

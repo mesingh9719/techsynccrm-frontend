@@ -33,7 +33,7 @@ export function LinkedRecordList({
   return (
     <div className="space-y-2">
       {items.length > 0 && (
-        <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line">
+        <ul className="divide-y divide-line overflow-hidden rounded-control border border-line">
           {items.map((item, i) => {
             const primary = item.isPrimary || onlyOne
             return (
@@ -48,7 +48,7 @@ export function LinkedRecordList({
                   placeholder={rolePlaceholder}
                   aria-label={`Role of ${item.option.label}`}
                   maxLength={80}
-                  className="h-10 w-full min-w-0 rounded-md border border-line bg-surface px-2 text-sm text-ink placeholder:text-muted focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 focus:outline-none sm:w-36"
+                  className="h-8 w-full min-w-0 rounded-md border border-line bg-surface px-2 text-sm text-ink placeholder:text-muted focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 focus:outline-none sm:w-36"
                 />
                 <div className="flex items-center gap-1">
                   <button
@@ -58,7 +58,7 @@ export function LinkedRecordList({
                     aria-pressed={primary}
                     title={primary ? `Primary ${noun}` : `Make primary ${noun}`}
                     className={cn(
-                      'compact-control inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-xs font-medium transition-colors disabled:cursor-default',
+                      'compact-control inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium transition-colors disabled:cursor-default',
                       primary ? 'bg-amber-50 text-amber-800' : 'text-muted hover:bg-surface-subtle hover:text-ink',
                     )}
                   >

@@ -24,7 +24,7 @@ export function RichEmailEditor({ initialHtml = '', onChange, disabled, label = 
   }
   useImperativeHandle(ref, () => ({ insert: (token: string) => command('insertText', token) }))
   const validLink = /^https?:\/\//i.test(url) || Boolean(fields && /^\{\{\s*([\w.]+)\s*\}\}$/.test(url) && Object.hasOwn(fields, url.replace(/[{}\s]/g, '')))
-  return <div className="overflow-hidden rounded-lg border border-line bg-surface">
+  return <div className="overflow-hidden rounded-control border border-line bg-surface">
     <div role="toolbar" aria-label={`${label} formatting`} className="flex gap-1 border-b border-line bg-surface-subtle p-1">
       {([{ name: 'bold', label: 'Bold', icon: Bold }, { name: 'italic', label: 'Italic', icon: Italic }, { name: 'insertUnorderedList', label: 'Bullet list', icon: List }] as const).map((item) => <button key={item.name} type="button" disabled={disabled} aria-label={item.label} className="compact-control rounded p-2 hover:bg-surface" onMouseDown={(e) => e.preventDefault()} onClick={() => command(item.name)}><item.icon className="size-4" /></button>)}
       <button type="button" disabled={disabled} aria-label="Insert link" className="compact-control rounded p-2 hover:bg-surface" onMouseDown={(e) => e.preventDefault()} onClick={() => setLinkOpen(!linkOpen)}><Link className="size-4" /></button>

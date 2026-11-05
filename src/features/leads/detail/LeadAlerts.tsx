@@ -40,7 +40,7 @@ export function LeadAlerts({ lead, canRestore, onRestore }: { lead: LeadRecord; 
       {lead.deletedAt && <DeletedBanner deletedAt={lead.deletedAt} canRestore={canRestore} onRestore={onRestore} />}
       {lead.status === 'converted' && (
         <div
-          className="flex flex-col gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900 ring-1 ring-emerald-100 sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-2 rounded-card bg-emerald-50 px-4 py-3 text-sm text-emerald-900 ring-1 ring-emerald-100 sm:flex-row sm:items-center sm:justify-between"
           role="status"
         >
           <p className="flex items-center gap-2">

@@ -63,7 +63,7 @@ export function Attachments({ entityType, entityId }: { entityType: string; enti
     catch (err) { notify({ tone: 'error', title: err instanceof Error ? err.message : 'Upload failed' }) }
     finally { uploadLock.current = false; setProgress(null); setActiveUpload(null); if (input.current) input.current.value = '' }
   }
-  return <section className="rounded-xl bg-surface p-5 ring-1 ring-line" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); void add(e.dataTransfer.files) }}>
+  return <section className="rounded-card bg-surface p-5 ring-1 ring-line" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); void add(e.dataTransfer.files) }}>
     <div className="mb-3 flex items-center justify-between"><h2 className="font-semibold">Attachments</h2>{canUpload && <Button size="sm" variant="secondary" disabled={progress !== null} onClick={() => input.current?.click()}>Upload files</Button>}</div>
     <input ref={input} type="file" multiple hidden aria-label="Upload attachments" onChange={(e) => void add(e.target.files)} />
     {progress !== null && activeUpload && <UploadProgress className="mb-4" title={activeUpload.name} progress={progress} status={progress >= 1 ? 'processing' : 'uploading'} description={progress >= 1 ? 'Upload received. Finishing up…' : 'Adding your attachment…'} detail={`File ${activeUpload.index} of ${activeUpload.total}`} />}

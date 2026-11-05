@@ -15,7 +15,7 @@ export function DirectoryTabs() {
           end
           className={({ isActive }) =>
             cn(
-              'flex min-h-11 items-center gap-2 border-b-2 px-4 text-sm font-medium transition-colors',
+              'flex min-h-9 items-center gap-2 border-b-2 px-4 text-sm font-medium transition-colors',
               isActive ? 'border-brand-600 text-brand-700 font-semibold' : 'border-transparent text-muted hover:text-ink',
             )
           }

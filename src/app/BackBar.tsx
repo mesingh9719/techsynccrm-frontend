@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { matchPath, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '../lib/cn'
 import { mainNav, settingsNav, settingsNavItem } from './navigation'
 
@@ -39,8 +39,9 @@ function parentOf(pathname: string): Parent | null {
 }
 
 /**
- * The app-wide back button above every page but the Dashboard. It goes "up" one level; when the
- * previous page was that parent it uses browser history instead, so list filters and scroll survive.
+ * Breadcrumb above nested pages (a record under its list, a settings page under Settings). Top-level
+ * modules get none — the sidebar already says where you are. When the previous page was the parent it
+ * uses browser history instead, so list filters and scroll survive.
  */
 export function BackBar() {
   const { pathname } = useLocation()
@@ -49,27 +50,30 @@ export function BackBar() {
   if (trail.current !== pathname) setTrail({ current: pathname, previous: trail.current })
 
   const parent = parentOf(pathname)
-  if (!parent) return null
+  if (!parent || parent === HOME) return null
   const wide = pathname.startsWith(SETTINGS.to)
   // On desktop a settings page's sidebar header already links back to Settings; skip the duplicate.
   const inSettingsRail = parent === SETTINGS
 
   return (
-    <div className={cn('mx-auto -mb-3 w-full px-4 pt-4 sm:px-6 lg:px-8', wide ? 'max-w-wide' : 'max-w-app', inSettingsRail && 'lg:hidden')}>
-      <a
-        href={parent.to}
-        onClick={(e) => {
-          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
-          e.preventDefault()
-          const canGoBack = ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0
-          if (canGoBack && trail.previous === parent.to) navigate(-1)
-          else navigate(parent.to)
-        }}
-        className="group -ml-2 inline-flex items-center gap-1.5 rounded-control px-2 py-1 text-sm font-medium text-muted transition-colors hover:bg-surface-subtle hover:text-ink focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:outline-none"
-      >
-        <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
-        <span>Back to {parent.label}</span>
-      </a>
-    </div>
+    <nav aria-label="Breadcrumb" className={cn('mx-auto -mb-4 w-full px-4 pt-4 sm:px-6 lg:px-8', wide ? 'max-w-wide' : 'max-w-app', inSettingsRail && 'lg:hidden')}>
+      <ol className="crumbs">
+        <li>
+          <a
+            href={parent.to}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+              e.preventDefault()
+              const canGoBack = ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0
+              if (canGoBack && trail.previous === parent.to) navigate(-1)
+              else navigate(parent.to)
+            }}
+          >
+            {parent.label}
+          </a>
+        </li>
+        <li aria-hidden="true"><ChevronRight className="size-3.5" /></li>
+      </ol>
+    </nav>
   )
 }

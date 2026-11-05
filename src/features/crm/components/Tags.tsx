@@ -87,7 +87,7 @@ export function TagPicker({ value, onChange, id, label = 'Tags' }: { value: stri
 
   return (
     <div ref={rootRef} className="relative" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false) }}>
-      <div className="flex min-h-10 flex-wrap items-center gap-2 rounded-lg border border-zinc-300 bg-surface px-3 py-2">
+      <div className="flex min-h-8 flex-wrap items-center gap-2 rounded-control border border-zinc-300 bg-surface px-3 py-2">
         {selected.map((t) => (
           <TagChip key={t.id} tag={t} onRemove={() => toggle(t.id)} />
         ))}
@@ -118,7 +118,7 @@ export function TagPicker({ value, onChange, id, label = 'Tags' }: { value: stri
             }}
             placeholder="Search or create a tag…"
             aria-label="Search tags"
-            className="h-10 w-full rounded-lg border border-line px-3 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none"
+            className="h-8 w-full rounded-control border border-line px-3 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none"
           />
           <ul className="mt-1 max-h-56 overflow-y-auto" role="listbox" aria-multiselectable="true" aria-label={label}>
             {tags.isPending && <li><Skeleton className="h-20" /></li>}
@@ -127,7 +127,7 @@ export function TagPicker({ value, onChange, id, label = 'Tags' }: { value: stri
               const on = value.includes(t.id)
               return (
                 <li key={t.id} role="option" aria-selected={on}>
-                  <button type="button" onClick={() => toggle(t.id)} className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left hover:bg-surface-subtle">
+                  <button type="button" onClick={() => toggle(t.id)} className="flex w-full items-center justify-between rounded-control px-2 py-2 text-left hover:bg-surface-subtle">
                     <TagChip tag={t} />
                     {on && <Check className="size-4 text-brand-700" aria-hidden="true" />}
                   </button>
@@ -137,7 +137,7 @@ export function TagPicker({ value, onChange, id, label = 'Tags' }: { value: stri
             {!tags.isError && !tags.isPending && !options.length && !term && <li className="px-2 py-2 text-sm text-muted">No tags yet.</li>}
           </ul>
           {term && !exact && canCreate && (
-            <button type="button" onClick={add} disabled={creating} className="mt-1 flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-brand-700 hover:bg-brand-50">
+            <button type="button" onClick={add} disabled={creating} className="mt-1 flex w-full items-center gap-2 rounded-control px-2 py-2 text-sm text-brand-700 hover:bg-brand-50">
               <Plus className="size-4" aria-hidden="true" />
               Create “{q.trim()}”
             </button>

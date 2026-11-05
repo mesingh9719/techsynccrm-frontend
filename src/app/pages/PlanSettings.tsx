@@ -180,7 +180,7 @@ function SeatSelection({ org }: { org: Organization }) {
       title="Choose who keeps access"
       description={`The ${planName(org.plan)} plan includes ${seats} users and this workspace has ${list.length}. Until you choose, only you and one admin can use the workspace. Everyone you don’t pick is deactivated — nothing they own is deleted, and their open records move to you.`}
     >
-      <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
+      <ul className="divide-y divide-zinc-100 rounded-card ring-1 ring-line">
         {list.map((m) => {
           const isOwner = m.role === 'owner'
           const checked = keep.has(m.userId)

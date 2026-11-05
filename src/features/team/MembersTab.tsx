@@ -234,7 +234,7 @@ export function MembersTab({ orgId, onViewRole }: { orgId: string; onViewRole?: 
             type="button"
             aria-pressed={status === s}
             onClick={() => setStatus(s)}
-            className={cn('rounded-lg px-3 py-2 text-sm font-medium', status === s ? 'bg-zinc-900 text-white' : 'text-muted hover:bg-zinc-100')}
+            className={cn('rounded-control px-3 py-2 text-sm font-medium', status === s ? 'bg-zinc-900 text-white' : 'text-muted hover:bg-zinc-100')}
           >
             {s === 'active' ? 'Active' : 'Removed'}
           </button>
@@ -291,7 +291,7 @@ export function MembersTab({ orgId, onViewRole }: { orgId: string; onViewRole?: 
                   <Menu
                     align="end"
                     trigger={(props) => (
-                      <button type="button" {...props} className="rounded-lg p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={`Actions for ${m.fullName}`}>
+                      <button type="button" {...props} className="rounded-control p-2 text-muted hover:bg-zinc-100 hover:text-ink" aria-label={`Actions for ${m.fullName}`}>
                         <MoreHorizontal className="size-4" aria-hidden="true" />
                       </button>
                     )}

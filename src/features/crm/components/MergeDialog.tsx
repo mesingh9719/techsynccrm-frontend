@@ -99,7 +99,7 @@ export function MergeDialog<T extends { id: string }>({
         <legend className="text-sm font-medium text-ink">Keep this record</legend>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           {records.map((r) => (
-            <label key={r.id} className={cn('flex cursor-pointer items-center gap-2 rounded-xl px-3 py-3 text-sm ring-1', primary === r.id ? 'bg-brand-50 ring-brand-300' : 'ring-line hover:bg-surface-subtle')}>
+            <label key={r.id} className={cn('flex cursor-pointer items-center gap-2 rounded-card px-3 py-3 text-sm ring-1', primary === r.id ? 'bg-brand-50 ring-brand-300' : 'ring-line hover:bg-surface-subtle')}>
               <input type="radio" name="merge-primary" checked={primary === r.id} onChange={() => setPrimaryId(r.id)} className="text-brand-700 focus:ring-brand-500" />
               <span className="truncate font-medium text-ink">{nameOf(r)}</span>
             </label>

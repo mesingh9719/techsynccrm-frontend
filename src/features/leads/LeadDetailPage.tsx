@@ -193,8 +193,6 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
         />
       </div>
 
-      <LeadGooglePanel lead={lead} />
-
       <div className="lead-layout">
         <div role="tablist" aria-label="Lead sections" className="lead-tabs">
           {(
@@ -260,7 +258,7 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
                       align="end"
                       className="w-72"
                       trigger={(props) => (
-                        <button type="button" {...props} className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted hover:bg-surface-subtle hover:text-ink">
+                        <button type="button" {...props} className="inline-flex h-8 items-center gap-1.5 rounded-control px-2 text-xs font-medium text-muted hover:bg-surface-subtle hover:text-ink">
                           <FileText className="size-4" aria-hidden="true" />
                           Note templates
                         </button>
@@ -287,6 +285,7 @@ function LeadWorkspace({ detail }: { detail: LeadDetail }) {
           <aside id="lead-col-next" role="tabpanel" aria-labelledby="lead-tab-next" className="lead-col lead-col-next" data-active={tab === 'next' || undefined} aria-label="Next steps">
             <InsightsCard insights={insights} canAct={insights.next ? canNextAction(insights.next.kind) : false} canEdit={canEditField} onAction={onNextAction} onMissing={onMissing} />
             <NextStepsCard detail={detail} onCustom={() => setDialog({ task: { title: `Follow up with ${lead.displayName}`, type: 'follow_up' } })} />
+            <LeadGooglePanel lead={lead} />
             <DuplicatesCard lead={lead} />
           </aside>
         </div>

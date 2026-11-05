@@ -1,4 +1,4 @@
-import { CalendarPlus, Clock, Ellipsis, Hand, Link2, Pencil, Sparkles, Trash2, UserRoundPlus } from 'lucide-react'
+import { CalendarPlus, Clock, Ellipsis, Hand, Link2, Pencil, Trash2, UserRoundPlus } from 'lucide-react'
 import { Avatar } from '../../../components/ui/Badge'
 import { RecordHeader } from '../../../components/app/RecordHeader'
 import { Button } from '../../../components/ui/Button'
@@ -90,21 +90,20 @@ export function LeadHeader({
           {!lead.deletedAt && <ContactActions comm={comm} canLog={can.createTasks} onMeeting={can.createTasks ? onMeeting : undefined} />}
           <span className="mx-1 hidden h-6 w-px bg-line sm:block" aria-hidden="true" />
           {can.claim && (
-            <Button size="sm" variant="secondary" className="h-9" onClick={() => act(() => claimLead(lead.id), 'Lead claimed — it’s yours')}>
+            <Button size="sm" variant="secondary" onClick={() => act(() => claimLead(lead.id), 'Lead claimed — it’s yours')}>
               <Hand className="size-4" aria-hidden="true" />
               Claim
             </Button>
           )}
           {can.convert && (
-            <Button size="sm" className="h-9" onClick={onConvert}>
-              <Sparkles className="size-4" aria-hidden="true" />
+            <Button size="sm" variant="secondary" onClick={onConvert}>
               Convert
             </Button>
           )}
           <Menu
             align="end"
             trigger={(props) => (
-              <button type="button" {...props} className="icon-button size-9! min-h-9! min-w-9! ring-1 ring-line ring-inset" aria-label="More lead actions">
+              <button type="button" {...props} className="icon-button size-8! min-h-8! min-w-8! ring-1 ring-line ring-inset" aria-label="More lead actions">
                 <Ellipsis className="size-4" aria-hidden="true" />
               </button>
             )}

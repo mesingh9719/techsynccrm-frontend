@@ -183,7 +183,7 @@ function TermsBanner() {
   if (!user || user.termsUpToDate) return null
   return (
     <div
-      className="flex flex-col gap-2 border-b border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-900 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+      className="flex flex-col gap-2 border-b border-line bg-surface px-4 py-1.5 text-[13px] text-ink sm:flex-row sm:items-center sm:justify-between sm:px-6"
       role="status"
     >
       <p className="flex items-center gap-2">
@@ -229,7 +229,7 @@ function PlanBanner() {
   if (organization.seatSelectionRequired && role === 'owner') {
     return (
       <div
-        className="flex flex-col gap-2 border-b border-red-100 bg-red-50 px-4 py-3 text-sm text-red-900 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+        className="flex flex-col gap-2 border-b border-red-100 bg-red-50 px-4 py-1.5 text-[13px] text-red-900 sm:flex-row sm:items-center sm:justify-between sm:px-6"
         role="alert"
       >
         <p className="flex items-center gap-2">
@@ -256,8 +256,8 @@ function PlanBanner() {
   return (
     <div
       className={cn(
-        'flex flex-col gap-2 border-b px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6',
-        urgent ? 'border-red-100 bg-red-50 text-red-900' : 'border-brand-100 bg-brand-50 text-brand-900',
+        'flex flex-col gap-2 border-b px-4 py-1.5 text-[13px] sm:flex-row sm:items-center sm:justify-between sm:px-6',
+        urgent ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-line bg-surface text-ink',
       )}
       role="status"
     >

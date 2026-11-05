@@ -105,6 +105,6 @@ export default function NotificationSettings() {
   const prefs = useQuery({ queryKey: notificationKeys(orgId, user?.id ?? 'none').preferences, queryFn: getNotificationPreferences, enabled: Boolean(user?.organization) })
   return <div className="account-settings notifications-settings space-y-6">
     <PageHeader title="Notifications" description="Keep the updates that matter. Make room for everything else." actions={<Button variant="secondary" to="/app/notifications"><Inbox className="size-3.5" aria-hidden="true" />Open inbox<ArrowUpRight className="size-3.5" aria-hidden="true" /></Button>} />
-    {prefs.isPending ? <div className="space-y-5" aria-label="Loading notification preferences"><Skeleton className="h-24 rounded-xl" /><Skeleton className="h-96 rounded-xl" /></div> : prefs.isError ? <ErrorState error={prefs.error} onRetry={() => prefs.refetch()} /> : <PreferencesForm key={`${orgId}:${user?.id}`} initial={prefs.data} />}
+    {prefs.isPending ? <div className="space-y-5" aria-label="Loading notification preferences"><Skeleton className="h-24 rounded-card" /><Skeleton className="h-96 rounded-card" /></div> : prefs.isError ? <ErrorState error={prefs.error} onRetry={() => prefs.refetch()} /> : <PreferencesForm key={`${orgId}:${user?.id}`} initial={prefs.data} />}
   </div>
 }

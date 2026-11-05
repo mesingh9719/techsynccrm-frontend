@@ -8,7 +8,7 @@ import {
   Download,
   Hand,
   Inbox,
-  LayoutGrid,
+  SquareKanban,
   SlidersHorizontal,
   List,
   Plus,
@@ -53,6 +53,7 @@ import { bulkLeads, claimLead, listLeads, useLeadSources } from './api'
 import { LeadFormDrawer } from './LeadFormDrawer'
 import { LeadStatusBadge, ScorePill } from './LeadBits'
 import { StatusDialog } from './StatusDialog'
+import { LeadBoard } from './LeadBoard'
 
 const CORE_KEYS = [
   'q',
@@ -98,7 +99,7 @@ export default function LeadsPage() {
     queryFn: () => memberOptions(),
     enabled: canAssign,
   })
-  const [view, setView] = useState<'table' | 'cards'>('table')
+  const [view, setView] = useState<'table' | 'board'>('table')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const canClaim = useCan('leads.claim') || canAssign
   const defs = useCustomFieldDefs('lead')
@@ -292,7 +293,7 @@ export default function LeadsPage() {
       sortKey: 'displayName',
       cell: (l) => (
         <span className="flex items-center gap-3">
-          <Avatar name={l.displayName} size="sm" />
+          <Avatar name={l.displayName} size="xs" />
           <span className="min-w-0">
             <span className="flex items-center gap-2 truncate font-medium text-ink">
               {l.status === 'new' && (
@@ -345,9 +346,7 @@ export default function LeadsPage() {
                 </button>
               ))}
             </span>
-          ) : (
-            'Your next customer starts here. Follow up while the conversation is warm.'
-          )
+          ) : undefined
         }
         actions={
           <>
@@ -431,10 +430,10 @@ export default function LeadsPage() {
               label="Lead layout"
               value={view}
               onChange={setView}
-              size="md"
+              size="sm"
               options={[
-                { value: 'table', label: (<><List className="size-4" /><span className="sr-only">Table</span></>) },
-                { value: 'cards', label: (<><LayoutGrid className="size-4" /><span className="sr-only">Cards</span></>) },
+                { value: 'table', label: (<><List className="size-3.5" aria-hidden="true" />Table</>) },
+                { value: 'board', label: (<><SquareKanban className="size-3.5" aria-hidden="true" />Board</>) },
               ]}
             />
             <SavedViewsMenu
@@ -559,11 +558,31 @@ export default function LeadsPage() {
               />
             )}
           </div>
+        ) : view === 'board' ? (
+          <>
+            <LeadBoard
+              rows={rows}
+              status={filters.status as LeadStatus | undefined}
+              counts={counts}
+              onOpen={canView ? (l) => navigate(`/app/leads/${l.id}`) : undefined}
+            />
+            <div className="data-footer">
+              <span>
+                Showing {rows.length.toLocaleString()}
+                {total !== undefined ? ` of ${total.toLocaleString()}` : ''} leads
+              </span>
+              {list.hasNextPage && (
+                <Button size="sm" variant="secondary" loading={list.isFetchingNextPage} onClick={() => list.fetchNextPage()}>
+                  Load more
+                </Button>
+              )}
+            </div>
+          </>
         ) : (
           <DataTable
             bare
             showColumnControls={false}
-            view={view}
+            view="table"
             rows={rows}
             columns={tableColumns}
             getRowId={(l) => l.id}
@@ -619,7 +638,7 @@ export default function LeadsPage() {
           </>
         }
       >
-        <div className="grid gap-4 sm:grid-cols-2 [&>div]:w-full [&_select]:min-h-11 [&_label]:min-h-11">
+        <div className="grid gap-3 sm:grid-cols-2 [&>div]:w-full">
           {!unassignedOnly && (
             <FilterSelect
               label="Owner"
@@ -660,7 +679,7 @@ export default function LeadsPage() {
             onChange={(v) => setFilter('tag', v)}
             options={(tags.data ?? []).map((t) => ({ value: t.id, label: t.name }))}
           />
-          <label className="flex h-10 items-center gap-2 rounded-lg border border-zinc-300 bg-surface px-2 text-xs text-muted">
+          <label className="crm-input flex h-[var(--control-h,2.5rem)] items-center gap-2 rounded-control border border-line bg-surface px-2 text-xs text-muted">
             From
             <Input
               type="date"
@@ -668,10 +687,10 @@ export default function LeadsPage() {
               value={filters.createdFrom ?? ''}
               max={filters.createdTo}
               onChange={(e) => setFilter('createdFrom', e.target.value)}
-              className="h-8! w-32 border-0 bg-transparent! px-1 shadow-none"
+              className="h-7! w-32 border-0 bg-transparent! px-1 shadow-none"
             />
           </label>
-          <label className="flex h-10 items-center gap-2 rounded-lg border border-zinc-300 bg-surface px-2 text-xs text-muted">
+          <label className="crm-input flex h-[var(--control-h,2.5rem)] items-center gap-2 rounded-control border border-line bg-surface px-2 text-xs text-muted">
             To
             <Input
               type="date"
@@ -679,7 +698,7 @@ export default function LeadsPage() {
               value={filters.createdTo ?? ''}
               min={filters.createdFrom}
               onChange={(e) => setFilter('createdTo', e.target.value)}
-              className="h-8! w-32 border-0 bg-transparent! px-1 shadow-none"
+              className="h-7! w-32 border-0 bg-transparent! px-1 shadow-none"
             />
           </label>
           <CustomFieldFilters defs={defs.data} filters={filters} setFilter={setFilter} />

@@ -31,14 +31,14 @@ function TagRow({ tag, editable, refresh }: { tag: Tag; editable: boolean; refre
           onChange={(e) => setName(e.target.value)}
           disabled={!editable}
           maxLength={40}
-          className="h-10! min-w-32 flex-1 sm:max-w-60"
+          className="h-8! min-w-32 flex-1 sm:max-w-60"
         />
         <Select
           aria-label={`Color of tag ${tag.name}`}
           value={color}
           onChange={(e) => setColor(e.target.value as TagColor)}
           disabled={!editable}
-          className="h-10! text-sm"
+          className="h-8! text-sm"
         >
           {tagColors.map((c) => (
             <option key={c} value={c}>

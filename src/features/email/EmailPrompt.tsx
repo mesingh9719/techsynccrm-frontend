@@ -21,9 +21,9 @@ function Prompt() {
     try { return promptDismissed(localStorage.getItem(key)) } catch { return false }
   })
   if (dismissed || !canConnect || !query.data?.enabled || !query.data.entitled || query.data.tenantEnabled === false || query.data.account && ['connected', 'syncing', 'delayed'].includes(query.data.account.status)) return null
-  return <div role="status" className="flex items-center justify-between gap-3 border-b border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-900 sm:px-6">
+  return <div role="status" className="flex items-center justify-between gap-3 border-b border-line bg-surface px-4 py-1 text-[13px] text-ink sm:px-6">
     <p>Connect Gmail to email leads from here. <Link className="font-medium underline" to="/app/settings/connections#email">Connect Gmail</Link></p>
-    <button type="button" aria-label="Dismiss Gmail reminder for 7 days" className="shrink-0 rounded-lg p-2 hover:bg-brand-100" onClick={() => {
+    <button type="button" aria-label="Dismiss Gmail reminder for 7 days" className="icon-button shrink-0" onClick={() => {
       setDismissed(true); try { localStorage.setItem(key, String(Date.now() + 7 * 86400000)) } catch { /* This tab still remembers. */ }
     }}><X className="size-4" aria-hidden="true" /></button>
   </div>

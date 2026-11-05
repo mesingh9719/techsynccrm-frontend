@@ -5,7 +5,8 @@ import { StatusChip, type SignalTone } from '../../components/ui/Signal'
 import { leadStatusLabels } from '../crm/format'
 import type { LeadStatus, ScoreBreakdown } from '../crm/types'
 
-const stageTone: Record<LeadStatus, SignalTone> = { new: 'info', contacted: 'violet', qualified: 'success', converted: 'success', lost: 'danger', junk: 'warning' }
+/** Semantic only: blue = new/info, amber = in progress, green = qualified/won, red = lost, grey = junk. */
+const stageTone: Record<LeadStatus, SignalTone> = { new: 'info', contacted: 'warning', qualified: 'success', converted: 'success', lost: 'danger', junk: 'neutral' }
 
 export function LeadStatusBadge({ status }: { status: LeadStatus }) {
   return <StatusChip tone={stageTone[status]}>{leadStatusLabels[status]}</StatusChip>

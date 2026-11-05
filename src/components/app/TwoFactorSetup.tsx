@@ -44,7 +44,7 @@ export function RecoveryCodes({ codes, onDone, doneLabel = 'I’ve saved my code
       <p className="text-sm text-muted">
         Save these somewhere safe, like a password manager. If you lose your phone, each code lets you sign in once. <strong className="font-medium text-ink">You won’t see them again.</strong>
       </p>
-      <ul className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-surface-subtle p-4 font-mono text-sm text-ink ring-1 ring-line" aria-label="Recovery codes">
+      <ul className="mt-4 grid grid-cols-2 gap-2 rounded-card bg-surface-subtle p-4 font-mono text-sm text-ink ring-1 ring-line" aria-label="Recovery codes">
         {codes.map((code) => (
           <li key={code}>{code}</li>
         ))}
@@ -126,8 +126,8 @@ export function TwoFactorSetup({ onComplete }: { onComplete: () => void }) {
           <p>
             <span className="font-medium text-ink">1. Scan this QR code</span> with an authenticator app such as Google Authenticator, Microsoft Authenticator or 1Password.
           </p>
-          <div className="mt-3 flex flex-col items-center gap-3 rounded-xl bg-surface-subtle p-4 ring-1 ring-line sm:flex-row sm:items-start">
-            <img src={setup.qr} alt="QR code for your authenticator app" width={160} height={160} className="rounded-lg bg-surface" />
+          <div className="mt-3 flex flex-col items-center gap-3 rounded-card bg-surface-subtle p-4 ring-1 ring-line sm:flex-row sm:items-start">
+            <img src={setup.qr} alt="QR code for your authenticator app" width={160} height={160} className="rounded-control bg-surface" />
             <div className="min-w-0 text-center sm:text-left">
               <p className="text-xs text-muted">Can’t scan? Enter this key instead:</p>
               <p className="mt-1 font-mono text-sm break-all text-ink select-all">{grouped}</p>

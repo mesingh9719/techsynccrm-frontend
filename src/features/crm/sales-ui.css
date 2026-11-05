@@ -1,9 +1,9 @@
 /* Local sales workspace styles; use the application's existing theme tokens. */
-.sales-filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: .625rem; padding: .875rem; }
+.sales-filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .5rem .75rem; }
 .sales-filter-row > :first-child { flex-basis: 15rem; }
-.sales-quick-filter { flex: 1 1 8rem; min-width: 8rem; max-width: 14rem; }
+.sales-quick-filter { flex: 0 1 11rem; min-width: 8rem; }
 .sales-quick-filter > div { width: 100%; }
-.sales-advanced-filters:not([hidden]) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; padding: 1rem; border-top: 1px solid var(--color-line); background: var(--color-surface-subtle); border-radius: 0 0 .75rem .75rem; }
+.sales-advanced-filters:not([hidden]) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; padding: .75rem; border-top: 1px solid var(--color-line); background: var(--color-surface-subtle); }
 .sales-filter-field { min-width: 0; }
 .sales-filter-field > div { width: 100%; }
 .sales-filter-field input, .sales-filter-field select { width: 100%; min-width: 0; }
@@ -18,8 +18,8 @@
 .sales-budget-track > span { display: block; height: 100%; border-radius: inherit; background: var(--color-brand-500); }
 .sales-budget-track[data-over='true'] > span { background: var(--color-warning, #d97706); }
 .sales-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
-.sales-metric { min-width: 0; padding: 1.125rem; }
-.sales-metric-value { overflow-wrap: anywhere; font-size: clamp(1.4rem, 2vw, 1.875rem); font-weight: 600; letter-spacing: -.04em; line-height: 1.25; font-variant-numeric: tabular-nums; color: var(--color-ink); }
+.sales-metric { min-width: 0; padding: .75rem 1rem; }
+.sales-metric-value { overflow-wrap: anywhere; font-size: 1.25rem; font-weight: 600; letter-spacing: -.01em; line-height: 1.25; font-variant-numeric: tabular-nums; color: var(--color-ink); }
 .sales-campaign-table .data-scroll { max-height: 65dvh; }
 .sales-campaign-table .data-table td { vertical-align: middle; }
 @media (max-width: 1100px) { .sales-advanced-filters:not([hidden]) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

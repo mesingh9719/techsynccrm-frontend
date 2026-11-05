@@ -200,7 +200,7 @@ export function RequirementsCard({
             )}
             {can.update &&
               (person ? (
-                <form onSubmit={addPerson} className="space-y-2 rounded-lg bg-surface-subtle p-2 ring-1 ring-line">
+                <form onSubmit={addPerson} className="space-y-2 rounded-control bg-surface-subtle p-2 ring-1 ring-line">
                   <input
                     autoFocus
                     value={person.name}

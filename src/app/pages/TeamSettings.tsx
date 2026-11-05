@@ -5,7 +5,6 @@ import { PageHeader } from '../../components/app/States'
 import { useAuth } from '../../lib/useAuth'
 import { useCan } from '../../lib/useOrg'
 import { useSeo } from '../../lib/useSeo'
-import { cn } from '../../lib/cn'
 import { Button } from '../../components/ui/Button'
 import { InviteDrawer } from '../../features/team/InviteDrawer'
 import { InvitationsTab } from '../../features/team/InvitationsTab'
@@ -56,8 +55,8 @@ export default function TeamSettings() {
   return (
     <div>
       <PageHeader title="Team & roles" description="Invite teammates, decide what each role can do, and organize your sales teams." />
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div role="tablist" aria-label="Team" className="flex gap-1 overflow-x-auto rounded-xl bg-zinc-100 p-1">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div role="tablist" aria-label="Team" className="list-tabs no-scrollbar -mx-0 border-b border-line px-0">
           {visibleTabs.map((t) => (
             <button
               key={t.key}
@@ -76,7 +75,7 @@ export default function TeamSettings() {
               }}
               aria-controls="team-tabpanel"
               onClick={() => go({ tab: t.key })}
-              className={cn('shrink-0 rounded-lg px-3 py-2 text-sm font-medium', tab === t.key ? 'bg-surface text-ink shadow-card' : 'text-muted hover:text-ink')}
+              className="list-tab compact-control"
             >
               {t.label}
             </button>

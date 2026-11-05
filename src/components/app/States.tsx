@@ -17,7 +17,7 @@ export function PageHeader({ title, description, meta, actions, className, bread
   return (
     <header className={cn('page-header', className)}>
       <div className="min-w-0">
-        {breadcrumbs && <nav aria-label="Breadcrumb" className="mb-3"><ol className="flex flex-wrap items-center gap-2 text-xs text-muted">{breadcrumbs.map((item, index) => <li key={`${item.label}-${index}`} className="flex items-center gap-2">{index > 0 && <ChevronRight className="size-3" aria-hidden="true" />}{item.to ? <Link to={item.to} className="hover:text-brand-700 hover:underline">{item.label}</Link> : <span aria-current="page">{item.label}</span>}</li>)}</ol></nav>}
+        {breadcrumbs && <nav aria-label="Breadcrumb" className="mb-1.5"><ol className="crumbs">{breadcrumbs.map((item, index) => <li key={`${item.label}-${index}`} className="flex items-center gap-1">{index > 0 && <ChevronRight className="size-3.5" aria-hidden="true" />}{item.to ? <Link to={item.to}>{item.label}</Link> : <span aria-current="page" className="text-ink">{item.label}</span>}</li>)}</ol></nav>}
         <h1 className="page-title">{title}</h1>
         {description && <p className="page-description">{description}</p>}
         {meta && <p className="page-meta">{meta}</p>}
@@ -42,15 +42,11 @@ export function EmptyState({
   className?: string
 }) {
   return (
-    <div className={cn('flex flex-col items-center rounded-card border border-dashed border-zinc-300 bg-surface px-6 py-14 text-center', className)}>
-      {Icon && (
-        <span className="flex size-11 items-center justify-center rounded-xl bg-surface-subtle ring-1 ring-line">
-          <Icon className="size-5 text-muted" aria-hidden="true" />
-        </span>
-      )}
-      <h2 className="mt-4 font-semibold text-ink">{title}</h2>
-      {description && <p className="mt-1 max-w-sm text-sm text-muted">{description}</p>}
-      {action && <div className="mt-6">{action}</div>}
+    <div className={cn('empty-state flex flex-col items-center rounded-card border border-line bg-surface px-6 py-10 text-center', className)}>
+      {Icon && <Icon className="size-5 text-muted" aria-hidden="true" />}
+      <h2 className="mt-3 text-sm font-semibold text-ink">{title}</h2>
+      {description && <p className="mt-1 max-w-sm text-[13px] leading-5 text-muted">{description}</p>}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   )
 }
@@ -65,11 +61,11 @@ export function ErrorState({ error, onRetry, className }: { error: unknown; onRe
       ? error.message
       : 'We couldn’t load this. Check your connection and try again.'
   return (
-    <div role="alert" className={cn('flex flex-col items-center rounded-card bg-surface px-6 py-12 text-center ring-1 ring-line', className)}>
-      {forbidden ? <Lock className="size-6 text-muted" aria-hidden="true" /> : <CircleAlert className="size-6 text-danger" aria-hidden="true" />}
-      <p className="mt-3 text-sm text-ink">{message}</p>
+    <div role="alert" className={cn('error-state flex flex-col items-center rounded-card bg-surface px-6 py-10 text-center ring-1 ring-line', className)}>
+      {forbidden ? <Lock className="size-5 text-muted" aria-hidden="true" /> : <CircleAlert className="size-5 text-danger" aria-hidden="true" />}
+      <p className="mt-2 text-sm text-ink">{message}</p>
       {onRetry && !forbidden && (
-        <Button variant="secondary" size="sm" onClick={onRetry} className="mt-5">
+        <Button variant="secondary" size="sm" onClick={onRetry} className="mt-4">
           <RefreshCw className="size-4" aria-hidden="true" />
           Try again
         </Button>
@@ -80,20 +76,20 @@ export function ErrorState({ error, onRetry, className }: { error: unknown; onRe
 
 /** Grey placeholder block while content loads. */
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden="true" className={cn('animate-pulse rounded-control bg-line', className)} />
+  return <div aria-hidden="true" className={cn('animate-pulse rounded-control bg-line/70', className)} />
 }
 
 /** Skeleton for list pages: a few table-like rows. */
 export function ListSkeleton({ rows = 6, label = 'Loading…' }: { rows?: number; label?: string }) {
   return (
-    <div role="status" className="space-y-2 rounded-card bg-surface p-4 ring-1 ring-line">
+    <div role="status" className="list-skeleton divide-y divide-line-subtle rounded-card bg-surface ring-1 ring-line">
       <span className="sr-only">{label}</span>
       {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="flex items-center gap-3 py-2">
-          <Skeleton className="size-8 rounded-full" />
-          <Skeleton className="h-3.5 flex-1" />
-          <Skeleton className="hidden h-3.5 w-24 sm:block" />
-          <Skeleton className="h-3.5 w-16" />
+        <div key={i} className="flex h-9 items-center gap-3 px-4">
+          <Skeleton className="size-6 rounded-full" />
+          <Skeleton className="h-3 flex-1" />
+          <Skeleton className="hidden h-3 w-24 sm:block" />
+          <Skeleton className="h-3 w-16" />
         </div>
       ))}
     </div>

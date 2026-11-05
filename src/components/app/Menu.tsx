@@ -118,7 +118,7 @@ export function MenuItem({ onSelect, children, icon, disabled, tone = 'default' 
       disabled={disabled}
       onClick={() => !disabled && onSelect()}
       className={cn(
-        'flex min-h-10 w-full items-center gap-3 rounded-control px-3 py-2 text-left text-sm outline-none',
+        'flex min-h-8 w-full items-center gap-3 rounded-control px-3 py-2 text-left text-sm outline-none',
         disabled
           ? 'cursor-not-allowed text-muted'
           : tone === 'danger'

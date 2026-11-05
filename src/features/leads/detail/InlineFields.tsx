@@ -138,7 +138,7 @@ export function Card({
       <header className="flex min-h-7 items-center justify-between gap-2">
         <h2 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-ink">
           {Icon && (
-            <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700 ring-1 ring-brand-100" aria-hidden="true">
+            <span className="grid size-7 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-700 ring-1 ring-brand-100" aria-hidden="true">
               <Icon className="size-4" />
             </span>
           )}

@@ -197,7 +197,7 @@ function QuickAddLead() {
   // The leads list has its own "New lead" in the page header.
   if (!allowed || pathname === '/app/leads') return null
   return (
-    <Button size="md" onClick={() => navigate('/app/leads?create=true')}>
+    <Button size="md" variant="secondary" onClick={() => navigate('/app/leads?create=true')}>
       <Plus className="size-4" />
       <span className="hidden sm:inline">New lead</span>
       <span className="sr-only sm:hidden">New lead</span>

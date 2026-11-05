@@ -96,7 +96,7 @@ function LogoUploader({ org, canEdit, onChanged }: { org: Organization; canEdit:
 
   return (
     <div className="flex items-center gap-4">
-      <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-subtle ring-1 ring-line">
+      <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-card bg-surface-subtle ring-1 ring-line">
         {org.logoUrl ? (
           <img src={org.logoUrl} alt={`${org.name} logo`} className="size-full object-contain" />
         ) : (

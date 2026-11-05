@@ -24,7 +24,7 @@ import { convertLead, getConversionSuggestions, type ConvertInput } from './api'
 
 function Choice({ checked, onChange, title, hint }: { checked: boolean; onChange: () => void; title: string; hint?: string }) {
   return (
-    <label className={cn('flex cursor-pointer items-start gap-3 rounded-xl px-3 py-3 text-sm ring-1', checked ? 'bg-brand-50 ring-brand-300' : 'ring-line hover:bg-surface-subtle')}>
+    <label className={cn('flex cursor-pointer items-start gap-3 rounded-card px-3 py-3 text-sm ring-1', checked ? 'bg-brand-50 ring-brand-300' : 'ring-line hover:bg-surface-subtle')}>
       <input type="radio" checked={checked} onChange={onChange} className="mt-1 text-brand-700 focus:ring-brand-500" />
       <span>
         <span className="block font-medium text-ink">{title}</span>

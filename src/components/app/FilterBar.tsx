@@ -32,7 +32,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', label 
 
   return (
     <div className={cn('relative', className)}>
-      <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
       <input
         type="search"
         value={text}
@@ -40,7 +40,7 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', label 
         placeholder={placeholder}
         aria-label={label}
         data-global-search-target
-        className="h-10 w-full rounded-lg border border-line bg-surface pr-8 pl-9 text-sm text-ink placeholder:text-muted hover:border-brand-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 focus:outline-none"
+        className="h-8 w-full rounded-control border border-line bg-surface pr-8 pl-8 text-[13px] text-ink placeholder:text-muted hover:border-line-strong focus:border-brand-500 focus:ring-3 focus:ring-brand-500/15 focus:outline-none"
       />
       {text && (
         <button
@@ -95,9 +95,9 @@ export function FilterChips<K extends string>({ filters, onRemove, onClear, excl
   if (!active.length) return null
   const names: Record<string, string> = { q: 'Search', sourceId: 'Source', ownerId: 'Owner', status: 'Status', tag: 'Tag', createdFrom: 'From', createdTo: 'Until', campaignId: 'Campaign', lifecycleStage: 'Stage', industry: 'Industry', assignee: 'Assignee', type: 'Channel' }
   return <div aria-label="Active filters" className="flex flex-wrap items-center gap-2">
-    {active.map(([key, value]) => <button key={key} type="button" onClick={() => onRemove(key as K)} className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-control border border-brand-200 bg-brand-50 px-3 text-xs font-medium text-brand-800" title={`Remove ${names[key] ?? key} filter`}>
+    {active.map(([key, value]) => <button key={key} type="button" onClick={() => onRemove(key as K)} className="inline-flex h-6 max-w-full items-center gap-1.5 rounded-chip border border-line bg-surface-subtle px-2 text-xs font-medium text-ink" title={`Remove ${names[key] ?? key} filter`}>
       <span className="truncate">{names[key] ?? key.replace(/^cf\./, '')}: {labels[`${key}:${value}`] ?? (value && /^[a-f0-9-]{20,}$/i.test(value) ? 'Selected' : value)}</span><X className="size-3 shrink-0" aria-hidden="true" />
     </button>)}
-    <button type="button" onClick={onClear} className="min-h-10 px-2 text-xs font-medium text-brand-700 hover:underline">Clear all</button>
+    <button type="button" onClick={onClear} className="min-h-8 px-2 text-xs font-medium text-brand-700 hover:underline">Clear all</button>
   </div>
 }

@@ -62,7 +62,7 @@ export function EmbedPanel({ form, scope }: { form: WebForm; scope: string }) {
                 <h3 className="text-sm font-medium text-ink">{snippet.label}</h3>
                 <CopyButton text={snippet.value} />
               </div>
-              <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-surface-subtle p-4 text-xs leading-6 text-ink">
+              <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-control border border-line bg-surface-subtle p-4 text-xs leading-6 text-ink">
                 <code>{snippet.value}</code>
               </pre>
               <p className="mt-2 text-xs text-muted">{snippet.help}</p>

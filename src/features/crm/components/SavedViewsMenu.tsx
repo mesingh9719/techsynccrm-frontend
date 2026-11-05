@@ -70,7 +70,7 @@ export function SavedViewsMenu({
           <button
             {...props}
             type="button"
-            className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-300 bg-surface px-3 text-sm text-ink hover:border-zinc-400"
+            className="toolbar-button"
           >
             <Bookmark className="size-4 text-muted" aria-hidden="true" />
             <span className="max-w-32 truncate">{active?.name ?? 'Views'}</span>

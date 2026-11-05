@@ -77,7 +77,7 @@ function TeamDialog({ team, open, onClose, orgId }: { team: Team | null; open: b
           )}
         </Field>
         {members.length > 0 && (
-          <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
+          <ul className="divide-y divide-zinc-100 rounded-card ring-1 ring-line">
             {members.map((m) => (
               <li key={m.userId} className="flex items-center gap-3 px-3 py-2">
                 <Avatar name={m.fullName} size="xs" className="size-6" />
@@ -151,10 +151,10 @@ export function TeamsTab({ orgId }: { orgId: string }) {
                 </div>
                 {canManage && (
                   <div className="flex gap-1">
-                    <button type="button" onClick={() => setEditing(t)} className="rounded-lg p-2 text-muted hover:bg-zinc-100" aria-label={`Edit ${t.name}`}>
+                    <button type="button" onClick={() => setEditing(t)} className="rounded-control p-2 text-muted hover:bg-zinc-100" aria-label={`Edit ${t.name}`}>
                       <Pencil className="size-4" aria-hidden="true" />
                     </button>
-                    <button type="button" onClick={() => setDeleting(t)} className="rounded-lg p-2 text-muted hover:bg-red-50 hover:text-red-700" aria-label={`Delete ${t.name}`}>
+                    <button type="button" onClick={() => setDeleting(t)} className="rounded-control p-2 text-muted hover:bg-red-50 hover:text-red-700" aria-label={`Delete ${t.name}`}>
                       <Trash2 className="size-4" aria-hidden="true" />
                     </button>
                   </div>

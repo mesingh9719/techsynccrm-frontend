@@ -31,7 +31,7 @@ export function Tabs<T extends string>({
       role="group"
       aria-label={label}
       id={id}
-      className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-zinc-100/80 p-1"
+      className="segmented flex max-w-full gap-0.5 overflow-x-auto rounded-control bg-surface-subtle p-0.5 ring-1 ring-line ring-inset"
     >
       {items.map((item, index) => (
         <button
@@ -44,8 +44,8 @@ export function Tabs<T extends string>({
           onKeyDown={(event) => move(event, index)}
           onClick={() => onChange(item.value)}
           className={cn(
-            'min-h-10 shrink-0 rounded-lg px-3 text-sm font-medium transition-colors',
-            value === item.value ? 'bg-white text-zinc-950 shadow-card' : 'text-zinc-500 hover:text-zinc-900',
+            'min-h-7 shrink-0 rounded-chip px-3 text-[13px] font-medium transition-colors',
+            value === item.value ? 'bg-surface text-ink ring-1 ring-line' : 'text-muted hover:text-ink',
           )}
         >
           {item.label}

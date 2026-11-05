@@ -85,10 +85,10 @@ export function FormDrawer({
           event.preventDefault()
           if (!busy && !submitDisabled) onSubmit()
         }}
-        className="@container space-y-6"
+        className="@container space-y-5"
       >
         {error && <FormAlert>{error}</FormAlert>}
-        <fieldset disabled={busy} className="min-w-0 space-y-6">{children}</fieldset>
+        <fieldset disabled={busy} className="min-w-0 space-y-5">{children}</fieldset>
       </form>
     </Drawer>
   )
@@ -101,7 +101,6 @@ export function FormDrawer({
 export function FormSection({
   title,
   description,
-  icon: Icon,
   aside,
   collapsible = false,
   defaultOpen = true,
@@ -112,6 +111,7 @@ export function FormSection({
 }: {
   title: string
   description?: ReactNode
+  /** Accepted for compatibility; section headings render text-only. */
   icon?: ComponentType<{ className?: string }>
   aside?: ReactNode
   collapsible?: boolean
@@ -128,7 +128,6 @@ export function FormSection({
 
   const heading = (
     <span className="flex min-w-0 flex-1 items-start gap-2.5">
-      {Icon && <Icon className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden="true" />}
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-ink">{title}</span>
         {description && <span className="mt-0.5 block text-xs leading-5 text-muted">{description}</span>}
@@ -140,22 +139,22 @@ export function FormSection({
   if (!collapsible)
     return (
       <section className={cn('form-section', className)}>
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="mb-3 flex items-start justify-between gap-3">
           {heading}
           {aside}
         </div>
-        <div className="space-y-4">{children}</div>
+        <div className="space-y-3">{children}</div>
       </section>
     )
 
   return (
     <details open={open} onToggle={(e) => setOpen(e.currentTarget.open)} className={cn('form-section group', className)}>
-      <summary className="form-section-toggle -mx-2 flex cursor-pointer list-none items-start gap-3 rounded-lg px-2 py-1 hover:bg-surface-subtle">
+      <summary className="form-section-toggle -mx-2 flex cursor-pointer list-none items-start gap-3 rounded-control px-2 py-1 hover:bg-surface-subtle">
         {heading}
         {aside}
         <ChevronDown className="form-section-chevron mt-0.5 size-4 shrink-0 text-muted transition-transform" aria-hidden="true" />
       </summary>
-      <div className="mt-4 space-y-4">{children}</div>
+      <div className="mt-3 space-y-3">{children}</div>
     </details>
   )
 }
@@ -166,5 +165,5 @@ export function FormSection({
  * `className="@md:col-span-2"` to keep them full width.
  */
 export function FieldRow({ cols = 2, className, children }: { cols?: 2 | 3; className?: string; children: ReactNode }) {
-  return <div className={cn('grid gap-4', cols === 2 ? '@md:grid-cols-2' : '@md:grid-cols-2 @2xl:grid-cols-3', className)}>{children}</div>
+  return <div className={cn('grid gap-3', cols === 2 ? '@md:grid-cols-2' : '@md:grid-cols-2 @2xl:grid-cols-3', className)}>{children}</div>
 }

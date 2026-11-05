@@ -139,12 +139,12 @@ function FieldCard({
         e.preventDefault()
         drag.drop()
       }}
-      className={cn('rounded-xl border bg-surface transition-shadow', open ? 'border-brand-300 shadow-card' : 'border-line hover:border-zinc-300')}
+      className={cn('rounded-card border bg-surface transition-shadow', open ? 'border-brand-300 ' : 'border-line hover:border-zinc-300')}
     >
       <div className="flex items-center gap-2 px-3 py-2.5">
         <GripVertical className="size-4 shrink-0 cursor-grab text-muted" aria-hidden="true" />
         <button type="button" onClick={onToggle} aria-expanded={open} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-subtle text-muted">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface-subtle text-muted">
             <Icon className="size-4" aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
@@ -253,11 +253,11 @@ function FieldCard({
             </div>
           )}
           <div className="flex items-center gap-2 border-t border-line pt-3">
-            <button type="button" onClick={onDuplicate} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted hover:bg-surface-subtle hover:text-ink">
+            <button type="button" onClick={onDuplicate} className="inline-flex items-center gap-1.5 rounded-control px-2 py-1.5 text-xs font-medium text-muted hover:bg-surface-subtle hover:text-ink">
               <Copy className="size-3.5" />
               Duplicate
             </button>
-            <button type="button" onClick={onRemove} className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted hover:bg-red-50 hover:text-danger">
+            <button type="button" onClick={onRemove} className="inline-flex items-center gap-1.5 rounded-control px-2 py-1.5 text-xs font-medium text-muted hover:bg-red-50 hover:text-danger">
               <Trash2 className="size-3.5" />
               Remove
             </button>
@@ -327,7 +327,7 @@ export function FieldsEditor({
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        {fields.length === 0 && <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-muted">Your form is empty. Add a field below.</p>}
+        {fields.length === 0 && <p className="rounded-card border border-dashed border-line p-6 text-center text-sm text-muted">Your form is empty. Add a field below.</p>}
         {fields.map((f, index) => (
           <FieldCard
             key={`${index}:${f.key}`}
@@ -374,7 +374,7 @@ export function FieldsEditor({
                   const made = p.make()
                   add(p.type === 'hidden' && usedKeys.has(made.key) ? { ...made, key: questionKey() } : made)
                 }}
-                className="flex items-start gap-2.5 rounded-xl border border-line bg-surface p-3 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40"
+                className="flex items-start gap-2.5 rounded-card border border-line bg-surface p-3 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40"
               >
                 <Icon className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />
                 <span className="min-w-0">

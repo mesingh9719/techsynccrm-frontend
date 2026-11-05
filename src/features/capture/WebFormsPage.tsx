@@ -48,7 +48,7 @@ function FormCard({
   return (
     <article className="surface flex flex-col p-5 transition-shadow hover:shadow-md">
       <div className="flex items-start gap-3">
-        <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg', status === 'live' ? 'bg-brand-50 text-brand-700' : 'bg-surface-subtle text-muted')}>
+        <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-control', status === 'live' ? 'bg-brand-50 text-brand-700' : 'bg-surface-subtle text-muted')}>
           <FileInput className="size-5" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
@@ -65,7 +65,7 @@ function FormCard({
         </span>
       </div>
 
-      <dl className="mt-5 grid grid-cols-3 divide-x divide-line rounded-lg bg-surface-subtle/70 py-3">
+      <dl className="mt-5 grid grid-cols-3 divide-x divide-line rounded-control bg-surface-subtle/70 py-3">
         {stats.map((s) => (
           <div key={s.label} className="px-4">
             <dt className="text-xs text-muted">{s.label}</dt>

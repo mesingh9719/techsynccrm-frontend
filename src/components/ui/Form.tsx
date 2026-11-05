@@ -3,7 +3,7 @@ import { CircleAlert, Eye, EyeOff, Check, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
 const control =
-  'block w-full rounded-lg border bg-surface px-3 text-sm text-ink shadow-card transition-colors placeholder:text-muted focus:outline-none focus:ring-4 disabled:bg-surface-subtle disabled:text-muted'
+  'field-control block w-full rounded-control border bg-surface px-3 text-sm text-ink shadow-card transition-colors placeholder:text-muted focus:outline-none focus:ring-[length:var(--focus-ring,4px)] disabled:bg-surface-subtle disabled:text-muted'
 
 function controlState(invalid?: boolean) {
   return invalid
@@ -33,8 +33,8 @@ export function Field({ label, error, hint, optional, required, className, child
 
   return (
     <div className={className}>
-      <div className="mb-2 flex items-baseline justify-between gap-2">
-        <label htmlFor={id} className="text-sm font-medium text-ink">
+      <div className="mb-[var(--label-gap,0.5rem)] flex items-baseline justify-between gap-2">
+        <label htmlFor={id} className="text-[length:var(--label-fs,0.875rem)] font-medium text-ink">
           {label}
           {required && <span className="ml-1 text-danger" aria-label="required">*</span>}
           {optional && <span className="ml-1 font-normal text-muted">(optional)</span>}
@@ -43,13 +43,13 @@ export function Field({ label, error, hint, optional, required, className, child
       </div>
       {children({ id, describedBy, invalid: Boolean(error) })}
       {error ? (
-        <p id={errorId} className="mt-2 flex items-center gap-2 text-sm text-red-600" role="alert">
+        <p id={errorId} className="mt-1.5 flex items-center gap-2 text-[length:var(--hint-fs,0.875rem)] text-red-600" role="alert">
           <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
           {error}
         </p>
       ) : (
         hint && (
-          <p id={hintId} className="mt-2 text-sm text-muted">
+          <p id={hintId} className="mt-1.5 text-[length:var(--hint-fs,0.875rem)] text-muted">
             {hint}
           </p>
         )
@@ -61,7 +61,7 @@ export function Field({ label, error, hint, optional, required, className, child
 type InputProps = ComponentProps<'input'> & { invalid?: boolean }
 
 export function Input({ className, invalid, ...props }: InputProps) {
-  return <input {...props} aria-invalid={invalid || undefined} className={cn(control, 'h-10', controlState(invalid), className)} />
+  return <input {...props} aria-invalid={invalid || undefined} className={cn(control, 'h-[var(--control-h,2.5rem)]', controlState(invalid), className)} />
 }
 
 /** Amount input with a currency symbol inside the field (₹ by default). */
@@ -100,7 +100,7 @@ export function Select({ className, invalid, children, ...props }: ComponentProp
       <select
         {...props}
         aria-invalid={invalid || undefined}
-        className={cn(control, 'h-10 appearance-none pr-10', controlState(invalid), className)}
+        className={cn(control, 'h-[var(--control-h,2.5rem)] appearance-none pr-10', controlState(invalid), className)}
       >
         {children}
       </select>
@@ -114,7 +114,7 @@ export function Textarea({ className, invalid, ...props }: ComponentProps<'texta
     <textarea
       {...props}
       aria-invalid={invalid || undefined}
-      className={cn(control, 'min-h-32 resize-y py-3 leading-relaxed', controlState(invalid), className)}
+      className={cn(control, 'min-h-24 resize-y py-2 leading-relaxed', controlState(invalid), className)}
     />
   )
 }
@@ -158,7 +158,7 @@ export function Checkbox({ label, invalid, description, className, id, ...props 
 /** Error summary shown when a server request fails. */
 export function FormAlert({ children }: { children: ReactNode }) {
   return (
-    <div role="alert" className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+    <div role="alert" className="flex items-start gap-3 rounded-control border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
       <CircleAlert className="mt-1 size-4 shrink-0" aria-hidden="true" />
       <div>{children}</div>
     </div>

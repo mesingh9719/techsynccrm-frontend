@@ -3,9 +3,10 @@
 :is(.status-chip, .notice-panel)[data-tone='warning'] { --signal: #a16207; --signal-fill: #fffbeb; --signal-line: #f4dda0; }
 :is(.status-chip, .notice-panel)[data-tone='danger'] { --signal: #be123c; --signal-fill: #fff1f2; --signal-line: #fecdd3; }
 :is(.status-chip, .notice-panel)[data-tone='info'] { --signal: #0369a1; --signal-fill: #f0f9ff; --signal-line: #bae6fd; }
-:is(.status-chip, .notice-panel)[data-tone='violet'] { --signal: #6d28d9; --signal-fill: #f5f3ff; --signal-line: #ddd6fe; }
-.status-chip { display: inline-flex; max-width: 100%; align-items: center; gap: .375rem; border: 1px solid var(--signal-line); border-radius: 999px; padding: .3rem .65rem; background: var(--signal-fill); color: var(--signal); font-size: 11px; line-height: 1.3; font-weight: 600; white-space: nowrap; }
+/* 'violet' predates the semantic palette; it now renders as neutral so status color always means something. */
+:is(.status-chip, .notice-panel)[data-tone='violet'] { --signal: #525a6a; --signal-fill: #f4f4f6; --signal-line: #e0e1e6; }
+.status-chip { display: inline-flex; max-width: 100%; height: 1.25rem; align-items: center; gap: .375rem; border: 1px solid var(--signal-line); border-radius: var(--radius-chip, 6px); padding: 0 .375rem; background: var(--signal-fill); color: var(--signal); font-size: 12px; line-height: 1; font-weight: 500; white-space: nowrap; }
 .status-chip-dot { width: .375rem; height: .375rem; flex-shrink: 0; border-radius: 50%; background: currentColor; }
-.notice-panel { display: flex; align-items: flex-start; gap: .7rem; border: 1px solid var(--signal-line); border-radius: .85rem; padding: .9rem 1rem; background: var(--signal-fill); color: var(--signal); }
+.notice-panel { display: flex; align-items: flex-start; gap: .625rem; border: 1px solid var(--signal-line); border-radius: 8px; padding: .625rem .875rem; background: var(--signal-fill); color: var(--signal); }
 .notice-description { color: color-mix(in srgb, var(--signal) 80%, var(--color-ink)); }
 .notice-description button { text-underline-offset: 3px; }

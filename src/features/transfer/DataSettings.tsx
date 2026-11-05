@@ -95,7 +95,7 @@ function ImportRow({ job }: { job: ImportHistoryItem }) {
   return (
     <li className="grid gap-x-5 gap-y-3 px-5 py-4 sm:px-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] md:items-center">
       <div className="flex min-w-0 items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-subtle text-muted ring-1 ring-line">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-control bg-surface-subtle text-muted ring-1 ring-line">
           <Icon className="size-4" aria-hidden="true" />
         </span>
         <div className="min-w-0">
@@ -140,7 +140,7 @@ function ExportRow({ job, downloading, onDownload }: { job: ExportJob; downloadi
   const xlsx = job.format === 'xlsx'
   return (
     <li className="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-4 sm:px-6">
-      <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-lg ring-1', xlsx ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-brand-50 text-brand-700 ring-brand-100')}>
+      <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-control ring-1', xlsx ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-brand-50 text-brand-700 ring-brand-100')}>
         {xlsx ? <FileSpreadsheet className="size-4" aria-hidden="true" /> : <FileText className="size-4" aria-hidden="true" />}
       </span>
       <div className="min-w-0 flex-1">
@@ -227,7 +227,7 @@ export default function DataSettings() {
               : []),
             ...(canExport ? [{ pending: exports.isPending, failed: exports.isError, label: 'Exports ready', value: n(ready), hint: 'Ready to download', tone: 'text-brand-700' }] : []),
           ].map((s) => (
-            <div key={s.label} className="rounded-card border border-line bg-surface px-4 py-3.5 shadow-card">
+            <div key={s.label} className="rounded-card border border-line bg-surface px-4 py-3.5 ">
               <p className="text-xs text-muted">{s.label}</p>
               <p className={cn('mt-1 text-2xl font-semibold tabular-nums', s.tone)}>{s.pending || s.failed ? '—' : s.value}</p>
               <p className="mt-0.5 text-xs text-muted">{s.hint}</p>
@@ -236,7 +236,7 @@ export default function DataSettings() {
         </div>
       )}
 
-      <section className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
+      <section className="overflow-hidden rounded-card border border-line bg-surface ">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 pt-3 sm:px-6">
           <Tabs
             label="Import and export history"
@@ -261,7 +261,7 @@ export default function DataSettings() {
                   const count = importList.filter(f.match).length
                   const on = filter === f.value
                   return (
-                    <button key={f.value} type="button" aria-pressed={on} onClick={() => setFilter(f.value)} className={cn('compact-control inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-xs font-medium ring-1 transition-colors', on ? 'bg-brand-600 text-white ring-brand-600' : 'bg-surface text-muted ring-line hover:text-ink')}>
+                    <button key={f.value} type="button" aria-pressed={on} onClick={() => setFilter(f.value)} className={cn('compact-control inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium ring-1 transition-colors', on ? 'bg-brand-600 text-white ring-brand-600' : 'bg-surface text-muted ring-line hover:text-ink')}>
                       {f.label}
                       <span className={cn('tabular-nums', on ? 'text-white/80' : 'text-muted')}>{count}</span>
                     </button>

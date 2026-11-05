@@ -71,7 +71,7 @@ export function InlineLeadStatus({ lead }: { lead: LeadRecord }) {
             type="button"
             disabled={mutation.isPending}
             aria-label={`Change status for ${lead.displayName}, currently ${leadStatusLabels[lead.status]}`}
-            className="inline-flex items-center gap-1 rounded-lg p-1 hover:bg-zinc-100 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-control p-1 hover:bg-zinc-100 disabled:opacity-50"
           >
             <LeadStatusBadge status={lead.status} />
             <ChevronDown className="size-3 text-muted" />

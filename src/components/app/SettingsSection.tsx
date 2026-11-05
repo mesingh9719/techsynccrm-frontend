@@ -73,10 +73,10 @@ export function SaveBar({
         {dirty ? 'You have unsaved changes' : 'No unsaved changes'}
       </p>
       <div className="flex gap-2">
-        <Button variant="secondary" size="sm" className="h-10" disabled={!dirty || saving} onClick={onDiscard}>
+        <Button variant="secondary" size="sm" className="h-8" disabled={!dirty || saving} onClick={onDiscard}>
           Discard
         </Button>
-        <Button type="submit" size="sm" className="h-10" loading={saving} disabled={!dirty}>
+        <Button type="submit" size="sm" className="h-8" loading={saving} disabled={!dirty}>
           {saveLabel}
         </Button>
       </div>

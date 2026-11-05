@@ -26,7 +26,7 @@ function PrimaryButton({ on, onClick, what }: { on: boolean; onClick: () => void
       onClick={onClick}
       aria-pressed={on}
       title={on ? `Primary ${what}` : `Make primary ${what}`}
-      className={cn('flex size-9 shrink-0 items-center justify-center rounded-lg', on ? 'text-amber-500' : 'text-zinc-300 hover:bg-zinc-100 hover:text-muted')}
+      className={cn('flex size-9 shrink-0 items-center justify-center rounded-control', on ? 'text-amber-500' : 'text-zinc-300 hover:bg-zinc-100 hover:text-muted')}
     >
       <Star className={cn('size-4', on && 'fill-current')} aria-hidden="true" />
       <span className="sr-only">{on ? `Primary ${what}` : `Make this the primary ${what}`}</span>
@@ -55,7 +55,7 @@ export function EmailsEditor({ value, onChange, idPrefix, errors = {} }: { value
             />
             <PrimaryButton on={Boolean(row.primary) || (rows.length === 1 && i === 0)} onClick={() => onChange(rows.map((r, j) => ({ ...r, primary: j === i })))} what="email" />
             {rows.length > 1 && (
-              <button type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))} className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-zinc-100 hover:text-danger" aria-label={`Remove email ${i + 1}`}>
+              <button type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))} className="flex size-9 shrink-0 items-center justify-center rounded-control text-muted hover:bg-zinc-100 hover:text-danger" aria-label={`Remove email ${i + 1}`}>
                 <Trash2 className="size-4" aria-hidden="true" />
               </button>
             )}
@@ -92,13 +92,13 @@ export function PhonesEditor({ value, onChange, idPrefix, errors = {} }: { value
               invalid={Boolean(errors[`${i}.raw`])}
               onChange={(e) => set(i, { raw: e.target.value })}
             />
-            <label className="flex h-10 shrink-0 items-center gap-1 rounded-lg px-2 text-xs text-muted hover:bg-surface-subtle" title="This number is on WhatsApp">
+            <label className="flex h-8 shrink-0 items-center gap-1 rounded-control px-2 text-xs text-muted hover:bg-surface-subtle" title="This number is on WhatsApp">
               <input type="checkbox" checked={Boolean(row.whatsapp)} onChange={(e) => set(i, { whatsapp: e.target.checked })} className="size-4 rounded-control border-zinc-300 text-success focus:ring-emerald-500" />
               WA
             </label>
             <PrimaryButton on={Boolean(row.primary) || (rows.length === 1 && i === 0)} onClick={() => onChange(rows.map((r, j) => ({ ...r, primary: j === i })))} what="phone" />
             {rows.length > 1 && (
-              <button type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))} className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-zinc-100 hover:text-danger" aria-label={`Remove phone ${i + 1}`}>
+              <button type="button" onClick={() => onChange(rows.filter((_, j) => j !== i))} className="flex size-9 shrink-0 items-center justify-center rounded-control text-muted hover:bg-zinc-100 hover:text-danger" aria-label={`Remove phone ${i + 1}`}>
                 <Trash2 className="size-4" aria-hidden="true" />
               </button>
             )}

@@ -263,7 +263,7 @@ export function DuplicateWarning({
 }) {
   if (!duplicates.length) return null
   return (
-    <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200" role="status">
+    <div className="rounded-card bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200" role="status">
       <p className="flex items-center gap-2 font-medium">
         <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
         {duplicates.length === 1 ? 'This might already exist' : `${duplicates.length} possible duplicates`}
@@ -295,17 +295,17 @@ export function BulkBar({ count, onClear, children }: { count: number; onClear: 
   if (!count) return null
   return (
     <div
-      className="sticky top-16 z-20 flex flex-wrap items-center gap-2 rounded-xl bg-zinc-900 px-3 py-2 text-sm text-white shadow-float"
+      className="sticky top-14 z-20 flex flex-wrap items-center gap-2 rounded-card border border-brand-200 bg-brand-50 px-3 py-1.5 text-[13px] text-ink"
       role="region"
       aria-label="Bulk actions"
     >
       <span className="font-medium tabular-nums">{count} selected</span>
-      <span className="mx-1 h-4 w-px bg-surface/20" aria-hidden="true" />
+      <span className="mx-1 h-4 w-px bg-brand-200" aria-hidden="true" />
       <div className="flex flex-wrap items-center gap-2">{children}</div>
       <button
         type="button"
         onClick={onClear}
-        className="ml-auto rounded-control p-3 text-muted hover:bg-surface/10 hover:text-white"
+        className="icon-button ml-auto"
         aria-label="Clear selection"
       >
         <X className="size-4" aria-hidden="true" />
@@ -320,7 +320,7 @@ export function BulkButton({ children, onClick, tone }: { children: ReactNode; o
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-xs font-medium',
+        'inline-flex min-h-8 items-center gap-2 rounded-md px-3 text-xs font-medium',
         tone === 'danger' ? 'text-red-300 hover:bg-red-500/20' : 'hover:bg-surface/10',
       )}
     >
@@ -344,7 +344,7 @@ export function DeletedBanner({
   const days = 30 - Math.floor((now - new Date(deletedAt).getTime()) / 86_400_000)
   return (
     <div
-      className="flex flex-col gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-900 ring-1 ring-red-100 sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-2 rounded-card bg-red-50 px-4 py-3 text-sm text-red-900 ring-1 ring-red-100 sm:flex-row sm:items-center sm:justify-between"
       role="status"
     >
       <p className="flex items-center gap-2">

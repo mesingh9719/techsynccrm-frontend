@@ -207,7 +207,7 @@ export function LeadFormDrawer({
             </Field>
           </FieldRow>
           {lead?.contactInfoHidden ? (
-            <p className="flex items-center gap-2 rounded-lg bg-surface-subtle px-3 py-2 text-sm text-muted ring-1 ring-line"><Lock className="size-4 shrink-0" aria-hidden="true" />Phone numbers and emails are hidden for your role and stay as they are.</p>
+            <p className="flex items-center gap-2 rounded-control bg-surface-subtle px-3 py-2 text-sm text-muted ring-1 ring-line"><Lock className="size-4 shrink-0" aria-hidden="true" />Phone numbers and emails are hidden for your role and stay as they are.</p>
           ) : (
             <>
               <Field label="Phone" optional error={errors.phones}>

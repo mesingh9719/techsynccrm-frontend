@@ -77,7 +77,7 @@ function Switch({ checked, label, disabled, onChange }: { checked: boolean; labe
     <span className="relative inline-flex">
       <input type="checkbox" role="switch" aria-checked={checked} aria-label={label} checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
       <span className="h-6 w-11 rounded-full bg-zinc-300 transition-colors peer-checked:bg-brand-600 peer-focus-visible:ring-4 peer-focus-visible:ring-brand-100 peer-disabled:opacity-50" />
-      <span className="pointer-events-none absolute top-1 left-1 size-4 rounded-full bg-surface shadow-card transition-transform peer-checked:translate-x-5" />
+      <span className="pointer-events-none absolute top-1 left-1 size-4 rounded-full bg-surface  transition-transform peer-checked:translate-x-5" />
     </span>
   )
 }
@@ -192,7 +192,7 @@ function SourceList({ sources, canManage, onChanged }: { sources: LeadSource[]; 
     }
   }
   return (
-    <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
+    <ul className="divide-y divide-zinc-100 rounded-card ring-1 ring-line">
       {sources.map((s, i) => (
         <SourceRow
           key={`${s.id}:${s.name}:${s.scoreWeight}`}
@@ -241,7 +241,7 @@ function AddSource({ onAdded }: { onAdded: () => Promise<unknown> }) {
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="New source, e.g. Trade fair" aria-label="New source name" maxLength={60} className="min-w-48 flex-1" />
         <label className="flex items-center gap-2 text-xs text-muted">
           Score +
-          <input type="number" min={0} max={20} value={weight} onChange={(e) => setWeight(e.target.value)} className="h-10 w-16 rounded-md border border-line px-2 text-sm tabular-nums" aria-label="Score points for the new source" />
+          <input type="number" min={0} max={20} value={weight} onChange={(e) => setWeight(e.target.value)} className="h-8 w-16 rounded-md border border-line px-2 text-sm tabular-nums" aria-label="Score points for the new source" />
         </label>
         <Button type="submit" variant="secondary" loading={busy} disabled={!name.trim()}>
           <Plus className="size-4" aria-hidden="true" />
@@ -366,7 +366,7 @@ export default function LeadSettings() {
         ) : reasons.isError ? (
           <ErrorState error={reasons.error} onRetry={() => reasons.refetch()} />
         ) : reasons.data.length ? (
-          <ul className="divide-y divide-zinc-100 rounded-xl ring-1 ring-line">
+          <ul className="divide-y divide-zinc-100 rounded-card ring-1 ring-line">
             {reasons.data.map((r) => (
               <ReasonRow key={`${r.id}:${r.name}`} reason={r} canManage={canManage} onChanged={refreshReasons} />
             ))}

@@ -28,7 +28,7 @@ export function GmailSection({ id }: { id?: string }) {
   const account = query.data?.account, status = mailboxStatus(account?.status), connected = status === 'CONNECTED'
   const active = Boolean(account && !['disconnected', 'deleting'].includes(account.status))
   return <div id={id} className="grid scroll-mt-24 gap-5">
-    {query.isPending ? <Skeleton className="h-72 rounded-2xl" /> : query.isError ? <ErrorState error={query.error} onRetry={() => query.refetch()} /> : <>
+    {query.isPending ? <Skeleton className="h-72 rounded-card" /> : query.isError ? <ErrorState error={query.error} onRetry={() => query.refetch()} /> : <>
       <section className="email-card" aria-label="Gmail connection">
         <div className="email-card-heading"><div className="min-w-0"><h2 className="flex items-center gap-2 text-sm font-semibold text-ink"><Mail className="size-4 text-rose-600" aria-hidden="true" />Gmail</h2><p className="mt-1 text-xs text-muted">Email leads from your own work address and keep replies on the record.</p></div><ConnectionBadge status={status} /></div>
         <div className="mailbox-hero" data-connected={connected}>

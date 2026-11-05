@@ -145,7 +145,7 @@ function RoleAvatar({ role, size = 'sm' }: { role: Pick<Role, 'name' | 'color' |
     <span
       className={cn(
         'grid shrink-0 place-items-center font-semibold text-white',
-        size === 'lg' ? 'size-9 rounded-lg text-sm' : 'size-6 rounded-md text-[11px]',
+        size === 'lg' ? 'size-9 rounded-control text-sm' : 'size-6 rounded-md text-[11px]',
         COLOR_DOT[roleColor(role)],
       )}
       aria-hidden="true"
@@ -183,7 +183,7 @@ function RoleRail({
           aria-current={active ? 'true' : undefined}
           onClick={() => onSelect(role.id)}
           className={cn(
-            'group relative flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none',
+            'group relative flex w-full items-center gap-2.5 rounded-control px-2 py-1.5 text-left transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none',
             active ? 'bg-brand-50' : 'hover:bg-surface-subtle',
           )}
         >
@@ -324,7 +324,7 @@ function RoleEditor({
                   value={current.name}
                   onChange={(e) => change({ name: e.target.value })}
                   maxLength={40}
-                  className="w-full rounded-lg border-0 bg-transparent px-2 py-1 -ml-2 text-base font-semibold text-ink ring-0 hover:bg-surface-subtle focus:bg-surface-subtle focus:ring-2 focus:ring-brand-500"
+                  className="w-full rounded-control border-0 bg-transparent px-2 py-1 -ml-2 text-base font-semibold text-ink ring-0 hover:bg-surface-subtle focus:bg-surface-subtle focus:ring-2 focus:ring-brand-500"
                 />
                 <label className="sr-only" htmlFor="role-description">
                   Description
@@ -335,7 +335,7 @@ function RoleEditor({
                   onChange={(e) => change({ description: e.target.value })}
                   maxLength={160}
                   placeholder="What is this role for? (optional)"
-                  className="w-full rounded-lg border-0 bg-transparent px-2 py-0.5 -ml-2 text-[13px] text-muted ring-0 placeholder:text-zinc-400 hover:bg-surface-subtle focus:bg-surface-subtle focus:ring-2 focus:ring-brand-500"
+                  className="w-full rounded-control border-0 bg-transparent px-2 py-0.5 -ml-2 text-[13px] text-muted ring-0 placeholder:text-zinc-400 hover:bg-surface-subtle focus:bg-surface-subtle focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             ) : (
@@ -361,7 +361,7 @@ function RoleEditor({
                 <Menu
                   align="end"
                   trigger={(props) => (
-                    <button type="button" {...props} className="grid size-8 place-items-center rounded-lg ring-1 ring-line hover:bg-surface-subtle" aria-label="Role colour" title="Colour">
+                    <button type="button" {...props} className="grid size-8 place-items-center rounded-control ring-1 ring-line hover:bg-surface-subtle" aria-label="Role colour" title="Colour">
                       <span className={cn('size-3.5 rounded-full', COLOR_DOT[current.color ?? roleColor(role)])} aria-hidden="true" />
                     </button>
                   )}
@@ -381,7 +381,7 @@ function RoleEditor({
                               change({ color: role.key && c === roleColor({ color: null, key: role.key }) ? null : c })
                               close()
                             }}
-                            className={cn('grid size-8 place-items-center rounded-lg hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none', active && 'ring-2 ring-ink')}
+                            className={cn('grid size-8 place-items-center rounded-control hover:bg-surface-subtle focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none', active && 'ring-2 ring-ink')}
                           >
                             <span className={cn('size-4 rounded-full', COLOR_DOT[c])} />
                           </button>
@@ -394,7 +394,7 @@ function RoleEditor({
               <Menu
                 align="end"
                 trigger={(props) => (
-                  <button type="button" {...props} disabled={dirty} className="grid size-8 place-items-center rounded-lg text-muted ring-1 ring-line hover:bg-surface-subtle hover:text-ink disabled:opacity-50" aria-label={`More actions for ${role.name}`} title={dirty ? 'Save or discard your changes first' : undefined}>
+                  <button type="button" {...props} disabled={dirty} className="grid size-8 place-items-center rounded-control text-muted ring-1 ring-line hover:bg-surface-subtle hover:text-ink disabled:opacity-50" aria-label={`More actions for ${role.name}`} title={dirty ? 'Save or discard your changes first' : undefined}>
                     <MoreHorizontal className="size-4" aria-hidden="true" />
                   </button>
                 )}
@@ -441,7 +441,7 @@ function RoleEditor({
       {!readOnly && (
         <div
           className={cn(
-            'sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-xl bg-surface px-4 py-3 shadow-float ring-1 ring-line transition',
+            'sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-card bg-surface px-4 py-3 shadow-float ring-1 ring-line transition',
             dirty ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-2 opacity-0',
           )}
           role="region"
@@ -453,10 +453,10 @@ function RoleEditor({
             <span className="truncate">Unsaved changes to {current.name.trim() || role.name}</span>
           </p>
           <div className="flex shrink-0 gap-2">
-            <Button variant="secondary" size="sm" className="h-10" tabIndex={dirty ? 0 : -1} onClick={() => onDraft(null)}>
+            <Button variant="secondary" size="sm" className="h-8" tabIndex={dirty ? 0 : -1} onClick={() => onDraft(null)}>
               Discard
             </Button>
-            <Button size="sm" className="h-10" tabIndex={dirty ? 0 : -1} loading={save.isPending} disabled={!role.system && current.name.trim().length < 2} onClick={() => save.mutate()}>
+            <Button size="sm" className="h-8" tabIndex={dirty ? 0 : -1} loading={save.isPending} disabled={!role.system && current.name.trim().length < 2} onClick={() => save.mutate()}>
               Save
             </Button>
           </div>

@@ -28,7 +28,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange, l
   }
 
   return (
-    <div role="radiogroup" aria-label={label} className={cn('inline-flex rounded-xl bg-zinc-100 p-1 ring-1 ring-zinc-200/70 ring-inset', className)}>
+    <div role="radiogroup" aria-label={label} className={cn('segmented inline-flex rounded-control bg-surface-subtle p-0.5 ring-1 ring-line ring-inset', className)}>
       {options.map((option, i) => {
         const active = option.value === value
         return (
@@ -44,9 +44,9 @@ export function SegmentedControl<T extends string>({ options, value, onChange, l
             onClick={() => onChange(option.value)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
-              'inline-flex items-center gap-2 rounded-lg font-medium transition-all duration-150',
-              size === 'sm' ? 'h-8 px-3 text-xs' : 'h-10 px-4 text-sm',
-              active ? 'bg-white text-zinc-900 shadow-card ring-1 ring-zinc-200/70' : 'text-zinc-600 hover:text-zinc-900',
+              'inline-flex items-center gap-2 rounded-chip font-medium transition-colors duration-150',
+              size === 'sm' ? 'h-6 px-2.5 text-xs' : 'h-7 px-3 text-[13px]',
+              active ? 'bg-surface text-ink ring-1 ring-line' : 'text-muted hover:text-ink',
             )}
           >
             {option.label}

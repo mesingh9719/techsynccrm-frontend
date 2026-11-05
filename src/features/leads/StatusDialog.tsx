@@ -78,7 +78,7 @@ export function StatusDialog({
           <legend className="mb-2 text-sm font-medium text-ink">New status</legend>
           <div className="flex flex-wrap gap-2">
             {allowed.map((s) => (
-              <label key={s} className={cn('cursor-pointer rounded-lg px-3 py-2 text-sm ring-1', status === s ? 'bg-zinc-900 text-white ring-zinc-900' : 'text-ink ring-line hover:bg-surface-subtle')}>
+              <label key={s} className={cn('cursor-pointer rounded-control px-3 py-2 text-sm ring-1', status === s ? 'bg-zinc-900 text-white ring-zinc-900' : 'text-ink ring-line hover:bg-surface-subtle')}>
                 <input type="radio" name="lead-status" value={s} checked={status === s} onChange={() => setStatus(s)} className="sr-only" />
                 {leadStatusLabels[s]}
               </label>

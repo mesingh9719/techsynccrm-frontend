@@ -102,7 +102,7 @@ export function UserPicker({ value, onChange, excludeIds = [], placeholder = 'Ch
           onKeyDown={onKeyDown}
           autoComplete="off"
           className={cn(
-            'block h-10 w-full rounded-lg border bg-surface pr-9 pl-4 text-sm text-ink placeholder:text-muted focus:ring-4 focus:outline-none disabled:bg-surface-subtle',
+            'block h-8 w-full rounded-control border bg-surface pr-9 pl-4 text-sm text-ink placeholder:text-muted focus:ring-4 focus:outline-none disabled:bg-surface-subtle',
             invalid ? 'border-red-400 focus:ring-red-100' : 'border-zinc-300 hover:border-zinc-400 focus:border-brand-500 focus:ring-brand-100',
           )}
         />
@@ -126,7 +126,7 @@ export function UserPicker({ value, onChange, excludeIds = [], placeholder = 'Ch
               onPointerDown={(e) => e.preventDefault()}
               onClick={() => choose(m)}
               onMouseEnter={() => setActive(i)}
-              className={cn('flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2', i === active && 'bg-zinc-100')}
+              className={cn('flex cursor-pointer items-center gap-3 rounded-control px-3 py-2', i === active && 'bg-zinc-100')}
             >
               <Avatar name={m.fullName} size="xs" className="size-6" />
               <span className="min-w-0 flex-1">

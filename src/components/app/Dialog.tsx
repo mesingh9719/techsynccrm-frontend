@@ -116,15 +116,15 @@ export function Dialog({ open, onClose, title, description, icon: Icon, children
       >
         {open && (
           <div className="crm-dialog-frame">
-            <header className={cn('crm-dialog-header flex items-start gap-3 px-4 py-4 sm:px-6', hasBody && 'border-b border-line')}>
+            <header className={cn('crm-dialog-header flex items-start gap-3 px-4 py-3 sm:px-5', hasBody && 'border-b border-line')}>
               {Icon && (
-                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-                  <Icon className="size-[1.125rem]" aria-hidden="true" />
+                <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-muted">
+                  <Icon className="size-4" aria-hidden="true" />
                 </span>
               )}
               <div className="min-w-0 flex-1">
-                <h2 id={titleId} className="font-display text-lg leading-7 font-semibold break-words text-ink">{title}</h2>
-                {description && <p id={descId} className="mt-0.5 text-sm leading-6 text-muted">{description}</p>}
+                <h2 id={titleId} className="text-base leading-6 font-semibold break-words text-ink">{title}</h2>
+                {description && <p id={descId} className="mt-0.5 text-[13px] leading-5 text-muted">{description}</p>}
               </div>
               <div className="-mt-1 -mr-2 flex shrink-0 items-center">
                 {canExpand && (
@@ -140,12 +140,12 @@ export function Dialog({ open, onClose, title, description, icon: Icon, children
                   </button>
                 )}
                 <button type="button" onClick={requestClose} disabled={busy} className="icon-button" aria-label={`Close ${title}`} title="Close (Esc)">
-                  <X className="size-5" aria-hidden="true" />
+                  <X className="size-4" aria-hidden="true" />
                 </button>
               </div>
             </header>
-            {hasBody && <div ref={bodyRef} className="crm-dialog-body p-5 sm:p-6">{children}</div>}
-            {footer && <footer className="crm-dialog-footer dialog-actions flex flex-wrap items-center justify-end gap-3 border-t border-line px-4 py-3 sm:px-6">{footer}</footer>}
+            {hasBody && <div ref={bodyRef} className="crm-dialog-body p-4 sm:p-5">{children}</div>}
+            {footer && <footer className="crm-dialog-footer dialog-actions flex flex-wrap items-center justify-end gap-2 border-t border-line px-4 py-2.5 sm:px-5">{footer}</footer>}
           </div>
         )}
       </dialog>

@@ -130,7 +130,7 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
   return (
     <li className={cn('space-y-3 px-4 py-4', system && 'bg-surface-subtle')}>
       <div className="flex flex-wrap items-center gap-2">
-        {system ? stage.type === 'won' ? <Trophy className="size-4 text-success" aria-hidden="true" /> : <X className="size-4 text-danger" aria-hidden="true" /> : <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-xs font-semibold tabular-nums text-brand-700">{index + 1}</span>}
+        {system ? stage.type === 'won' ? <Trophy className="size-4 text-success" aria-hidden="true" /> : <X className="size-4 text-danger" aria-hidden="true" /> : <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-control bg-brand-50 text-xs font-semibold tabular-nums text-brand-700">{index + 1}</span>}
         <input
           value={name}
           disabled={!canManage || busy}
@@ -194,8 +194,8 @@ function StageRow({ pipeline, stage, index, openCount, canManage, onChanged, onD
       </div>
       {stage.type !== 'lost' && (
         <details className="group/rules pl-9">
-          <summary className="flex min-h-10 w-fit cursor-pointer list-none items-center gap-2 rounded-md text-xs font-medium text-muted hover:text-ink"><ShieldCheck className="size-3.5" aria-hidden="true" />Entry rules<span className="rounded bg-surface-subtle px-1.5 py-0.5 text-xs tabular-nums">{stage.requiredFields.length}{stage.type === 'won' && !stage.requiredFields.includes('valueMinor') ? ' + value' : ''}</span><ChevronDown className="size-3.5 transition-transform group-open/rules:rotate-180" aria-hidden="true" /></summary>
-          <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-3">
+          <summary className="flex min-h-8 w-fit cursor-pointer list-none items-center gap-2 rounded-md text-xs font-medium text-muted hover:text-ink"><ShieldCheck className="size-3.5" aria-hidden="true" />Entry rules<span className="rounded bg-surface-subtle px-1.5 py-0.5 text-xs tabular-nums">{stage.requiredFields.length}{stage.type === 'won' && !stage.requiredFields.includes('valueMinor') ? ' + value' : ''}</span><ChevronDown className="size-3.5 transition-transform group-open/rules:rotate-180" aria-hidden="true" /></summary>
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded-control border border-line bg-surface p-3">
           <span className="w-full text-xs text-muted">Required before a deal enters this stage</span>
           {options.map((o) => {
             const on = stage.requiredFields.includes(o.value)
@@ -294,8 +294,8 @@ function PipelineCard({ pipeline, pipelines, canManage }: { pipeline: Pipeline; 
           />
         )}
       </div>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line bg-surface-subtle px-3 py-2.5 text-xs text-muted"><span className="inline-flex items-center gap-2"><Columns3 className="size-4" aria-hidden="true" />{open.length} open stages · {system.length} protected outcomes</span><span>Changes save when you leave a field</span></div>
-      <ul className="divide-y divide-line overflow-hidden rounded-xl ring-1 ring-line">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-control border border-line bg-surface-subtle px-3 py-2.5 text-xs text-muted"><span className="inline-flex items-center gap-2"><Columns3 className="size-4" aria-hidden="true" />{open.length} open stages · {system.length} protected outcomes</span><span>Changes save when you leave a field</span></div>
+      <ul className="divide-y divide-line overflow-hidden rounded-card ring-1 ring-line">
         {open.map((s, i) => (
           <StageRow
             key={`${s.id}:${s.name}:${s.probability}:${s.rottingDays}`}

@@ -43,7 +43,7 @@ function TemplatePicker({ onPick }: { onPick: (template: FormTemplate) => void }
               onClick={() => onPick(t)}
               className="surface flex flex-col p-5 text-left transition-shadow hover:shadow-md focus-visible:ring-4 focus-visible:ring-brand-500/20 focus-visible:outline-none"
             >
-              <span className="flex size-10 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+              <span className="flex size-10 items-center justify-center rounded-control bg-brand-50 text-brand-700">
                 <FileText className="size-5" aria-hidden="true" />
               </span>
               <span className="mt-4 text-base font-semibold text-ink">{t.name}</span>
@@ -328,7 +328,7 @@ function Builder({ initial, isNew, scope }: { initial: WebForm; isNew: boolean; 
               ]}
             />
           </div>
-          <div className="max-h-[calc(100dvh-12rem)] overflow-y-auto rounded-xl p-4 sm:p-6" style={formPageStyle(form.settings)}>
+          <div className="max-h-[calc(100dvh-12rem)] overflow-y-auto rounded-card p-4 sm:p-6" style={formPageStyle(form.settings)}>
             <div className={cn('mx-auto transition-[max-width]', device === 'mobile' ? 'max-w-[360px]' : 'max-w-xl')}>
               <FormRenderer key={form.key} form={form} preview workspaceLogoUrl={workspaceLogoUrl} />
             </div>

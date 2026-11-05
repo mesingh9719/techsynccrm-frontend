@@ -6,7 +6,7 @@ import { IMPORT_STEPS } from './importConstants'
 export function ImportStepper({ step, disabled, onStepChange }: { step: number; disabled?: boolean; onStepChange: (step: number) => void }) {
   const total = IMPORT_STEPS.length
   return (
-    <nav aria-label="Import steps" className="rounded-card border border-line bg-surface px-4 py-3 shadow-card sm:px-5">
+    <nav aria-label="Import steps" className="rounded-card border border-line bg-surface px-4 py-3  sm:px-5">
       <div className="md:hidden">
         <div className="flex items-baseline justify-between gap-3 text-sm">
           <span className="font-semibold text-ink">{IMPORT_STEPS[step - 1].title}</span>
@@ -31,7 +31,7 @@ export function ImportStepper({ step, disabled, onStepChange }: { step: number; 
                 disabled={!clickable}
                 onClick={() => onStepChange(number)}
                 aria-label={`${number}. ${title}${done ? ', completed — go back to this step' : ''}`}
-                className={cn('group flex min-w-0 items-center gap-2.5 rounded-lg py-1.5 pr-2 text-left', clickable && 'hover:bg-surface-subtle')}
+                className={cn('group flex min-w-0 items-center gap-2.5 rounded-control py-1.5 pr-2 text-left', clickable && 'hover:bg-surface-subtle')}
               >
                 <span
                   className={cn(

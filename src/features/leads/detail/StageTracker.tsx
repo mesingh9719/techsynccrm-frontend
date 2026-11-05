@@ -97,7 +97,7 @@ export function StageTracker({
           <Menu
             align="end"
             trigger={(props) => (
-              <button type="button" {...props} className="compact-control inline-flex h-8 items-center gap-1 self-start rounded-lg px-2 text-xs font-medium text-muted hover:bg-surface-subtle hover:text-ink sm:self-auto">
+              <button type="button" {...props} className="compact-control inline-flex h-8 items-center gap-1 self-start rounded-control px-2 text-xs font-medium text-muted hover:bg-surface-subtle hover:text-ink sm:self-auto">
                 Close lead
                 <ChevronDown className="size-4" aria-hidden="true" />
               </button>

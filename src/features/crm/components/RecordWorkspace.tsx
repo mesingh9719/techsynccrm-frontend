@@ -25,14 +25,14 @@ export function RecordWorkspace({ entityType, entityId, name, canPin, deals, all
     { key: 'files', label: 'Files', icon: Files, body: <Attachments entityType={entityType} entityId={entityId} /> },
   ]
   return <section className="min-w-0 space-y-4" aria-label={`${name} workspace`}>
-    <div role="tablist" aria-label="Record sections" className="flex gap-1 overflow-x-auto rounded-card border border-line bg-surface p-2 shadow-card">
+    <div role="tablist" aria-label="Record sections" className="flex gap-1 overflow-x-auto rounded-card border border-line bg-surface p-2 ">
       {tabs.map((tab, index) => <button key={tab.key} ref={(element) => { refs.current[index] = element }} type="button" role="tab" id={`${id}-${tab.key}-tab`} aria-controls={`${id}-${tab.key}-panel`} aria-selected={active === tab.key} tabIndex={active === tab.key ? 0 : -1}
         onClick={() => setActive(tab.key)} onKeyDown={(event) => {
           if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
           event.preventDefault()
           const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length
           setActive(tabs[next].key); refs.current[next]?.focus()
-        }} className={cn('inline-flex min-h-10 shrink-0 items-center gap-2 rounded-control px-3 text-sm font-medium transition-colors', active === tab.key ? 'bg-brand-50 text-brand-800' : 'text-muted hover:bg-surface-subtle hover:text-ink')}>
+        }} className={cn('inline-flex min-h-8 shrink-0 items-center gap-2 rounded-control px-3 text-sm font-medium transition-colors', active === tab.key ? 'bg-brand-50 text-brand-800' : 'text-muted hover:bg-surface-subtle hover:text-ink')}>
         <tab.icon className="size-4" aria-hidden="true" />{tab.label}
       </button>)}
     </div>

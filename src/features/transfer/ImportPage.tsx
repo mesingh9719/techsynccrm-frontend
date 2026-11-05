@@ -178,11 +178,11 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
       />
       {leaveGuard.confirmation}
       <ImportStepper step={step} disabled={busy} onStepChange={changeStep} />
-      {error && <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" /><span>{error}</span></div>}
-      {notice && <p role="status" className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"><CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{notice}</p>}
+      {error && <div role="alert" className="flex items-start gap-3 rounded-card border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" /><span>{error}</span></div>}
+      {notice && <p role="status" className="flex items-start gap-3 rounded-card border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"><CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{notice}</p>}
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
-        <section aria-labelledby="import-step-title" aria-busy={busy || undefined} className="min-w-0 overflow-hidden rounded-card border border-line bg-surface shadow-card">
+        <section aria-labelledby="import-step-title" aria-busy={busy || undefined} className="min-w-0 overflow-hidden rounded-card border border-line bg-surface ">
           <header className="border-b border-line px-5 py-4 sm:px-6">
             <p className="text-xs font-medium text-brand-700">Step {step} of 6</p>
             <h2 id="import-step-title" className="mt-0.5 text-lg font-semibold tracking-tight text-ink">{STEP_COPY[step - 1].title}</h2>
@@ -198,9 +198,9 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
                   {importable.map(({ value, title, description, icon: Icon }) => {
                     const on = entity === value
                     return (
-                      <label key={value} className={cn('relative flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors has-focus-visible:ring-4 has-focus-visible:ring-brand-100', on ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-line bg-surface hover:border-zinc-300 hover:bg-surface-subtle', busy && 'pointer-events-none opacity-60')}>
+                      <label key={value} className={cn('relative flex cursor-pointer items-start gap-3 rounded-card border p-3.5 transition-colors has-focus-visible:ring-4 has-focus-visible:ring-brand-100', on ? 'border-brand-500 bg-brand-50/60 ring-1 ring-brand-500' : 'border-line bg-surface hover:border-zinc-300 hover:bg-surface-subtle', busy && 'pointer-events-none opacity-60')}>
                         <input type="radio" name="import-record-type" value={value} checked={on} onChange={() => { setEntity(value); setSelectedFile(null); setError('') }} className="sr-only" />
-                        <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-lg', on ? 'bg-brand-600 text-white' : 'bg-surface-subtle text-muted')}><Icon className="size-[1.125rem]" aria-hidden="true" /></span>
+                        <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-control', on ? 'bg-brand-600 text-white' : 'bg-surface-subtle text-muted')}><Icon className="size-[1.125rem]" aria-hidden="true" /></span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-sm font-semibold text-ink">{title}</span>
                           <span className="mt-0.5 block text-xs text-muted">{description}</span>
@@ -213,7 +213,7 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
               </Part>
 
               <Part number={2} title="Start from our sample" hint="Optional — fill it in, or use your own file">
-                <div className="rounded-xl border border-line bg-surface-subtle/60 p-4">
+                <div className="rounded-card border border-line bg-surface-subtle/60 p-4">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-ink">{recordLabel} spreadsheet template</p>
@@ -248,7 +248,7 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
                 <span className="inline-flex items-center gap-2"><span className="size-2 rounded-full bg-zinc-300" aria-hidden="true" /><strong className="text-ink tabular-nums">{ignored}</strong><span className="text-muted">ignored</span></span>
                 <span className="text-xs text-muted">Columns set to “Ignore” are left out. You can also save this mapping for next time.</span>
               </div>
-              <div className="overflow-hidden rounded-xl border border-line">
+              <div className="overflow-hidden rounded-card border border-line">
                 <div className="table-viewport">
                   <table className="w-full text-left text-sm">
                     <thead className="border-b border-line bg-surface-subtle text-xs text-muted">
@@ -332,7 +332,7 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
               <div className="grid gap-6 lg:grid-cols-2">
                 {entity !== 'company' && (
                   <Part title="Lead sources">
-                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line p-3.5 hover:bg-surface-subtle">
+                    <label className="flex cursor-pointer items-start gap-3 rounded-card border border-line p-3.5 hover:bg-surface-subtle">
                       <input type="checkbox" checked={job.options.createMissingSources ?? false} onChange={(e) => setOptions({ createMissingSources: e.target.checked })} className="mt-0.5 size-4 accent-brand-600" />
                       <span><span className="block text-sm font-medium text-ink">Create missing sources</span><span className="mt-0.5 block text-xs text-muted">Create a source when its name is not already in this workspace.</span></span>
                     </label>
@@ -345,7 +345,7 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
                   </div>
                 </Part>
               </div>
-              <p className="flex items-start gap-2 rounded-lg bg-surface-subtle px-3 py-2.5 text-xs text-muted"><Undo2 className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />After importing you can undo: new records nobody has changed are removed; updates to existing records are kept.</p>
+              <p className="flex items-start gap-2 rounded-control bg-surface-subtle px-3 py-2.5 text-xs text-muted"><Undo2 className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />After importing you can undo: new records nobody has changed are removed; updates to existing records are kept.</p>
             </>}
 
             {step === 5 && job && <Suspense fallback={<ListSkeleton rows={6} label="Loading final preview" />}><ImportReviewStep job={job} initial={preview} onReady={setPreview} onFix={fix} definitions={defs.data} /></Suspense>}
@@ -357,10 +357,10 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
                 { label: 'Updated', value: current.updated, color: 'text-brand-700', bg: 'bg-brand-50', icon: RefreshCw },
                 { label: 'Skipped', value: current.skipped, color: 'text-muted', bg: 'bg-surface-subtle', icon: SkipForward },
                 { label: 'Failed', value: current.failed, color: 'text-red-700', bg: 'bg-red-50', icon: CircleAlert },
-              ].map(({ label, value, color, bg, icon: Icon }) => <div key={label} className="flex items-center gap-3 rounded-xl border border-line p-4"><span className={cn('flex size-9 shrink-0 items-center justify-center rounded-lg', color, bg)}><Icon className="size-4" aria-hidden="true" /></span><span><span className="block text-xl font-semibold text-ink tabular-nums">{value.toLocaleString('en-IN')}</span><span className="block text-xs text-muted">{label}</span></span></div>)}</div>
-              {polling.isError && <p role="alert" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Could not refresh progress. <button type="button" className="font-semibold underline" onClick={() => void polling.refetch()}>Retry</button></p>}
+              ].map(({ label, value, color, bg, icon: Icon }) => <div key={label} className="flex items-center gap-3 rounded-card border border-line p-4"><span className={cn('flex size-9 shrink-0 items-center justify-center rounded-control', color, bg)}><Icon className="size-4" aria-hidden="true" /></span><span><span className="block text-xl font-semibold text-ink tabular-nums">{value.toLocaleString('en-IN')}</span><span className="block text-xs text-muted">{label}</span></span></div>)}</div>
+              {polling.isError && <p role="alert" className="rounded-control bg-amber-50 p-3 text-sm text-amber-800">Could not refresh progress. <button type="button" className="font-semibold underline" onClick={() => void polling.refetch()}>Retry</button></p>}
               {running ? (
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface-subtle p-4"><p className="flex items-center gap-2 text-sm text-muted"><Info className="size-4 shrink-0" aria-hidden="true" />Progress updates automatically.</p><Button variant="secondary" onClick={() => void run(async () => { setJob(await cancelImport(current.id)); await polling.refetch() })}>Cancel import</Button></div>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-card bg-surface-subtle p-4"><p className="flex items-center gap-2 text-sm text-muted"><Info className="size-4 shrink-0" aria-hidden="true" />Progress updates automatically.</p><Button variant="secondary" onClick={() => void run(async () => { setJob(await cancelImport(current.id)); await polling.refetch() })}>Cancel import</Button></div>
               ) : (
                 <div className="flex flex-wrap items-center gap-2">
                   <Button to={`/app/${entity === 'company' ? 'companies' : `${entity}s`}`}>View {recordLabel.toLowerCase()}<ArrowRight className="size-4" aria-hidden="true" /></Button>
@@ -386,7 +386,7 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
 
         <aside className="space-y-4 xl:sticky xl:top-24">
           {step === 1 ? (
-            <div className="rounded-card border border-line bg-surface p-5 shadow-card">
+            <div className="rounded-card border border-line bg-surface p-5 ">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-ink"><Lightbulb className="size-4 text-amber-500" aria-hidden="true" />Before you upload</h2>
               <ul className="mt-4 space-y-3">
                 {[
@@ -401,7 +401,7 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
               <p className="mt-4 flex items-start gap-2 border-t border-line pt-4 text-xs text-muted"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-700" aria-hidden="true" />You’ll see every change before anything is saved, and you can undo afterwards.</p>
             </div>
           ) : (
-            <div className="rounded-card border border-line bg-surface p-5 shadow-card">
+            <div className="rounded-card border border-line bg-surface p-5 ">
               <h2 className="text-sm font-semibold text-ink">Your import</h2>
               <dl className="mt-3 divide-y divide-line text-sm">
                 {[
@@ -430,7 +430,7 @@ function ImportWizard({ initial }: { initial?: ImportJob }) {
         confirmLabel={`Import ${plural((preview?.summary?.willCreate ?? 0) + (preview?.summary?.willUpdate ?? 0), 'record', 'records')}`}
         onConfirm={() => beginImport(true)}
       >
-        <dl className="grid grid-cols-3 divide-x divide-line overflow-hidden rounded-xl border border-line text-center">
+        <dl className="grid grid-cols-3 divide-x divide-line overflow-hidden rounded-card border border-line text-center">
           {[
             { label: 'Will be created', value: preview?.summary?.willCreate ?? 0, tone: 'text-emerald-700' },
             { label: 'Will be updated', value: preview?.summary?.willUpdate ?? 0, tone: 'text-brand-700' },
@@ -474,7 +474,7 @@ function ChoiceGroup<T extends string>({ name, value, onChange, options }: { nam
       {options.map((o) => {
         const on = o.value === value
         return (
-          <label key={o.value} className={cn('flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors has-focus-visible:ring-4 has-focus-visible:ring-brand-100', on ? 'border-brand-500 bg-brand-50/50 ring-1 ring-brand-500' : 'border-line hover:bg-surface-subtle')}>
+          <label key={o.value} className={cn('flex cursor-pointer items-start gap-3 rounded-card border p-3.5 transition-colors has-focus-visible:ring-4 has-focus-visible:ring-brand-100', on ? 'border-brand-500 bg-brand-50/50 ring-1 ring-brand-500' : 'border-line hover:bg-surface-subtle')}>
             <input type="radio" name={name} value={o.value} checked={on} onChange={() => onChange(o.value)} className="mt-0.5 size-4 shrink-0 accent-brand-600" />
             <span className="min-w-0"><span className="block text-sm font-medium text-ink">{o.label}</span><span className="mt-0.5 block text-xs text-muted">{o.description}</span></span>
           </label>

@@ -74,7 +74,7 @@ export function CampaignPicker({
         ) : query.isError ? (
           <ErrorState error={query.error} onRetry={() => query.refetch()} />
         ) : (
-          <div className="max-h-72 divide-y divide-line overflow-y-auto rounded-xl border border-line">
+          <div className="max-h-72 divide-y divide-line overflow-y-auto rounded-card border border-line">
             <button
               type="button"
               onClick={() => setSelectedId('none')}

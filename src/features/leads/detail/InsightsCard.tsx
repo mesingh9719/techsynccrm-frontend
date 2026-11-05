@@ -1,5 +1,5 @@
 import { StatusChip } from '../../../components/ui/Signal'
-import { ArrowRight, CircleAlert, Lightbulb, Plus, Sparkles, Target } from 'lucide-react'
+import { ArrowRight, CircleAlert, Lightbulb, Plus, Sparkles } from 'lucide-react'
 import { cn } from '../../../lib/cn'
 import { Card } from './InlineFields'
 import type { FieldTarget, LeadInsights, NextActionKind } from './insights'
@@ -43,17 +43,16 @@ export function InsightsCard({
     <Card title="Insights" icon={Sparkles}>
       {next && (
         <div className="next-action">
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-brand-700 uppercase">
-            <Target className="size-3.5" aria-hidden="true" />
+          <p className="text-xs font-medium text-muted">
             Next best action
           </p>
-          <p className="mt-1.5 text-[15px] leading-6 font-semibold text-ink">{next.title}</p>
+          <p className="mt-1 text-sm leading-5 font-semibold text-ink">{next.title}</p>
           <p className="mt-0.5 text-xs leading-5 text-muted">{next.reason}</p>
           {canAct && (
             <button
               type="button"
               onClick={() => onAction(next.kind)}
-              className="group mt-3 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-action px-3 text-sm font-medium text-white shadow-card transition-colors hover:bg-action-hover sm:w-auto"
+              className="group mt-2.5 inline-flex h-7 w-full items-center justify-center gap-1.5 rounded-control bg-surface px-2.5 text-[13px] font-medium text-ink ring-1 ring-line ring-inset transition-colors hover:bg-surface-subtle sm:w-auto"
             >
               {actionLabel[next.kind]}
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
@@ -65,7 +64,7 @@ export function InsightsCard({
       {inactivity && (
         <p
           className={cn(
-            'mt-3 flex items-start gap-2 rounded-lg px-3 py-2 text-xs leading-5',
+            'mt-3 flex items-start gap-2 rounded-control px-3 py-2 text-xs leading-5',
             inactivity.tone === 'danger' ? 'bg-red-50 text-red-800' : inactivity.tone === 'warning' ? 'bg-amber-50 text-amber-900' : 'bg-surface-subtle text-muted',
           )}
           role={inactivity.tone === 'neutral' ? undefined : 'alert'}

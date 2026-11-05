@@ -16,10 +16,10 @@ const FONTS = {
 }
 const RADIUS = {
   sharp: { card: 'rounded-none', control: 'rounded-none', button: 'rounded-none' },
-  soft: { card: 'rounded-2xl', control: 'rounded-lg', button: 'rounded-lg' },
-  round: { card: 'rounded-3xl', control: 'rounded-xl', button: 'rounded-full' },
+  soft: { card: 'rounded-card', control: 'rounded-control', button: 'rounded-control' },
+  round: { card: 'rounded-3xl', control: 'rounded-card', button: 'rounded-full' },
 }
-const CARD = { shadow: 'shadow-card border border-black/5', border: 'border border-black/15', flat: '' }
+const CARD = { shadow: ' border border-black/5', border: 'border border-black/15', flat: '' }
 const LOGO_HEIGHT = { sm: 'max-h-8', md: 'max-h-12', lg: 'max-h-20' }
 const ALIGN = { left: 'justify-start', center: 'justify-center', right: 'justify-end' }
 
@@ -186,7 +186,7 @@ export function FormRenderer({
       )
     if (field.type === 'select')
       return (
-        <select {...props} className={cn(box, 'h-11')} value={String(value ?? '')} onChange={(e) => set(field.key, e.target.value)}>
+        <select {...props} className={cn(box, 'h-9')} value={String(value ?? '')} onChange={(e) => set(field.key, e.target.value)}>
           <option value="">{field.placeholder || 'Choose an option'}</option>
           {field.options?.map((o) => (
             <option key={o.value} value={o.value}>
@@ -237,7 +237,7 @@ export function FormRenderer({
             {...props}
             type="text"
             inputMode="decimal"
-            className={cn(box, 'h-11 pl-7')}
+            className={cn(box, 'h-9 pl-7')}
             value={String(value ?? '')}
             placeholder={field.placeholder}
             maxLength={16}
@@ -251,7 +251,7 @@ export function FormRenderer({
         type={field.type}
         inputMode={field.type === 'number' ? 'decimal' : undefined}
         autoComplete={field.type === 'email' ? 'email' : field.type === 'tel' ? 'tel' : field.key === 'firstName' ? 'name' : undefined}
-        className={cn(box, 'h-11')}
+        className={cn(box, 'h-9')}
         value={String(value ?? '')}
         placeholder={field.placeholder}
         maxLength={field.type === 'tel' ? 30 : 1000}
@@ -402,7 +402,7 @@ export function FormRenderer({
                   type="submit"
                   disabled={busy}
                   className={cn(
-                    'min-h-11 px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60',
+                    'min-h-9 px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60',
                     radius.button,
                     theme.buttonWidth === 'full' && 'w-full',
                   )}

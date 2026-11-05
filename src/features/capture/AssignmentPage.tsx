@@ -142,7 +142,7 @@ function RuleEditor({
             </Button>
           </div>
           {!draft.conditions.length && (
-            <p className="rounded-lg bg-surface-subtle p-3 text-xs text-muted">
+            <p className="rounded-control bg-surface-subtle p-3 text-xs text-muted">
               No conditions: this rule matches every new lead.
             </p>
           )}
@@ -150,13 +150,13 @@ function RuleEditor({
             {draft.conditions.map((c, i) => (
               <div
                 key={i}
-                className="grid grid-cols-[1fr_auto] gap-2 rounded-lg border border-line p-3 sm:grid-cols-[1fr_1fr_1fr_auto]"
+                className="grid grid-cols-[1fr_auto] gap-2 rounded-control border border-line p-3 sm:grid-cols-[1fr_1fr_1fr_auto]"
               >
                 <Select
                   aria-label={`Condition ${i + 1} field`}
                   value={c.field}
                   onChange={(e) => condition(i, { field: e.target.value, value: '' })}
-                  className="h-10! text-xs"
+                  className="h-8! text-xs"
                 >
                   {fields.map((f) => (
                     <option
@@ -172,7 +172,7 @@ function RuleEditor({
                   aria-label={`Condition ${i + 1} operator`}
                   value={c.operator}
                   onChange={(e) => condition(i, { operator: e.target.value as RuleCondition['operator'] })}
-                  className="h-10! text-xs"
+                  className="h-8! text-xs"
                 >
                   <option value="equals">is exactly</option>
                   <option value="contains">contains</option>
@@ -185,7 +185,7 @@ function RuleEditor({
                     aria-label={`Condition ${i + 1} source`}
                     value={c.value}
                     onChange={(e) => condition(i, { value: e.target.value })}
-                    className="h-10! text-xs"
+                    className="h-8! text-xs"
                   >
                     <option value="">Choose source</option>
                     {sources.data
@@ -202,7 +202,7 @@ function RuleEditor({
                     value={c.value}
                     onChange={(e) => condition(i, { value: e.target.value })}
                     placeholder="Value"
-                    className="h-10! text-xs"
+                    className="h-8! text-xs"
                   />
                 )}
                 <button
@@ -251,7 +251,7 @@ function RuleEditor({
         </p>
         <fieldset>
           <legend className="mb-2 text-sm font-medium text-ink">Eligible teammates</legend>
-          <div className="grid gap-2 rounded-lg border border-line p-3 sm:grid-cols-2">
+          <div className="grid gap-2 rounded-control border border-line p-3 sm:grid-cols-2">
             {members.map((member) => (
               <label key={member.userId} className="flex items-center gap-2 py-1 text-sm text-muted">
                 <input
@@ -351,7 +351,7 @@ function HoursEditor({
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
             <label
               key={d}
-              className="flex items-center gap-2 rounded-lg border border-line bg-surface-subtle px-3 py-2 text-sm text-muted"
+              className="flex items-center gap-2 rounded-control border border-line bg-surface-subtle px-3 py-2 text-sm text-muted"
             >
               <input
                 type="checkbox"
@@ -751,7 +751,7 @@ export default function AssignmentPage() {
             Run dry test
           </Button>
           {result && (
-            <div role="status" className="rounded-xl border border-brand-100 bg-brand-50 p-4">
+            <div role="status" className="rounded-card border border-brand-100 bg-brand-50 p-4">
               <p className="font-semibold text-brand-900">{result.ruleName ?? 'Fallback routing'}</p>
               <p className="mt-2 text-sm text-brand-800">
                 Suggested owner:{' '}
