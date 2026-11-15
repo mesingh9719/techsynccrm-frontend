@@ -28,6 +28,7 @@ export function makeCaptureApi(_scope: string) {
     deleteForm: (id: string) => captureApi<void>(`/forms/${id}`, { method: 'DELETE' }),
     submissions: (id: string) => captureApi<{ items: Submission[] }>(`/forms/${id}/submissions`).then((d) => d.items),
     embedCode: (id: string) => captureApi<{ script: string; iframe: string; hostedUrl: string }>(`/forms/${id}/embed-code`),
+    listRulesPage: async (params:{q?:string;cursor?:string} = {}) => { const page = await assignmentApi<{rules:AssignmentRule[];nextCursor:string|null}>('/assignment-rules',{query:params}); return {items:page.rules,nextCursor:page.nextCursor} },
     listRules: () => assignmentApi<{ rules: AssignmentRule[] }>('/assignment-rules').then((d) => d.rules),
     saveRule: (rule: AssignmentRule, isNew: boolean) => assignmentApi<{ rule: AssignmentRule }>(isNew ? '/assignment-rules' : `/assignment-rules/${rule.id}`, { method: isNew ? 'POST' : 'PATCH', body: rule }).then((d) => d.rule),
     deleteRule: (id: string) => assignmentApi<void>(`/assignment-rules/${id}`, { method: 'DELETE' }),

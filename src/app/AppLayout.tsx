@@ -221,6 +221,15 @@ function TermsBanner() {
  * "X days left in your Growth trial · Upgrade" while a trial runs (red on the last 3 days), and —
  * for the owner — a prompt to choose who keeps access after a downgrade left too few seats.
  */
+function BillingBanner() {
+  const { organization,role } = useOrg()
+  const [now,setNow] = useState(() => Date.now())
+  useEffect(() => {const timer=window.setInterval(()=>setNow(Date.now()),15000);return()=>window.clearInterval(timer)},[])
+  const restricted = organization?.billingManaged && (organization.billingRestrictedAt || !organization.billingAccessUntil || new Date(organization.billingAccessUntil).getTime() <= now)
+  if (!restricted) return null
+  return <div role="status" className="border-b border-line bg-surface px-4 py-3 text-sm sm:px-6">This workspace currently has read and export access. {role==='owner'?<Link className="font-medium underline" to="/app/settings/billing">Review billing</Link>:<span>Ask the workspace owner to review billing.</span>} <Link className="underline" to="/app/settings/privacy">Data requests</Link></div>
+}
+
 function PlanBanner() {
   const { organization, role } = useOrg()
   if (!organization) return null
@@ -324,6 +333,7 @@ function Shell() {
       <MobileNav open={mobileOpen} onClose={closeNav} />
       <div className="app-content flex min-h-dvh min-w-0 flex-col">
         <Topbar onOpenMenu={() => setMobileOpen(true)} />
+        <BillingBanner />
         <PlanBanner />
         <TermsBanner />
         <EmailPrompt />

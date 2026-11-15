@@ -215,6 +215,10 @@ export interface OrganizationSummary {
 
 /** Full workspace settings (GET /api/organizations/current). */
 export interface Organization {
+  billingManaged?: boolean
+  billingRestrictedAt?: string | null
+  billingAccessUntil?: string | null
+  billingSeatLimit?: number | null
   unreadNotificationCount?: number
   id: string
   name: string

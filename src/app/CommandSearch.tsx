@@ -82,7 +82,7 @@ export function CommandSearch() {
         canContacts ? listContacts(params) : null,
         canCompanies ? listCompanies(params) : null,
         canDeals ? listDeals(params) : null,
-        canCampaigns ? listCampaigns(orgId) : null,
+        canCampaigns ? listCampaigns(orgId, params) : null,
       ])
       const qLower = query.toLowerCase()
       const matchingCampaigns = (campaigns ?? []).filter(

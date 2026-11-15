@@ -1,20 +1,15 @@
+import { usePagedList } from '../../lib/usePagedList'
 import { invalidateSales } from '../crm/invalidateSales'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ApiError } from '../../services/http'
 import { useOrgId } from '../crm/hooks'
 import { useCan } from '../../lib/useOrg'
-import { listCampaigns, saveCampaign, deleteCampaign, updateCampaignStatus, syncMetaCampaigns, getCampaignOptions } from './api'
+import { listCampaignPage, saveCampaign, deleteCampaign, updateCampaignStatus, syncMetaCampaigns, getCampaignOptions } from './api'
 import type { CampaignInput, CampaignStatus } from './types'
 
-export function useCampaigns() {
-  const orgId = useOrgId()
-  const allowed = useCan('campaigns.list')
-  return useQuery({
-    queryKey: ['org', orgId, 'campaigns'],
-    queryFn: () => listCampaigns(orgId),
-    enabled: orgId !== 'none' && allowed,
-    staleTime: 60_000,
-  })
+export function useCampaigns(params:Record<string,string|number|undefined> = {}) {
+  const orgId = useOrgId(), allowed = useCan('campaigns.list')
+  return usePagedList(['org',orgId,'campaigns',params],cursor => listCampaignPage(orgId,{...params,cursor}),orgId !== 'none' && allowed)
 }
 
 export function useCampaignMutations() {

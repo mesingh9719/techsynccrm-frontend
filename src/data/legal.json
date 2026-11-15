@@ -1,148 +1,207 @@
 {
   "privacy": {
-    "title": "Privacy Policy",
-    "updated": "2026-10-20",
-    "intro": "This Privacy Policy explains how TechSync Technologies Pvt. Ltd. (“TechSync”, “we”, “us”) collects, uses and protects personal data when you use our website and CRM services. It is template content and should be reviewed by legal counsel before publication.",
+    "title": "Private beta privacy notice (draft)",
+    "updated": "2026-11-11",
+    "intro": "TechSync CRM is preparing an invite-only, free private beta. This notice describes the intended core service. Operator details and the operational launch checks must be completed before real customer data is accepted.",
     "sections": [
       {
         "id": "information-we-collect",
         "title": "Information we collect",
         "body": [
-          { "type": "p", "text": "We collect information you provide directly, information generated when you use the service, and limited information from third parties." },
-          { "type": "ul", "items": ["Account data: name, work email, phone number, company name and billing details.", "Customer data: the leads, contacts, deals and messages you store in TechSync. You control this data; we process it on your behalf.", "Usage data: pages visited, features used, device and browser information, and IP address.", "Integration data: information from services you connect, such as WhatsApp or Gmail, limited to what you authorise."] }
+          {
+            "type": "p",
+            "text": "The core beta stores account information, workspace membership and permissions, and CRM records and files supplied by invited users."
+          },
+          {
+            "type": "ul",
+            "items": [
+              "Account and workspace information includes your name, email, sign-in credentials, role and workspace settings.",
+              "Customer data includes leads, contacts, companies, deals, activities, tasks, form submissions and imported files.",
+              "Operational records include security and activity logs, delivery state and limited request information needed to run and troubleshoot the service.",
+              "Provider connections are unavailable until separately accepted. The free core beta has no payment checkout."
+            ]
+          }
         ]
       },
       {
         "id": "how-we-use-information",
         "title": "How we use information",
         "body": [
-          { "type": "ul", "items": ["To provide, maintain and improve the service.", "To process payments and send invoices and service notices.", "To provide customer support.", "To send product updates and marketing, where you have agreed to receive them.", "To detect and prevent fraud, abuse and security incidents."] },
-          { "type": "p", "text": "We never sell your personal data or your customer data, and we do not use customer data to train AI models shared with other customers." }
+          {
+            "type": "ul",
+            "items": [
+              "To authenticate users and apply workspace access permissions.",
+              "To store and display CRM records, capture form submissions, process imports and exports, and deliver requested service messages.",
+              "To investigate service failures and security incidents, and handle authorized support and data requests."
+            ]
+          }
         ]
       },
       {
         "id": "gmail-data",
-        "title": "Connected Gmail data",
+        "title": "Optional provider connections",
         "body": [
-          { "type": "p", "text": "Connecting Gmail authorises Google mailbox read and send access. TechSync uses address searches and opaque change identifiers to discover matching CRM conversations; it does not import your entire inbox. Matched message content is shared with people who can access the CRM record, including viewers. Use a work mailbox and exclude private addresses and domains before connecting. Unmatched or ambiguous messages are ignored. Incoming attachment names are shown; their files stay in Gmail." },
-          { "type": "p", "text": "Refresh credentials and imported message content are encrypted. Message content is retained for up to 365 days, or a shorter operator-configured period. Disconnecting stops future access; imported history is deleted separately in Gmail settings. Administrators may disconnect employee mailboxes and request deletion of their imported history. Minimal identifiers remain to prevent duplicate imports. Team members leaving the workspace lose mailbox access; permitted record readers retain existing history until expiry or deletion." },
-          { "type": "p", "text": "TechSync's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including its Limited Use requirements. Gmail data is used to provide the email features you request, not for advertising or general AI model training. The Google policy is available at https://developers.google.com/terms/api-services-user-data-policy." }
+          {
+            "type": "p",
+            "text": "Provider integrations are not included in the core private beta until separately accepted. If a Gmail sending pilot is offered, its consent screen must identify the send-only access requested. Inbox or reply synchronization is not promised by send-only access."
+          }
         ]
       },
       {
         "id": "data-storage",
-        "title": "Data storage and security",
+        "title": "Storage and security",
         "body": [
-          { "type": "p", "text": "Data for customers in India is stored in data centres located in India. Data is encrypted in transit (TLS 1.2+) and at rest (AES-256), and backed up daily. Access is limited to authorised staff on a need-to-know basis and is logged." }
+          {
+            "type": "p",
+            "text": "The intended hosting uses a Vercel frontend, a VPS API and worker, and Supabase database and private object storage. The currently inventoried Supabase project is in Frankfurt, Germany (eu-central-1). No India-only residency, certification, recovery guarantee or security guarantee is offered. Access to CRM data depends on workspace roles; authorized operators also need access to operate and recover the service."
+          }
         ]
       },
       {
         "id": "sharing",
-        "title": "Sharing with third parties",
+        "title": "Service providers",
         "body": [
-          { "type": "p", "text": "We share data only with sub-processors who help us run the service — such as cloud hosting, payment processing and email delivery — under contracts that require them to protect it. A current list of sub-processors is available on request." }
+          {
+            "type": "p",
+            "text": "Infrastructure and delivery providers process data needed to operate the service. The final list, operator identity and contractual arrangements must be supplied before a business is invited to use real data. We do not claim to be certified against a security or privacy standard."
+          }
         ]
       },
       {
         "id": "your-rights",
-        "title": "Your rights",
+        "title": "Access, export and removal requests",
         "body": [
-          { "type": "p", "text": "Subject to applicable law, including India's Digital Personal Data Protection Act, 2023, you may request access to, correction of, or deletion of your personal data, and withdraw consent for marketing at any time." },
-          { "type": "p", "text": "To exercise these rights, email privacy@techsynccrm.com. We respond within 30 days." }
+          {
+            "type": "p",
+            "text": "Use the contact supplied with your invitation to request access, correction, export or removal. During the private beta these requests are handled manually after checking your authority. A completed privacy request requires confirmation from the operator; no automatic or fixed-time completion guarantee is offered."
+          }
         ]
       },
       {
         "id": "facebook-data-deletion",
-        "title": "Facebook connection and data deletion",
+        "title": "Optional connection data",
         "body": [
-          { "type": "p", "text": "When a workspace administrator connects Facebook, we store the app-scoped Facebook account ID, account name, encrypted access credentials and selected Page/form settings to retrieve authorised lead enquiries. Facebook login status is checked on the integration settings page. We do not automatically connect a workspace based on that status or enable automatic Facebook page-view event logging." },
-          { "type": "p", "text": "To request deletion of your Facebook connection data, open Facebook Settings & Privacy → Settings → Apps and Websites, remove TechSync, then use View Removed Apps and Websites → View → Send Request. Our callback provides a confirmation code and a private URL showing progress. You may also contact privacy@techsynccrm.com with your request or confirmation code." },
-          { "type": "p", "text": "A verified deletion request revokes matching access credentials and removes the associated Facebook account identity, connected Page/form settings and capture receipts. A later connection authorised after the request is outside its scope. This account-connection request does not delete unrelated CRM records about other people; contact the workspace administrator or privacy@techsynccrm.com about those records." },
-          { "type": "p", "text": "Deletion runs in background batches with retries. The status page explains completion or a processing delay. After completion, we remove the encrypted Facebook identifier from the request and retain minimal confirmation hashes and processing timestamps for up to 90 days so you can check its status. Keep the confirmation URL private." }
+          {
+            "type": "p",
+            "text": "Facebook and other provider connections are unavailable in the core private beta. If a separately accepted connection already exists, its disconnect and provider deletion-request routes remain available. A connection deletion does not erase unrelated CRM records; request workspace data removal separately."
+          }
         ]
       },
       {
         "id": "cookies",
         "title": "Cookies",
         "body": [
-          { "type": "p", "text": "We use essential cookies to keep you signed in and secure, and optional analytics cookies to understand how our website is used. You can manage optional cookies through the banner shown on your first visit." }
+          {
+            "type": "p",
+            "text": "Essential cookies support sign-in and connection security. The core private beta does not require optional analytics."
+          }
         ]
       },
       {
         "id": "retention",
-        "title": "Data retention",
+        "title": "Retention and workspace closure",
         "body": [
-          { "type": "p", "text": "We keep account data for as long as your account is active. After cancellation, customer data is available for export for 30 days and then deleted within 90 days, except where we must retain it by law." }
+          {
+            "type": "p",
+            "text": "CRM record deletion normally moves a record to a 30-day recycle window before scheduled permanent record cleanup. Closing a workspace currently disables access first; complete workspace and object removal requires the operator-run removal procedure. A final retention schedule for logs, files and independently retained backup copies must be agreed and verified before real customer use. No automatic 90-day workspace-erasure promise is made."
+          }
         ]
       },
       {
         "id": "contact",
-        "title": "Contact us",
+        "title": "Operator and contact",
         "body": [
-          { "type": "p", "text": "Grievance Officer: Data Protection Team, TechSync Technologies Pvt. Ltd., 4th Floor, 21 Residency Road, Bengaluru 560025. Email: privacy@techsynccrm.com." }
+          {
+            "type": "p",
+            "text": "The invitation must identify the responsible operator and the contact for support and privacy requests. A public support/privacy inbox and response hours are not yet configured. Do not submit real business or personal data until those details are provided."
+          }
         ]
       }
     ]
   },
   "terms": {
-    "title": "Terms of Service",
-    "updated": "2026-09-01",
-    "intro": "These Terms govern your access to and use of TechSync CRM. By creating an account or using the service, you agree to these Terms on behalf of yourself and the organisation you represent. This is template content and should be reviewed by legal counsel before publication.",
+    "title": "Private beta terms (draft)",
+    "updated": "2026-11-11",
+    "intro": "These draft terms describe a free, invitation-only private beta of TechSync CRM. The responsible operator and final reviewed terms must be identified in the invitation before real customer use.",
     "sections": [
       {
         "id": "accounts",
         "title": "Accounts",
         "body": [
-          { "type": "p", "text": "You must provide accurate information when creating an account and keep your credentials secure. You are responsible for all activity under your account and for your users' compliance with these Terms." }
+          {
+            "type": "p",
+            "text": "You must provide accurate information when creating an account and keep your credentials secure. You are responsible for all activity under your account and for your users' compliance with these Terms."
+          }
         ]
       },
       {
         "id": "subscriptions",
-        "title": "Subscriptions and payment",
+        "title": "Free private beta",
         "body": [
-          { "type": "ul", "items": ["Paid plans are billed in advance, monthly or annually, per user.", "Prices exclude applicable taxes such as GST.", "Subscriptions renew automatically unless cancelled before the renewal date.", "Upgrades are prorated; downgrades take effect at the next billing cycle."] }
+          {
+            "type": "p",
+            "text": "The private beta is free and accepts approved businesses by invitation. There is no paid checkout or paid service commitment in this release. Displayed plan names or feature limits do not create a subscription or payment obligation. Any later paid service requires separate accepted terms and billing setup."
+          }
         ]
       },
       {
         "id": "acceptable-use",
         "title": "Acceptable use",
         "body": [
-          { "type": "p", "text": "You agree not to use TechSync to send unsolicited bulk messages, violate WhatsApp or email provider policies, store unlawful content, or attempt to disrupt or reverse-engineer the service." }
+          {
+            "type": "p",
+            "text": "You agree not to use TechSync to send unsolicited bulk messages, violate WhatsApp or email provider policies, store unlawful content, or attempt to disrupt or reverse-engineer the service."
+          }
         ]
       },
       {
         "id": "your-data",
         "title": "Your data",
         "body": [
-          { "type": "p", "text": "You own the data you put into TechSync. You grant us a limited licence to host and process it solely to provide the service. You can export your data at any time." }
+          {
+            "type": "p",
+            "text": "You are responsible for having authority to upload and use the data you put into TechSync. During the beta, authorized workspace owners can request a workspace export and removal through the operator-run procedure. The operator must confirm completion and account for files, connection data and retained copies."
+          }
         ]
       },
       {
         "id": "availability",
-        "title": "Service availability",
+        "title": "Availability",
         "body": [
-          { "type": "p", "text": "We aim for high availability and publish planned maintenance in advance. Uptime commitments and service credits apply only where included in your plan or order form." }
+          {
+            "type": "p",
+            "text": "This is a limited private beta without a service-level commitment. Features may be unavailable or change. Automated monitoring, backups and recovery procedures require operational verification before the beta opens; recovery-time or data-loss targets are not guarantees."
+          }
         ]
       },
       {
         "id": "termination",
-        "title": "Cancellation and termination",
+        "title": "Ending beta access",
         "body": [
-          { "type": "p", "text": "You can cancel at any time from Settings → Billing. We may suspend accounts that breach these Terms, after notice where reasonably possible." }
+          {
+            "type": "p",
+            "text": "You may ask the operator to close access, provide an export and remove workspace data after authority checks. Account or workspace closure does not by itself prove that all records, objects, credentials and retained copies have been erased. The operator must confirm completion of the removal procedure."
+          }
         ]
       },
       {
         "id": "liability",
-        "title": "Limitation of liability",
+        "title": "Terms awaiting review",
         "body": [
-          { "type": "p", "text": "To the extent permitted by law, our total liability for any claim is limited to the fees you paid in the 12 months before the claim. We are not liable for indirect or consequential losses." }
+          {
+            "type": "p",
+            "text": "Final liability, jurisdiction and other contractual provisions require review for the actual operator and intended businesses before real customer use. This draft is not evidence that those launch requirements have been accepted."
+          }
         ]
       },
       {
         "id": "governing-law",
-        "title": "Governing law",
+        "title": "Operator and final terms",
         "body": [
-          { "type": "p", "text": "These Terms are governed by the laws of India, and the courts of Bengaluru, Karnataka have exclusive jurisdiction." }
+          {
+            "type": "p",
+            "text": "The responsible legal operator, jurisdiction and reviewed terms must be confirmed before real businesses are invited. This draft does not name an unverified company or address. Contact the person who supplied your invitation for those details."
+          }
         ]
       }
     ]

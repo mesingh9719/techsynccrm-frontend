@@ -4,7 +4,7 @@ import { Dialog } from '../../components/app/Dialog'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { ErrorState } from '../../components/app/States'
-import { FormAlert } from '../../components/ui/Form'
+import { Input, FormAlert } from '../../components/ui/Form'
 import { useCampaigns } from './useCampaigns'
 import type { Campaign } from './types'
 
@@ -23,7 +23,8 @@ export function CampaignPicker({
   onClose: () => void
   onSelect: (campaign: Campaign | null) => Promise<unknown>
 }) {
-  const query = useCampaigns()
+  const [search,setSearch] = useState('')
+  const query = useCampaigns({q:search || undefined})
   const { data: campaigns = [], isPending } = query
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -67,6 +68,8 @@ export function CampaignPicker({
         </div>
       }
     >
+      <Input aria-label="Search campaigns" placeholder="Search campaigns" value={search} onChange={event => setSearch(event.target.value)} />
+      {query.hasNextPage && <Button type="button" loading={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>More campaigns</Button>}
       <div className="space-y-3">
         {error && <FormAlert>{error}</FormAlert>}
         {isPending ? (

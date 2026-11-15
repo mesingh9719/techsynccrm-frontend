@@ -1,7 +1,8 @@
+import { usePagedList } from '../../lib/usePagedList'
 import { useState, type FormEvent } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { Crown, MoreHorizontal, Pencil, RotateCcw, ShieldCheck, UserMinus, Users } from 'lucide-react'
-import { deactivateMember, listMembers, listTeams, reactivateMember, transferOwnership, updateMember } from '../../services/team'
+import { deactivateMember, listMembersPage, listTeamsPage, reactivateMember, transferOwnership, updateMember } from '../../services/team'
 import { fetchMe } from '../../services/auth'
 import { roleLabels } from '../../lib/permissions'
 import { useAuth } from '../../lib/useAuth'
@@ -27,7 +28,8 @@ function EditMemberDialog({ member, onClose, orgId }: { member: Member | null; o
   const { invalidate, keys } = useTeamData(orgId)
   const notify = useToast()
   const canManageAdmins = useCan('members.manage.admins')
-  const teams = useQuery({ queryKey: keys.teams, queryFn: listTeams, enabled: Boolean(member) })
+  const [teamSearch,setTeamSearch] = useState('')
+  const teams = usePagedList([...keys.teams,teamSearch],cursor => listTeamsPage({q:teamSearch || undefined,cursor}),Boolean(member))
   const [role, setRole] = useState<string>(member?.roleId ?? member?.role ?? 'sales_rep')
   const [title, setTitle] = useState(member?.title ?? '')
   const [teamIds, setTeamIds] = useState<string[]>(member?.teams.map((t) => t.id) ?? [])
@@ -77,6 +79,8 @@ function EditMemberDialog({ member, onClose, orgId }: { member: Member | null; o
         </Field>
         <fieldset>
           <legend className="mb-2 text-sm font-medium text-ink">Teams</legend>
+          <Input aria-label="Find a team" placeholder="Search teams" value={teamSearch} onChange={event => setTeamSearch(event.target.value)} />
+          {teams.hasNextPage && <Button type="button" size="sm" onClick={() => void teams.fetchNextPage()}>More teams</Button>}
           <TeamCheckboxes teams={teams.data ?? []} value={teamIds} onChange={setTeamIds} />
         </fieldset>
         {error && <FormAlert>{error}</FormAlert>}
@@ -213,7 +217,8 @@ export function MembersTab({ orgId, onViewRole }: { orgId: string; onViewRole?: 
   const [editing, setEditing] = useState<Member | null>(null)
   const [removing, setRemoving] = useState<Member | null>(null)
   const [transferTo, setTransferTo] = useState<Member | null>(null)
-  const members = useQuery({ queryKey: keys.members(status), queryFn: () => listMembers({ status }) })
+  const [search,setSearch] = useState('')
+  const members = usePagedList([...keys.members(status),search], cursor => listMembersPage({status,q:search || undefined,cursor}))
   const reactivate = useMutation({
     mutationFn: (m: Member) => reactivateMember(m.userId),
     onSuccess: async (_d, m) => {
@@ -227,6 +232,7 @@ export function MembersTab({ orgId, onViewRole }: { orgId: string; onViewRole?: 
 
   return (
     <>
+      <Input aria-label="Search members" placeholder="Search members by name or email" value={search} onChange={event => setSearch(event.target.value)} className="mb-3" />
       <div className="mb-4 flex gap-1" role="group" aria-label="Show members">
         {(['active', 'deactivated'] as const).map((s) => (
           <button
@@ -326,6 +332,7 @@ export function MembersTab({ orgId, onViewRole }: { orgId: string; onViewRole?: 
         </ul>
       )}
 
+      {members.hasNextPage && <Button variant="secondary" loading={members.isFetchingNextPage} onClick={() => void members.fetchNextPage()}>Load more members</Button>}
       <EditMemberDialog key={editing?.userId ?? 'none'} member={editing} onClose={() => setEditing(null)} orgId={orgId} />
       <DeactivateDialog member={removing} onClose={() => setRemoving(null)} orgId={orgId} />
       <TransferDialog member={transferTo} onClose={() => setTransferTo(null)} orgId={orgId} />

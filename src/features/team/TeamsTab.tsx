@@ -1,7 +1,7 @@
+import { usePagedList } from '../../lib/usePagedList'
 import { useState, type FormEvent } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Pencil, Trash2, Users, X } from 'lucide-react'
-import { createTeam, deleteTeam, listTeams, updateTeam } from '../../services/team'
+import { createTeam, deleteTeam, listTeamsPage, updateTeam } from '../../services/team'
 import { useCan } from '../../lib/useOrg'
 import type { Team } from '../../types'
 import { Avatar, Badge } from '../../components/ui/Badge'
@@ -115,7 +115,8 @@ export function TeamsTab({ orgId }: { orgId: string }) {
   const { keys, invalidate } = useTeamData(orgId)
   const notify = useToast()
   const canManage = useCan('members.manage')
-  const teams = useQuery({ queryKey: keys.teams, queryFn: listTeams })
+  const [search,setSearch] = useState('')
+  const teams = usePagedList([...keys.teams,search],cursor => listTeamsPage({q:search || undefined,cursor}))
   const [editing, setEditing] = useState<Team | 'new' | null>(null)
   const [deleting, setDeleting] = useState<Team | null>(null)
 
@@ -124,6 +125,7 @@ export function TeamsTab({ orgId }: { orgId: string }) {
 
   return (
     <>
+      <Input aria-label="Search teams" placeholder="Search teams" value={search} onChange={event => setSearch(event.target.value)} />
       {canManage && (
         <div className="mb-4 flex justify-end">
           <Button variant="secondary" size="sm" onClick={() => setEditing('new')}>
@@ -174,6 +176,7 @@ export function TeamsTab({ orgId }: { orgId: string }) {
           ))}
         </ul>
       )}
+      {teams.hasNextPage && <Button variant="secondary" loading={teams.isFetchingNextPage} onClick={() => void teams.fetchNextPage()}>Load more teams</Button>}
       <TeamDialog
         key={editing === 'new' ? 'new' : (editing?.id ?? 'none')}
         team={editing === 'new' ? null : editing}

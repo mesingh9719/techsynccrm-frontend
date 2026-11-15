@@ -1,3 +1,5 @@
+import { OwnerFilter } from '../../components/app/OwnerFilter'
+import { CampaignFilter } from '../campaigns/CampaignFilter'
 import { SalesFilterField, SalesFilters } from '../crm/components/SalesFilters'
 import { useCampaigns } from '../campaigns/useCampaigns'
 import { useLeadSources } from '../leads/api'
@@ -299,6 +301,7 @@ function ListView({ params, canUpdate }: { params: Record<string, string>; canUp
               Change owner
             </BulkButton>
           )}
+          <DataTools selection entityType='deal' filters={{ids:[...selected].join(',')}} columns={['title','valueMinor','stage','owner','createdAt']} />
           {canDelete && (
             <BulkButton tone="danger" onClick={() => setDialog('delete')}>
               <Trash2 className="size-4" aria-hidden="true" />
@@ -550,9 +553,9 @@ export default function DealsPage() {
 
       <div className="mt-4 space-y-3">
         <SalesFilters label="Pipeline filters" search={{ value: filters.q, onChange: value => setFilter('q', value), placeholder: 'Find a deal or company…', label: 'Search deals' }} count={advancedCount}
-          quickFilters={<FilterSelect label="Owner" value={filters.ownerId} onChange={value => setFilter('ownerId', value)} options={[{ value: 'me', label: 'Me' }, { value: 'none', label: 'Unassigned' }]} />}
+          quickFilters={<OwnerFilter value={filters.ownerId} onChange={value => setFilter('ownerId',value)} />}
         >
-          <SalesFilterField label="Campaign"><FilterSelect label="Campaign" value={filters.campaignId} onChange={value => setFilter('campaignId', value)} options={(campaigns.data ?? []).map(campaign => ({ value: campaign.id, label: campaign.name }))} /></SalesFilterField>
+          <SalesFilterField label="Campaign"><CampaignFilter value={filters.campaignId} onChange={value => setFilter('campaignId',value)} /></SalesFilterField>
           <SalesFilterField label="Lead source"><FilterSelect label="Source" value={filters.sourceId} onChange={value => setFilter('sourceId', value)} options={(sources.data ?? []).map(source => ({ value: source.id, label: source.name }))} /></SalesFilterField>
           <SalesFilterField label="Stage"><FilterSelect label="Stage" value={filters.stageId} onChange={value => setFilter('stageId', value)} options={(pipeline?.stages ?? []).map(stage => ({ value: stage.id, label: stage.name }))} /></SalesFilterField>
           {view !== 'forecast' && <SalesFilterField label="Deal status"><FilterSelect label="Status" value={filters.status} onChange={value => setFilter('status', value)} options={[{ value: 'open', label: 'Open' }, { value: 'won', label: 'Won' }, { value: 'lost', label: 'Lost' }]} /></SalesFilterField>}

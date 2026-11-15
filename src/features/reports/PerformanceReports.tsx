@@ -1,5 +1,6 @@
+import { usePagedList } from '../../lib/usePagedList'
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Target } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Avatar } from '../../components/ui/Badge'
@@ -112,9 +113,11 @@ function TargetsDialog({ month: initial, currency, onClose }: { month: string; c
   const [draft, setDraft] = useState<Draft | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-  const query = useQuery({ queryKey: ['org', orgId, 'reports', 'targets', month], queryFn: () => getTargets(month) })
+  const [search,setSearch] = useState('')
+  const pages = usePagedList(['org',orgId,'reports','targets',month,search],async cursor => {const page=await getTargets(month,{q:search || undefined,cursor});return {items:page.members,nextCursor:page.nextCursor || null}})
+  const query = {...pages,data:{month,currency,members:pages.data}}
   const editable = query.data?.members.filter((m) => m.canEdit) ?? []
-  const values = draft ?? (query.data ? toDraft(query.data.members) : {})
+  const values = {...toDraft(query.data.members),...(draft || {})}
 
   function change(userId: string, field: 'revenue' | 'deals', value: string) {
     setDraft({ ...values, [userId]: { ...values[userId], [field]: value } })
@@ -123,7 +126,7 @@ function TargetsDialog({ month: initial, currency, onClose }: { month: string; c
   async function save() {
     if (!query.data) return
     const parse = (text: string, scale: number) => (text.trim() === '' ? null : Math.round(Number(text) * scale))
-    const targets = editable.map((m) => ({ userId: m.userId, revenueMinor: parse(values[m.userId].revenue, 100), dealsWon: parse(values[m.userId].deals, 1) }))
+    const targets = Object.entries(draft || {}).map(([userId,value]) => ({ userId, revenueMinor:parse(value.revenue,100),dealsWon:parse(value.deals,1) }))
     if (targets.some((t) => [t.revenueMinor, t.dealsWon].some((v) => v !== null && (!Number.isFinite(v) || v < 0)))) {
       setError('Targets must be zero or more.')
       return
@@ -182,6 +185,8 @@ function TargetsDialog({ month: initial, currency, onClose }: { month: string; c
           <FormAlert>{error}</FormAlert>
         </div>
       )}
+      <Input aria-label="Search target members" placeholder="Search by name or email" value={search} onChange={event => setSearch(event.target.value)} />
+      {pages.hasNextPage && <Button type="button" variant="secondary" loading={pages.isFetchingNextPage} onClick={() => void pages.fetchNextPage()}>Load more members</Button>}
       {query.isPending ? (
         <Skeleton className="h-48" />
       ) : query.isError ? (

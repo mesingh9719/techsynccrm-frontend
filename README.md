@@ -95,3 +95,16 @@ No backend, database, dependency or deployment changes are included in this fron
 ## Gmail
 
 Lead/contact Email opens a Gmail composer with inline connection guidance. Settings live at `/app/settings/gmail`; existing manual timeline logging is labelled “Log email”. Gmail is disabled until the backend is configured. See [backend setup](../backend/docs/gmail-integration/setup.md) and [verification evidence](../backend/docs/gmail-integration/implementation.md). Gmail browser QA uses local synthetic API fixtures through `test/gmail.browser.mjs`; no real messages are sent.
+
+## Environment and security gate
+
+Local `.env` files are ignored. Copy `.env.example` and supply local values; every `VITE_*` setting is
+public browser build configuration, so never put service secrets there. The example local API target
+uses port 8900. Production VPS HTTPS routing remains a deployment dependency.
+
+The security settings UI requires password confirmation for authenticator enrollment and device
+revocation. Google-only accounts can first set a password through the existing reset email flow.
+Release this UI with the corresponding backend security migration/API changes.
+
+`.github/workflows/security.yml` runs clean installation, unit/behavior tests, lint, build and audit.
+Task timezone and notification connection tests live here and do not require a backend checkout.

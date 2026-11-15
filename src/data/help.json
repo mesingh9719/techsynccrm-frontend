@@ -1,25 +1,71 @@
 {
   "categories": [
-    { "id": "getting-started", "icon": "Rocket", "title": "Getting started", "description": "Set up your account, import data and invite your team." },
-    { "id": "leads-contacts", "icon": "Contact", "title": "Leads & contacts", "description": "Capture, assign, score and de-duplicate leads." },
-    { "id": "pipeline", "icon": "SquareKanban", "title": "Pipelines & deals", "description": "Stages, forecasting and deal management." },
-    { "id": "automation", "icon": "Workflow", "title": "Automation", "description": "Workflows, sequences and AI reminders." },
-    { "id": "integrations", "icon": "Plug", "title": "Integrations", "description": "WhatsApp, email, telephony and accounting." },
-    { "id": "billing", "icon": "CreditCard", "title": "Billing & account", "description": "Plans, invoices, users and security." }
+    {
+      "id": "getting-started",
+      "icon": "Rocket",
+      "title": "Getting started",
+      "description": "Set up your account, import data and invite your team."
+    },
+    {
+      "id": "leads-contacts",
+      "icon": "Contact",
+      "title": "Leads & contacts",
+      "description": "Capture, assign, score and de-duplicate leads."
+    },
+    {
+      "id": "pipeline",
+      "icon": "SquareKanban",
+      "title": "Pipelines & deals",
+      "description": "Stages, forecasting and deal management."
+    },
+    {
+      "id": "automation",
+      "icon": "Workflow",
+      "title": "Automation",
+      "description": "Assignment, tasks, reminders and scheduled reports."
+    },
+    {
+      "id": "integrations",
+      "icon": "Plug",
+      "title": "Integrations",
+      "description": "Current availability and external app actions."
+    },
+    {
+      "id": "billing",
+      "icon": "CreditCard",
+      "title": "Billing & account",
+      "description": "Private beta access, users and security."
+    }
   ],
   "articles": [
     {
       "slug": "import-leads-from-excel",
       "category": "getting-started",
-      "title": "Import leads and contacts from Excel or CSV",
+      "title": "Import records from CSV or XLSX",
       "summary": "Bring your existing data into TechSync with column mapping and duplicate detection.",
-      "updated": "2026-09-30",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "You can import up to 50,000 rows at a time from .xlsx, .xls or .csv files. Imports run in the background, and you'll get a notification when they finish." },
-        { "type": "h2", "text": "Steps" },
-        { "type": "ol", "items": ["Go to Leads → Import.", "Upload your file and choose whether rows are leads or contacts.", "Map each column to a TechSync field. Unmapped columns can be saved as custom fields.", "Choose how to handle duplicates: skip, update or create new.", "Review the preview and click Start import."] },
-        { "type": "h2", "text": "Tips" },
-        { "type": "ul", "items": ["Include country codes in phone numbers (e.g. +91) for WhatsApp to work.", "Use one row per lead. Split multiple contacts into separate rows.", "Add an 'Owner email' column to assign leads during import."] }
+        {
+          "type": "p",
+          "text": "Import CSV or XLSX files from the Import / export menu on Leads, Contacts, Companies or Deals. XLS files are not supported. The limit is 50,000 data rows, 200 columns and 25 MB; dense or expanded workbooks and large reviews have lower size limits and should be split."
+        },
+        {
+          "type": "ol",
+          "items": [
+            "Upload a file and choose the sheet and header row.",
+            "Map columns to existing fields and choose skip, update or create for duplicates. Create any needed custom fields in Settings first.",
+            "Generate the background preview. Review errors, warnings and duplicate actions. Changes to the draft require a new preview.",
+            "Confirm any skipped error rows and start. Progress and row results are saved; cancellation preserves rows already committed."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "A workspace processes one preview, import or record export at a time. Other work waits. Source data pages reuse a derived copy instead of repeatedly parsing the workbook. The first file inspection still runs during upload setup."
+        },
+        {
+          "type": "p",
+          "text": "If a job fails, review its error before resuming. Resuming uses the saved row journal. Undo is available only for eligible records that have not changed; it is not a general rollback of later work."
+        }
       ]
     },
     {
@@ -27,12 +73,20 @@
       "category": "getting-started",
       "title": "Invite your team and set roles",
       "summary": "Add users, choose roles and control what each person can see.",
-      "updated": "2026-09-12",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "Admins can invite users from Settings → Users. Each user receives an email invite valid for 7 days." },
-        { "type": "h2", "text": "Default roles" },
-        { "type": "ul", "items": ["Admin — full access, including billing and settings.", "Manager — sees their team's records and reports.", "Sales rep — sees records they own or that are shared with them."] },
-        { "type": "p", "text": "On Business and Enterprise, you can create custom roles with field-level permissions." }
+        {
+          "type": "p",
+          "text": "Workspace owners or members with invitation permission can invite people from Settings → Team. An invitation link expires after seven days."
+        },
+        {
+          "type": "p",
+          "text": "Built-in roles are owner, admin, manager, sales rep and viewer. Permissions and record scopes determine each action. Custom roles can narrow modules, fields and actions; plan availability also applies."
+        },
+        {
+          "type": "p",
+          "text": "Use search and Load more to reach members and teams beyond the first page. Assignment and owner selectors search the workspace."
+        }
       ]
     },
     {
@@ -40,10 +94,16 @@
       "category": "getting-started",
       "title": "Set up your first sales pipeline",
       "summary": "Choose a template, rename stages and set win probabilities.",
-      "updated": "2026-08-30",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "Go to Deals → Pipelines → New pipeline. Start from an industry template or a blank pipeline." },
-        { "type": "ol", "items": ["Rename stages to match how you sell. Four to six stages work best.", "Set a win probability for each stage to power your forecast.", "Optionally set a 'rotting' limit in days for each stage.", "Save and start adding deals."] }
+        {
+          "type": "p",
+          "text": "Open Settings → Pipelines to create or edit pipelines and stages when your role allows it. Set stage names, probabilities and rotting days. On Deals, use the pipeline selector and board or list."
+        },
+        {
+          "type": "p",
+          "text": "Moving a deal into a won or lost stage requires the applicable close details. Archived stages and pipelines are unavailable for new deals. Changes remain subject to record scope and plan limits."
+        }
       ]
     },
     {
@@ -51,21 +111,45 @@
       "category": "leads-contacts",
       "title": "Automatically assign leads with round-robin and territory rules",
       "summary": "Route new leads to the right rep the moment they arrive.",
-      "updated": "2026-09-18",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "Assignment rules run on every new lead, whatever the source. Rules are evaluated top to bottom; the first match wins." },
-        { "type": "ul", "items": ["Round-robin — distributes evenly across a group of users.", "Territory — assigns by state, city or pin code.", "Product — assigns by the product or service of interest.", "Working hours — skips users who are on leave or off shift."] }
+        {
+          "type": "p",
+          "text": "Open Settings → Assignment to configure rules and working hours. Rules are evaluated in their saved order. Search or load more to find later rules."
+        },
+        {
+          "type": "p",
+          "text": "Supported rules select eligible members by round-robin or configured criteria. A lead can be held outside workspace working hours and released by the worker when the workspace opens. This does not infer personal leave or individual shifts."
+        },
+        {
+          "type": "p",
+          "text": "Manual owner selection, inactive members, assignment scope and configured fallback behavior affect the result. Check the lead owner and assignment history after capture."
+        }
       ]
     },
     {
       "slug": "merge-duplicate-contacts",
       "category": "leads-contacts",
-      "title": "Find and merge duplicate contacts",
-      "summary": "Keep one clean record per customer, with all history combined.",
-      "updated": "2026-07-21",
+      "title": "Review and merge duplicate leads or contacts",
+      "summary": "Choose a survivor and field values before combining records.",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "TechSync checks for duplicates by phone number and email. Open Contacts → Duplicates to review suggested matches." },
-        { "type": "p", "text": "When you merge, all activities, deals and notes move to the primary record. Merges can be undone for 30 days." }
+        {
+          "type": "p",
+          "text": "Duplicate checks use email and phone. Select records in the Contacts list to review a contact merge. Select 2–11 non-converted leads in Leads and choose Merge to review a lead merge."
+        },
+        {
+          "type": "p",
+          "text": "For leads, choose the surviving record and conflicting field values. Its owner and status remain. Contact points, tags, activities, tasks and supported record links are combined. Historical source records are archived with a link to the survivor. Existing deal attribution stays with each deal."
+        },
+        {
+          "type": "p",
+          "text": "You need access to contact information and permission to edit and delete every selected lead. Converted leads, conflicting existing-contact links, busy provider operations, changed versions and oversized combined contact points or tags block the merge."
+        },
+        {
+          "type": "p",
+          "text": "Merges cannot be undone in the app. Archived merged leads cannot be restored separately. Review the survivor and chosen field values carefully."
+        }
       ]
     },
     {
@@ -73,53 +157,64 @@
       "category": "pipeline",
       "title": "Use rotting alerts to catch stalled deals",
       "summary": "Highlight deals that have had no activity for too long.",
-      "updated": "2026-08-14",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "Set a rotting limit on each pipeline stage. Deals with no activity past that limit are highlighted in red, and owners get a daily digest." }
+        {
+          "type": "p",
+          "text": "Set rotting days on pipeline stages to identify open deals without recent activity. Worker scans create due alerts when configured. Check notification preferences; an alert does not guarantee an email reached an inbox."
+        }
       ]
     },
     {
       "slug": "build-a-workflow",
       "category": "automation",
-      "title": "Build your first workflow",
-      "summary": "Create if-this-then-that rules with triggers, conditions and actions.",
-      "updated": "2026-09-25",
+      "title": "Workflow builder availability",
+      "summary": "The workflow builder, sequences and AI automation are unavailable in the current private beta. Use assignment rules, tasks, reminders and scheduled reports for the supported daily workflow.",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "Workflows automate repetitive work. Each workflow has one trigger, optional conditions, and one or more actions." },
-        { "type": "ol", "items": ["Go to Automation → Workflows → New workflow.", "Pick a trigger, such as 'Lead created' or 'Deal stage changed'.", "Add conditions, such as 'Source is IndiaMART'.", "Add actions, such as 'Assign owner' and 'Send WhatsApp template'.", "Turn it on. You can test it first with a sample record."] }
+        {
+          "type": "p",
+          "text": "The workflow builder, sequences and AI automation are unavailable in the current private beta. Use assignment rules, tasks, reminders and scheduled reports for the supported daily workflow."
+        }
       ]
     },
     {
       "slug": "connect-whatsapp-business",
       "category": "integrations",
-      "title": "Connect your WhatsApp Business number",
-      "summary": "Link the official WhatsApp Business API to your shared team inbox.",
-      "updated": "2026-10-02",
+      "title": "WhatsApp availability in the private beta",
+      "summary": "An embedded WhatsApp Business integration and shared inbox are unavailable in the current private beta. A WhatsApp action on a record opens the external app; it does not send or track a message through TechSync.",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "You'll need a phone number that isn't currently registered on the WhatsApp app, and access to your Meta Business account." },
-        { "type": "ol", "items": ["Go to Settings → Channels → WhatsApp.", "Click Connect and sign in with Facebook.", "Select or create your WhatsApp Business account and verify the number.", "Submit message templates for approval — most are approved within an hour."] }
+        {
+          "type": "p",
+          "text": "An embedded WhatsApp Business integration and shared inbox are unavailable in the current private beta. A WhatsApp action on a record opens the external app; it does not send or track a message through TechSync."
+        }
       ]
     },
     {
       "slug": "sync-with-tally",
       "category": "integrations",
-      "title": "Sync invoices and customers with Tally Prime",
-      "summary": "Keep your CRM and accounting in step, without double entry.",
-      "updated": "2026-08-05",
+      "title": "Tally connector availability",
+      "summary": "Tally synchronization is unavailable in the current private beta. There is no supported automatic invoice or ledger sync.",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "The Tally connector runs on the computer where Tally Prime is installed and syncs every 15 minutes." },
-        { "type": "ul", "items": ["Customers in TechSync are created as ledgers in Tally.", "Invoices raised from accepted quotes are pushed as sales vouchers.", "Outstanding balances are pulled back to each account."] }
+        {
+          "type": "p",
+          "text": "Tally synchronization is unavailable in the current private beta. There is no supported automatic invoice or ledger sync."
+        }
       ]
     },
     {
       "slug": "change-plan-or-billing",
       "category": "billing",
-      "title": "Change your plan, users or billing details",
-      "summary": "Upgrade, downgrade, add seats or update your GSTIN.",
-      "updated": "2026-09-01",
+      "title": "Plans and billing in the private beta",
+      "summary": "The current private beta is free for approved businesses. Online checkout, renewals, prorated plan changes and billing invoices are not available. Workspace access and limits are configured for the beta; they are not a paid subscription purchase.",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "Admins can manage billing from Settings → Billing. Upgrades apply immediately and are prorated; downgrades apply at the next renewal." },
-        { "type": "p", "text": "To add your GSTIN to invoices, go to Settings → Billing → Company details." }
+        {
+          "type": "p",
+          "text": "The current private beta is free for approved businesses. Online checkout, renewals, prorated plan changes and billing invoices are not available. Workspace access and limits are configured for the beta; they are not a paid subscription purchase."
+        }
       ]
     },
     {
@@ -127,9 +222,62 @@
       "category": "billing",
       "title": "Enable two-factor authentication",
       "summary": "Protect your account with an authenticator app.",
-      "updated": "2026-07-10",
+      "updated": "2026-11-12",
       "body": [
-        { "type": "p", "text": "Go to Profile → Security → Two-factor authentication and scan the QR code with an authenticator app. Admins can require 2FA for every user from Settings → Security." }
+        {
+          "type": "p",
+          "text": "Open Settings → Security to set up an authenticator app. Confirm the current code and save recovery codes securely. A newly enrolled factor does not create a verified sign-in session until its challenge succeeds."
+        },
+        {
+          "type": "p",
+          "text": "If you lose access, use an unused recovery code. Do not share your authenticator secret or recovery codes."
+        }
+      ]
+    },
+    {
+      "slug": "export-records-and-reports",
+      "category": "getting-started",
+      "title": "Export records and reports",
+      "summary": "Understand export scope, background jobs and private downloads.",
+      "updated": "2026-11-12",
+      "body": [
+        {
+          "type": "p",
+          "text": "Use Import / export for a filtered CSV or XLSX export, or select rows and use Export selected. Record exports run in the worker. Wait for completion and use the download link. Read access and the corresponding export permission are required."
+        },
+        {
+          "type": "p",
+          "text": "Own and team exports exclude unassigned records. All-record scope includes them. This applies to record files, reports, scheduled report summaries and enabled Google Sheets exports. Contact information is blank when your role hides it."
+        },
+        {
+          "type": "p",
+          "text": "Permissions are rebuilt during paged jobs and before publication. A later role or team change can require a fresh export; previously issued signed download links remain valid until their short expiry."
+        },
+        {
+          "type": "p",
+          "text": "Scheduled reports show queued, preparing, sending, delivered, failed, cancelled or uncertain. Delivered means the mail server accepted the message. Failed attempts can retry safely; uncertain sends require operator review to avoid duplicates. A missing worker or unavailable SMTP can delay delivery."
+        }
+      ]
+    },
+    {
+      "slug": "form-retries-and-repeat-enquiries",
+      "category": "leads-contacts",
+      "title": "Form retries and repeat enquiries",
+      "summary": "Retry a failed submission without losing a genuine new enquiry.",
+      "updated": "2026-11-12",
+      "body": [
+        {
+          "type": "p",
+          "text": "The hosted form keeps the same request ID while retrying unchanged answers in the current page session. Within 24 hours, the same ID and answers return the earlier result without counting another enquiry. Changed answers receive a new request ID."
+        },
+        {
+          "type": "p",
+          "text": "A new request ID or a legacy submission without one remains a separate enquiry, even if its email or phone matches an existing lead. Reloading or opening another tab can create a new ID. Retry protection is not a permanent ban on repeat enquiries."
+        },
+        {
+          "type": "p",
+          "text": "A form that has since closed or changed its consent or origin rules can reject a retry. If the result remains unclear, check the captured lead before submitting again."
+        }
       ]
     }
   ]

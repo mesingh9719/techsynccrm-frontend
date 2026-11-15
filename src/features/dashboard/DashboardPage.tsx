@@ -30,7 +30,7 @@ import { getTaskSummary } from '../activities/api'
 import { listNotifications } from '../notifications/api'
 import { LaunchFocus, LaunchPad } from '../onboarding/LaunchPad'
 import { useLaunchSteps, type LaunchState } from '../onboarding/useLaunchSteps'
-import { listCampaigns } from '../campaigns/api'
+import { listCampaigns, getCampaignSummary } from '../campaigns/api'
 import { memberOptions } from '../../services/team'
 import { qk } from '../../lib/queryKeys'
 import { workspaceDates } from './dates'
@@ -126,6 +126,7 @@ function DashboardWorkspace({ storageKey, launch }: { storageKey: string; launch
     queryFn: () => getBoard({}),
     enabled: canDeals && needsBoard,
   })
+  const campaignSummary = useQuery({queryKey:['org',orgId,'campaign-summary'],queryFn:getCampaignSummary,enabled:useCan('campaigns.read')})
   const campaigns = useQuery({
     queryKey: ['org', orgId, 'campaigns'],
     queryFn: () => listCampaigns(orgId),
@@ -420,7 +421,7 @@ function DashboardWorkspace({ storageKey, launch }: { storageKey: string; launch
       <DashboardKpis
         currentLeads={current.data}
         previousLeads={previous.data}
-        campaigns={campaigns.data ?? []}
+        campaignSummary={campaignSummary.data}
         board={board.data}
         taskSummary={tasks.data}
         dateRange={dateRange}
@@ -429,8 +430,8 @@ function DashboardWorkspace({ storageKey, launch }: { storageKey: string; launch
         selected={visibleKpis}
         leadLoading={current.isPending}
         previousReady={previous.isSuccess}
-        campaignLoading={campaigns.isPending}
-        campaignReady={campaigns.isSuccess}
+        campaignLoading={campaignSummary.isPending}
+        campaignReady={campaignSummary.isSuccess}
         boardLoading={board.isPending}
         taskLoading={tasks.isPending}
       />

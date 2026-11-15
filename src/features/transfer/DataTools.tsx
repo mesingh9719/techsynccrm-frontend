@@ -1,7 +1,7 @@
 import { CreateSheetDialog } from '../google/SheetsPage'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowDownToLine, ChevronDown, Upload } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
@@ -10,21 +10,27 @@ import { useCan } from '../../lib/useOrg'
 import { TRANSFER_MODULE } from './api'
 import { useAuth } from '../../lib/useAuth'
 import { createExport, getExport, type TransferEntity, type ExportJob } from './api'
+import { getAvailability } from '../../services/availability'
 
 export function DataTools({
   entityType,
   filters,
   columns,
+  selection = false,
 }: {
   entityType: TransferEntity
   filters: Record<string, string | number | boolean | undefined>
   columns?: string[]
+  selection?: boolean
 }) {
-  const canImport = useCan(`${TRANSFER_MODULE[entityType]}.import`),
+  const importAllowed = useCan(`${TRANSFER_MODULE[entityType]}.import`),
     canExport = useCan(`${TRANSFER_MODULE[entityType]}.export`),
     notify = useToast(),
     { user } = useAuth(),
     navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const canImport = importAllowed && !selection
+  const availability = useQuery({ queryKey: ['release','availability'], queryFn: getAvailability })
   const [googleExport, setGoogleExport] = useState(false)
   const [busy, setBusy] = useState(false),
     [result, setResult] = useState<ExportJob | null>(null)
@@ -41,8 +47,7 @@ export function DataTools({
     setBusy(true)
     setResult(null)
     try {
-      setResult(
-        await createExport(
+      const created = await createExport(
           entityType,
           filters,
           columns?.length
@@ -54,8 +59,10 @@ export function DataTools({
                 'createdAt',
               ],
           format,
-        ),
-      )
+        )
+      setResult(created)
+      await queryClient.invalidateQueries({queryKey:['org',user?.organization?.id,'exports']})
+      notify({title:'Export queued',description:'Progress and downloads remain in Settings → Data when you leave this view.',action:{label:'Open export history',onClick:() => navigate('/app/settings/data?tab=exports')}})
     } catch (err) {
       notify({ title: err instanceof Error ? err.message : 'Export failed', tone: 'error' })
     } finally {
@@ -70,7 +77,7 @@ export function DataTools({
         trigger={(props) => (
           <Button {...props} variant="secondary" size="sm" loading={busy}>
             <ArrowDownToLine className="size-4" />
-            {canImport && canExport ? 'Import / export' : canImport ? 'Import' : 'Export'}
+            {selection ? 'Export selected' : canImport && canExport ? 'Import / export' : canImport ? 'Import' : 'Export'}
             <ChevronDown className="size-3" />
           </Button>
         )}
@@ -97,16 +104,16 @@ export function DataTools({
                     void run('csv')
                   }}
                 >
-                  Export current view as CSV
+                  {selection ? 'Selected records as CSV' : 'Export current view as CSV'}
                 </MenuItem>
-                {entityType === 'lead' && <MenuItem onSelect={() => { close(); setGoogleExport(true) }}>Export current view to Google Sheets</MenuItem>}
+                {entityType === 'lead' && !selection && availability.data?.integrations.includes('google-workspace') && <MenuItem onSelect={() => { close(); setGoogleExport(true) }}>Export current view to Google Sheets</MenuItem>}
                 <MenuItem
                   onSelect={() => {
                     close()
                     void run('xlsx')
                   }}
                 >
-                  Export current view as Excel
+                  {selection ? 'Selected records as Excel' : 'Export current view as Excel'}
                 </MenuItem>
               </>
             )}

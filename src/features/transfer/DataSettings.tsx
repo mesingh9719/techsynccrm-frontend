@@ -1,7 +1,7 @@
 import { useState, type ComponentType } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Building2, CircleAlert, Download, FileSpreadsheet, FileText, Layers3, Sparkles, Upload, Users } from 'lucide-react'
+import { ArrowRight, Building2, Download, FileSpreadsheet, FileText, Layers3, Sparkles, Upload, Users } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import { useAuth } from '../../lib/useAuth'
 import { useCanAny } from '../../lib/useOrg'
@@ -10,9 +10,8 @@ import { Tabs } from '../../components/ui/Tabs'
 import { useToast } from '../../components/ui/Toast'
 import { EmptyState, ErrorState, ListSkeleton, PageHeader } from '../../components/app/States'
 import { relativeTime } from '../crm/format'
-import { listImports, listExports, getExport, type ExportJob, type ImportJob, type TransferEntity } from './api'
+import { listImports, listExports, getExport, type ExportJob, type ImportHistoryItem, type TransferEntity } from './api'
 
-type ImportHistoryItem = ImportJob
 
 const ENTITY: Record<TransferEntity, { label: string; plural: string; path: string; icon: ComponentType<{ className?: string }> }> = {
   lead: { label: 'Lead', plural: 'Leads', path: '/app/leads', icon: Sparkles },
@@ -116,12 +115,7 @@ function ImportRow({ job }: { job: ImportHistoryItem }) {
         ) : (
           <ResultBar job={job} />
         )}
-        {job.lastError && job.status === 'failed' && (
-          <p className="mt-1.5 flex items-start gap-1.5 text-xs text-danger">
-            <CircleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-            <span className="line-clamp-2">{job.lastError}</span>
-          </p>
-        )}
+
       </div>
       <div className="flex items-center justify-between gap-3 pl-12 md:justify-end md:pl-0">
         <StatusPill {...status} />
@@ -182,7 +176,7 @@ export default function DataSettings() {
     canExport = useCanAny('export')
   const notify = useToast()
   const [downloading, setDownloading] = useState<string | null>(null)
-  const [tab, setTab] = useState<'imports' | 'exports'>(allowed ? 'imports' : 'exports')
+  const [tab, setTab] = useState<'imports' | 'exports'>(() => new URLSearchParams(window.location.search).get('tab')==='exports' && canExport ? 'exports' : allowed ? 'imports' : 'exports')
   const [filter, setFilter] = useState<ImportFilter>('all')
   const imports = useQuery({ queryKey: ['org', user?.organization?.id, 'imports'], queryFn: listImports, enabled: allowed, refetchInterval: (query) => query.state.data?.some((job) => ['queued', 'running', 'preparing'].includes(job.status)) ? 5000 : false })
   const exports = useQuery({ queryKey: ['org', user?.organization?.id, 'exports'], queryFn: listExports, enabled: canExport, refetchInterval: (query) => query.state.data?.some((job) => ['queued', 'running', 'preparing'].includes(job.status)) ? 5000 : false })

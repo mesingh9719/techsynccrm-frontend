@@ -65,6 +65,7 @@ export function FormRenderer({
     { theme } = settings
   const id = useId(),
     frame = useRef<HTMLDivElement>(null)
+  const submission = useRef<{ signature: string; requestId: string } | null>(null)
   const [started] = useState(Date.now)
   const [values, setValues] = useState<Record<string, string | boolean | string[]>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -138,16 +139,18 @@ export function FormRenderer({
     )
     const native = new FormData(event.currentTarget)
     try {
-      const result = await onSubmit({
+      const payload = {
         fields: data,
         consent: settings.consentEnabled,
         consentText: settings.consentEnabled ? settings.consentText : '',
         website: native.get('website') ?? '',
-        elapsedMs: Date.now() - started,
         pageUrl: search.get('host_url') ?? window.location.href,
         referrer: search.get('host_referrer') ?? document.referrer,
         utm,
-      })
+      }
+      const signature = JSON.stringify(payload)
+      if (submission.current?.signature !== signature) submission.current = { signature, requestId: crypto.randomUUID() }
+      const result = await onSubmit({ ...payload, requestId: submission.current.requestId, elapsedMs: Date.now() - started })
       if (result.redirectUrl) {
         const url = new URL(result.redirectUrl)
         if (url.protocol !== 'https:') throw new Error('The form returned an invalid redirect.')

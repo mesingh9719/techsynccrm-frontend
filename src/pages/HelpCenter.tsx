@@ -11,7 +11,7 @@ import { IconTile } from '../components/ui/Badge'
 import { Container, Reveal, Section, SectionHeader } from '../components/ui/Section'
 import { Accordion } from '../components/ui/Accordion'
 
-const popular = ['import-leads-from-excel', 'connect-whatsapp-business', 'build-a-workflow', 'lead-assignment-rules']
+const popular = ['import-leads-from-excel', 'export-records-and-reports', 'merge-duplicate-contacts', 'lead-assignment-rules']
 
 export default function HelpCenter() {
   useSeo({
@@ -150,7 +150,7 @@ export default function HelpCenter() {
           <div className="rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-8">
             <MessageSquare className="size-6 text-zinc-400" aria-hidden="true" />
             <h2 className="mt-4 text-lg font-semibold text-zinc-950">Still need help?</h2>
-            <p className="mt-2 text-zinc-600">Our support team is available Monday to Saturday, 9am–8pm IST, in English and Hindi.</p>
+            <p className="mt-2 text-zinc-600">Support hours and contact details for the private beta must be confirmed with your beta coordinator.</p>
             <Button to="/contact?topic=support" className="mt-6">
               Contact support
               <ArrowRight className="size-4" aria-hidden="true" />
@@ -159,7 +159,7 @@ export default function HelpCenter() {
           <div className="rounded-dialog bg-white p-6 shadow-card ring-1 ring-zinc-200 sm:p-8">
             <Headphones className="size-6 text-zinc-400" aria-hidden="true" />
             <h2 className="mt-4 text-lg font-semibold text-zinc-950">Prefer a guided setup?</h2>
-            <p className="mt-2 text-zinc-600">Book a free onboarding session and we’ll configure TechSync with you. Or email {site.supportEmail}.</p>
+            <p className="mt-2 text-zinc-600">Arrange a walkthrough with your beta coordinator. {site.supportEmail ? `Contact: ${site.supportEmail}.` : 'A public support inbox is not configured yet.'}</p>
             <Button to="/demo" variant="secondary" className="mt-6">
               Book a session
             </Button>

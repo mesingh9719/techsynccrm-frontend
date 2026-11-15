@@ -1,3 +1,4 @@
+import { usePagedList } from '../../lib/usePagedList'
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -486,8 +487,9 @@ export default function AssignmentPage() {
   const scope = `${user?.organization?.id}:${user?.id}`,
     service = makeCaptureApi(scope),
     key = captureKeys(scope)
-  const rules = useQuery({ queryKey: [...key, 'rules'], queryFn: service.listRules, enabled: allowed }),
-    hours = useQuery({ queryKey: [...key, 'hours'], queryFn: service.getHours, enabled: allowed }),
+  const [ruleSearch,setRuleSearch] = useState('')
+  const rules = usePagedList([...key,'rules',ruleSearch],cursor => service.listRulesPage({q:ruleSearch || undefined,cursor}),allowed)
+  const hours = useQuery({ queryKey: [...key, 'hours'], queryFn: service.getHours, enabled: allowed }),
     members = useQuery({
       queryKey: ['org', user?.organization?.id, 'memberOptions', ''],
       queryFn: () => memberOptions(),
@@ -517,8 +519,9 @@ export default function AssignmentPage() {
   async function reorder(from: number, to: number) {
     const ids = rules.data?.map((r) => r.id) ?? []
     if (to < 0 || to >= ids.length) return
+    const selected = new Set([ids[from],ids[to]])
     ids.splice(to, 0, ...ids.splice(from, 1))
-    await run(() => service.orderRules(ids))
+    await run(() => service.orderRules(ids.filter(id => selected.has(id))))
   }
   if (!allowed)
     return (
@@ -597,6 +600,7 @@ export default function AssignmentPage() {
       />
       {error && <FormAlert>{error}</FormAlert>}
       {members.isError && <ErrorState error={members.error} onRetry={() => members.refetch()} />}
+      {tab === 'rules' && <div className="flex flex-wrap gap-2"><Input aria-label="Search assignment rules" placeholder="Search rules" value={ruleSearch} onChange={event => setRuleSearch(event.target.value)} />{rules.hasNextPage && <Button variant="secondary" loading={rules.isFetchingNextPage} onClick={() => void rules.fetchNextPage()}>Load more rules</Button>}</div>}
       {tab === 'rules' ? (
         rules.isPending ? (
           <ListSkeleton />
@@ -637,7 +641,7 @@ export default function AssignmentPage() {
                 <article key={rule.id} className="surface flex flex-wrap items-center gap-3 p-4">
                   <GripVertical className="size-4 text-zinc-300" />
                   <span className="flex size-6 items-center justify-center rounded-md bg-zinc-100 text-xs text-muted">
-                    {index + 1}
+                    {rule.position + 1}
                   </span>
                   <button onClick={() => setEditing(rule)} className="min-w-0 flex-1 text-left">
                     <p className="text-sm font-semibold text-ink">{rule.name}</p>

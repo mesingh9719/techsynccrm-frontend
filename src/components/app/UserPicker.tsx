@@ -43,7 +43,7 @@ export function UserPicker({ value, onChange, excludeIds = [], placeholder = 'Ch
   }, [q])
 
   const options = useQuery({ queryKey: qk.org(orgId).memberOptions(debounced), queryFn: () => memberOptions(debounced || undefined), enabled: open || Boolean(value) })
-  const selectedQuery = useQuery({ queryKey: qk.org(orgId).memberOptions(''), queryFn: () => memberOptions(), enabled: Boolean(value) })
+  const selectedQuery = useQuery({ queryKey: qk.org(orgId).memberOptions(`selected:${value}`), queryFn: () => memberOptions(undefined,value ? [value] : []), enabled: Boolean(value) })
   const selected = selectedQuery.data?.find((m) => m.userId === value) ?? options.data?.find((m) => m.userId === value) ?? null
   const items = useMemo(() => (options.data ?? []).filter((m) => !excludeIds.includes(m.userId)), [options.data, excludeIds])
 

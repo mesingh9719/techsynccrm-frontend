@@ -3,7 +3,7 @@ import siteJson from '../data/site.json'
 import navigationJson from '../data/navigation.json'
 import type { FooterColumn, NavGroup } from '../types'
 
-export const site = siteJson
+export const site = { ...siteJson, social: siteJson.social as { label: string; href: string; icon: string }[] }
 
 export const navigation = {
   main: navigationJson.main as NavGroup[],

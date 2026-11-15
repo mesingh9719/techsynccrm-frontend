@@ -1,3 +1,4 @@
+import { OwnerFilter } from '../../components/app/OwnerFilter'
 import { useState } from 'react'
 import { z } from 'zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -136,14 +137,7 @@ export default function ReportsPage() {
         </label>
         <label className="min-w-40 flex-1 text-xs text-muted">
           Owner
-          <Select aria-label="Report owner" value={filters.ownerId ?? ''} onChange={(e) => setFilter('ownerId', e.target.value)} className="mt-2 h-10!">
-            <option value="">All visible owners</option>
-            {ownerOptions.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </Select>
+          <OwnerFilter allowUnassigned={false} value={filters.ownerId} onChange={value => setFilter('ownerId',value)} />
         </label>
         <label className="min-w-40 flex-1 text-xs text-muted">
           Source

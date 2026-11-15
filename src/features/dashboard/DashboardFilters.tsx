@@ -1,3 +1,4 @@
+import { OwnerFilter } from '../../components/app/OwnerFilter'
 import { useState } from 'react'
 import { CalendarDays, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -164,19 +165,7 @@ export function DashboardFilters({
           </label>
           <label className="space-y-2 text-xs font-medium text-muted">
             <span>Lead owner</span>
-            <select
-              value={filters.ownerId || ''}
-              onChange={(event) => onChange({ ...filters, ownerId: event.target.value || undefined })}
-              className={selectClass}
-            >
-              <option value="">All team members</option>
-              <option value="me">Assigned to me</option>
-              {(members.data ?? []).map((member) => (
-                <option key={member.userId} value={member.userId}>
-                  {member.fullName}
-                </option>
-              ))}
-            </select>
+            <OwnerFilter allowUnassigned={false} value={filters.ownerId} onChange={value => onChange({...filters,ownerId:value})} />
           </label>
         </div>
       )}

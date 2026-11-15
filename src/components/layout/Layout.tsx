@@ -1,3 +1,5 @@
+import { privateBeta } from '../../config/release'
+import { PrivateBetaNotice } from './PrivateBetaNotice'
 import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigation } from 'react-router-dom'
 import { Navbar } from './Navbar'
@@ -93,6 +95,14 @@ function CookieNotice() {
 }
 
 export function Layout() {
+  const { pathname } = useLocation()
+  const betaPublicPage = /^\/(?:$|features|solutions|pricing|integrations|about|contact|demo|blog|help)/.test(pathname)
+  if (privateBeta) return <>
+    <a href="#main" className="sr-only focus:not-sr-only">Skip to content</a>
+    <RouteProgress /><ScrollManager />
+    <nav className="flex flex-wrap gap-5 border-b border-line px-5 py-4" aria-label="Main"><Link to="/">TechSync CRM</Link><Link to="/login">Sign in</Link><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></nav>
+    <main id="main" tabIndex={-1}>{betaPublicPage ? <PrivateBetaNotice /> : <Outlet />}</main>
+  </>
   return (
     <>
       <a

@@ -7,6 +7,7 @@ export const TRANSFER_MODULE = { lead: 'leads', contact: 'contacts', company: 'c
 export const getImportTemplate = (entityType: TransferEntity) => apiBlob('/imports/template', { query: { entityType } })
 export interface ImportOptions { duplicateStrategy: 'skip' | 'update' | 'create'; updateMode: 'empty' | 'overwrite'; dateFormat: 'DMY' | 'MDY'; defaultOwnerId?: string | null; createMissingSources?: boolean; maxRows?: number }
 export interface ImportJob { id: string; entityType: TransferEntity; status: string; mapping: Record<string, string>; options: ImportOptions; totalRows: number; processed: number; created: number; updated: number; skipped: number; failed: number; createdAt: string; finishedAt: string | null; lastError?: string | null; revision: number; edits: Overlay; hasHeader: boolean; headerRow: number; sheetName?: string | null; headers?: string[]; sheets?: string[]; sampleRows?: string[][] }
+export type ImportHistoryItem = Pick<ImportJob, 'id' | 'entityType' | 'status' | 'totalRows' | 'processed' | 'created' | 'updated' | 'skipped' | 'failed' | 'createdAt' | 'finishedAt'>
 export interface ReviewRow { id: string; row: number | null; index: number; input: Record<string, unknown>; values: Record<string, string | number>; raw: string[]; originalValues: Record<string, string>; issues: ImportIssue[]; warnings: string[]; errors: string[]; duplicate: boolean; edited: boolean; editedFields: string[]; status: 'ready' | 'warning' | 'error' | 'duplicate'; action: 'create' | 'update' | 'skip'; reason?: string }
 export interface Preview {
   status: 'stale' | 'pending' | 'running' | 'complete' | 'error'; revision: number; rows: ReviewRow[]; message?: string; fields?: string[]; totalRows?: number; filteredTotal?: number; offset?: number; generatedAt?: string;
@@ -23,7 +24,7 @@ export const updateImport = (id: string, values: DraftUpdate) => api<ImportJob>(
 export const previewImport = (id: string, query: { offset?: number; filter?: string; q?: string } = {}) => api<Preview>(`/imports/${id}/preview`, { method: 'POST', query })
 export const startImport = (id: string, revision?: number, acceptSkippedRows?: boolean) => api<ImportJob>(`/imports/${id}/start`, { method: 'POST', body: revision === undefined ? undefined : { revision, acceptSkippedRows } })
 export const getImport = (id: string) => api<ImportJob>(`/imports/${id}`)
-export const listImports = () => api<{ imports: ImportJob[] }>('/imports').then((d) => d.imports)
+export const listImports = () => api<{ imports: ImportHistoryItem[] }>('/imports').then((d) => d.imports)
 export const cancelImport = (id: string) => api<ImportJob>(`/imports/${id}/cancel`, { method: 'POST' })
 export const undoImport = (id: string) => api<{ removed: number; kept: number }>(`/imports/${id}/undo`, { method: 'POST' })
 export const importErrors = (id: string) => api<FileRecord>(`/imports/${id}/errors`)

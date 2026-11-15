@@ -169,3 +169,7 @@ export const LEAD_TRANSITIONS: Record<LeadStatus, Exclude<LeadStatus, 'converted
   junk: ['new'],
   converted: [],
 }
+
+export function mergeLeads(input: { primaryId: string; duplicateIds: string[]; fieldChoices: Record<string,string>; versions: Record<string,string> }) {
+  return api<{ lead: LeadRecord }>('/leads/merge', { method: 'POST', body: input }).then(result => result.lead)
+}

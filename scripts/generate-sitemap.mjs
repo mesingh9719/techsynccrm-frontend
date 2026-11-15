@@ -1,13 +1,15 @@
 // Writes public/sitemap.xml from the static routes plus every blog post and help article.
 // Runs before each build (see "build" in package.json), so new content is picked up automatically.
 import { readFileSync, writeFileSync } from 'node:fs'
+import { loadEnv } from 'vite'
 
 const SITE = JSON.parse(readFileSync('src/data/site.json', 'utf8')).url
 const blog = JSON.parse(readFileSync('src/data/blog.json', 'utf8'))
 const help = JSON.parse(readFileSync('src/data/help.json', 'utf8'))
 
 const staticRoutes = ['/', '/features', '/solutions', '/pricing', '/integrations', '/about', '/contact', '/demo', '/blog', '/help', '/privacy', '/terms']
-const entries = [
+const privateBeta = loadEnv('production', process.cwd(), 'VITE_').VITE_PRIVATE_BETA !== 'false'
+const entries = privateBeta ? ['/', '/privacy', '/terms'].map((path) => ({ path, lastmod: undefined })) : [
   ...staticRoutes.map((path) => ({ path })),
   ...blog.posts.map((p) => ({ path: `/blog/${p.slug}`, lastmod: p.date })),
   ...help.articles.map((a) => ({ path: `/help/${a.slug}`, lastmod: a.updated })),

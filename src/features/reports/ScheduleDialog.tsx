@@ -60,7 +60,8 @@ export function ScheduleDialog({ filters, filterLabel, onClose }: { filters: { o
                 <span>
                   <span className="block font-medium text-ink">{copy[s.frequency].title}</span>
                   <span className="block text-xs text-muted">{copy[s.frequency].when}</span>
-                  {s.lastSentAt && <span className="block text-xs text-muted">Last sent {new Date(s.lastSentAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>}
+                  {s.delivery && <span role="status" className="block text-xs text-muted">{({queued:"Queued",preparing:"Preparing",sending:"Sending",delivered:"Accepted by mail server",failed:"Retry pending",uncertain:"Delivery needs operator review",cancelled:"Delivery stopped"} as Record<string,string>)[s.delivery.status] || s.delivery.status}{s.delivery.status === "failed" && s.delivery.attempts >= 5 ? " — operator review required" : ""}</span>}
+                  {s.lastSentAt && <span className="block text-xs text-muted">Last accepted by mail server {new Date(s.lastSentAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>}
                 </span>
                 <Switch checked={s.enabled} disabled={busy === s.frequency} label={copy[s.frequency].title} onChange={(on) => void toggle(s.frequency, on)} />
               </li>

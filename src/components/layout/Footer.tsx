@@ -50,7 +50,7 @@ export function Footer() {
 
         <div className="mt-16 flex flex-col-reverse items-start justify-between gap-6 border-t border-zinc-200 pt-8 sm:flex-row sm:items-center">
           <p className="text-sm text-zinc-500">
-            © {YEAR} TechSync Technologies Pvt. Ltd. All rights reserved.
+            © {YEAR} TechSync CRM. Operator details are supplied with beta invitations.
           </p>
           <div className="flex items-center gap-1">
             {site.social.map((s) => (

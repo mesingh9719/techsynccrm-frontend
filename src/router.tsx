@@ -60,6 +60,7 @@ const setupRoutes: RouteObject = {
     { path: 'onboarding', lazy: page(() => import('./pages/Onboarding')) },
     { path: 'setup-2fa', lazy: page(() => import('./pages/SetupTwoFactor')) },
     { path: 'invite', lazy: page(() => import('./pages/Invite')) },
+    { path: 'data-requests', lazy: () => import('./features/privacy/PrivacySettings').then(module=>({Component:module.DataRequestsPage})) },
     { path: 'workspace-suspended', lazy: page(() => import('./pages/WorkspaceSuspended')) },
   ],
 }
@@ -132,7 +133,9 @@ const appRoutes: RouteObject = {
         { path: 'plan', lazy: page(() => import('./app/pages/PlanSettings')) },
         { path: 'data', lazy: page(() => import('./features/transfer/DataSettings')) },
         { path: 'facebook', lazy: page(() => import('./features/facebook/FacebookSettings')) },
-        soon('billing', { title: 'Billing', module: 'M16' }),
+        {path:'billing',lazy:page(()=>import('./features/billing/BillingSettings'))},
+        {path:'privacy',lazy:page(()=>import('./features/privacy/PrivacySettings'))},
+        {path:'audit',lazy:page(()=>import('./features/privacy/AuditSettings'))},
         soon('*', { title: 'Settings' }),
       ],
     },

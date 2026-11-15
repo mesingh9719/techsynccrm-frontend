@@ -262,6 +262,7 @@ export default function CompaniesPage() {
               Add tags
             </BulkButton>
             <BulkButton onClick={() => setDialog('untag')}>Remove tags</BulkButton>
+            <DataTools selection entityType='company' filters={{ids:[...selected].join(',')}} columns={["name", "email", "phoneE164", "domain", "owner", "createdAt"]} />
             {selected.size >= 2 && selected.size <= 10 && (
               <BulkButton onClick={() => setDialog('merge')}>
                 <GitMerge className="size-4" aria-hidden="true" />

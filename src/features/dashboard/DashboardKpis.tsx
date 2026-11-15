@@ -17,7 +17,7 @@ import {
 import { Skeleton } from '../../components/app/States'
 import { formatMinor } from '../crm/format'
 import type { LeadPage } from '../leads/api'
-import type { Campaign } from '../campaigns/types'
+import type { CampaignSummary } from '../campaigns/api'
 import type { Board } from '../crm/types'
 import type { DateRange } from './datePresets'
 import type { DashboardFilterState } from './DashboardFilters'
@@ -26,7 +26,7 @@ import type { KpiId } from './preferences'
 interface DashboardKpisProps {
   currentLeads?: LeadPage
   previousLeads?: LeadPage
-  campaigns: Campaign[]
+  campaignSummary?: CampaignSummary
   board?: Board
   taskSummary?: { today: number; overdue: number }
   dateRange: DateRange
@@ -62,7 +62,7 @@ const TONES = {
 export function DashboardKpis({
   currentLeads,
   previousLeads,
-  campaigns,
+  campaignSummary,
   board,
   taskSummary,
   dateRange,
@@ -114,12 +114,8 @@ export function DashboardKpis({
   const open = board?.stages.filter((stage) => stage.type === 'open') ?? []
   const won = board?.stages.filter((stage) => stage.type === 'won') ?? []
   const openValue = open.reduce((sum, stage) => sum + stage.totalMinor, 0)
-  const campaignLeads = campaigns.reduce((sum, campaign) => sum + (campaign.metrics?.leadsCount ?? 0), 0)
-  const costedCampaigns = campaigns.filter(
-    (campaign) => campaign.actualSpendMinor != null && campaign.currency === currency,
-  )
-  const spend = costedCampaigns.reduce((sum, campaign) => sum + (campaign.actualSpendMinor ?? 0), 0)
-  const costedLeads = costedCampaigns.reduce((sum, campaign) => sum + (campaign.metrics?.leadsCount ?? 0), 0)
+  const campaignLeads = campaignSummary?.leads ?? 0
+  const spend = campaignSummary?.spendMinor ?? 0, costedLeads = campaignSummary?.costedLeads ?? 0
   const pp = rate - previousRate
   const metrics: Record<KpiId, Metric> = {
     total: {

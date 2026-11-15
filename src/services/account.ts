@@ -32,12 +32,12 @@ export function listSessions() {
   return api<{ sessions: UserSession[] }>('/users/me/sessions').then((d) => d.sessions)
 }
 
-export function revokeSession(id: string) {
-  return api<{ revoked: true }>(`/users/me/sessions/${id}`, { method: 'DELETE' })
+export function revokeSession({ id, password }: { id: string; password: string }) {
+  return api<{ revoked: true }>(`/users/me/sessions/${id}`, { method: 'DELETE', body: { password } })
 }
 
-export function revokeOtherSessions() {
-  return api<{ revoked: true }>('/users/me/sessions', { method: 'DELETE' })
+export function revokeOtherSessions(password: string) {
+  return api<{ revoked: true }>('/users/me/sessions', { method: 'DELETE', body: { password } })
 }
 
 // ---------- Two-factor authentication ----------
@@ -54,12 +54,12 @@ export function getTwoFactorStatus() {
   return api<TwoFactorStatus>('/users/me/2fa')
 }
 
-export function startTwoFactorSetup() {
-  return api<{ secret: string; otpauthUrl: string }>('/users/me/2fa/setup', { method: 'POST' })
+export function startTwoFactorSetup(password: string) {
+  return api<{ secret: string; otpauthUrl: string }>('/users/me/2fa/setup', { method: 'POST', body: { password } })
 }
 
-export function enableTwoFactor(code: string) {
-  return api<{ recoveryCodes: string[] }>('/users/me/2fa/enable', { method: 'POST', body: { code } })
+export function enableTwoFactor(code: string, password: string) {
+  return api<{ recoveryCodes: string[] }>('/users/me/2fa/enable', { method: 'POST', body: { code, password } })
 }
 
 export function disableTwoFactor(values: Reauth) {

@@ -431,15 +431,18 @@ test('campaigns use paginated authenticated API data instead of browser storage 
   http.setSession({ user: { id: 'campaign-fixture' }, accessToken: 'campaign-test-token' })
   globalThis.fetch = async (url, options) => {
     calls.push({ url, ...options })
-    if (url === '/api/campaigns?limit=100') return respond({ items: [{ id: 'first', metrics: { leadsCount: 0 } }], nextCursor: 'page-two' })
-    if (url === '/api/campaigns?limit=100&cursor=page-two') return respond({ items: [{ id: 'second', metrics: { leadsCount: 125 } }], nextCursor: null })
+    if (url === '/api/campaigns?limit=50') return respond({ items: [{ id: 'first', metrics: { leadsCount: 0 } }], nextCursor: 'page-two' })
+    if (url === '/api/campaigns?limit=50&cursor=page-two') return respond({ items: [{ id: 'second', metrics: { leadsCount: 125 } }], nextCursor: null })
     return respond({ campaign: { id: 'first', updatedAt: '2026-10-21T00:00:00Z' } })
   }
   const campaigns = await import(moduleUrl('src/features/campaigns/api.ts'))
   const items = await campaigns.listCampaigns('workspace-not-sent-in-body')
-  assert.equal(items.length, 2)
+  assert.equal(items.length, 1)
+  assert.equal(calls.length, 1)
   assert.equal(items[0].metrics.leadsCount, 0)
-  assert.equal(items[1].metrics.leadsCount, 125)
+  const next = await campaigns.listCampaignPage('workspace-not-sent-in-body', { cursor: 'page-two' })
+  assert.equal(next.items[0].metrics.leadsCount, 125)
+  assert.equal(next.nextCursor, null)
   await campaigns.saveCampaign('workspace', { name: 'Updated' }, 'first', '2026-10-20T00:00:00Z')
   assert.equal(calls[2].url, '/api/campaigns/first')
   assert.equal(calls[2].method, 'PATCH')
@@ -623,4 +626,53 @@ test('rollout switches disable reports and settings without fabricating numbers 
   const service = makeCaptureApi('workspace:user')
   await assert.rejects(service.listForms(), { code: 'FEATURE_DISABLED' })
   await assert.rejects(service.saveHours({ timezone: 'Asia/Kolkata' }), { code: 'FEATURE_DISABLED' })
+})
+
+
+const taskTime = await import(moduleUrl('src/features/tasks/taskTime.ts'))
+test('task inputs and date labels use the workspace timezone, including midnight and DST', () => {
+  const { dueLabel, duePresets, fromLocalInput, toDateInput, toLocalInput } = taskTime
+  assert.equal(fromLocalInput('2026-10-20T10:00', 'Asia/Kolkata').toISOString(), '2026-10-20T04:30:00.000Z')
+  assert.equal(toLocalInput(new Date('2026-10-20T04:30:00Z'), 'Asia/Kolkata'), '2026-10-20T10:00')
+  assert.equal(toDateInput(new Date('2026-10-20T18:29:59.999Z'), 'Asia/Kolkata'), '2026-10-20')
+  const now = new Date('2026-10-19T20:00:00Z')
+  assert.equal(duePresets(now, 'Asia/Kolkata').find(p => p.key === 'today').date.toISOString(), '2026-10-20T12:30:00.000Z')
+  assert.equal(duePresets(now, 'Asia/Kolkata').find(p => p.key === 'tomorrow').date.toISOString(), '2026-10-21T04:30:00.000Z')
+  assert.equal(dueLabel('2026-10-20T18:29:59Z', true, now, 'Asia/Kolkata'), 'Today')
+  assert.equal(fromLocalInput('2026-07-01T10:00', 'America/New_York').toISOString(), '2026-07-01T14:00:00.000Z')
+  assert.throws(() => fromLocalInput('2026-03-08T02:30', 'America/New_York'), /does not exist/)
+})
+const { startNotificationConnection } = await import(moduleUrl('src/features/notifications/notificationConnection.ts'))
+test('notification polling stops on cleanup when SSE is unavailable', (t) => {
+  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] })
+  const onPoll = t.mock.fn(), requestTicket = t.mock.fn()
+  const stop = startNotificationConnection({ requestTicket, makeUrl: t => t, isActive: () => true, onNotification() {}, onPoll })
+  t.mock.timers.tick(60000)
+  assert.equal(onPoll.mock.callCount(), 1); assert.equal(requestTicket.mock.callCount(), 0)
+  stop(); t.mock.timers.tick(60000)
+  assert.equal(onPoll.mock.callCount(), 1)
+})
+test('notification reconnect requests a new ticket and ignores malformed frames', async (t) => {
+  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] })
+  const sources = [], onNotification = t.mock.fn()
+  let count = 0
+  const stop = startNotificationConnection({ requestTicket: async () => ({ ticket: String(++count) }), makeUrl: ticket => `/stream?ticket=${ticket}`, isActive: () => true, onNotification, onPoll() {}, createSource: url => {
+    const source = { url, onmessage: null, onerror: null, close: t.mock.fn() }; sources.push(source); return source
+  } })
+  await Promise.resolve(); await Promise.resolve()
+  sources[0].onmessage({ data: '{"type":"notification","unreadCount":2}' })
+  sources[0].onmessage({ data: 'invalid' })
+  sources[0].onmessage({ data: '{"type":"notification","unreadCount":-1}' })
+  assert.equal(onNotification.mock.callCount(), 1); assert.deepEqual(onNotification.mock.calls[0].arguments, [2])
+  sources[0].onerror(); assert.equal(sources[0].close.mock.callCount(), 1)
+  t.mock.timers.tick(10000); await Promise.resolve(); await Promise.resolve()
+  assert.deepEqual(sources.map(s => s.url), ['/stream?ticket=1', '/stream?ticket=2'])
+  stop(); assert.equal(sources[1].close.mock.callCount(), 1)
+})
+test('notification ticket resolution after cleanup cannot open the old workspace stream', async (t) => {
+  let resolve
+  const createSource = t.mock.fn()
+  const stop = startNotificationConnection({ requestTicket: () => new Promise(r => { resolve = r }), makeUrl: t => t, isActive: () => true, onNotification() {}, onPoll() {}, createSource })
+  stop(); resolve({ ticket: 'late' }); await Promise.resolve(); await Promise.resolve()
+  assert.equal(createSource.mock.callCount(), 0)
 })

@@ -1,9 +1,9 @@
+import { usePagedList } from '../../lib/usePagedList'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQuery } from '@tanstack/react-query'
 import { Send } from 'lucide-react'
-import { createInvitations, listTeams, type InviteResult } from '../../services/team'
+import { createInvitations, listTeamsPage, type InviteResult } from '../../services/team'
 import { ApiError } from '../../services/http'
 import { inviteSchema, parseEmails, type InviteValues } from '../../lib/schemas'
 import { useCan, useEntitlement } from '../../lib/useOrg'
@@ -11,7 +11,7 @@ import { handleGlobalApiError } from '../../lib/apiErrors'
 import { cn } from '../../lib/cn'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { Field, FormAlert, Textarea } from '../../components/ui/Form'
+import { Field, FormAlert, Input, Textarea } from '../../components/ui/Form'
 import { Drawer } from '../../components/app/Dialog'
 import { useUnsavedChanges } from '../../components/app/useUnsavedChanges'
 import { RoleSelect, TeamCheckboxes } from './shared'
@@ -22,7 +22,8 @@ export function InviteDrawer({ open, onClose, orgId }: { open: boolean; onClose:
   const { invalidate, keys } = useTeamData(orgId)
   const canInviteAdmins = useCan('members.manage.admins')
   const seats = useEntitlement('users')
-  const teams = useQuery({ queryKey: keys.teams, queryFn: listTeams, enabled: open })
+  const [teamSearch,setTeamSearch] = useState('')
+  const teams = usePagedList([...keys.teams,teamSearch],cursor => listTeamsPage({q:teamSearch || undefined,cursor}),open)
   const [teamIds, setTeamIds] = useState<string[]>([])
   const [results, setResults] = useState<InviteResult[] | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
@@ -112,6 +113,8 @@ export function InviteDrawer({ open, onClose, orgId }: { open: boolean; onClose:
           </Field>
           <fieldset>
             <legend className="mb-2 text-sm font-medium text-ink">Teams (optional)</legend>
+            <Input aria-label="Find a team" placeholder="Search teams" value={teamSearch} onChange={event => setTeamSearch(event.target.value)} />
+            {teams.hasNextPage && <Button type="button" size="sm" onClick={() => void teams.fetchNextPage()}>More teams</Button>}
             <TeamCheckboxes teams={teams.data ?? []} value={teamIds} onChange={setTeamIds} />
           </fieldset>
           {seats.limit !== null && seats.used !== null && (

@@ -26,7 +26,6 @@ import { CampaignFormDrawer } from './CampaignFormDrawer'
 import { useCampaignMutations, useCampaigns, useCampaignOptions } from './useCampaigns'
 import { CAMPAIGN_STATUS_LABELS, CAMPAIGN_TYPE_LABELS, isMetaCampaign, type Campaign } from './types'
 
-const PAGE_SIZE = 25
 const CHANNEL_SHORT: Record<Campaign['type'], string> = { meta_ads: 'Meta Ads', google_ads: 'Google Ads', email: 'Email', sms: 'SMS / WhatsApp', website: 'Website', referral: 'Referral', offline: 'Offline', other: 'Other' }
 const shortDate = (value: string) => new Date(`${value.slice(0, 10)}T00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: '2-digit' })
 
@@ -54,7 +53,6 @@ export default function CampaignsPage() {
   const setSearch = (value: string) => setFilter('q', value)
   const setStatusFilter = (value: string) => setFilter('status', value === 'all' ? undefined : value)
   const setTypeFilter = (value: string) => setFilter('type', value === 'all' ? undefined : value)
-  const [page, setPage] = useState(0)
   const [selection, setSelection] = useState<Set<string>>(() => new Set())
   const [confirmBulkMeta, setConfirmBulkMeta] = useState(false)
   const [bulkBusy, setBulkBusy] = useState(false)
@@ -65,7 +63,7 @@ export default function CampaignsPage() {
   const [selectedAccount, setSelectedAccount] = useState('')
   const [loadingAccounts, setLoadingAccounts] = useState(false)
 
-  const campaignsQuery = useCampaigns()
+  const campaignsQuery = useCampaigns(Object.fromEntries(Object.entries(filters).filter(([,value]) => Boolean(value))))
   const { save, syncMeta, setStatus } = useCampaignMutations()
 
   // Check if Facebook is connected for Meta sync option
@@ -78,34 +76,11 @@ export default function CampaignsPage() {
 
   const campaigns = campaignsQuery.data ?? []
 
-  // Filter campaigns
-  const matching = campaigns.filter((c) => {
-    if (filters.ownerId && c.ownerId !== (filters.ownerId === 'me' ? user?.id : filters.ownerId === 'none' ? null : filters.ownerId)) return false
-    if (filters.sourceId && c.sourceId !== filters.sourceId) return false
-    if (filters.createdFrom && c.createdAt.slice(0, 10) < filters.createdFrom) return false
-    if (filters.createdTo && c.createdAt.slice(0, 10) > filters.createdTo) return false
-    if (typeFilter !== 'all' && c.type !== typeFilter) return false
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      const matchName = c.name.toLowerCase().includes(q)
-      const matchCode = c.code.toLowerCase().includes(q)
-      const matchUtm = Object.values(c.utm).some((v) => v?.toLowerCase().includes(q))
-      if (!matchName && !matchCode && !matchUtm) return false
-    }
-    return true
-  })
-
-  const filtered = matching.filter(campaign => statusFilter === 'all' || campaign.status === statusFilter)
+  // Filtering, sorting and paging are performed by the API over the entire authorized set.
+  const filtered = campaigns
   const sort = filters.sort ?? '-createdAt'
-  const sortKey = sort.replace(/^-/, '') as keyof Campaign
-  filtered.sort((a, b) => {
-    const left = a[sortKey], right = b[sortKey]
-    const order = typeof left === 'number' || typeof right === 'number' ? Number(left ?? 0) - Number(right ?? 0) : String(left ?? '').localeCompare(String(right ?? ''), undefined, { numeric: true })
-    return (sort.startsWith('-') ? -order : order) || a.id.localeCompare(b.id)
-  })
   const advancedCount = ['ownerId', 'sourceId', 'createdFrom', 'createdTo'].filter(key => filters[key as keyof typeof filters]).length
   const hasFilters = Object.entries(filters).some(([key, value]) => key !== 'sort' && Boolean(value))
-  const currentPage = Math.min(page, Math.max(0, Math.ceil(filtered.length / PAGE_SIZE) - 1))
 
   async function pauseSelected() {
     if (bulkBusy) return
@@ -202,7 +177,6 @@ export default function CampaignsPage() {
       </div>
     )
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const startNew = () => { setEditingCampaign(null); setDrawerOpen(true) }
 
   return (
@@ -210,8 +184,8 @@ export default function CampaignsPage() {
       <PageHeader
         title="Campaigns"
         description={campaignsQuery.isSuccess && campaigns.length > 0 ? (
-          <span className="page-summary" aria-label="Campaign summary, all time">
-            <span><b>{activeCount}</b> active of {campaigns.length}</span>
+          <span className="page-summary" aria-label="Campaign summary for loaded results">
+            <span><b>{activeCount}</b> active of {campaigns.length} loaded</span>
             <span><b>{totalAttributedLeads.toLocaleString()}</b> attributed leads</span>
             <span><b>{formatMinor(totalSpendMinor, currency)}</b> recorded spend</span>
             {avgCplMinor != null && <span><b>{formatMinor(avgCplMinor, currency)}</b> per lead</span>}
@@ -227,25 +201,24 @@ export default function CampaignsPage() {
       <section className="list-card" aria-label="Campaign list">
         <div className="list-tabs no-scrollbar" role="group" aria-label="Campaign status">
           {(['all', 'active', 'scheduled', 'draft', 'paused', 'completed', 'archived'] as const).map(status => {
-            const count = status === 'all' ? matching.length : matching.filter(campaign => campaign.status === status).length
-            return <button key={status} type="button" aria-pressed={statusFilter === status} className="list-tab compact-control" onClick={() => { setStatusFilter(status); setPage(0); setSelection(new Set()) }}>{status === 'all' ? 'All' : CAMPAIGN_STATUS_LABELS[status]}{campaignsQuery.isSuccess && <span className="list-tab-count">{count}</span>}</button>
+            return <button key={status} type="button" aria-pressed={statusFilter === status} className="list-tab compact-control" onClick={() => { setStatusFilter(status); setSelection(new Set()) }}>{status === 'all' ? 'All' : CAMPAIGN_STATUS_LABELS[status]}</button>
           })}
         </div>
-        <SalesFilters bare label="Campaign filters" search={{ value: search, onChange: (value) => { setPage(0); setSearch(value) }, placeholder: 'Search name, tracking code, UTM…', label: 'Search campaigns' }} count={advancedCount}
-          quickFilters={<Select aria-label="Campaign channel" value={typeFilter} onChange={event => { setPage(0); setTypeFilter(event.target.value) }}><option value="all">All channels</option>{Object.entries(CAMPAIGN_TYPE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>}
+        <SalesFilters bare label="Campaign filters" search={{ value: search, onChange: (value) => { setSearch(value) }, placeholder: 'Search name or tracking code…', label: 'Search campaigns' }} count={advancedCount}
+          quickFilters={<Select aria-label="Campaign channel" value={typeFilter} onChange={event => { setTypeFilter(event.target.value) }}><option value="all">All channels</option>{Object.entries(CAMPAIGN_TYPE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>}
           trailing={<div className="ml-auto flex items-center gap-2">
-            <Select aria-label="Sort campaigns" value={sort} className="w-auto! max-w-44" onChange={event => { setFilter('sort', event.target.value); setPage(0) }}>
+            <Select aria-label="Sort campaigns" value={sort} className="w-auto! max-w-44" onChange={event => { setFilter('sort', event.target.value) }}>
               <option value="-createdAt">Newest first</option><option value="createdAt">Oldest first</option><option value="name">Name A–Z</option><option value="-name">Name Z–A</option><option value="-startDate">Start date, latest</option><option value="startDate">Start date, earliest</option><option value="-actualSpendMinor">Highest spend</option><option value="actualSpendMinor">Lowest spend</option>
             </Select>
-            <LocalViews module="campaigns" filters={filters} onApply={value => { replaceFilters(value); setPage(0); setSelection(new Set()) }} />
+            <LocalViews module="campaigns" filters={filters} onApply={value => { replaceFilters(value); setSelection(new Set()) }} />
           </div>}
         >
-          <SalesFilterField label="Owner"><FilterSelect label="Owner" value={filters.ownerId} onChange={value => { setFilter('ownerId', value); setPage(0) }} options={[{ value: 'me', label: 'Me' }, { value: 'none', label: 'Unassigned' }]} /></SalesFilterField>
-          <SalesFilterField label="Lead source"><FilterSelect label="Source" value={filters.sourceId} onChange={value => { setFilter('sourceId', value); setPage(0) }} options={(sources.data ?? []).map(source => ({ value: source.id, label: source.name }))} /></SalesFilterField>
-          <SalesFilterField label="Created from"><Input type="date" aria-label="Campaigns created from" value={filters.createdFrom ?? ''} onChange={event => { setFilter('createdFrom', event.target.value); setPage(0) }} /></SalesFilterField>
-          <SalesFilterField label="Created until"><Input type="date" aria-label="Campaigns created to" value={filters.createdTo ?? ''} min={filters.createdFrom} onChange={event => { setFilter('createdTo', event.target.value); setPage(0) }} /></SalesFilterField>
+          <SalesFilterField label="Owner"><FilterSelect label="Owner" value={filters.ownerId} onChange={value => { setFilter('ownerId', value) }} options={[{ value: 'me', label: 'Me' }, { value: 'none', label: 'Unassigned' }]} /></SalesFilterField>
+          <SalesFilterField label="Lead source"><FilterSelect label="Source" value={filters.sourceId} onChange={value => { setFilter('sourceId', value) }} options={(sources.data ?? []).map(source => ({ value: source.id, label: source.name }))} /></SalesFilterField>
+          <SalesFilterField label="Created from"><Input type="date" aria-label="Campaigns created from" value={filters.createdFrom ?? ''} onChange={event => { setFilter('createdFrom', event.target.value) }} /></SalesFilterField>
+          <SalesFilterField label="Created until"><Input type="date" aria-label="Campaigns created to" value={filters.createdTo ?? ''} min={filters.createdFrom} onChange={event => { setFilter('createdTo', event.target.value) }} /></SalesFilterField>
         </SalesFilters>
-        <FilterChips exclude={['sort', 'status', 'q', 'type']} labels={Object.fromEntries([...(sources.data ?? []).map(source => [`sourceId:${source.id}`, source.name])])} filters={filters} onRemove={(key) => { setFilter(key, undefined); setPage(0) }} onClear={() => { clearFilters(); setPage(0) }} />
+        <FilterChips exclude={['sort', 'status', 'q', 'type']} labels={Object.fromEntries([...(sources.data ?? []).map(source => [`sourceId:${source.id}`, source.name])])} filters={filters} onRemove={(key) => { setFilter(key, undefined) }} onClear={() => { clearFilters() }} />
         {canEdit && selection.size > 0 && <div className="px-3 pb-3">
           <BulkBar count={filtered.filter((campaign) => selection.has(campaign.id) && canPauseCampaign(campaign)).length} onClear={() => setSelection(new Set())}>
             <BulkButton onClick={() => {
@@ -265,15 +238,15 @@ export default function CampaignsPage() {
               icon={Megaphone}
               title={hasFilters ? 'No campaigns match' : 'No campaigns yet'}
               description={hasFilters ? 'Try a different search or clear the filters.' : 'Create a campaign to get a tracking link and attribute incoming leads to it.'}
-              action={hasFilters ? <Button variant="secondary" onClick={() => { clearFilters(); setPage(0) }}>Clear filters</Button> : canCreate ? <Button onClick={startNew}><Plus className="size-4" aria-hidden="true" />New campaign</Button> : undefined}
+              action={hasFilters ? <Button variant="secondary" onClick={() => { clearFilters() }}>Clear filters</Button> : canCreate ? <Button onClick={startNew}><Plus className="size-4" aria-hidden="true" />New campaign</Button> : undefined}
             />
           </div>
         ) : (
-          <DataTable bare className="sales-campaign-table" caption="Campaigns" sort={sort} onSortChange={value => { setFilter('sort', value); setPage(0) }}
-            rows={filtered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)} total={filtered.length} getRowId={(campaign) => campaign.id}
+          <DataTable bare className="sales-campaign-table" caption="Campaigns" sort={sort} onSortChange={value => { setFilter('sort', value) }}
+            rows={filtered} total={filtered.length} getRowId={(campaign) => campaign.id}
             canSelectRow={canPauseCampaign} selectedIds={canEdit ? selection : undefined} onSelectionChange={canEdit ? setSelection : undefined}
             onRowClick={canView ? (campaign) => navigate(`/app/campaigns/${campaign.id}`) : undefined}
-            footer={pageCount > 1 && <div className="flex items-center gap-2"><span className="tabular-nums">Page {currentPage + 1} of {pageCount}</span><Button size="sm" variant="secondary" disabled={currentPage <= 0} onClick={() => setPage(Math.max(0, currentPage - 1))}>Previous</Button><Button size="sm" variant="secondary" disabled={currentPage + 1 >= pageCount} onClick={() => setPage(currentPage + 1)}>Next</Button></div>}
+            footer={<div className="flex items-center gap-2"><span>{filtered.length} loaded</span>{campaignsQuery.hasNextPage && <Button size="sm" variant="secondary" loading={campaignsQuery.isFetchingNextPage} onClick={() => void campaignsQuery.fetchNextPage()}>Load more campaigns</Button>}</div>}
             mobileCard={campaign => <div className="rounded-card border border-line bg-surface p-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><span className="block truncate text-sm font-medium text-ink">{campaign.name}</span><span className="mt-0.5 block truncate text-xs text-muted">{CHANNEL_SHORT[campaign.type]} · {campaign.ownerName ?? 'Unassigned'}</span></div><CampaignStatusBadge status={campaign.status} /></div><div className="mt-2 flex justify-between gap-3 text-xs text-muted tabular-nums"><span><b className="font-medium text-ink">{campaign.metrics.leadsCount.toLocaleString()}</b> leads · {campaign.metrics.conversionRate}% converted</span><span>{formatMinor(campaign.actualSpendMinor, campaign.currency)}</span></div></div>}
             columns={[
               { key: 'name', header: 'Campaign', sortKey: 'name', cell: campaign => <div className="min-w-44 max-w-72">{canView ? <Link title={campaign.name} to={`/app/campaigns/${campaign.id}`} onClick={event => event.stopPropagation()} className="block truncate font-medium text-ink hover:underline">{campaign.name}</Link> : <span title={campaign.name} className="block truncate font-medium text-ink">{campaign.name}</span>}<code title={campaign.code} className="block truncate text-xs text-muted">{campaign.code}</code></div> },

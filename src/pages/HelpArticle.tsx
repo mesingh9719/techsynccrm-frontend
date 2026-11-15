@@ -145,7 +145,7 @@ export default function HelpArticle() {
             <Feedback key={article.slug} slug={article.slug} />
             <div className="rounded-dialog bg-canvas p-6 ring-1 ring-zinc-200">
               <p className="font-medium text-zinc-900">Still stuck?</p>
-              <p className="mt-1 text-sm text-zinc-600">Our support team usually replies within 2 hours on working days.</p>
+              <p className="mt-1 text-sm text-zinc-600">Support arrangements for the private beta must be confirmed with your beta coordinator.</p>
               <Button to="/contact?topic=support" variant="secondary" size="sm" className="mt-4">
                 Contact support
               </Button>

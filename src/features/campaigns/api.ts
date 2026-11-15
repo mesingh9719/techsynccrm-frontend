@@ -34,17 +34,13 @@ export function buildUtmUrl(landingUrl: string, utm: UtmParameters): string {
 }
 
 /** The authenticated session selects the workspace; clients cannot choose another org in a body. */
-export async function listCampaigns(_orgId: string): Promise<Campaign[]> {
-  const items: Campaign[] = []
-  let cursor: string | undefined
-  do {
-    const page = await api<{ items: Campaign[]; nextCursor: string | null }>('/campaigns', {
-      query: { limit: 100, cursor },
-    })
-    items.push(...page.items)
-    cursor = page.nextCursor ?? undefined
-  } while (cursor)
-  return items
+export type CampaignPage = {items:Campaign[];nextCursor:string|null}
+export function listCampaignPage(_orgId:string, params:Record<string,string|number|undefined> = {}) {
+  return api<CampaignPage>('/campaigns',{query:{limit:50,...params}})
+}
+/** One bounded request. Search or explicitly request the next page for more campaigns. */
+export async function listCampaigns(orgId:string, params:Record<string,string|number|undefined> = {}):Promise<Campaign[]> {
+  return (await listCampaignPage(orgId,params)).items
 }
 
 export function getCampaign(_orgId: string, id: string): Promise<Campaign> {
@@ -94,3 +90,6 @@ export async function syncMetaCampaigns(_orgId: string, adAccountId: string): Pr
 
 export interface CampaignOptions { statuses: CampaignStatus[]; transitions: Record<CampaignStatus, CampaignStatus[]> }
 export const getCampaignOptions = () => api<CampaignOptions>('/campaigns/options')
+
+export interface CampaignSummary {campaigns:number;active:number;leads:number;spendMinor:number;costedLeads:number}
+export const getCampaignSummary = () => api<CampaignSummary>('/campaigns/summary')

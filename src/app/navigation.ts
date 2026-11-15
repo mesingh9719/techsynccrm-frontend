@@ -149,7 +149,7 @@ export const settingsNav: SettingsNavItem[] = [
   { key: 'workspace', label: 'General', to: '/app/settings/workspace', ready: true, group: 'Workspace & team', icon: Building2, description: 'Company identity, region and business details' },
   { key: 'team', label: 'Team & roles', to: '/app/settings/team', ready: true, group: 'Workspace & team', icon: UsersRound, description: 'Invite people, roles and sales teams' },
   { key: 'plan', label: 'Plan & usage', to: '/app/settings/plan', ready: true, group: 'Plan & billing', icon: Gauge, description: 'Your plan, limits and seats' },
-  { key: 'billing', label: 'Billing', to: '/app/settings/billing', ready: false, module: 'M16', group: 'Plan & billing', icon: CreditCard, description: 'Invoices and payment method' },
+  { key: 'billing', label: 'Billing', to: '/app/settings/billing', ready: true, module: 'M16', group: 'Plan & billing', icon: CreditCard, description: 'Invoices and payment method' },
   { key: 'pipelines', label: 'Pipelines', to: '/app/settings/pipelines', ready: true, group: 'Sales setup', icon: SquareKanban, description: 'Deal stages and probabilities' },
   { key: 'lead-settings', label: 'Lead settings', to: '/app/settings/leads', ready: true, group: 'Sales setup', icon: Inbox, description: 'Sources, scoring weights and lost reasons' },
   { key: 'custom-fields', label: 'Custom fields', to: '/app/settings/custom-fields', ready: true, group: 'Sales setup', icon: TextCursorInput, description: 'Extra fields on records' },
@@ -159,5 +159,7 @@ export const settingsNav: SettingsNavItem[] = [
   { key: 'assignment', label: 'Assignment rules', to: '/app/settings/assignment', ready: true, group: 'Lead capture', icon: Shuffle, description: 'Who gets each new lead' },
   { key: 'connections', label: 'Email & Google', to: '/app/settings/connections', ready: true, group: 'Integrations', icon: Mail, description: 'Gmail, Calendar & Meet and Google Sheets, for you and your team' },
   { key: 'facebook', label: 'Facebook Lead Ads', to: '/app/settings/facebook', ready: true, group: 'Integrations', icon: Facebook, description: 'Bring in leads from Facebook forms' },
+  { key: 'privacy', label: 'Data & privacy', to: '/app/settings/privacy', ready: true, group: 'Data', icon: ShieldCheck, description: 'Workspace export, erasure and your request status' },
+  { key: 'audit', label: 'Audit history', to: '/app/settings/audit', ready: true, group: 'Data', icon: ListChecks, description: 'Review and export workspace audit events' },
   { key: 'data', label: 'Import & export', to: '/app/settings/data', ready: true, group: 'Data', icon: ArrowDownUp, description: 'Import history and your exports' },
 ]

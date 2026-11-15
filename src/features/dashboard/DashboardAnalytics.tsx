@@ -76,7 +76,7 @@ export function CampaignPerformance({ campaigns, currency = 'INR' }: { campaigns
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line p-5">
         <div>
           <h2 className="section-title">Campaign performance</h2>
-          <p className="mt-1 text-xs text-muted">All-time totals · recorded spend</p>
+          <p className="mt-1 text-xs text-muted">Recent campaigns · all-time figures per campaign</p>
         </div>
         <Button size="sm" variant="secondary" to="/app/campaigns">
           View campaigns

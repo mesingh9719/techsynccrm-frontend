@@ -186,11 +186,12 @@ export interface TargetMember {
   dealsWon: number
 }
 export interface TargetsMonth {
+  nextCursor?:string|null
   month: string
   currency: string
   members: TargetMember[]
 }
-export const getTargets = (month: string) => api<TargetsMonth>('/reports/targets', { query: { month } })
+export const getTargets = (month: string,params:{q?:string;cursor?:string} = {}) => api<TargetsMonth>('/reports/targets', { query: { month,...params } })
 export const saveTargets = (month: string, targets: { userId: string; revenueMinor?: number | null; dealsWon?: number | null }[]) =>
   api<TargetsMonth>('/reports/targets', { method: 'PUT', body: { month, targets } })
 
@@ -202,6 +203,7 @@ export interface ReportSchedule {
   enabled: boolean
   filters: { ownerId?: string; sourceId?: string }
   lastSentAt: string | null
+  delivery?: {status:string;attempts:number;lastError:string|null;deliveredAt:string|null;createdAt:string}|null
 }
 export interface ReportSchedules {
   available: boolean

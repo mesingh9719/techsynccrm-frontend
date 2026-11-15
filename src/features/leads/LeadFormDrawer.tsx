@@ -85,7 +85,9 @@ export function LeadFormDrawer({
   const canAssign = useCan('leads.assign')
   const canView = useCan('leads.view')
   const sources = useLeadSources()
-  const { data: campaigns = [] } = useCampaigns()
+  const [campaignSearch,setCampaignSearch] = useState('')
+  const campaignQuery = useCampaigns({q:campaignSearch || undefined})
+  const campaigns = campaignQuery.data
   const [draft, setDraft] = useState<Draft>(() => fromLead(lead, user?.id ?? null))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string | null>(null)
@@ -255,6 +257,8 @@ export function LeadFormDrawer({
                 </Select>
               )}
             </Field>
+            <Input aria-label="Find a campaign" placeholder="Search campaigns by name or code" value={campaignSearch} onChange={event => setCampaignSearch(event.target.value)} />
+            {campaignQuery.hasNextPage && <Button type="button" size="sm" onClick={() => void campaignQuery.fetchNextPage()}>More campaigns</Button>}
             <Field label="Campaign" optional error={errors.campaignId}>
               {({ id, invalid }) => (
                 <Select

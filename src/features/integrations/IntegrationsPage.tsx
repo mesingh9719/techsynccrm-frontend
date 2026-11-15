@@ -1,3 +1,4 @@
+import { getAvailability } from '../../services/availability'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -129,10 +130,12 @@ export default function IntegrationsPage() {
     [term, setTerm] = useState(''),
     [category, setCategory] = useState('All sources'),
     [testGuide, setTestGuide] = useState(false)
+  const availability = useQuery({ queryKey: ['release', 'availability'], queryFn: getAvailability })
+  const facebookAccepted = availability.data?.integrations.includes('facebook') === true
   const facebook = useQuery({
     queryKey: ['org', orgId, 'facebook', 'status'],
     queryFn: getFacebookStatus,
-    enabled: allowed,
+    enabled: allowed && facebookAccepted,
   })
   const scope = `${orgId}:${user?.id}`,
     service = makeCaptureApi(scope)
@@ -153,6 +156,7 @@ export default function IntegrationsPage() {
   }
   function status(id: string): { text: string; tone: 'success' | 'warning' | 'neutral' | 'danger' } {
     if (id === 'facebook') {
+      if (!facebookAccepted) return { text: 'Unavailable in beta', tone: 'neutral' }
       if (!allowed) return { text: 'Admin managed', tone: 'neutral' }
       if (facebook.isPending) return { text: 'Checking…', tone: 'neutral' }
       if (facebook.isError || needsReconnect) return { text: 'Needs attention', tone: 'danger' }
@@ -215,7 +219,7 @@ export default function IntegrationsPage() {
           Your workspace owner or admin manages connections. You can still explore the setup guides.
         </div>
       )}
-      {facebook.isError && allowed && <ErrorState error={facebook.error} onRetry={() => facebook.refetch()} />}
+      {facebook.isError && allowed && facebookAccepted && <ErrorState error={facebook.error} onRetry={() => facebook.refetch()} />}
       <div className="filter-toolbar">
         <div role="group" aria-label="Source categories" className="flex max-w-full gap-1 overflow-x-auto">
           {['All sources', 'Website', 'Advertising', 'Social', 'Other sources'].map((c) => (
@@ -347,7 +351,7 @@ export default function IntegrationsPage() {
                 </li>
               ))}
             </ol>
-            {selected.id === 'facebook' &&
+            {selected.id === 'facebook' && facebookAccepted &&
               allowed &&
               (facebook.isPending ? (
                 <Skeleton className="h-16" />
@@ -426,7 +430,7 @@ export default function IntegrationsPage() {
                 </div>
               </div>
             )}
-            {selected.to && (selected.id === 'import' ? canImport : allowed) ? (
+            {selected.to && (selected.id !== 'facebook' || facebookAccepted) && (selected.id === 'import' ? canImport : allowed) ? (
               <Button to={selected.to} onClick={close} className="w-full">
                 {selected.id === 'website'
                   ? 'Open form builder'

@@ -109,7 +109,8 @@ function TagRow({ tag, editable, refresh }: { tag: Tag; editable: boolean; refre
   )
 }
 export default function TagsSettings() {
-  const query = useTags(),
+  const [search,setSearch] = useState('')
+  const query = useTags(search),
     orgId = useOrgId(),
     client = useQueryClient(),
     editable = useCan('settings.workspace.manage'),
@@ -157,6 +158,7 @@ export default function TagsSettings() {
         </form>
       )}
       {error && <FormAlert>{error}</FormAlert>}
+      <Input aria-label="Search tags" placeholder="Search tags" value={search} onChange={event => setSearch(event.target.value)} className="mb-3" />
       {query.isPending ? (
         <ListSkeleton />
       ) : query.isError ? (
@@ -178,6 +180,7 @@ export default function TagsSettings() {
           ))}
         </div>
       )}
+      {query.hasNextPage && <Button variant="secondary" loading={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>Load more tags</Button>}
     </div>
   )
 }

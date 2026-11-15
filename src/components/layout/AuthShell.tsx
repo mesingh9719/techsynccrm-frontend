@@ -1,10 +1,13 @@
+import { useQuery } from '@tanstack/react-query'
+import { getAvailability } from '../../services/availability'
+import { privateBeta } from '../../config/release'
 import type { ReactNode } from 'react'
 import { Check, Star } from 'lucide-react'
 import { testimonials } from '../../services/content'
 import { Avatar } from '../ui/Badge'
 import { Container } from '../ui/Section'
 
-const highlights = ['Free for up to 2 users', 'Import from Excel in minutes', 'WhatsApp, email and calls in one place', 'Data hosted securely in India']
+const highlights = ['Private beta by invitation', 'Import from Excel in minutes', 'Follow-up tasks and record exports', 'Provider integrations require separate acceptance']
 
 /** Two-column frame for login and sign-up: form on the left, reassurance on the right. */
 export function AuthShell({ children, quoteIndex = 0 }: { children: ReactNode; quoteIndex?: number }) {
@@ -31,7 +34,7 @@ export function AuthShell({ children, quoteIndex = 0 }: { children: ReactNode; q
               ))}
             </ul>
           </div>
-          <figure className="relative mt-12 rounded-dialog bg-white/5 p-6 ring-1 ring-white/10">
+          {!privateBeta && <figure className="relative mt-12 rounded-dialog bg-white/5 p-6 ring-1 ring-white/10">
             <div className="flex gap-1" aria-label="Rated 5 out of 5">
               {Array.from({ length: 5 }, (_, i) => (
                 <Star key={i} className="size-4 fill-amber-300 text-amber-300" aria-hidden="true" />
@@ -47,7 +50,7 @@ export function AuthShell({ children, quoteIndex = 0 }: { children: ReactNode; q
                 </span>
               </span>
             </figcaption>
-          </figure>
+          </figure>}
         </aside>
       </div>
     </Container>
@@ -55,12 +58,15 @@ export function AuthShell({ children, quoteIndex = 0 }: { children: ReactNode; q
 }
 
 export function SocialAuthButtons({ onSelect, onGoogle, googleBusy = false, label }: { onSelect: (provider: string) => void; onGoogle?: () => void; googleBusy?: boolean; label: 'Continue' | 'Sign up' }) {
+  const availability = useQuery({ queryKey: ['release', 'availability'], queryFn: getAvailability })
+  const googleAvailable = availability.data?.googleSignIn === true
+  if (privateBeta && !googleAvailable) return <p className="text-sm text-muted">Provider sign-in is unavailable in this beta. Sign in with email.</p>
   return (
     <div className="grid grid-cols-2 gap-3">
       <button
         type="button"
         onClick={onGoogle ?? (() => onSelect('Google'))}
-        disabled={googleBusy}
+        disabled={googleBusy || !googleAvailable}
         aria-busy={googleBusy || undefined}
         className="inline-flex h-11 items-center justify-center gap-3 rounded-lg bg-white text-sm font-medium text-zinc-800 shadow-card ring-1 ring-zinc-200 transition-colors hover:bg-zinc-50"
       >
@@ -76,7 +82,7 @@ export function SocialAuthButtons({ onSelect, onGoogle, googleBusy = false, labe
       </button>
       <button
         type="button"
-        onClick={() => onSelect('Microsoft')}
+        disabled title="Microsoft sign-in is unavailable"
         className="inline-flex h-11 items-center justify-center gap-3 rounded-lg bg-white text-sm font-medium text-zinc-800 shadow-card ring-1 ring-zinc-200 transition-colors hover:bg-zinc-50"
       >
         <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">

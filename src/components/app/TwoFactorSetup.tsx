@@ -1,19 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import QRCode from 'qrcode'
-import { Check, Copy, Download, LoaderCircle } from 'lucide-react'
+import { Check, Copy, Download } from 'lucide-react'
 import { enableTwoFactor, startTwoFactorSetup } from '../../services/account'
 import { fetchMe } from '../../services/auth'
 import { ApiError } from '../../services/http'
 import { Button } from '../ui/Button'
 import { Field, FormAlert, Input } from '../ui/Form'
-
-// A mount runs the setup effect twice in development (StrictMode). Each call issues a new secret, so
-// share one in-flight request — otherwise the QR shown could belong to a superseded secret.
-let setupInFlight: ReturnType<typeof startTwoFactorSetup> | null = null
-function startSetupOnce() {
-  setupInFlight ??= startTwoFactorSetup().finally(() => window.setTimeout(() => (setupInFlight = null), 1000))
-  return setupInFlight
-}
 
 /** The recovery codes, with copy/download — shown once after enabling or regenerating. */
 export function RecoveryCodes({ codes, onDone, doneLabel = 'I’ve saved my codes' }: { codes: string[]; onDone: () => void; doneLabel?: string }) {
@@ -72,24 +64,26 @@ export function RecoveryCodes({ codes, onDone, doneLabel = 'I’ve saved my code
  */
 export function TwoFactorSetup({ onComplete }: { onComplete: () => void }) {
   const [setup, setSetup] = useState<{ secret: string; qr: string } | null>(null)
+  const [password, setPassword] = useState('')
   const [loadError, setLoadError] = useState<string | null>(null)
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [codes, setCodes] = useState<string[] | null>(null)
 
-  useEffect(() => {
-    let active = true
-    startSetupOnce()
-      .then(async ({ secret, otpauthUrl }) => {
-        const qr = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 200 })
-        if (active) setSetup({ secret, qr })
-      })
-      .catch((err) => active && setLoadError(err instanceof ApiError ? err.message : 'Couldn’t start the setup. Please try again.'))
-    return () => {
-      active = false
-    }
-  }, [])
+  async function begin(e: FormEvent) {
+    e.preventDefault()
+    if (busy || !password) return
+    setBusy(true)
+    setLoadError(null)
+    try {
+      const { secret, otpauthUrl } = await startTwoFactorSetup(password)
+      const qr = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 200 })
+      setSetup({ secret, qr })
+    } catch (err) {
+      setLoadError(err instanceof ApiError ? err.message : 'Couldn’t start the setup. Please try again.')
+    } finally { setBusy(false) }
+  }
 
   async function confirm(e: FormEvent) {
     e.preventDefault()
@@ -98,7 +92,8 @@ export function TwoFactorSetup({ onComplete }: { onComplete: () => void }) {
     setBusy(true)
     setError(null)
     try {
-      const { recoveryCodes } = await enableTwoFactor(clean)
+      const { recoveryCodes } = await enableTwoFactor(clean, password)
+      setPassword('')
       setCodes(recoveryCodes)
       await fetchMe().catch(() => {})
     } catch (err) {
@@ -109,13 +104,15 @@ export function TwoFactorSetup({ onComplete }: { onComplete: () => void }) {
   }
 
   if (codes) return <RecoveryCodes codes={codes} onDone={onComplete} />
-  if (loadError) return <FormAlert>{loadError}</FormAlert>
   if (!setup) {
-    return (
-      <p role="status" className="flex items-center gap-2 py-8 text-sm text-muted">
-        <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> Preparing…
-      </p>
-    )
+    return <form onSubmit={begin}>
+      <p className="mb-4 text-sm text-muted">Confirm your password to set up two-factor authentication. If you signed up with Google, set a password using the password reset email first.</p>
+      {loadError && <FormAlert>{loadError}</FormAlert>}
+      <Field label="Current password">
+        {(ids) => <Input {...ids} type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />}
+      </Field>
+      <Button className="mt-4" type="submit" loading={busy} disabled={!password}>Continue</Button>
+    </form>
   }
 
   const grouped = setup.secret.match(/.{1,4}/g)?.join(' ')

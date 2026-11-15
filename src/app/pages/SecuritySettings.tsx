@@ -274,29 +274,31 @@ function TwoFactorSection({ status }: { status: UseQueryResult<TwoFactorStatus> 
 
 // ---------- Sessions ----------
 
-function SessionRow({ session, onRevoke, busy }: { session: UserSession; onRevoke: () => void; busy: boolean }) {
+function SessionRow({ session, onRevoke, busy, disabled }: { session: UserSession; onRevoke: () => void; busy: boolean; disabled: boolean }) {
   const Icon = /Android|iOS|iPhone|iPad/i.test(session.device.os) ? Smartphone : Laptop
   return (
     <li className="account-session" data-current={session.current}>
       <span className="account-session-icon"><Icon className="size-5" aria-hidden="true" /></span>
       <div className="account-session-details"><p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink"><span className="break-words">{session.device.label}</span>{session.current && <StatusChip tone="success" icon={Check}>This device</StatusChip>}</p><div className="account-session-meta"><span><Globe2 className="size-3 shrink-0" aria-hidden="true" />{session.ip ?? 'Unknown IP'}</span><span><Clock3 className="size-3 shrink-0" aria-hidden="true" /><time dateTime={session.lastActiveAt} title={formatDate(session.lastActiveAt)}>Active {timeAgo(session.lastActiveAt)}</time></span></div><p className="mt-1.5 text-[11px] text-muted">Signed in {formatDate(session.startedAt)}</p></div>
-      {!session.current && <Button variant="ghost" size="sm" aria-label={`Sign out ${session.device.label}`} onClick={onRevoke} loading={busy}><LogOut className="size-3.5" aria-hidden="true" />Sign out</Button>}
+      {!session.current && <Button variant="ghost" size="sm" aria-label={`Sign out ${session.device.label}`} onClick={onRevoke} loading={busy} disabled={disabled}><LogOut className="size-3.5" aria-hidden="true" />Sign out</Button>}
     </li>
   )
 }
 
 function SessionsSection({ sessions }: { sessions: UseQueryResult<UserSession[]> }) {
+  const [password, setPassword] = useState('')
   const queryClient = useQueryClient()
   const notify = useToast()
   const revoke = useMutation({
     mutationFn: revokeSession,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk.me.sessions }),
+    onSuccess: () => { setPassword(''); return queryClient.invalidateQueries({ queryKey: qk.me.sessions }) },
     onError: (err) => notify({ tone: 'error', title: 'Couldn’t sign out that device', description: firstError(err, 'Please try again.') }),
   })
   const revokeOthers = useMutation({
     mutationFn: revokeOtherSessions,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: qk.me.sessions })
+      setPassword('')
       notify({ title: 'Signed out of all other devices' })
     },
     onError: (err) => notify({ tone: 'error', title: 'Couldn’t sign out other devices', description: firstError(err, 'Please try again.') }),
@@ -308,13 +310,18 @@ function SessionsSection({ sessions }: { sessions: UseQueryResult<UserSession[]>
 
   return (
     <>
+      {others > 0 && <div className="mb-4">
+        <Field label="Confirm password to sign out other devices" hint="If you signed up with Google, set a password using the password reset email first.">
+          {(ids) => <Input {...ids} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
+        </Field>
+      </div>}
       <ul className="account-session-list" aria-label="Signed-in devices">
         {sessions.data.map((s) => (
-          <SessionRow key={s.id} session={s} busy={revoke.isPending && revoke.variables === s.id} onRevoke={() => revoke.mutate(s.id)} />
+          <SessionRow key={s.id} session={s} disabled={!password || revokeOthers.isPending} busy={revoke.isPending && revoke.variables?.id === s.id} onRevoke={() => { if (password) revoke.mutate({ id: s.id, password }) }} />
         ))}
       </ul>
       {!sessions.data.length && <Notice title="No active sessions to display">Refresh your security settings to check again.</Notice>}
-      {sessions.data.length > 0 && <div className="account-session-footer"><p className="text-xs text-muted">{sessions.data.length} active {sessions.data.length === 1 ? 'session' : 'sessions'}{others ? ` · ${others} on other devices` : ' · You’re up to date'}</p>{others > 0 && <Button variant="secondary" size="sm" loading={revokeOthers.isPending} disabled={revoke.isPending} onClick={() => revokeOthers.mutate()}><LogOut className="size-3.5" aria-hidden="true" />Sign out of all other devices</Button>}</div>}
+      {sessions.data.length > 0 && <div className="account-session-footer"><p className="text-xs text-muted">{sessions.data.length} active {sessions.data.length === 1 ? 'session' : 'sessions'}{others ? ` · ${others} on other devices` : ' · You’re up to date'}</p>{others > 0 && <Button variant="secondary" size="sm" loading={revokeOthers.isPending} disabled={revoke.isPending || !password} onClick={() => revokeOthers.mutate(password)}><LogOut className="size-3.5" aria-hidden="true" />Sign out of all other devices</Button>}</div>}
     </>
   )
 }

@@ -81,7 +81,7 @@ export function MergeDialog<T extends { id: string }>({
       open={open}
       onClose={onClose}
       title={title}
-      description={`${records.length} records will become one. The others are kept in the bin as “merged” and can’t be restored separately.`}
+      description={`${records.length} records will become one. The others are archived as merged and cannot be restored separately.`}
       className="max-w-3xl"
       footer={
         <>

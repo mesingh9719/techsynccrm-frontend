@@ -1,11 +1,14 @@
+import { OwnerFilter } from '../../components/app/OwnerFilter'
+import { CampaignFilter } from '../campaigns/CampaignFilter'
+import { MergeDialog } from '../crm/components/MergeDialog'
 import { useCreateFromUrl } from '../../lib/useCreateFromUrl'
 import { DataTools } from '../transfer/DataTools'
 import { createElement, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   CircleDot,
-  Download,
+  GitMerge,
   Hand,
   Inbox,
   SquareKanban,
@@ -20,7 +23,6 @@ import {
 } from 'lucide-react'
 import { handleGlobalApiError } from '../../lib/apiErrors'
 import { qk } from '../../lib/queryKeys'
-import { useAuth } from '../../lib/useAuth'
 import { useCan } from '../../lib/useOrg'
 import { useSeo } from '../../lib/useSeo'
 import { useUrlFilters } from '../../lib/useUrlFilters'
@@ -30,8 +32,6 @@ import { Input } from '../../components/ui/Form'
 import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import { sourceIcon } from './sourceIcons'
 import { InlineLeadStatus } from './InlineLeadStatus'
-import { memberOptions } from '../../services/team'
-import { downloadCsv } from '../../lib/downloadCsv'
 import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
 import { DataTable, type Column } from '../../components/app/DataTable'
@@ -49,7 +49,7 @@ import { TagChips } from '../crm/components/Tags'
 import { formatMinor, leadStatusLabels, relativeTime } from '../crm/format'
 import { useCustomFieldDefs, useOrgId, useRecordList, useTags } from '../crm/hooks'
 import type { LeadRecord, LeadStatus } from '../crm/types'
-import { bulkLeads, claimLead, listLeads, useLeadSources } from './api'
+import { bulkLeads, claimLead, listLeads, mergeLeads, useLeadSources } from './api'
 import { LeadFormDrawer } from './LeadFormDrawer'
 import { LeadStatusBadge, ScorePill } from './LeadBits'
 import { StatusDialog } from './StatusDialog'
@@ -83,7 +83,6 @@ const FROZEN: LeadStatus[] = ['converted', 'lost', 'junk']
 export default function LeadsPage() {
   useSeo({ title: 'Leads', noindex: true })
   const orgId = useOrgId()
-  const { user } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const notify = useToast()
@@ -91,14 +90,10 @@ export default function LeadsPage() {
   const canView = useCan('leads.view')
   const canUpdate = useCan('leads.update')
   const canDelete = useCan('leads.delete')
+  const canSeeContactInfo = useCan('leads.contactInfo')
   const canAssign = useCan('leads.assign')
   const canExport = useCan('leads.export')
   const canReadCampaigns = useCan('campaigns.read')
-  const members = useQuery({
-    queryKey: qk.org(orgId).memberOptions(''),
-    queryFn: () => memberOptions(),
-    enabled: canAssign,
-  })
   const [view, setView] = useState<'table' | 'board'>('table')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const canClaim = useCan('leads.claim') || canAssign
@@ -127,7 +122,7 @@ export default function LeadsPage() {
   }
   const [creating, setCreating] = useCreateFromUrl()
   const [claiming, setClaiming] = useState<string | null>(null)
-  const [dialog, setDialog] = useState<null | 'assign' | 'status' | 'tag' | 'untag' | 'delete'>(null)
+  const [dialog, setDialog] = useState<null | 'assign' | 'status' | 'tag' | 'untag' | 'delete' | 'merge'>(null)
   const columns = useColumnPrefs(`techsync:${orgId}:leads:columns`, [
     'source',
     'score',
@@ -145,24 +140,7 @@ export default function LeadsPage() {
   ).length
   const total = counts ? (filters.status ? counts[filters.status as LeadStatus] : counts.all) : undefined
 
-  function exportSelected() {
-    const picked = rows.filter((r) => selected.has(r.id))
-    downloadCsv(
-      'selected-leads.csv',
-      ['Name', 'Email', 'Phone', 'Company', 'Source', 'Status', 'Owner', 'Created'],
-      picked.map((r) => [
-        r.displayName,
-        r.primaryEmail,
-        r.primaryPhoneE164,
-        r.companyName,
-        r.source?.name,
-        leadStatusLabels[r.status],
-        r.owner?.fullName,
-        r.createdAt,
-      ]),
-    )
-    notify({ title: `${picked.length} selected leads exported`, description: 'CSV contains the selected records loaded in this view.' })
-  }
+
 
   async function runBulk(
     action: 'assign' | 'status' | 'tag' | 'untag' | 'delete',
@@ -497,11 +475,9 @@ export default function LeadsPage() {
                 Add tags
               </BulkButton>
               <BulkButton onClick={() => setDialog('untag')}>Remove tags</BulkButton>
-              {canExport && (
-                <BulkButton onClick={exportSelected}>
-                  <Download className="size-4" />
-                  Export selected
-                </BulkButton>
+              {canExport && <DataTools selection entityType='lead' filters={{ ids: [...selected].join(',') }} columns={["displayName", "primaryEmail", "primaryPhoneE164", "companyName", "status", "budgetMinor", "owner", "source"]} />}
+              {canUpdate && canDelete && canSeeContactInfo && selected.size >= 2 && selected.size <= 11 && rows.filter(row => selected.has(row.id)).every(row => row.status !== 'converted') && (
+                <BulkButton onClick={() => setDialog('merge')}><GitMerge className="size-4" />Merge</BulkButton>
               )}
               {canDelete && (
                 <BulkButton tone="danger" onClick={() => setDialog('delete')}>
@@ -640,17 +616,7 @@ export default function LeadsPage() {
       >
         <div className="grid gap-3 sm:grid-cols-2 [&>div]:w-full">
           {!unassignedOnly && (
-            <FilterSelect
-              label="Owner"
-              value={filters.ownerId}
-              onChange={(v) => setFilter('ownerId', v)}
-              options={[
-                { value: 'me', label: 'Me' },
-                ...(members.data ?? [])
-                  .filter((m) => m.userId !== user?.id)
-                  .map((m) => ({ value: m.userId, label: m.fullName })),
-              ]}
-            />
+            <OwnerFilter value={filters.ownerId} onChange={value => setFilter('ownerId',value)} />
           )}
           <FilterSelect
             label="Source"
@@ -658,12 +624,7 @@ export default function LeadsPage() {
             onChange={(v) => setFilter('sourceId', v)}
             options={[{ value: 'none', label: 'No source' }, ...(sources.data ?? []).map((s) => ({ value: s.id, label: s.name }))]}
           />
-          {canReadCampaigns && <FilterSelect
-            label="Campaign"
-            value={filters.campaignId}
-            onChange={(value) => setFilter('campaignId', value)}
-            options={(campaigns.data ?? []).map((campaign) => ({ value: campaign.id, label: campaign.name }))}
-          />}
+          {canReadCampaigns && <CampaignFilter value={filters.campaignId} onChange={value => setFilter('campaignId',value)} />}
           <FilterSelect
             label="Score"
             value={filters.scoreMin}
@@ -705,6 +666,31 @@ export default function LeadsPage() {
         </div>
       </Dialog>
       {creating && <LeadFormDrawer open onClose={() => setCreating(false)} />}
+      {dialog === 'merge' && <MergeDialog
+        open onClose={() => setDialog(null)} records={rows.filter(row => selected.has(row.id))}
+        title="Merge duplicate leads" nameOf={row => row.displayName}
+        fields={[
+            { key: 'firstName', label: 'First name', value: (row: LeadRecord) => row.firstName },
+            { key: 'lastName', label: 'Last name', value: (row: LeadRecord) => row.lastName },
+            { key: 'companyName', label: 'Company', value: (row: LeadRecord) => row.companyName },
+            { key: 'requirement', label: 'Requirement', value: (row: LeadRecord) => row.requirement },
+            { key: 'budgetMinor', label: 'Budget (minor units)', value: (row: LeadRecord) => row.budgetMinor },
+            { key: 'city', label: 'City', value: (row: LeadRecord) => row.city },
+            { key: 'stateCode', label: 'State', value: (row: LeadRecord) => row.stateCode },
+            { key: 'pincode', label: 'Postcode', value: (row: LeadRecord) => row.pincode },
+            { key: 'sourceId', label: 'First source', value: (row: LeadRecord) => row.sourceId },
+            { key: 'sourceDetail', label: 'Source detail', value: (row: LeadRecord) => row.sourceDetail },
+            { key: 'campaignId', label: 'Campaign', value: (row: LeadRecord) => row.campaignId },
+          ...activeDefs.map(def => ({ key: `cf.${def.key}`, label: def.label, value: (row: LeadRecord) => row.customFields?.[def.key] })),
+        ]}
+        combinedNote="The chosen lead keeps its owner and status. Contact points, tags, activities, tasks and files are combined; sources and campaigns keep the chosen values. Converted leads and conflicting existing-contact links require separate review. Merged copies cannot be restored."
+        onMerge={async input => {
+          const picked = rows.filter(row => selected.has(row.id))
+          const merged = await mergeLeads({ ...input, versions: Object.fromEntries(picked.map(row => [row.id, row.updatedAt])) })
+          setDialog(null); setSelected(new Set()); await refresh()
+          notify({ title: 'Leads merged' }); navigate(`/app/leads/${merged.id}`)
+        }}
+      />}
       <BulkAssignDialog
         open={dialog === 'assign'}
         count={selected.size}

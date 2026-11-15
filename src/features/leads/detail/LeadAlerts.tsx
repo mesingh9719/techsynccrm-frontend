@@ -37,7 +37,8 @@ export function LeadAlerts({ lead, canRestore, onRestore }: { lead: LeadRecord; 
 
   return (
     <>
-      {lead.deletedAt && <DeletedBanner deletedAt={lead.deletedAt} canRestore={canRestore} onRestore={onRestore} />}
+      {lead.mergedIntoId && <div role="status" className="rounded-card bg-sky-50 px-4 py-3 text-sm text-sky-900">This lead was merged and cannot be restored. <Link className="underline" to={`/app/leads/${lead.mergedIntoId}`}>Open the surviving lead</Link></div>}
+      {lead.deletedAt && !lead.mergedIntoId && <DeletedBanner deletedAt={lead.deletedAt} canRestore={canRestore} onRestore={onRestore} />}
       {lead.status === 'converted' && (
         <div
           className="flex flex-col gap-2 rounded-card bg-emerald-50 px-4 py-3 text-sm text-emerald-900 ring-1 ring-emerald-100 sm:flex-row sm:items-center sm:justify-between"

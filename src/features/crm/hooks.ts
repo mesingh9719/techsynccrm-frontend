@@ -1,7 +1,8 @@
+import { usePagedList } from '../../lib/usePagedList'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { qk } from '../../lib/queryKeys'
 import { useAuth } from '../../lib/useAuth'
-import { listCustomFields, listSavedViews, listTags } from './api'
+import { listCustomFields, listSavedViews, listTagsPage } from './api'
 import type { CustomFieldEntity, Page, SavedView } from './types'
 
 /** Active workspace id for query keys ('none' before sign-in). */
@@ -10,9 +11,9 @@ export function useOrgId() {
   return user?.organization?.id ?? 'none'
 }
 
-export function useTags() {
+export function useTags(q = '') {
   const orgId = useOrgId()
-  return useQuery({ queryKey: qk.org(orgId).tags, queryFn: listTags, staleTime: 60_000 })
+  return usePagedList([...qk.org(orgId).tags,q], cursor => listTagsPage({q:q || undefined,cursor}))
 }
 
 /** Custom field definitions for an entity type, including archived (filter with `.archived`). */

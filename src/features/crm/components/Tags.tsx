@@ -1,7 +1,8 @@
+import { listTagsPage } from '../api'
 import { useFloatingPanel } from '../../../components/app/useFloatingPanel'
 import { Skeleton } from '../../../components/app/States'
 import { useEffect, useId, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Plus, Tag as TagIcon, X } from 'lucide-react'
 import { cn } from '../../../lib/cn'
 import { qk } from '../../../lib/queryKeys'
@@ -46,10 +47,11 @@ export function TagChips({ tags, max = 3, className }: { tags: Tag[]; max?: numb
 export function TagPicker({ value, onChange, id, label = 'Tags' }: { value: string[]; onChange: (ids: string[]) => void; id?: string; label?: string }) {
   const orgId = useOrgId()
   const queryClient = useQueryClient()
-  const tags = useTags()
   const canCreate = useCan('contacts.create')
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
+  const tags = useTags(q)
+  const selectedTags = useQuery({ queryKey: [...qk.org(orgId).tags,'selected',value.join(',')], queryFn:() => listTagsPage({ids:value.join(',')}),enabled:value.length>0 })
   const [error, setError] = useState<string | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const listId = useId()
@@ -64,7 +66,7 @@ export function TagPicker({ value, onChange, id, label = 'Tags' }: { value: stri
   }, [open])
 
   const all = tags.data ?? []
-  const selected = all.filter((t) => value.includes(t.id))
+  const selected = [...new Map([...(selectedTags.data?.items || []),...all].map(tag => [tag.id,tag])).values()].filter(tag => value.includes(tag.id))
   const term = q.trim().toLowerCase()
   const options = all.filter((t) => !term || t.name.toLowerCase().includes(term))
   const exact = all.some((t) => t.name.toLowerCase() === term)
@@ -136,6 +138,7 @@ export function TagPicker({ value, onChange, id, label = 'Tags' }: { value: stri
             })}
             {!tags.isError && !tags.isPending && !options.length && !term && <li className="px-2 py-2 text-sm text-muted">No tags yet.</li>}
           </ul>
+          {tags.hasNextPage && <button type="button" className="p-2 text-sm underline" onClick={() => void tags.fetchNextPage()}>More matching tags</button>}
           {term && !exact && canCreate && (
             <button type="button" onClick={add} disabled={creating} className="mt-1 flex w-full items-center gap-2 rounded-control px-2 py-2 text-sm text-brand-700 hover:bg-brand-50">
               <Plus className="size-4" aria-hidden="true" />

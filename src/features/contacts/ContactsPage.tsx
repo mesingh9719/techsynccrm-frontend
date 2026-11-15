@@ -272,6 +272,7 @@ export default function ContactsPage() {
               Add tags
             </BulkButton>
             <BulkButton onClick={() => setDialog('untag')}>Remove tags</BulkButton>
+            <DataTools selection entityType='contact' filters={{ids:[...selected].join(',')}} columns={["displayName", "primaryEmail", "primaryPhoneE164", "owner", "createdAt"]} />
             {selected.size >= 2 && selected.size <= 10 && (
               <BulkButton onClick={() => setDialog('merge')}>
                 <GitMerge className="size-4" aria-hidden="true" />

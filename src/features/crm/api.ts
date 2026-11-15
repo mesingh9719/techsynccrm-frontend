@@ -87,3 +87,8 @@ export function updateSavedView(
 export function deleteSavedView(id: string) {
   return api<void>(`/saved-views/${id}`, { method: 'DELETE' })
 }
+
+export async function listTagsPage(params:{q?:string;cursor?:string;ids?:string} = {}) {
+  const page = await api<{tags:Tag[];nextCursor:string|null}>('/tags',{query:params})
+  return {items:page.tags,nextCursor:page.nextCursor}
+}
